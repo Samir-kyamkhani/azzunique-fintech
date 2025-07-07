@@ -378,7 +378,7 @@ const menuItems = [
 ];
 
 // Sidebar Component
-const Sidebar = ({ isOpen, toggleSidebar }) => {
+const MasterSidebar = ({ isOpen, toggleSidebar }) => {
   const [expandedItems, setExpandedItems] = useState({});
   const [activeItem, setActiveItem] = useState("dashboard");
 
@@ -490,4 +490,4 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   );
 };
 
-export default Sidebar;
+export default MasterSidebar;
