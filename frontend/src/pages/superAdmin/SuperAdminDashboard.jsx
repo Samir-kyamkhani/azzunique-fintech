@@ -195,7 +195,7 @@ const SuperAdminDashboard = () => {
         {/* Charts Section */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {/* Daily Sales Chart */}
-          <DailySales />
+        <DailySales data={dailySalesData} title={'Daily Sales'} />
 
           {/* Wallet Customer Details */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
