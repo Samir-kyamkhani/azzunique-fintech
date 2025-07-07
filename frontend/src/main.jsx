@@ -9,6 +9,7 @@ import {
 } from "react-router-dom";
 import DashboardLayout from "./layouts/DashboardLayout.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
+import LedgerReport from "./pages/superAdmin/MasterReport/LedgerReport.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -20,8 +21,9 @@ const router = createBrowserRouter(
         <Route path="login" element={<LoginPage />} />
       </Route> */}
 
-      <Route element={<DashboardLayout />}>
-        <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="dashboard" element={<DashboardLayout />}>
+        <Route index element={<Dashboard />} />
+        <Route path="ledger-report" element={<LedgerReport />} />
       </Route>
     </>
   )
