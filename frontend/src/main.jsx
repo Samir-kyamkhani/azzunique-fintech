@@ -10,6 +10,7 @@ import {
 import DashboardLayout from "./layouts/DashboardLayout.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import LedgerReport from "./pages/superAdmin/MasterReport/LedgerReport.jsx";
+import CustomerLedger from "./pages/superAdmin/MasterReport/CustomerLedger.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -24,6 +25,7 @@ const router = createBrowserRouter(
       <Route path="dashboard" element={<DashboardLayout />}>
         <Route index element={<Dashboard />} />
         <Route path="ledger-report" element={<LedgerReport />} />
+        <Route path="customer-ledger" element={<CustomerLedger />} />
       </Route>
     </>
   )
