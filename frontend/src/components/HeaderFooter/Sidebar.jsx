@@ -222,10 +222,6 @@ const menuItems = [
           { id: "ledger-report", label: "Ledger Report", path: "/master-report/ledger" },
           { id: "customer-ledger", label: "Customer Ledger", path: "/master-report/customer-ledger" },
           { id: "tds-gst", label: "TDS & GST", path: "/master-report/tds-gst" },
-          { id: "sales-products", label: "Sales By Products", path: "/master-report/sales-products" },
-          { id: "sales-service", label: "Sales By Service", path: "/master-report/sales-service" },
-          { id: "sales-purchase", label: "Sales Purchase", path: "/master-report/sales-purchase" },
-          { id: "customer-sales-purchase", label: "Customer Sales Purchase", path: "/master-report/customer-sales-purchase" },
         ],
       },
       {
@@ -233,59 +229,45 @@ const menuItems = [
         label: "Settings",
         icon: Settings,
         children: [
-          {
-            id: "admin-setting",
-            label: "Admin Setting",
-            children: [
-              { id: "commission-setting", label: "Commission Setting", path: "/settings/admin/commission" },
-              { id: "user-commission", label: "User Commission", path: "/settings/admin/user-commission" },
-            ],
-          },
-          {
-            id: "media",
-            label: "Media",
-            children: [
-              { id: "news", label: "News", path: "/settings/media/news" },
-              { id: "home-banner", label: "Home Banner", path: "/settings/media/banner" },
-            ],
-          },
-          {
-            id: "api-setting",
-            label: "API Setting",
-            children: [
-              { id: "create-edit-products", label: "Create/Edit Products", path: "/settings/api/products" },
-              { id: "create-api", label: "Create API", path: "/settings/api/create" },
-              { id: "api-keys", label: "API Keys", path: "/settings/api/keys" },
-              { id: "user-api-switch", label: "User API Switch", path: "/settings/api/user-switch" },
-              { id: "product-api-switch", label: "Product API Switch", path: "/settings/api/product-switch" },
-            ],
-          },
-          {
-            id: "sales",
-            label: "Sales",
-            children: [
-              { id: "by-api", label: "By API", path: "/settings/sales/api" },
-              { id: "by-product", label: "By Product", path: "/settings/sales/product" },
-              { id: "by-service", label: "By Service", path: "/settings/sales/service" },
-              { id: "by-all", label: "By All", path: "/settings/sales/all" },
-            ],
-          },
-          {
-            id: "policy",
-            label: "Policy",
-            children: [
-              { id: "refund-policy", label: "Refund Policy", path: "/settings/policy/refund" },
-              { id: "privacy-policy", label: "Privacy Policy", path: "/settings/policy/privacy" },
-              { id: "terms-conditions", label: "Terms Conditions", path: "/settings/policy/terms" },
-            ],
-          },
+          { id: "commission-setting", label: "Commission Setting", path: "/settings/commission" },
+          { id: "user-commission", label: "User Commission", path: "/settings/user-commission" },
+          { id: "news", label: "News", path: "/settings/news" },
+          { id: "home-banner", label: "Home Banner", path: "/settings/banner" },
+          { id: "create-api", label: "Create API", path: "/settings/create-api" },
+          { id: "user-api-switch", label: "User API Switch", path: "/settings/user-api-switch" },
+          { id: "product-api-switch", label: "Product API Switch", path: "/settings/product-api-switch" },
+          { id: "create-edit-products", label: "Create/Edit Products", path: "/settings/products" },
+          { id: "api-keys", label: "API Keys", path: "/settings/api-keys" },
+          { id: "useful-links", label: "Usefull Links", path: "/settings/useful-links" },
         ],
       },
       {
-        id: "report",
-        label: "Report",
-        icon: BarChart3,
-        path: "/report",
+        id: "pending-report",
+        label: "Pending Report",
+        icon: FileText,
+        children: [
+          { id: "pending-aeps", label: "Pending AEPS", path: "/report/pending/aeps" },
+          { id: "pending-dmt", label: "Pending DMT", path: "/report/pending/dmt" },
+          { id: "pending-recharge", label: "Pending Recharge", path: "/report/pending/recharge" },
+          { id: "pending-pg", label: "Pending Payment Gateway", path: "/report/pending/pg" },
+          { id: "pending-mtb", label: "Pending Move To Bank", path: "/report/pending/mtb" },
+          { id: "pending-et", label: "Pending Express Transfer", path: "/report/pending/et" },
+          { id: "pending-matm", label: "Pending MATM", path: "/report/pending/matm" },
+        ],
+      },
+      {
+        id: "transaction-report",
+        label: "Transaction Report",
+        icon: FileText,
+        children: [
+          { id: "aeps-tx", label: "AEPS Transaction", path: "/report/transaction/aeps" },
+          { id: "dmt-tx", label: "DMT Transaction", path: "/report/transaction/dmt" },
+          { id: "recharge-tx", label: "Recharge Transaction", path: "/report/transaction/recharge" },
+          { id: "pg-tx", label: "Payment Gateway Transaction", path: "/report/transaction/pg" },
+          { id: "mtb-tx", label: "Move To Bank Transaction", path: "/report/transaction/mtb" },
+          { id: "et-tx", label: "Express Transfer Transaction", path: "/report/transaction/et" },
+          { id: "matm-tx", label: "MATM Transaction", path: "/report/transaction/matm" },
+        ],
       },
       {
         id: "registration",
@@ -299,13 +281,13 @@ const menuItems = [
         ],
       },
       {
-        id: "transaction",
-        label: "Transaction",
+        id: "wallet",
+        label: "Wallet",
         icon: RefreshCw,
         children: [
-          { id: "purchase", label: "Purchase", path: "/transaction/purchase" },
-          { id: "request-order", label: "Request Order", path: "/transaction/request-order" },
-          { id: "transfer-revert", label: "Transfer & Revert Bal", path: "/transaction/transfer-revert" },
+          { id: "purchase", label: "Purchase", path: "/wallet/purchase" },
+          { id: "request-order", label: "Request Order", path: "/wallet/request-order" },
+          { id: "transfer-revert", label: "Transfer & Revert Bal", path: "/wallet/transfer-revert" },
         ],
       },
       {
@@ -318,83 +300,11 @@ const menuItems = [
           { id: "employees", label: "Employees", path: "/help-desk/employees" },
           { id: "solved-complain", label: "Solved Complain", path: "/help-desk/solved-complain" },
           { id: "pending-complain", label: "Pending Complain", path: "/help-desk/pending-complain" },
-          { id: "lead", label: "Lead", path: "/help-desk/lead" },
-        ],
-      },
-      {
-        id: "transactions-detailed",
-        label: "Transactions (Detailed)",
-        icon: CreditCard,
-        children: [
-          { id: "pending", label: "Pending", path: "/transactions/pending" },
-          {
-            id: "aeps",
-            label: "AEPS",
-            children: [
-              { id: "aeps-pending", label: "Pending", path: "/transactions/aeps/pending" },
-              { id: "aeps-completed", label: "Completed", path: "/transactions/aeps/completed" },
-            ],
-          },
-          {
-            id: "recharge",
-            label: "Recharge",
-            children: [
-              { id: "recharge-pending", label: "Pending", path: "/transactions/recharge/pending" },
-              { id: "recharge-completed", label: "Completed", path: "/transactions/recharge/completed" },
-            ],
-          },
-          {
-            id: "move-to-bank",
-            label: "Move To Bank",
-            children: [
-              { id: "mtb-pending", label: "Pending", path: "/transactions/move-to-bank/pending" },
-              { id: "mtb-completed", label: "Completed", path: "/transactions/move-to-bank/completed" },
-            ],
-          },
-          {
-            id: "express-transfer",
-            label: "Express Transfer",
-            children: [
-              { id: "et-pending", label: "Pending", path: "/transactions/express-transfer/pending" },
-              { id: "et-completed", label: "Completed", path: "/transactions/express-transfer/completed" },
-            ],
-          },
-          {
-            id: "dmt",
-            label: "DMT",
-            children: [
-              { id: "dmt-pending", label: "Pending", path: "/transactions/dmt/pending" },
-              { id: "dmt-completed", label: "Completed", path: "/transactions/dmt/completed" },
-            ],
-          },
-          {
-            id: "payment-gateway",
-            label: "Payment Gateway",
-            children: [
-              { id: "pg-pending", label: "Pending", path: "/transactions/payment-gateway/pending" },
-              { id: "pg-completed", label: "Completed", path: "/transactions/payment-gateway/completed" },
-            ],
-          },
-          {
-            id: "move-to-bank-pg",
-            label: "Move To Bank PG",
-            children: [
-              { id: "mtb-pg-pending", label: "Pending", path: "/transactions/move-to-bank-pg/pending" },
-              { id: "mtb-pg-completed", label: "Completed", path: "/transactions/move-to-bank-pg/completed" },
-            ],
-          },
-          {
-            id: "matm",
-            label: "MATM",
-            children: [
-              { id: "matm-pending", label: "Pending", path: "/transactions/matm/pending" },
-              { id: "matm-completed", label: "Completed", path: "/transactions/matm/completed" },
-            ],
-          },
         ],
       },
     ],
   }
+
 ];
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {

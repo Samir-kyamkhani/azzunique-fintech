@@ -6,3 +6,16 @@ export const gradientColors = [
   "from-rose-500 to-pink-400",
   "from-indigo-500 to-purple-400",
 ];
+
+export const dailySalesData = [
+    { name: "REMITTANCE", value: 4026.05 },
+    { name: "SETTLEMENT", value: 25000 },
+    { name: "AEPS", value: 0 },
+];
+export const  SalesActivity = [
+    { name: "REMITTANCE", value: 4026.05 },
+    { name: "SETTLEMENT", value: 25000 },
+    { name: "AEPS", value: 0 },
+];
+
+
