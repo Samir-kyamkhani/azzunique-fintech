@@ -1,15 +1,9 @@
-import React, { useState } from "react";
 import {
-  Menu,
   Users,
   DollarSign,
   Wallet,
-  TrendingUp,
   ArrowDownRight,
   MoreHorizontal,
-  Search,
-  Bell,
-  User,
   RefreshCw,
 } from "lucide-react";
 import {
@@ -20,6 +14,10 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from "recharts";
+import StatsCard from "../../components/Ui/StatsCard";
+import { gradientColors } from "../../index.js";
+import DailySales from "../../components/Ui/DailySales.jsx";
+import MiniCard from "../../components/Ui/MiniCard.jsx";
 
 // Sample data for charts
 const dailySalesData = [
@@ -95,52 +93,7 @@ const walletRequests = [
   },
 ];
 
-// Modern gradient colors
-const gradientColors = [
-  "from-blue-500 to-cyan-400",
-  "from-emerald-500 to-teal-400",
-  "from-purple-500 to-pink-400",
-  "from-orange-500 to-yellow-400",
-  "from-rose-500 to-pink-400",
-  "from-indigo-500 to-purple-400",
-];
-
-// Enhanced Stats Card Component
-const StatsCard = ({ title, value, icon: Icon, color = "blue", trend, gradient }) => (
-  <div className="group relative overflow-hidden bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-gray-200">
-    <div className="absolute inset-0 bg-gradient-to-br opacity-5 group-hover:opacity-10 transition-opacity duration-300" 
-         style={{background: `linear-gradient(135deg, var(--tw-gradient-from), var(--tw-gradient-to))`}}></div>
-    <div className="relative p-6">
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-          <p className="text-2xl font-bold text-gray-900 mb-1">{value}</p>
-          {trend && (
-            <div className="flex items-center text-sm">
-              <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-              <span className="text-green-600 font-medium">{trend}</span>
-            </div>
-          )}
-        </div>
-        <div className={`p-4 rounded-xl bg-gradient-to-br ${gradient} shadow-lg`}>
-          <Icon className="w-6 h-6 text-white" />
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
 // Modern Mini Card Component
-const MiniCard = ({ title, value, isNegative = false }) => (
-  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow duration-200">
-    <div className="text-center">
-      <p className="text-xs font-medium text-gray-500 mb-2">{title}</p>
-      <p className={`text-lg font-bold ${isNegative ? 'text-red-600' : 'text-gray-900'}`}>
-        {value}
-      </p>
-    </div>
-  </div>
-);
 
 // Modern Table Component
 const ModernTable = ({ title, headers, data, renderRow }) => (
@@ -148,24 +101,24 @@ const ModernTable = ({ title, headers, data, renderRow }) => (
     <div className="p-6 border-b border-gray-100">
       <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
     </div>
-      <table className="w-full ">
-        <thead className="bg-gray-50  ">
-          <tr>
-            {headers.map((header, index) => (
-              <th key={index} className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {header}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {data.map((row, index) => (
-            <tr key={index} className="hover:bg-gray-50 transition-colors duration-150">
-              {renderRow(row, index)}
-            </tr>
+    <table className="w-full ">
+      <thead className="bg-gray-50  ">
+        <tr>
+          {headers.map((header, index) => (
+            <th key={index} className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              {header}
+            </th>
           ))}
-        </tbody>
-      </table>
+        </tr>
+      </thead>
+      <tbody className="bg-white divide-y divide-gray-200">
+        {data.map((row, index) => (
+          <tr key={index} className="hover:bg-gray-50 transition-colors duration-150">
+            {renderRow(row, index)}
+          </tr>
+        ))}
+      </tbody>
+    </table>
   </div>
 );
 
@@ -174,7 +127,7 @@ const SuperAdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-    
+
 
       <div className=" space-y-8">
         {/* Main Stats Cards */}
@@ -208,10 +161,10 @@ const SuperAdminDashboard = () => {
 
         {/* Secondary Stats */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <StatsCard 
-            title="Total Customers" 
-            value="18" 
-            icon={Users} 
+          <StatsCard
+            title="Total Customers"
+            value="18"
+            icon={Users}
             gradient={gradientColors[4]}
             trend="+2 this week"
           />
@@ -242,22 +195,7 @@ const SuperAdminDashboard = () => {
         {/* Charts Section */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {/* Daily Sales Chart */}
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Daily Sales</h3>
-              <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                <MoreHorizontal className="w-5 h-5" />
-              </button>
-            </div>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={dailySalesData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Bar dataKey="value" fill="#3B82F6" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <DailySales />
 
           {/* Wallet Customer Details */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
@@ -336,11 +274,10 @@ const SuperAdminDashboard = () => {
                 <td className="px-6 py-4 font-medium text-gray-900 max-w-xs truncate">{row.product}</td>
                 <td className="px-6 py-4">
                   <span
-                    className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${
-                      row.status === "SUCCESS"
-                        ? "bg-emerald-100 text-emerald-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
+                    className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${row.status === "SUCCESS"
+                      ? "bg-emerald-100 text-emerald-800"
+                      : "bg-red-100 text-red-800"
+                      }`}
                   >
                     {row.status}
                   </span>
