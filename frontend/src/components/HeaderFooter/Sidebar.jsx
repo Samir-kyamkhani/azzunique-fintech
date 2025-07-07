@@ -12,6 +12,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { getUserRole } from "../../setting";
+import { useNavigate } from "react-router-dom";
 
 // Menu data structure
 const menuItems = [
@@ -29,13 +30,37 @@ const menuItems = [
         label: "Master Report",
         icon: FileText,
         children: [
-          { id: "ledger-report", label: "Ledger Report", path: "/master-report/ledger" },
-          { id: "customer-ledger", label: "Customer Ledger", path: "/master-report/customer-ledger" },
-          { id: "tds-gst", label: "TDS & GST", path: "/master-report/tds-gst" },
-          { id: "sales-products", label: "Sales By Products", path: "/master-report/sales-products" },
-          { id: "sales-service", label: "Sales By Service", path: "/master-report/sales-service" },
-          { id: "sales-purchase", label: "Sales Purchase", path: "/master-report/sales-purchase" },
-          { id: "customer-sales-purchase", label: "Customer Sales Purchase", path: "/master-report/customer-sales-purchase" },
+          {
+            id: "ledger-report",
+            label: "Ledger Report",
+            path: "/dashboard/ledger-report",
+          },
+          {
+            id: "customer-ledger",
+            label: "Customer Ledger",
+            path: "/dashboard/customer-ledger",
+          },
+          { id: "tds-gst", label: "TDS & GST", path: "/dashboard/tds-gst" },
+          {
+            id: "sales-products",
+            label: "Sales By Products",
+            path: "/dashboard/sales-products",
+          },
+          {
+            id: "sales-service",
+            label: "Sales By Service",
+            path: "/dashboard/sales-service",
+          },
+          {
+            id: "sales-purchase",
+            label: "Sales Purchase",
+            path: "/dashboard/sales-purchase",
+          },
+          {
+            id: "customer-sales-purchase",
+            label: "Customer Sales Purchase",
+            path: "/dashboard/customer-sales-purchase",
+          },
         ],
       },
       {
@@ -47,8 +72,16 @@ const menuItems = [
             id: "admin-setting",
             label: "Admin Setting",
             children: [
-              { id: "commission-setting", label: "Commission Setting", path: "/settings/admin/commission" },
-              { id: "user-commission", label: "User Commission", path: "/settings/admin/user-commission" },
+              {
+                id: "commission-setting",
+                label: "Commission Setting",
+                path: "/settings/admin/commission",
+              },
+              {
+                id: "user-commission",
+                label: "User Commission",
+                path: "/settings/admin/user-commission",
+              },
             ],
           },
           {
@@ -56,18 +89,38 @@ const menuItems = [
             label: "Media",
             children: [
               { id: "news", label: "News", path: "/settings/media/news" },
-              { id: "home-banner", label: "Home Banner", path: "/settings/media/banner" },
+              {
+                id: "home-banner",
+                label: "Home Banner",
+                path: "/settings/media/banner",
+              },
             ],
           },
           {
             id: "api-setting",
             label: "API Setting",
             children: [
-              { id: "create-edit-products", label: "Create/Edit Products", path: "/settings/api/products" },
-              { id: "create-api", label: "Create API", path: "/settings/api/create" },
+              {
+                id: "create-edit-products",
+                label: "Create/Edit Products",
+                path: "/settings/api/products",
+              },
+              {
+                id: "create-api",
+                label: "Create API",
+                path: "/settings/api/create",
+              },
               { id: "api-keys", label: "API Keys", path: "/settings/api/keys" },
-              { id: "user-api-switch", label: "User API Switch", path: "/settings/api/user-switch" },
-              { id: "product-api-switch", label: "Product API Switch", path: "/settings/api/product-switch" },
+              {
+                id: "user-api-switch",
+                label: "User API Switch",
+                path: "/settings/api/user-switch",
+              },
+              {
+                id: "product-api-switch",
+                label: "Product API Switch",
+                path: "/settings/api/product-switch",
+              },
             ],
           },
           {
@@ -75,8 +128,16 @@ const menuItems = [
             label: "Sales",
             children: [
               { id: "by-api", label: "By API", path: "/settings/sales/api" },
-              { id: "by-product", label: "By Product", path: "/settings/sales/product" },
-              { id: "by-service", label: "By Service", path: "/settings/sales/service" },
+              {
+                id: "by-product",
+                label: "By Product",
+                path: "/settings/sales/product",
+              },
+              {
+                id: "by-service",
+                label: "By Service",
+                path: "/settings/sales/service",
+              },
               { id: "by-all", label: "By All", path: "/settings/sales/all" },
             ],
           },
@@ -84,9 +145,21 @@ const menuItems = [
             id: "policy",
             label: "Policy",
             children: [
-              { id: "refund-policy", label: "Refund Policy", path: "/settings/policy/refund" },
-              { id: "privacy-policy", label: "Privacy Policy", path: "/settings/policy/privacy" },
-              { id: "terms-conditions", label: "Terms Conditions", path: "/settings/policy/terms" },
+              {
+                id: "refund-policy",
+                label: "Refund Policy",
+                path: "/settings/policy/refund",
+              },
+              {
+                id: "privacy-policy",
+                label: "Privacy Policy",
+                path: "/settings/policy/privacy",
+              },
+              {
+                id: "terms-conditions",
+                label: "Terms Conditions",
+                path: "/settings/policy/terms",
+              },
             ],
           },
         ],
@@ -102,10 +175,26 @@ const menuItems = [
         label: "Registration",
         icon: UserPlus,
         children: [
-          { id: "customers", label: "Customers", path: "/registration/customers" },
-          { id: "customers-list", label: "Customers List", path: "/registration/customers-list" },
-          { id: "customer-banks", label: "Customer Banks", path: "/registration/customer-banks" },
-          { id: "customer-mapping", label: "Customer Mapping", path: "/registration/customer-mapping" },
+          {
+            id: "customers",
+            label: "Customers",
+            path: "/registration/customers",
+          },
+          {
+            id: "customers-list",
+            label: "Customers List",
+            path: "/registration/customers-list",
+          },
+          {
+            id: "customer-banks",
+            label: "Customer Banks",
+            path: "/registration/customer-banks",
+          },
+          {
+            id: "customer-mapping",
+            label: "Customer Mapping",
+            path: "/registration/customer-mapping",
+          },
         ],
       },
       {
@@ -114,8 +203,16 @@ const menuItems = [
         icon: RefreshCw,
         children: [
           { id: "purchase", label: "Purchase", path: "/transaction/purchase" },
-          { id: "request-order", label: "Request Order", path: "/transaction/request-order" },
-          { id: "transfer-revert", label: "Transfer & Revert Bal", path: "/transaction/transfer-revert" },
+          {
+            id: "request-order",
+            label: "Request Order",
+            path: "/transaction/request-order",
+          },
+          {
+            id: "transfer-revert",
+            label: "Transfer & Revert Bal",
+            path: "/transaction/transfer-revert",
+          },
         ],
       },
       {
@@ -123,11 +220,27 @@ const menuItems = [
         label: "Help Desk",
         icon: HelpCircle,
         children: [
-          { id: "company-bank", label: "Company Bank", path: "/help-desk/company-bank" },
-          { id: "service-onoff", label: "Service On/Off", path: "/help-desk/service-onoff" },
+          {
+            id: "company-bank",
+            label: "Company Bank",
+            path: "/help-desk/company-bank",
+          },
+          {
+            id: "service-onoff",
+            label: "Service On/Off",
+            path: "/help-desk/service-onoff",
+          },
           { id: "employees", label: "Employees", path: "/help-desk/employees" },
-          { id: "solved-complain", label: "Solved Complain", path: "/help-desk/solved-complain" },
-          { id: "pending-complain", label: "Pending Complain", path: "/help-desk/pending-complain" },
+          {
+            id: "solved-complain",
+            label: "Solved Complain",
+            path: "/help-desk/solved-complain",
+          },
+          {
+            id: "pending-complain",
+            label: "Pending Complain",
+            path: "/help-desk/pending-complain",
+          },
           { id: "lead", label: "Lead", path: "/help-desk/lead" },
         ],
       },
@@ -141,64 +254,128 @@ const menuItems = [
             id: "aeps",
             label: "AEPS",
             children: [
-              { id: "aeps-pending", label: "Pending", path: "/transactions/aeps/pending" },
-              { id: "aeps-completed", label: "Completed", path: "/transactions/aeps/completed" },
+              {
+                id: "aeps-pending",
+                label: "Pending",
+                path: "/transactions/aeps/pending",
+              },
+              {
+                id: "aeps-completed",
+                label: "Completed",
+                path: "/transactions/aeps/completed",
+              },
             ],
           },
           {
             id: "recharge",
             label: "Recharge",
             children: [
-              { id: "recharge-pending", label: "Pending", path: "/transactions/recharge/pending" },
-              { id: "recharge-completed", label: "Completed", path: "/transactions/recharge/completed" },
+              {
+                id: "recharge-pending",
+                label: "Pending",
+                path: "/transactions/recharge/pending",
+              },
+              {
+                id: "recharge-completed",
+                label: "Completed",
+                path: "/transactions/recharge/completed",
+              },
             ],
           },
           {
             id: "move-to-bank",
             label: "Move To Bank",
             children: [
-              { id: "mtb-pending", label: "Pending", path: "/transactions/move-to-bank/pending" },
-              { id: "mtb-completed", label: "Completed", path: "/transactions/move-to-bank/completed" },
+              {
+                id: "mtb-pending",
+                label: "Pending",
+                path: "/transactions/move-to-bank/pending",
+              },
+              {
+                id: "mtb-completed",
+                label: "Completed",
+                path: "/transactions/move-to-bank/completed",
+              },
             ],
           },
           {
             id: "express-transfer",
             label: "Express Transfer",
             children: [
-              { id: "et-pending", label: "Pending", path: "/transactions/express-transfer/pending" },
-              { id: "et-completed", label: "Completed", path: "/transactions/express-transfer/completed" },
+              {
+                id: "et-pending",
+                label: "Pending",
+                path: "/transactions/express-transfer/pending",
+              },
+              {
+                id: "et-completed",
+                label: "Completed",
+                path: "/transactions/express-transfer/completed",
+              },
             ],
           },
           {
             id: "dmt",
             label: "DMT",
             children: [
-              { id: "dmt-pending", label: "Pending", path: "/transactions/dmt/pending" },
-              { id: "dmt-completed", label: "Completed", path: "/transactions/dmt/completed" },
+              {
+                id: "dmt-pending",
+                label: "Pending",
+                path: "/transactions/dmt/pending",
+              },
+              {
+                id: "dmt-completed",
+                label: "Completed",
+                path: "/transactions/dmt/completed",
+              },
             ],
           },
           {
             id: "payment-gateway",
             label: "Payment Gateway",
             children: [
-              { id: "pg-pending", label: "Pending", path: "/transactions/payment-gateway/pending" },
-              { id: "pg-completed", label: "Completed", path: "/transactions/payment-gateway/completed" },
+              {
+                id: "pg-pending",
+                label: "Pending",
+                path: "/transactions/payment-gateway/pending",
+              },
+              {
+                id: "pg-completed",
+                label: "Completed",
+                path: "/transactions/payment-gateway/completed",
+              },
             ],
           },
           {
             id: "move-to-bank-pg",
             label: "Move To Bank PG",
             children: [
-              { id: "mtb-pg-pending", label: "Pending", path: "/transactions/move-to-bank-pg/pending" },
-              { id: "mtb-pg-completed", label: "Completed", path: "/transactions/move-to-bank-pg/completed" },
+              {
+                id: "mtb-pg-pending",
+                label: "Pending",
+                path: "/transactions/move-to-bank-pg/pending",
+              },
+              {
+                id: "mtb-pg-completed",
+                label: "Completed",
+                path: "/transactions/move-to-bank-pg/completed",
+              },
             ],
           },
           {
             id: "matm",
             label: "MATM",
             children: [
-              { id: "matm-pending", label: "Pending", path: "/transactions/matm/pending" },
-              { id: "matm-completed", label: "Completed", path: "/transactions/matm/completed" },
+              {
+                id: "matm-pending",
+                label: "Pending",
+                path: "/transactions/matm/pending",
+              },
+              {
+                id: "matm-completed",
+                label: "Completed",
+                path: "/transactions/matm/completed",
+              },
             ],
           },
         ],
@@ -219,13 +396,37 @@ const menuItems = [
         label: "Master Report",
         icon: FileText,
         children: [
-          { id: "ledger-report", label: "Ledger Report", path: "/master-report/ledger" },
-          { id: "customer-ledger", label: "Customer Ledger", path: "/master-report/customer-ledger" },
+          {
+            id: "ledger-report",
+            label: "Ledger Report",
+            path: "/master-report/ledger",
+          },
+          {
+            id: "customer-ledger",
+            label: "Customer Ledger",
+            path: "/master-report/customer-ledger",
+          },
           { id: "tds-gst", label: "TDS & GST", path: "/master-report/tds-gst" },
-          { id: "sales-products", label: "Sales By Products", path: "/master-report/sales-products" },
-          { id: "sales-service", label: "Sales By Service", path: "/master-report/sales-service" },
-          { id: "sales-purchase", label: "Sales Purchase", path: "/master-report/sales-purchase" },
-          { id: "customer-sales-purchase", label: "Customer Sales Purchase", path: "/master-report/customer-sales-purchase" },
+          {
+            id: "sales-products",
+            label: "Sales By Products",
+            path: "/master-report/sales-products",
+          },
+          {
+            id: "sales-service",
+            label: "Sales By Service",
+            path: "/master-report/sales-service",
+          },
+          {
+            id: "sales-purchase",
+            label: "Sales Purchase",
+            path: "/master-report/sales-purchase",
+          },
+          {
+            id: "customer-sales-purchase",
+            label: "Customer Sales Purchase",
+            path: "/master-report/customer-sales-purchase",
+          },
         ],
       },
       {
@@ -237,8 +438,16 @@ const menuItems = [
             id: "admin-setting",
             label: "Admin Setting",
             children: [
-              { id: "commission-setting", label: "Commission Setting", path: "/settings/admin/commission" },
-              { id: "user-commission", label: "User Commission", path: "/settings/admin/user-commission" },
+              {
+                id: "commission-setting",
+                label: "Commission Setting",
+                path: "/settings/admin/commission",
+              },
+              {
+                id: "user-commission",
+                label: "User Commission",
+                path: "/settings/admin/user-commission",
+              },
             ],
           },
           {
@@ -246,18 +455,38 @@ const menuItems = [
             label: "Media",
             children: [
               { id: "news", label: "News", path: "/settings/media/news" },
-              { id: "home-banner", label: "Home Banner", path: "/settings/media/banner" },
+              {
+                id: "home-banner",
+                label: "Home Banner",
+                path: "/settings/media/banner",
+              },
             ],
           },
           {
             id: "api-setting",
             label: "API Setting",
             children: [
-              { id: "create-edit-products", label: "Create/Edit Products", path: "/settings/api/products" },
-              { id: "create-api", label: "Create API", path: "/settings/api/create" },
+              {
+                id: "create-edit-products",
+                label: "Create/Edit Products",
+                path: "/settings/api/products",
+              },
+              {
+                id: "create-api",
+                label: "Create API",
+                path: "/settings/api/create",
+              },
               { id: "api-keys", label: "API Keys", path: "/settings/api/keys" },
-              { id: "user-api-switch", label: "User API Switch", path: "/settings/api/user-switch" },
-              { id: "product-api-switch", label: "Product API Switch", path: "/settings/api/product-switch" },
+              {
+                id: "user-api-switch",
+                label: "User API Switch",
+                path: "/settings/api/user-switch",
+              },
+              {
+                id: "product-api-switch",
+                label: "Product API Switch",
+                path: "/settings/api/product-switch",
+              },
             ],
           },
           {
@@ -265,8 +494,16 @@ const menuItems = [
             label: "Sales",
             children: [
               { id: "by-api", label: "By API", path: "/settings/sales/api" },
-              { id: "by-product", label: "By Product", path: "/settings/sales/product" },
-              { id: "by-service", label: "By Service", path: "/settings/sales/service" },
+              {
+                id: "by-product",
+                label: "By Product",
+                path: "/settings/sales/product",
+              },
+              {
+                id: "by-service",
+                label: "By Service",
+                path: "/settings/sales/service",
+              },
               { id: "by-all", label: "By All", path: "/settings/sales/all" },
             ],
           },
@@ -274,9 +511,21 @@ const menuItems = [
             id: "policy",
             label: "Policy",
             children: [
-              { id: "refund-policy", label: "Refund Policy", path: "/settings/policy/refund" },
-              { id: "privacy-policy", label: "Privacy Policy", path: "/settings/policy/privacy" },
-              { id: "terms-conditions", label: "Terms Conditions", path: "/settings/policy/terms" },
+              {
+                id: "refund-policy",
+                label: "Refund Policy",
+                path: "/settings/policy/refund",
+              },
+              {
+                id: "privacy-policy",
+                label: "Privacy Policy",
+                path: "/settings/policy/privacy",
+              },
+              {
+                id: "terms-conditions",
+                label: "Terms Conditions",
+                path: "/settings/policy/terms",
+              },
             ],
           },
         ],
@@ -292,10 +541,26 @@ const menuItems = [
         label: "Registration",
         icon: UserPlus,
         children: [
-          { id: "customers", label: "Customers", path: "/registration/customers" },
-          { id: "customers-list", label: "Customers List", path: "/registration/customers-list" },
-          { id: "customer-banks", label: "Customer Banks", path: "/registration/customer-banks" },
-          { id: "customer-mapping", label: "Customer Mapping", path: "/registration/customer-mapping" },
+          {
+            id: "customers",
+            label: "Customers",
+            path: "/registration/customers",
+          },
+          {
+            id: "customers-list",
+            label: "Customers List",
+            path: "/registration/customers-list",
+          },
+          {
+            id: "customer-banks",
+            label: "Customer Banks",
+            path: "/registration/customer-banks",
+          },
+          {
+            id: "customer-mapping",
+            label: "Customer Mapping",
+            path: "/registration/customer-mapping",
+          },
         ],
       },
       {
@@ -304,8 +569,16 @@ const menuItems = [
         icon: RefreshCw,
         children: [
           { id: "purchase", label: "Purchase", path: "/transaction/purchase" },
-          { id: "request-order", label: "Request Order", path: "/transaction/request-order" },
-          { id: "transfer-revert", label: "Transfer & Revert Bal", path: "/transaction/transfer-revert" },
+          {
+            id: "request-order",
+            label: "Request Order",
+            path: "/transaction/request-order",
+          },
+          {
+            id: "transfer-revert",
+            label: "Transfer & Revert Bal",
+            path: "/transaction/transfer-revert",
+          },
         ],
       },
       {
@@ -313,11 +586,27 @@ const menuItems = [
         label: "Help Desk",
         icon: HelpCircle,
         children: [
-          { id: "company-bank", label: "Company Bank", path: "/help-desk/company-bank" },
-          { id: "service-onoff", label: "Service On/Off", path: "/help-desk/service-onoff" },
+          {
+            id: "company-bank",
+            label: "Company Bank",
+            path: "/help-desk/company-bank",
+          },
+          {
+            id: "service-onoff",
+            label: "Service On/Off",
+            path: "/help-desk/service-onoff",
+          },
           { id: "employees", label: "Employees", path: "/help-desk/employees" },
-          { id: "solved-complain", label: "Solved Complain", path: "/help-desk/solved-complain" },
-          { id: "pending-complain", label: "Pending Complain", path: "/help-desk/pending-complain" },
+          {
+            id: "solved-complain",
+            label: "Solved Complain",
+            path: "/help-desk/solved-complain",
+          },
+          {
+            id: "pending-complain",
+            label: "Pending Complain",
+            path: "/help-desk/pending-complain",
+          },
           { id: "lead", label: "Lead", path: "/help-desk/lead" },
         ],
       },
@@ -331,77 +620,141 @@ const menuItems = [
             id: "aeps",
             label: "AEPS",
             children: [
-              { id: "aeps-pending", label: "Pending", path: "/transactions/aeps/pending" },
-              { id: "aeps-completed", label: "Completed", path: "/transactions/aeps/completed" },
+              {
+                id: "aeps-pending",
+                label: "Pending",
+                path: "/transactions/aeps/pending",
+              },
+              {
+                id: "aeps-completed",
+                label: "Completed",
+                path: "/transactions/aeps/completed",
+              },
             ],
           },
           {
             id: "recharge",
             label: "Recharge",
             children: [
-              { id: "recharge-pending", label: "Pending", path: "/transactions/recharge/pending" },
-              { id: "recharge-completed", label: "Completed", path: "/transactions/recharge/completed" },
+              {
+                id: "recharge-pending",
+                label: "Pending",
+                path: "/transactions/recharge/pending",
+              },
+              {
+                id: "recharge-completed",
+                label: "Completed",
+                path: "/transactions/recharge/completed",
+              },
             ],
           },
           {
             id: "move-to-bank",
             label: "Move To Bank",
             children: [
-              { id: "mtb-pending", label: "Pending", path: "/transactions/move-to-bank/pending" },
-              { id: "mtb-completed", label: "Completed", path: "/transactions/move-to-bank/completed" },
+              {
+                id: "mtb-pending",
+                label: "Pending",
+                path: "/transactions/move-to-bank/pending",
+              },
+              {
+                id: "mtb-completed",
+                label: "Completed",
+                path: "/transactions/move-to-bank/completed",
+              },
             ],
           },
           {
             id: "express-transfer",
             label: "Express Transfer",
             children: [
-              { id: "et-pending", label: "Pending", path: "/transactions/express-transfer/pending" },
-              { id: "et-completed", label: "Completed", path: "/transactions/express-transfer/completed" },
+              {
+                id: "et-pending",
+                label: "Pending",
+                path: "/transactions/express-transfer/pending",
+              },
+              {
+                id: "et-completed",
+                label: "Completed",
+                path: "/transactions/express-transfer/completed",
+              },
             ],
           },
           {
             id: "dmt",
             label: "DMT",
             children: [
-              { id: "dmt-pending", label: "Pending", path: "/transactions/dmt/pending" },
-              { id: "dmt-completed", label: "Completed", path: "/transactions/dmt/completed" },
+              {
+                id: "dmt-pending",
+                label: "Pending",
+                path: "/transactions/dmt/pending",
+              },
+              {
+                id: "dmt-completed",
+                label: "Completed",
+                path: "/transactions/dmt/completed",
+              },
             ],
           },
           {
             id: "payment-gateway",
             label: "Payment Gateway",
             children: [
-              { id: "pg-pending", label: "Pending", path: "/transactions/payment-gateway/pending" },
-              { id: "pg-completed", label: "Completed", path: "/transactions/payment-gateway/completed" },
+              {
+                id: "pg-pending",
+                label: "Pending",
+                path: "/transactions/payment-gateway/pending",
+              },
+              {
+                id: "pg-completed",
+                label: "Completed",
+                path: "/transactions/payment-gateway/completed",
+              },
             ],
           },
           {
             id: "move-to-bank-pg",
             label: "Move To Bank PG",
             children: [
-              { id: "mtb-pg-pending", label: "Pending", path: "/transactions/move-to-bank-pg/pending" },
-              { id: "mtb-pg-completed", label: "Completed", path: "/transactions/move-to-bank-pg/completed" },
+              {
+                id: "mtb-pg-pending",
+                label: "Pending",
+                path: "/transactions/move-to-bank-pg/pending",
+              },
+              {
+                id: "mtb-pg-completed",
+                label: "Completed",
+                path: "/transactions/move-to-bank-pg/completed",
+              },
             ],
           },
           {
             id: "matm",
             label: "MATM",
             children: [
-              { id: "matm-pending", label: "Pending", path: "/transactions/matm/pending" },
-              { id: "matm-completed", label: "Completed", path: "/transactions/matm/completed" },
+              {
+                id: "matm-pending",
+                label: "Pending",
+                path: "/transactions/matm/pending",
+              },
+              {
+                id: "matm-completed",
+                label: "Completed",
+                path: "/transactions/matm/completed",
+              },
             ],
           },
         ],
       },
     ],
-  }
+  },
 ];
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const [expandedItems, setExpandedItems] = useState({});
   const [activeItem, setActiveItem] = useState("dashboard");
 
-  const userRole = getUserRole()
+  const userRole = getUserRole();
 
   const toggleExpanded = (itemId) => {
     setExpandedItems((prev) => ({
@@ -410,10 +763,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     }));
   };
 
+  const navigate = useNavigate();
+
   const handleItemClick = (itemId, path) => {
     setActiveItem(itemId);
     if (path) {
-      console.log("Navigate to:", path);
+      navigate(path);
     }
     if (toggleSidebar) {
       toggleSidebar();
@@ -430,19 +785,32 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       <div key={item.id}>
         <div
           onClick={() => {
-            hasChildren ? toggleExpanded(item.id) : handleItemClick(item.id, item.path);
+            hasChildren
+              ? toggleExpanded(item.id)
+              : handleItemClick(item.id, item.path);
           }}
-          className={`flex justify-between items-center py-2 px-4 cursor-pointer transition-all hover:bg-blue-50 ${isActive ? "bg-blue-100 border-r-4 border-blue-600 text-blue-700" : "text-gray-700"}`}
+          className={`flex justify-between items-center py-2 px-4 cursor-pointer transition-all hover:bg-blue-50 ${
+            isActive
+              ? "bg-blue-100 border-r-4 border-blue-600 text-blue-700"
+              : "text-gray-700"
+          }`}
           style={{ paddingLeft: `${level * 16 + 16}px` }}
         >
           <div className="flex items-center gap-3">
             {Icon && <Icon className="w-5 h-5" />}
             <span className="font-medium">{item.label}</span>
           </div>
-          {hasChildren && (isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />)}
+          {hasChildren &&
+            (isExpanded ? (
+              <ChevronDown className="w-4 h-4" />
+            ) : (
+              <ChevronRight className="w-4 h-4" />
+            ))}
         </div>
         {hasChildren && isExpanded && (
-          <div>{item.children.map((child) => renderMenuItem(child, level + 1))}</div>
+          <div>
+            {item.children.map((child) => renderMenuItem(child, level + 1))}
+          </div>
         )}
       </div>
     );
@@ -453,11 +821,16 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   return (
     <>
       {isOpen && (
-        <div className="lg:hidden fixed inset-0 bg-opacity-30 z-40" onClick={toggleSidebar}></div>
+        <div
+          className="lg:hidden fixed inset-0 bg-opacity-30 z-40"
+          onClick={toggleSidebar}
+        ></div>
       )}
       <aside
         className={`fixed z-50 top-0 left-0 h-screen bg-white border-r border-gray-200 shadow-lg transform transition-transform duration-300 ease-in-out
-        ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 lg:static lg:shadow-none w-[280px]`}
+        ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        } lg:translate-x-0 lg:static lg:shadow-none w-[280px]`}
       >
         <div className="flex flex-col h-full">
           <div className="p-4 border-b border-gray-200 text-lg font-semibold text-blue-600">
