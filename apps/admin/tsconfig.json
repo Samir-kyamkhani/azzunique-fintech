@@ -8,13 +8,13 @@
     ]
   },
   "include": [
-    "../admin/**/*.ts",
-    "../admin/**/*.tsx",
-    "../admin/next-env.d.ts",
-    "../admin/next.config.js",
-    "../admin/.next/types/**/*.ts"
+    "**/*.ts",
+    "**/*.tsx",
+    "next-env.d.ts",
+    "next.config.js",
+    ".next/types/**/*.ts"
   ],
   "exclude": [
-    "../admin/node_modules"
+    "node_modules"
   ]
 }
