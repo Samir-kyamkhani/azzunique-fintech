@@ -6,15 +6,7 @@
   "scripts": {
     "dev": "pnpm build --watch",
     "build": "tsc -b -v",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
-
-    "db:generate": "pnpm drizzle-kit generate",
-    "db:migrate": "pnpm drizzle-kit migrate",
-    "db:push": "pnpm drizzle-kit push",
-    "db:pull": "pnpm drizzle-kit pull",
-    "db:check": "pnpm drizzle-kit check",
-    "db:up": "pnpm drizzle-kit up",
-    "db:studio": "pnpm drizzle-kit studio"
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\""
   },
   "main": "./dist/entry.js",
   "types": "./dist/entry.d.ts",
@@ -35,16 +27,11 @@
     }
   },
   "dependencies": {
-    "@nestjs/mapped-types": "*",
-    "dotenv": "^17.2.3",
-    "drizzle-orm": "^0.45.1",
-    "pg": "^8.16.3"
+    "@nestjs/mapped-types": "*"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "^22.10.7",
-    "drizzle-kit": "^0.31.8",
     "ts-loader": "^9.4.3",
     "ts-node": "^10.9.2",
     "typescript": "5.5.4"
