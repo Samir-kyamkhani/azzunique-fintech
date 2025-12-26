@@ -6,6 +6,8 @@ import {
   boolean,
   json,
 } from 'drizzle-orm/mysql-core';
+import { sql } from 'drizzle-orm';
+
 import {
   platformServiceTable,
   serviceProviderTable,
@@ -15,7 +17,9 @@ import {
 export const tenantServiceProviderTable = mysqlTable(
   'tenant_service_providers',
   {
-    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
+    id: varchar('id', { length: 36 })
+  .primaryKey()
+  .default(sql`(UUID())`),
 
     tenantId: varchar('tenant_id', { length: 36 }).notNull(),
     platformServiceId: varchar('platform_service_id', { length: 36 }).notNull(),
@@ -31,16 +35,19 @@ export const tenantServiceProviderTable = mysqlTable(
 
   (table) => ({
     tenantFk: foreignKey({
+      name: 'tsp_tenant_fk',
       columns: [table.tenantId],
       foreignColumns: [tenantsTable.id],
     }),
 
     platformServiceFk: foreignKey({
+      name: 'tsp_platform_service_fk',
       columns: [table.platformServiceId],
       foreignColumns: [platformServiceTable.id],
     }),
 
     serviceProviderFk: foreignKey({
+      name: 'tsp_service_provider_fk',
       columns: [table.serviceProviderId],
       foreignColumns: [serviceProviderTable.id],
     }),

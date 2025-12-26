@@ -6,13 +6,18 @@ import {
   json,
   int,
   text,
+  uniqueIndex,
 } from 'drizzle-orm/mysql-core';
+import { sql } from 'drizzle-orm';
+
 import { tenantsTable, usersTable } from './index';
 
 export const transactionTable = mysqlTable(
   'transactions',
   {
-    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
+    id: varchar('id', { length: 36 })
+  .primaryKey()
+  .default(sql`(UUID())`),
 
     tenantId: varchar('tenant_id', { length: 36 }).notNull(),
     platformServiceId: varchar('platform_service_id', { length: 36 }).notNull(),
@@ -25,7 +30,7 @@ export const transactionTable = mysqlTable(
       length: 40,
     }).unique(),
 
-    amount: int('amount').notNull().default(0), // paise
+    amount: int('amount').notNull().default(0), // stored in paise
 
     status: text('status', {
       enum: [
@@ -41,6 +46,7 @@ export const transactionTable = mysqlTable(
       .default('INITIATED'),
 
     failureReason: varchar('failure_reason', { length: 500 }),
+
     idempotencyKey: varchar('idempotency_key', { length: 100 }).notNull(),
 
     initiatedByUserId: varchar('initiated_by_user_id', {
@@ -54,14 +60,21 @@ export const transactionTable = mysqlTable(
   },
 
   (table) => ({
-    userFk: foreignKey({
+    initiatedByUserFk: foreignKey({
+      name: 'txn_initiated_by_user_fk',
       columns: [table.initiatedByUserId],
       foreignColumns: [usersTable.id],
     }),
 
     tenantFk: foreignKey({
+      name: 'txn_tenant_fk',
       columns: [table.tenantId],
       foreignColumns: [tenantsTable.id],
     }),
+
+    uniqTxnIdempotency: uniqueIndex('uniq_txn_tenant_idempotency').on(
+      table.tenantId,
+      table.idempotencyKey,
+    ),
   }),
 );

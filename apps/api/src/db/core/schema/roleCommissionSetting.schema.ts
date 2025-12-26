@@ -6,7 +6,11 @@ import {
   int,
   boolean,
   foreignKey,
+  uniqueIndex,
+  index,
 } from 'drizzle-orm/mysql-core';
+import { sql } from 'drizzle-orm';
+
 import {
   platformServiceFeatureTable,
   platformServiceTable,
@@ -17,15 +21,19 @@ import {
 export const roleCommissionSettingTable = mysqlTable(
   'role_commission_settings',
   {
-    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
+    id: varchar('id', { length: 36 })
+  .primaryKey()
+  .default(sql`(UUID())`),
+
     tenantId: varchar('tenant_id', { length: 36 }).notNull(),
-    platformServiceId: varchar('platform_service_id', { length: 36 }).notNull(),
+    platformServiceId: varchar('platform_service_id', {
+      length: 36,
+    }).notNull(),
     platformServiceFeatureId: varchar('platform_service_feature_id', {
       length: 36,
     }).notNull(),
     roleId: varchar('role_id', { length: 36 }).notNull(),
 
-    // Enums
     commissionType: text('commission_type', {
       enum: ['FLAT', 'PERCENTAGE'],
     }).notNull(),
@@ -42,7 +50,9 @@ export const roleCommissionSettingTable = mysqlTable(
       enum: ['COMMISSION', 'SURCHARGE', 'BOTH'],
     }).notNull(),
     gstInclusive: boolean('gst_inclusive').default(false).notNull(),
+
     maxCommissionValue: int('max_commission_value').default(0).notNull(),
+
     isActive: boolean('is_active').default(true).notNull(),
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -50,21 +60,41 @@ export const roleCommissionSettingTable = mysqlTable(
   },
 
   (table) => ({
-    tenantFk: foreignKey({
+    /** FKs */
+    rcsTenantFk: foreignKey({
+      name: 'rcs_tenant_fk',
       columns: [table.tenantId],
       foreignColumns: [tenantsTable.id],
     }),
-    platformServiceFk: foreignKey({
+
+    rcsPlatformServiceFk: foreignKey({
+      name: 'rcs_ps_fk',
       columns: [table.platformServiceId],
       foreignColumns: [platformServiceTable.id],
     }),
-    platformServiceFeatureFk: foreignKey({
+
+    rcsPlatformServiceFeatureFk: foreignKey({
+      name: 'rcs_psf_fk',
       columns: [table.platformServiceFeatureId],
       foreignColumns: [platformServiceFeatureTable.id],
     }),
-    roleFk: foreignKey({
+
+    rcsRoleFk: foreignKey({
+      name: 'rcs_role_fk',
       columns: [table.roleId],
       foreignColumns: [roleTable.id],
     }),
+
+    uniqRoleCommissionRule: uniqueIndex('uniq_role_commission_rule').on(
+      table.tenantId,
+      table.roleId,
+      table.platformServiceFeatureId,
+    ),
+
+    idxRcsTenant: index('idx_rcs_tenant').on(table.tenantId),
+
+    idxRcsRole: index('idx_rcs_role').on(table.roleId),
+
+    idxRcsFeature: index('idx_rcs_feature').on(table.platformServiceFeatureId),
   }),
 );

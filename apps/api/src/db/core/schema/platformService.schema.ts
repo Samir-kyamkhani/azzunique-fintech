@@ -3,13 +3,30 @@ import {
   varchar,
   timestamp,
   boolean,
+  uniqueIndex,
 } from 'drizzle-orm/mysql-core';
+import { sql } from 'drizzle-orm';
 
-export const platformServiceTable = mysqlTable('platform_services', {
-  id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
-  code: varchar('code', { length: 40 }).notNull().unique(), //-- DMT, BBPS
-  name: varchar('name', { length: 100 }).notNull(),
-  isActive: boolean('is_active').default(true).notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+export const platformServiceTable = mysqlTable(
+  'platform_services',
+  {
+    id: varchar('id', { length: 36 })
+  .primaryKey()
+  .default(sql`(UUID())`),
+
+    code: varchar('code', { length: 40 }).notNull(),
+
+    name: varchar('name', { length: 100 }).notNull(),
+
+    isActive: boolean('is_active').default(true).notNull(),
+
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+
+  (table) => ({
+    uniqPlatformServiceCode: uniqueIndex('uniq_platform_service_code').on(
+      table.code,
+    ),
+  }),
+);

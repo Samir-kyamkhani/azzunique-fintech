@@ -4,29 +4,49 @@ import {
   timestamp,
   foreignKey,
   text,
+  uniqueIndex,
 } from 'drizzle-orm/mysql-core';
+import { sql } from 'drizzle-orm';
+
 import { employeesTable, permissionTable } from './index';
 
 export const employeePermissionTable = mysqlTable(
   'employee_permissions',
   {
-    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
+    id: varchar('id', { length: 36 })
+  .primaryKey()
+  .default(sql`(UUID())`),
+
     employeeId: varchar('employee_id', { length: 36 }).notNull(),
     permissionId: varchar('permission_id', { length: 36 }).notNull(),
-    effact: text('effact', { enum: ['ALLOW', 'DENY'] })
+
+    /** explicit allow / deny override */
+    effect: text('effect', {
+      enum: ['ALLOW', 'DENY'],
+    })
       .notNull()
       .default('ALLOW'),
+
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
+
   (table) => ({
-    employeeFk: foreignKey({
+    empPermissionEmployeeFk: foreignKey({
+      name: 'ep_employee_fk',
       columns: [table.employeeId],
       foreignColumns: [employeesTable.id],
     }),
-    permissionFk: foreignKey({
+
+    empPermissionPermissionFk: foreignKey({
+      name: 'ep_permission_fk',
       columns: [table.permissionId],
       foreignColumns: [permissionTable.id],
     }),
+
+    uniqEmployeePermission: uniqueIndex('uniq_employee_permission').on(
+      table.employeeId,
+      table.permissionId,
+    ),
   }),
 );

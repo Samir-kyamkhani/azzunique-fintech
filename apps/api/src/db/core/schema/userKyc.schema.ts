@@ -4,13 +4,21 @@ import {
   varchar,
   text,
   foreignKey,
+  uniqueIndex,
+  index,
 } from 'drizzle-orm/mysql-core';
+import { sql } from 'drizzle-orm';
+
 import { usersTable } from './index';
 
 export const usersKycTable = mysqlTable(
   'users_kyc',
   {
-    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
+    id: varchar('id', { length: 36 })
+  .primaryKey()
+  .default(sql`(UUID())`),
+
+    userId: varchar('user_id', { length: 36 }).notNull(),
 
     verificationStatus: text('verification_status', {
       enum: ['PENDING', 'VERIFIED', 'REJECTED'],
@@ -19,7 +27,7 @@ export const usersKycTable = mysqlTable(
       .default('PENDING'),
 
     submittedByUserId: varchar('submitted_by_user_id', { length: 36 }),
-    verifiedByUserId: varchar('verified_by_user_id', { length: 36 }).notNull(),
+    verifiedByUserId: varchar('verified_by_user_id', { length: 36 }),
     verifiedByEmployeeId: varchar('verified_by_employee_id', { length: 36 }),
 
     actionedAt: timestamp('actioned_at'),
@@ -30,13 +38,26 @@ export const usersKycTable = mysqlTable(
   },
 
   (table) => ({
-    submittedByUserFk: foreignKey({
+    userKycUserFk: foreignKey({
+      name: 'uk_user_fk',
+      columns: [table.userId],
+      foreignColumns: [usersTable.id],
+    }),
+
+    userKycSubmittedByUserFk: foreignKey({
+      name: 'uk_submitted_by_user_fk',
       columns: [table.submittedByUserId],
       foreignColumns: [usersTable.id],
     }),
-    verifiedByUserFk: foreignKey({
+
+    userKycVerifiedByUserFk: foreignKey({
+      name: 'uk_verified_by_user_fk',
       columns: [table.verifiedByUserId],
       foreignColumns: [usersTable.id],
     }),
+
+    uniqUserKyc: uniqueIndex('uniq_user_kyc').on(table.userId),
+
+    idxUserKycStatus: index('idx_user_kyc_status').on(table.verificationStatus),
   }),
 );

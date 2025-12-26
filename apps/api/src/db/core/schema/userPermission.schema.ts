@@ -4,18 +4,23 @@ import {
   varchar,
   text,
   foreignKey,
+  uniqueIndex,
 } from 'drizzle-orm/mysql-core';
+import { sql } from 'drizzle-orm';
+
 import { permissionTable, usersTable } from './index';
 
 export const userPermissionTable = mysqlTable(
   'user_permissions',
   {
-    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
+    id: varchar('id', { length: 36 })
+  .primaryKey()
+  .default(sql`(UUID())`),
 
     userId: varchar('user_id', { length: 36 }).notNull(),
     permissionId: varchar('permission_id', { length: 36 }).notNull(),
 
-    effact: text('effact', {
+    effect: text('effect', {
       enum: ['ALLOW', 'DENY'],
     })
       .notNull()
@@ -26,13 +31,21 @@ export const userPermissionTable = mysqlTable(
   },
 
   (table) => ({
-    userFk: foreignKey({
+    upUserFk: foreignKey({
+      name: 'up_user_fk',
       columns: [table.userId],
       foreignColumns: [usersTable.id],
     }),
-    permissionFk: foreignKey({
+
+    upPermissionFk: foreignKey({
+      name: 'up_permission_fk',
       columns: [table.permissionId],
       foreignColumns: [permissionTable.id],
     }),
+
+    uniqUserPermission: uniqueIndex('uniq_user_permission').on(
+      table.userId,
+      table.permissionId,
+    ),
   }),
 );

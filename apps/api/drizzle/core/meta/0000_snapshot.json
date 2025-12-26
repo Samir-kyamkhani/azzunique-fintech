@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "2eabda9a-00b0-4c8f-b772-ef564891a644",
+  "id": "34131666-63ed-40e7-a6da-6a670db169a0",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "audit_log": {
@@ -13,7 +13,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "entity_type": {
           "name": "entity_type",
@@ -111,8 +111,8 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "audit_log_perform_by_user_id_users_id_fk": {
-          "name": "audit_log_perform_by_user_id_users_id_fk",
+        "audit_user_fk": {
+          "name": "audit_user_fk",
           "tableFrom": "audit_log",
           "tableTo": "users",
           "columnsFrom": [
@@ -124,8 +124,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "audit_log_tenant_id_tenants_id_fk": {
-          "name": "audit_log_tenant_id_tenants_id_fk",
+        "audit_tenant_fk": {
+          "name": "audit_tenant_fk",
           "tableFrom": "audit_log",
           "tableTo": "tenants",
           "columnsFrom": [
@@ -158,7 +158,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "user_number": {
           "name": "user_number",
@@ -233,11 +233,11 @@
         },
         "is_kyc_verified": {
           "name": "is_kyc_verified",
-          "type": "varchar(5)",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'false'"
+          "default": false
         },
         "role_id": {
           "name": "role_id",
@@ -326,10 +326,47 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_user_number": {
+          "name": "uniq_user_number",
+          "columns": [
+            "user_number"
+          ],
+          "isUnique": true
+        },
+        "uniq_user_email": {
+          "name": "uniq_user_email",
+          "columns": [
+            "email"
+          ],
+          "isUnique": true
+        },
+        "uniq_user_mobile": {
+          "name": "uniq_user_mobile",
+          "columns": [
+            "mobile_number"
+          ],
+          "isUnique": true
+        },
+        "idx_user_tenant_status": {
+          "name": "idx_user_tenant_status",
+          "columns": [
+            "tenant_id",
+            "user_status"
+          ],
+          "isUnique": false
+        },
+        "idx_user_parent": {
+          "name": "idx_user_parent",
+          "columns": [
+            "parent_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
-        "users_role_id_roles_id_fk": {
-          "name": "users_role_id_roles_id_fk",
+        "user_role_fk": {
+          "name": "user_role_fk",
           "tableFrom": "users",
           "tableTo": "roles",
           "columnsFrom": [
@@ -341,8 +378,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "users_parent_id_users_id_fk": {
-          "name": "users_parent_id_users_id_fk",
+        "user_parent_fk": {
+          "name": "user_parent_fk",
           "tableFrom": "users",
           "tableTo": "users",
           "columnsFrom": [
@@ -354,8 +391,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "users_tenant_id_tenants_id_fk": {
-          "name": "users_tenant_id_tenants_id_fk",
+        "user_tenant_fk": {
+          "name": "user_tenant_fk",
           "tableFrom": "users",
           "tableTo": "tenants",
           "columnsFrom": [
@@ -376,26 +413,7 @@
           ]
         }
       },
-      "uniqueConstraints": {
-        "users_user_number_unique": {
-          "name": "users_user_number_unique",
-          "columns": [
-            "user_number"
-          ]
-        },
-        "users_email_unique": {
-          "name": "users_email_unique",
-          "columns": [
-            "email"
-          ]
-        },
-        "users_mobile_number_unique": {
-          "name": "users_mobile_number_unique",
-          "columns": [
-            "mobile_number"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "checkConstraint": {}
     },
     "tenants": {
@@ -407,7 +425,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "tenant_number": {
           "name": "tenant_number",
@@ -503,10 +521,46 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_tenant_number": {
+          "name": "uniq_tenant_number",
+          "columns": [
+            "tenant_number"
+          ],
+          "isUnique": true
+        },
+        "uniq_tenant_email": {
+          "name": "uniq_tenant_email",
+          "columns": [
+            "tenant_email"
+          ],
+          "isUnique": true
+        },
+        "uniq_tenant_whatsapp": {
+          "name": "uniq_tenant_whatsapp",
+          "columns": [
+            "tenant_whatsapp"
+          ],
+          "isUnique": true
+        },
+        "idx_tenant_parent": {
+          "name": "idx_tenant_parent",
+          "columns": [
+            "parent_tenant_id"
+          ],
+          "isUnique": false
+        },
+        "idx_tenant_status": {
+          "name": "idx_tenant_status",
+          "columns": [
+            "tenant_status"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
-        "tenants_parent_tenant_id_tenants_id_fk": {
-          "name": "tenants_parent_tenant_id_tenants_id_fk",
+        "tenant_parent_fk": {
+          "name": "tenant_parent_fk",
           "tableFrom": "tenants",
           "tableTo": "tenants",
           "columnsFrom": [
@@ -527,26 +581,7 @@
           ]
         }
       },
-      "uniqueConstraints": {
-        "tenants_tenant_number_unique": {
-          "name": "tenants_tenant_number_unique",
-          "columns": [
-            "tenant_number"
-          ]
-        },
-        "tenants_tenant_email_unique": {
-          "name": "tenants_tenant_email_unique",
-          "columns": [
-            "tenant_email"
-          ]
-        },
-        "tenants_tenant_whatsapp_unique": {
-          "name": "tenants_tenant_whatsapp_unique",
-          "columns": [
-            "tenant_whatsapp"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "checkConstraint": {}
     },
     "roles": {
@@ -558,7 +593,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "role_code": {
           "name": "role_code",
@@ -598,7 +633,15 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_role_code": {
+          "name": "uniq_role_code",
+          "columns": [
+            "role_code"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {
         "roles_id": {
@@ -608,14 +651,7 @@
           ]
         }
       },
-      "uniqueConstraints": {
-        "roles_role_code_unique": {
-          "name": "roles_role_code_unique",
-          "columns": [
-            "role_code"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "checkConstraint": {}
     },
     "departments": {
@@ -627,7 +663,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "department_code": {
           "name": "department_code",
@@ -683,8 +719,8 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "departments_created_by_user_id_users_id_fk": {
-          "name": "departments_created_by_user_id_users_id_fk",
+        "dept_created_by_user_fk": {
+          "name": "dept_created_by_user_fk",
           "tableFrom": "departments",
           "tableTo": "users",
           "columnsFrom": [
@@ -696,8 +732,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "departments_created_by_employee_id_users_id_fk": {
-          "name": "departments_created_by_employee_id_users_id_fk",
+        "dept_created_by_employee_fk": {
+          "name": "dept_created_by_employee_fk",
           "tableFrom": "departments",
           "tableTo": "users",
           "columnsFrom": [
@@ -737,7 +773,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "employee_number": {
           "name": "employee_number",
@@ -869,10 +905,26 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_emp_tenant_status": {
+          "name": "idx_emp_tenant_status",
+          "columns": [
+            "tenant_id",
+            "employee_status"
+          ],
+          "isUnique": false
+        },
+        "idx_emp_department": {
+          "name": "idx_emp_department",
+          "columns": [
+            "department_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
-        "employees_department_id_departments_id_fk": {
-          "name": "employees_department_id_departments_id_fk",
+        "emp_department_fk": {
+          "name": "emp_department_fk",
           "tableFrom": "employees",
           "tableTo": "departments",
           "columnsFrom": [
@@ -884,8 +936,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "employees_tenant_id_tenants_id_fk": {
-          "name": "employees_tenant_id_tenants_id_fk",
+        "emp_tenant_fk": {
+          "name": "emp_tenant_fk",
           "tableFrom": "employees",
           "tableTo": "tenants",
           "columnsFrom": [
@@ -937,7 +989,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "resource": {
           "name": "resource",
@@ -959,7 +1011,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": false
+          "default": true
         },
         "created_at": {
           "name": "created_at",
@@ -978,7 +1030,16 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_permission_resource_action": {
+          "name": "uniq_permission_resource_action",
+          "columns": [
+            "resource",
+            "action"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {
         "permissions_id": {
@@ -1000,7 +1061,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "role_id": {
           "name": "role_id",
@@ -1033,10 +1094,19 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_role_permission": {
+          "name": "uniq_role_permission",
+          "columns": [
+            "role_id",
+            "permission_id"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
-        "role_permissions_role_id_roles_id_fk": {
-          "name": "role_permissions_role_id_roles_id_fk",
+        "rp_role_fk": {
+          "name": "rp_role_fk",
           "tableFrom": "role_permissions",
           "tableTo": "roles",
           "columnsFrom": [
@@ -1048,8 +1118,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "role_permissions_permission_id_permissions_id_fk": {
-          "name": "role_permissions_permission_id_permissions_id_fk",
+        "rp_permission_fk": {
+          "name": "rp_permission_fk",
           "tableFrom": "role_permissions",
           "tableTo": "permissions",
           "columnsFrom": [
@@ -1082,7 +1152,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "user_id": {
           "name": "user_id",
@@ -1098,8 +1168,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "effact": {
-          "name": "effact",
+        "effect": {
+          "name": "effect",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -1123,10 +1193,19 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_user_permission": {
+          "name": "uniq_user_permission",
+          "columns": [
+            "user_id",
+            "permission_id"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
-        "user_permissions_user_id_users_id_fk": {
-          "name": "user_permissions_user_id_users_id_fk",
+        "up_user_fk": {
+          "name": "up_user_fk",
           "tableFrom": "user_permissions",
           "tableTo": "users",
           "columnsFrom": [
@@ -1138,8 +1217,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "user_permissions_permission_id_permissions_id_fk": {
-          "name": "user_permissions_permission_id_permissions_id_fk",
+        "up_permission_fk": {
+          "name": "up_permission_fk",
           "tableFrom": "user_permissions",
           "tableTo": "permissions",
           "columnsFrom": [
@@ -1172,7 +1251,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "department_id": {
           "name": "department_id",
@@ -1205,10 +1284,19 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_department_permission": {
+          "name": "uniq_department_permission",
+          "columns": [
+            "department_id",
+            "permission_id"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
-        "department_permissions_department_id_departments_id_fk": {
-          "name": "department_permissions_department_id_departments_id_fk",
+        "dp_department_fk": {
+          "name": "dp_department_fk",
           "tableFrom": "department_permissions",
           "tableTo": "departments",
           "columnsFrom": [
@@ -1220,8 +1308,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "department_permissions_permission_id_permissions_id_fk": {
-          "name": "department_permissions_permission_id_permissions_id_fk",
+        "dp_permission_fk": {
+          "name": "dp_permission_fk",
           "tableFrom": "department_permissions",
           "tableTo": "permissions",
           "columnsFrom": [
@@ -1254,7 +1342,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "employee_id": {
           "name": "employee_id",
@@ -1270,8 +1358,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "effact": {
-          "name": "effact",
+        "effect": {
+          "name": "effect",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -1295,10 +1383,19 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_employee_permission": {
+          "name": "uniq_employee_permission",
+          "columns": [
+            "employee_id",
+            "permission_id"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
-        "employee_permissions_employee_id_employees_id_fk": {
-          "name": "employee_permissions_employee_id_employees_id_fk",
+        "ep_employee_fk": {
+          "name": "ep_employee_fk",
           "tableFrom": "employee_permissions",
           "tableTo": "employees",
           "columnsFrom": [
@@ -1310,8 +1407,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "employee_permissions_permission_id_permissions_id_fk": {
-          "name": "employee_permissions_permission_id_permissions_id_fk",
+        "ep_permission_fk": {
+          "name": "ep_permission_fk",
           "tableFrom": "employee_permissions",
           "tableTo": "permissions",
           "columnsFrom": [
@@ -1344,7 +1441,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "record_type": {
           "name": "record_type",
@@ -1406,10 +1503,19 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_server_hostname_status": {
+          "name": "idx_server_hostname_status",
+          "columns": [
+            "hostname",
+            "status"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
-        "server_details_created_by_user_id_users_id_fk": {
-          "name": "server_details_created_by_user_id_users_id_fk",
+        "server_created_by_user_fk": {
+          "name": "server_created_by_user_fk",
           "tableFrom": "server_details",
           "tableTo": "users",
           "columnsFrom": [
@@ -1442,7 +1548,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "tenant_id": {
           "name": "tenant_id",
@@ -1503,10 +1609,32 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_tenant_domain": {
+          "name": "uniq_tenant_domain",
+          "columns": [
+            "domain_name"
+          ],
+          "isUnique": true
+        },
+        "idx_tenant_domain_tenant": {
+          "name": "idx_tenant_domain_tenant",
+          "columns": [
+            "tenant_id"
+          ],
+          "isUnique": false
+        },
+        "idx_tenant_domain_status": {
+          "name": "idx_tenant_domain_status",
+          "columns": [
+            "status"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
-        "tenants_domains_tenant_id_tenants_id_fk": {
-          "name": "tenants_domains_tenant_id_tenants_id_fk",
+        "td_tenant_fk": {
+          "name": "td_tenant_fk",
           "tableFrom": "tenants_domains",
           "tableTo": "tenants",
           "columnsFrom": [
@@ -1518,8 +1646,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "tenants_domains_created_by_user_id_users_id_fk": {
-          "name": "tenants_domains_created_by_user_id_users_id_fk",
+        "td_created_by_user_fk": {
+          "name": "td_created_by_user_fk",
           "tableFrom": "tenants_domains",
           "tableTo": "users",
           "columnsFrom": [
@@ -1531,8 +1659,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "tenants_domains_server_detail_id_server_details_id_fk": {
-          "name": "tenants_domains_server_detail_id_server_details_id_fk",
+        "td_server_detail_fk": {
+          "name": "td_server_detail_fk",
           "tableFrom": "tenants_domains",
           "tableTo": "server_details",
           "columnsFrom": [
@@ -1553,14 +1681,7 @@
           ]
         }
       },
-      "uniqueConstraints": {
-        "tenants_domains_domain_name_unique": {
-          "name": "tenants_domains_domain_name_unique",
-          "columns": [
-            "domain_name"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "checkConstraint": {}
     },
     "tenants_websites": {
@@ -1572,7 +1693,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "tenant_id": {
           "name": "tenant_id",
@@ -1654,10 +1775,18 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_tenant_website": {
+          "name": "uniq_tenant_website",
+          "columns": [
+            "tenant_id"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
-        "tenants_websites_tenant_id_tenants_id_fk": {
-          "name": "tenants_websites_tenant_id_tenants_id_fk",
+        "tw_tenant_fk": {
+          "name": "tw_tenant_fk",
           "tableFrom": "tenants_websites",
           "tableTo": "tenants",
           "columnsFrom": [
@@ -1690,7 +1819,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "tenant_website_id": {
           "name": "tenant_website_id",
@@ -1751,10 +1880,18 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_tenant_website_social": {
+          "name": "uniq_tenant_website_social",
+          "columns": [
+            "tenant_website_id"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
-        "tenants_social_media_tenant_website_id_tenants_websites_id_fk": {
-          "name": "tenants_social_media_tenant_website_id_tenants_websites_id_fk",
+        "tsm_website_fk": {
+          "name": "tsm_website_fk",
           "tableFrom": "tenants_social_media",
           "tableTo": "tenants_websites",
           "columnsFrom": [
@@ -1787,7 +1924,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "tenant_id": {
           "name": "tenant_id",
@@ -1856,10 +1993,33 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_tenant_page_url": {
+          "name": "uniq_tenant_page_url",
+          "columns": [
+            "tenant_id",
+            "page_url"
+          ],
+          "isUnique": true
+        },
+        "idx_tenant_pages_tenant": {
+          "name": "idx_tenant_pages_tenant",
+          "columns": [
+            "tenant_id"
+          ],
+          "isUnique": false
+        },
+        "idx_tenant_pages_status": {
+          "name": "idx_tenant_pages_status",
+          "columns": [
+            "status"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
-        "tenants_pages_tenant_id_tenants_id_fk": {
-          "name": "tenants_pages_tenant_id_tenants_id_fk",
+        "tp_tenant_fk": {
+          "name": "tp_tenant_fk",
           "tableFrom": "tenants_pages",
           "tableTo": "tenants",
           "columnsFrom": [
@@ -1871,8 +2031,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "tenants_pages_created_by_user_id_users_id_fk": {
-          "name": "tenants_pages_created_by_user_id_users_id_fk",
+        "tp_created_by_user_fk": {
+          "name": "tp_created_by_user_fk",
           "tableFrom": "tenants_pages",
           "tableTo": "users",
           "columnsFrom": [
@@ -1893,14 +2053,7 @@
           ]
         }
       },
-      "uniqueConstraints": {
-        "tenants_pages_page_url_unique": {
-          "name": "tenants_pages_page_url_unique",
-          "columns": [
-            "page_url"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "checkConstraint": {}
     },
     "tenants_seo": {
@@ -1912,7 +2065,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "tenant_page_id": {
           "name": "tenant_page_id",
@@ -1975,10 +2128,18 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_tenant_page_seo": {
+          "name": "uniq_tenant_page_seo",
+          "columns": [
+            "tenant_page_id"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
-        "tenants_seo_tenant_page_id_tenants_pages_id_fk": {
-          "name": "tenants_seo_tenant_page_id_tenants_pages_id_fk",
+        "tseo_page_fk": {
+          "name": "tseo_page_fk",
           "tableFrom": "tenants_seo",
           "tableTo": "tenants_pages",
           "columnsFrom": [
@@ -2011,7 +2172,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "smtp_host": {
           "name": "smtp_host",
@@ -2100,10 +2261,18 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_tenant_smtp_config": {
+          "name": "uniq_tenant_smtp_config",
+          "columns": [
+            "tenant_id"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
-        "tenants_smtp_config_tenant_id_tenants_id_fk": {
-          "name": "tenants_smtp_config_tenant_id_tenants_id_fk",
+        "smtp_tenant_fk": {
+          "name": "smtp_tenant_fk",
           "tableFrom": "tenants_smtp_config",
           "tableTo": "tenants",
           "columnsFrom": [
@@ -2115,8 +2284,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "tenants_smtp_config_created_by_user_id_users_id_fk": {
-          "name": "tenants_smtp_config_created_by_user_id_users_id_fk",
+        "smtp_created_by_user_fk": {
+          "name": "smtp_created_by_user_fk",
           "tableFrom": "tenants_smtp_config",
           "tableTo": "users",
           "columnsFrom": [
@@ -2149,7 +2318,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "bank_name": {
           "name": "bank_name",
@@ -2263,8 +2432,8 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "tenants_bank_detail_tenant_id_tenants_id_fk": {
-          "name": "tenants_bank_detail_tenant_id_tenants_id_fk",
+        "bank_tenant_fk": {
+          "name": "bank_tenant_fk",
           "tableFrom": "tenants_bank_detail",
           "tableTo": "tenants",
           "columnsFrom": [
@@ -2276,8 +2445,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "tenants_bank_detail_owner_id_users_id_fk": {
-          "name": "tenants_bank_detail_owner_id_users_id_fk",
+        "bank_owner_user_fk": {
+          "name": "bank_owner_user_fk",
           "tableFrom": "tenants_bank_detail",
           "tableTo": "users",
           "columnsFrom": [
@@ -2289,8 +2458,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "tenants_bank_detail_verified_by_user_id_users_id_fk": {
-          "name": "tenants_bank_detail_verified_by_user_id_users_id_fk",
+        "bank_verified_by_user_fk": {
+          "name": "bank_verified_by_user_fk",
           "tableFrom": "tenants_bank_detail",
           "tableTo": "users",
           "columnsFrom": [
@@ -2323,7 +2492,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "tenant_id": {
           "name": "tenant_id",
@@ -2392,10 +2561,25 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_tenant_kyc": {
+          "name": "uniq_tenant_kyc",
+          "columns": [
+            "tenant_id"
+          ],
+          "isUnique": true
+        },
+        "idx_tenant_kyc_status": {
+          "name": "idx_tenant_kyc_status",
+          "columns": [
+            "status"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
-        "tenants_kyc_tenant_id_tenants_id_fk": {
-          "name": "tenants_kyc_tenant_id_tenants_id_fk",
+        "tk_tenant_fk": {
+          "name": "tk_tenant_fk",
           "tableFrom": "tenants_kyc",
           "tableTo": "tenants",
           "columnsFrom": [
@@ -2407,8 +2591,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "tenants_kyc_submitted_by_user_id_users_id_fk": {
-          "name": "tenants_kyc_submitted_by_user_id_users_id_fk",
+        "tk_submitted_by_user_fk": {
+          "name": "tk_submitted_by_user_fk",
           "tableFrom": "tenants_kyc",
           "tableTo": "users",
           "columnsFrom": [
@@ -2420,8 +2604,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "tenants_kyc_verified_by_user_id_users_id_fk": {
-          "name": "tenants_kyc_verified_by_user_id_users_id_fk",
+        "tk_verified_by_user_fk": {
+          "name": "tk_verified_by_user_fk",
           "tableFrom": "tenants_kyc",
           "tableTo": "users",
           "columnsFrom": [
@@ -2454,7 +2638,14 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         },
         "verification_status": {
           "name": "verification_status",
@@ -2475,7 +2666,7 @@
           "name": "verified_by_user_id",
           "type": "varchar(36)",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "verified_by_employee_id": {
@@ -2516,10 +2707,38 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_user_kyc": {
+          "name": "uniq_user_kyc",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": true
+        },
+        "idx_user_kyc_status": {
+          "name": "idx_user_kyc_status",
+          "columns": [
+            "verification_status"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
-        "users_kyc_submitted_by_user_id_users_id_fk": {
-          "name": "users_kyc_submitted_by_user_id_users_id_fk",
+        "uk_user_fk": {
+          "name": "uk_user_fk",
+          "tableFrom": "users_kyc",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "uk_submitted_by_user_fk": {
+          "name": "uk_submitted_by_user_fk",
           "tableFrom": "users_kyc",
           "tableTo": "users",
           "columnsFrom": [
@@ -2531,8 +2750,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "users_kyc_verified_by_user_id_users_id_fk": {
-          "name": "users_kyc_verified_by_user_id_users_id_fk",
+        "uk_verified_by_user_fk": {
+          "name": "uk_verified_by_user_fk",
           "tableFrom": "users_kyc",
           "tableTo": "users",
           "columnsFrom": [
@@ -2565,7 +2784,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "owner_type": {
           "name": "owner_type",
@@ -2627,10 +2846,26 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_kyc_owner": {
+          "name": "idx_kyc_owner",
+          "columns": [
+            "owner_type",
+            "owner_id"
+          ],
+          "isUnique": false
+        },
+        "idx_kyc_document_type": {
+          "name": "idx_kyc_document_type",
+          "columns": [
+            "document_type"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
-        "kyc_documents_owner_id_users_id_fk": {
-          "name": "kyc_documents_owner_id_users_id_fk",
+        "kyc_owner_user_fk": {
+          "name": "kyc_owner_user_fk",
           "tableFrom": "kyc_documents",
           "tableTo": "users",
           "columnsFrom": [
@@ -2663,7 +2898,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "user_id": {
           "name": "user_id",
@@ -2752,10 +2987,35 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_pii_consent": {
+          "name": "uniq_pii_consent",
+          "columns": [
+            "user_id",
+            "tenant_id",
+            "purpose",
+            "consent_version"
+          ],
+          "isUnique": true
+        },
+        "idx_pii_consent_user": {
+          "name": "idx_pii_consent_user",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
+        },
+        "idx_pii_consent_tenant": {
+          "name": "idx_pii_consent_tenant",
+          "columns": [
+            "tenant_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
-        "pii_consent_user_id_users_id_fk": {
-          "name": "pii_consent_user_id_users_id_fk",
+        "pii_consent_user_fk": {
+          "name": "pii_consent_user_fk",
           "tableFrom": "pii_consent",
           "tableTo": "users",
           "columnsFrom": [
@@ -2767,8 +3027,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "pii_consent_tenant_id_tenants_id_fk": {
-          "name": "pii_consent_tenant_id_tenants_id_fk",
+        "pii_consent_tenant_fk": {
+          "name": "pii_consent_tenant_fk",
           "tableFrom": "pii_consent",
           "tableTo": "tenants",
           "columnsFrom": [
@@ -2801,7 +3061,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "tenant_id": {
           "name": "tenant_id",
@@ -2899,10 +3159,19 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_txn_tenant_idempotency": {
+          "name": "uniq_txn_tenant_idempotency",
+          "columns": [
+            "tenant_id",
+            "idempotency_key"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
-        "transactions_initiated_by_user_id_users_id_fk": {
-          "name": "transactions_initiated_by_user_id_users_id_fk",
+        "txn_initiated_by_user_fk": {
+          "name": "txn_initiated_by_user_fk",
           "tableFrom": "transactions",
           "tableTo": "users",
           "columnsFrom": [
@@ -2914,8 +3183,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "transactions_tenant_id_tenants_id_fk": {
-          "name": "transactions_tenant_id_tenants_id_fk",
+        "txn_tenant_fk": {
+          "name": "txn_tenant_fk",
           "tableFrom": "transactions",
           "tableTo": "tenants",
           "columnsFrom": [
@@ -2955,7 +3224,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "code": {
           "name": "code",
@@ -2996,7 +3265,15 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_platform_service_code": {
+          "name": "uniq_platform_service_code",
+          "columns": [
+            "code"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {
         "platform_services_id": {
@@ -3006,14 +3283,7 @@
           ]
         }
       },
-      "uniqueConstraints": {
-        "platform_services_code_unique": {
-          "name": "platform_services_code_unique",
-          "columns": [
-            "code"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "checkConstraint": {}
     },
     "platform_service_features": {
@@ -3025,7 +3295,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "code": {
           "name": "code",
@@ -3073,10 +3343,33 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_platform_service_feature": {
+          "name": "uniq_platform_service_feature",
+          "columns": [
+            "platform_service_id",
+            "code"
+          ],
+          "isUnique": true
+        },
+        "idx_psf_service": {
+          "name": "idx_psf_service",
+          "columns": [
+            "platform_service_id"
+          ],
+          "isUnique": false
+        },
+        "idx_psf_active": {
+          "name": "idx_psf_active",
+          "columns": [
+            "is_active"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
-        "platform_service_features_platform_service_id_platform_services_id_fk": {
-          "name": "platform_service_features_platform_service_id_platform_services_id_fk",
+        "psf_ps_fk": {
+          "name": "psf_ps_fk",
           "tableFrom": "platform_service_features",
           "tableTo": "platform_services",
           "columnsFrom": [
@@ -3097,14 +3390,7 @@
           ]
         }
       },
-      "uniqueConstraints": {
-        "platform_service_features_code_unique": {
-          "name": "platform_service_features_code_unique",
-          "columns": [
-            "code"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "checkConstraint": {}
     },
     "service_providers": {
@@ -3116,7 +3402,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "platform_service_id": {
           "name": "platform_service_id",
@@ -3171,10 +3457,33 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_service_provider": {
+          "name": "uniq_service_provider",
+          "columns": [
+            "platform_service_id",
+            "code"
+          ],
+          "isUnique": true
+        },
+        "idx_service_provider_service": {
+          "name": "idx_service_provider_service",
+          "columns": [
+            "platform_service_id"
+          ],
+          "isUnique": false
+        },
+        "idx_service_provider_active": {
+          "name": "idx_service_provider_active",
+          "columns": [
+            "is_active"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
-        "service_providers_platform_service_id_platform_services_id_fk": {
-          "name": "service_providers_platform_service_id_platform_services_id_fk",
+        "sp_ps_fk": {
+          "name": "sp_ps_fk",
           "tableFrom": "service_providers",
           "tableTo": "platform_services",
           "columnsFrom": [
@@ -3195,14 +3504,7 @@
           ]
         }
       },
-      "uniqueConstraints": {
-        "service_providers_code_unique": {
-          "name": "service_providers_code_unique",
-          "columns": [
-            "code"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "checkConstraint": {}
     },
     "service_provider_features": {
@@ -3214,7 +3516,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "service_provider_id": {
           "name": "service_provider_id",
@@ -3247,10 +3549,19 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_service_provider_feature": {
+          "name": "uniq_service_provider_feature",
+          "columns": [
+            "service_provider_id",
+            "platform_service_feature_id"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
-        "service_provider_features_service_provider_id_service_providers_id_fk": {
-          "name": "service_provider_features_service_provider_id_service_providers_id_fk",
+        "spf_service_provider_fk": {
+          "name": "spf_service_provider_fk",
           "tableFrom": "service_provider_features",
           "tableTo": "service_providers",
           "columnsFrom": [
@@ -3262,8 +3573,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "service_provider_features_platform_service_feature_id_platform_service_features_id_fk": {
-          "name": "service_provider_features_platform_service_feature_id_platform_service_features_id_fk",
+        "spf_platform_service_feature_fk": {
+          "name": "spf_platform_service_feature_fk",
           "tableFrom": "service_provider_features",
           "tableTo": "platform_service_features",
           "columnsFrom": [
@@ -3296,7 +3607,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "tenant_id": {
           "name": "tenant_id",
@@ -3337,10 +3648,33 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_tenant_service": {
+          "name": "uniq_tenant_service",
+          "columns": [
+            "tenant_id",
+            "platform_service_id"
+          ],
+          "isUnique": true
+        },
+        "idx_tenant_service_tenant": {
+          "name": "idx_tenant_service_tenant",
+          "columns": [
+            "tenant_id"
+          ],
+          "isUnique": false
+        },
+        "idx_tenant_service_enabled": {
+          "name": "idx_tenant_service_enabled",
+          "columns": [
+            "is_enabled"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
-        "tenant_services_tenant_id_tenants_id_fk": {
-          "name": "tenant_services_tenant_id_tenants_id_fk",
+        "ts_tenant_fk": {
+          "name": "ts_tenant_fk",
           "tableFrom": "tenant_services",
           "tableTo": "tenants",
           "columnsFrom": [
@@ -3352,8 +3686,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "tenant_services_platform_service_id_platform_services_id_fk": {
-          "name": "tenant_services_platform_service_id_platform_services_id_fk",
+        "ts_platform_service_fk": {
+          "name": "ts_platform_service_fk",
           "tableFrom": "tenant_services",
           "tableTo": "platform_services",
           "columnsFrom": [
@@ -3386,7 +3720,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "tenant_id": {
           "name": "tenant_id",
@@ -3443,8 +3777,8 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "tenant_service_providers_tenant_id_tenants_id_fk": {
-          "name": "tenant_service_providers_tenant_id_tenants_id_fk",
+        "tsp_tenant_fk": {
+          "name": "tsp_tenant_fk",
           "tableFrom": "tenant_service_providers",
           "tableTo": "tenants",
           "columnsFrom": [
@@ -3456,8 +3790,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "tenant_service_providers_platform_service_id_platform_services_id_fk": {
-          "name": "tenant_service_providers_platform_service_id_platform_services_id_fk",
+        "tsp_platform_service_fk": {
+          "name": "tsp_platform_service_fk",
           "tableFrom": "tenant_service_providers",
           "tableTo": "platform_services",
           "columnsFrom": [
@@ -3469,8 +3803,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "tenant_service_providers_service_provider_id_service_providers_id_fk": {
-          "name": "tenant_service_providers_service_provider_id_service_providers_id_fk",
+        "tsp_service_provider_fk": {
+          "name": "tsp_service_provider_fk",
           "tableFrom": "tenant_service_providers",
           "tableTo": "service_providers",
           "columnsFrom": [
@@ -3503,7 +3837,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "tenant_id": {
           "name": "tenant_id",
@@ -3566,10 +3900,37 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_wallet_identity": {
+          "name": "uniq_wallet_identity",
+          "columns": [
+            "tenant_id",
+            "owner_type",
+            "owner_id",
+            "wallet_type"
+          ],
+          "isUnique": true
+        },
+        "idx_wallet_owner": {
+          "name": "idx_wallet_owner",
+          "columns": [
+            "owner_type",
+            "owner_id"
+          ],
+          "isUnique": false
+        },
+        "idx_wallet_tenant_status": {
+          "name": "idx_wallet_tenant_status",
+          "columns": [
+            "tenant_id",
+            "status"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
-        "wallets_tenant_id_tenants_id_fk": {
-          "name": "wallets_tenant_id_tenants_id_fk",
+        "wallet_tenant_fk": {
+          "name": "wallet_tenant_fk",
           "tableFrom": "wallets",
           "tableTo": "tenants",
           "columnsFrom": [
@@ -3602,7 +3963,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "wallet_id": {
           "name": "wallet_id",
@@ -3665,10 +4026,26 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_ledger_wallet_created": {
+          "name": "idx_ledger_wallet_created",
+          "columns": [
+            "wallet_id",
+            "created_at"
+          ],
+          "isUnique": false
+        },
+        "idx_ledger_transaction": {
+          "name": "idx_ledger_transaction",
+          "columns": [
+            "transaction_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
-        "ledgers_wallet_id_wallets_id_fk": {
-          "name": "ledgers_wallet_id_wallets_id_fk",
+        "ledger_wallet_fk": {
+          "name": "ledger_wallet_fk",
           "tableFrom": "ledgers",
           "tableTo": "wallets",
           "columnsFrom": [
@@ -3680,8 +4057,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "ledgers_transaction_id_transactions_id_fk": {
-          "name": "ledgers_transaction_id_transactions_id_fk",
+        "ledger_transaction_fk": {
+          "name": "ledger_transaction_fk",
           "tableFrom": "ledgers",
           "tableTo": "transactions",
           "columnsFrom": [
@@ -3693,8 +4070,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "ledgers_refund_id_refunds_id_fk": {
-          "name": "ledgers_refund_id_refunds_id_fk",
+        "ledger_refund_fk": {
+          "name": "ledger_refund_fk",
           "tableFrom": "ledgers",
           "tableTo": "refunds",
           "columnsFrom": [
@@ -3727,7 +4104,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "transaction_id": {
           "name": "transaction_id",
@@ -3783,10 +4160,33 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_refund_transaction": {
+          "name": "uniq_refund_transaction",
+          "columns": [
+            "transaction_id"
+          ],
+          "isUnique": true
+        },
+        "idx_refund_tenant_status": {
+          "name": "idx_refund_tenant_status",
+          "columns": [
+            "tenant_id",
+            "status"
+          ],
+          "isUnique": false
+        },
+        "idx_refund_transaction": {
+          "name": "idx_refund_transaction",
+          "columns": [
+            "transaction_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
-        "refunds_tenant_id_tenants_id_fk": {
-          "name": "refunds_tenant_id_tenants_id_fk",
+        "refund_tenant_fk": {
+          "name": "refund_tenant_fk",
           "tableFrom": "refunds",
           "tableTo": "tenants",
           "columnsFrom": [
@@ -3798,8 +4198,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "refunds_transaction_id_transactions_id_fk": {
-          "name": "refunds_transaction_id_transactions_id_fk",
+        "refund_transaction_fk": {
+          "name": "refund_transaction_fk",
           "tableFrom": "refunds",
           "tableTo": "transactions",
           "columnsFrom": [
@@ -3811,8 +4211,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "refunds_initiated_by_user_id_users_id_fk": {
-          "name": "refunds_initiated_by_user_id_users_id_fk",
+        "refund_initiated_by_user_fk": {
+          "name": "refund_initiated_by_user_fk",
           "tableFrom": "refunds",
           "tableTo": "users",
           "columnsFrom": [
@@ -3845,7 +4245,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "user_id": {
           "name": "user_id",
@@ -3854,15 +4254,22 @@
           "notNull": true,
           "autoincrement": false
         },
-        "transaction_id": {
-          "name": "transaction_id",
+        "tenant_id": {
+          "name": "tenant_id",
           "type": "varchar(36)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "tenant_id": {
-          "name": "tenant_id",
+        "wallet_id": {
+          "name": "wallet_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "transaction_id": {
+          "name": "transaction_id",
           "type": "varchar(36)",
           "primaryKey": false,
           "notNull": true,
@@ -3882,20 +4289,12 @@
           "notNull": true,
           "autoincrement": false
         },
-        "wallet_id": {
-          "name": "wallet_id",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "commission_type": {
           "name": "commission_type",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "('FIXED')"
+          "autoincrement": false
         },
         "commission_value": {
           "name": "commission_value",
@@ -3916,8 +4315,7 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "('FIXED')"
+          "autoincrement": false
         },
         "surcharge_value": {
           "name": "surcharge_value",
@@ -3971,10 +4369,40 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_commission_earning": {
+          "name": "uniq_commission_earning",
+          "columns": [
+            "transaction_id",
+            "user_id"
+          ],
+          "isUnique": true
+        },
+        "idx_commission_tenant": {
+          "name": "idx_commission_tenant",
+          "columns": [
+            "tenant_id"
+          ],
+          "isUnique": false
+        },
+        "idx_commission_user": {
+          "name": "idx_commission_user",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
+        },
+        "idx_commission_transaction": {
+          "name": "idx_commission_transaction",
+          "columns": [
+            "transaction_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
-        "commission_earnings_tenant_id_tenants_id_fk": {
-          "name": "commission_earnings_tenant_id_tenants_id_fk",
+        "ce_tenant_fk": {
+          "name": "ce_tenant_fk",
           "tableFrom": "commission_earnings",
           "tableTo": "tenants",
           "columnsFrom": [
@@ -3986,34 +4414,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "commission_earnings_platform_service_id_platform_services_id_fk": {
-          "name": "commission_earnings_platform_service_id_platform_services_id_fk",
-          "tableFrom": "commission_earnings",
-          "tableTo": "platform_services",
-          "columnsFrom": [
-            "platform_service_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "commission_earnings_platform_service_feature_id_platform_service_features_id_fk": {
-          "name": "commission_earnings_platform_service_feature_id_platform_service_features_id_fk",
-          "tableFrom": "commission_earnings",
-          "tableTo": "platform_service_features",
-          "columnsFrom": [
-            "platform_service_feature_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "commission_earnings_user_id_users_id_fk": {
-          "name": "commission_earnings_user_id_users_id_fk",
+        "ce_user_fk": {
+          "name": "ce_user_fk",
           "tableFrom": "commission_earnings",
           "tableTo": "users",
           "columnsFrom": [
@@ -4025,8 +4427,21 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "commission_earnings_transaction_id_transactions_id_fk": {
-          "name": "commission_earnings_transaction_id_transactions_id_fk",
+        "ce_wallet_fk": {
+          "name": "ce_wallet_fk",
+          "tableFrom": "commission_earnings",
+          "tableTo": "wallets",
+          "columnsFrom": [
+            "wallet_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "ce_tx_fk": {
+          "name": "ce_tx_fk",
           "tableFrom": "commission_earnings",
           "tableTo": "transactions",
           "columnsFrom": [
@@ -4038,12 +4453,25 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "commission_earnings_wallet_id_wallets_id_fk": {
-          "name": "commission_earnings_wallet_id_wallets_id_fk",
+        "ce_ps_fk": {
+          "name": "ce_ps_fk",
           "tableFrom": "commission_earnings",
-          "tableTo": "wallets",
+          "tableTo": "platform_services",
           "columnsFrom": [
-            "wallet_id"
+            "platform_service_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "ce_psf_fk": {
+          "name": "ce_psf_fk",
+          "tableFrom": "commission_earnings",
+          "tableTo": "platform_service_features",
+          "columnsFrom": [
+            "platform_service_feature_id"
           ],
           "columnsTo": [
             "id"
@@ -4072,7 +4500,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "tenant_id": {
           "name": "tenant_id",
@@ -4194,10 +4622,41 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_role_commission_rule": {
+          "name": "uniq_role_commission_rule",
+          "columns": [
+            "tenant_id",
+            "role_id",
+            "platform_service_feature_id"
+          ],
+          "isUnique": true
+        },
+        "idx_rcs_tenant": {
+          "name": "idx_rcs_tenant",
+          "columns": [
+            "tenant_id"
+          ],
+          "isUnique": false
+        },
+        "idx_rcs_role": {
+          "name": "idx_rcs_role",
+          "columns": [
+            "role_id"
+          ],
+          "isUnique": false
+        },
+        "idx_rcs_feature": {
+          "name": "idx_rcs_feature",
+          "columns": [
+            "platform_service_feature_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
-        "role_commission_settings_tenant_id_tenants_id_fk": {
-          "name": "role_commission_settings_tenant_id_tenants_id_fk",
+        "rcs_tenant_fk": {
+          "name": "rcs_tenant_fk",
           "tableFrom": "role_commission_settings",
           "tableTo": "tenants",
           "columnsFrom": [
@@ -4209,8 +4668,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "role_commission_settings_platform_service_id_platform_services_id_fk": {
-          "name": "role_commission_settings_platform_service_id_platform_services_id_fk",
+        "rcs_ps_fk": {
+          "name": "rcs_ps_fk",
           "tableFrom": "role_commission_settings",
           "tableTo": "platform_services",
           "columnsFrom": [
@@ -4222,8 +4681,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "role_commission_settings_platform_service_feature_id_platform_service_features_id_fk": {
-          "name": "role_commission_settings_platform_service_feature_id_platform_service_features_id_fk",
+        "rcs_psf_fk": {
+          "name": "rcs_psf_fk",
           "tableFrom": "role_commission_settings",
           "tableTo": "platform_service_features",
           "columnsFrom": [
@@ -4235,8 +4694,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "role_commission_settings_role_id_roles_id_fk": {
-          "name": "role_commission_settings_role_id_roles_id_fk",
+        "rcs_role_fk": {
+          "name": "rcs_role_fk",
           "tableFrom": "role_commission_settings",
           "tableTo": "roles",
           "columnsFrom": [
@@ -4269,7 +4728,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'UUID()'"
+          "default": "(UUID())"
         },
         "tenant_id": {
           "name": "tenant_id",
@@ -4391,10 +4850,20 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_user_commission_setting": {
+          "name": "uniq_user_commission_setting",
+          "columns": [
+            "tenant_id",
+            "user_id",
+            "platform_service_feature_id"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
-        "user_commission_settings_tenant_id_tenants_id_fk": {
-          "name": "user_commission_settings_tenant_id_tenants_id_fk",
+        "ucs_tenant_fk": {
+          "name": "ucs_tenant_fk",
           "tableFrom": "user_commission_settings",
           "tableTo": "tenants",
           "columnsFrom": [
@@ -4406,8 +4875,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "user_commission_settings_platform_service_id_platform_services_id_fk": {
-          "name": "user_commission_settings_platform_service_id_platform_services_id_fk",
+        "ucs_platform_service_fk": {
+          "name": "ucs_platform_service_fk",
           "tableFrom": "user_commission_settings",
           "tableTo": "platform_services",
           "columnsFrom": [
@@ -4419,8 +4888,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "user_commission_settings_platform_service_feature_id_platform_service_features_id_fk": {
-          "name": "user_commission_settings_platform_service_feature_id_platform_service_features_id_fk",
+        "ucs_platform_service_feature_fk": {
+          "name": "ucs_platform_service_feature_fk",
           "tableFrom": "user_commission_settings",
           "tableTo": "platform_service_features",
           "columnsFrom": [
@@ -4432,8 +4901,8 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "user_commission_settings_user_id_users_id_fk": {
-          "name": "user_commission_settings_user_id_users_id_fk",
+        "ucs_user_fk": {
+          "name": "ucs_user_fk",
           "tableFrom": "user_commission_settings",
           "tableTo": "users",
           "columnsFrom": [

@@ -5,38 +5,61 @@ import {
   foreignKey,
   text,
   int,
+  index,
 } from 'drizzle-orm/mysql-core';
+import { sql } from 'drizzle-orm';
+
 import { refundTable, transactionTable, walletTable } from './index';
 
 export const ledgerTable = mysqlTable(
   'ledgers',
   {
-    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
+    id: varchar('id', { length: 36 })
+  .primaryKey()
+  .default(sql`(UUID())`),
+
     walletId: varchar('wallet_id', { length: 36 }).notNull(),
+
     transactionId: varchar('transaction_id', { length: 36 }),
     refundId: varchar('refund_id', { length: 36 }),
 
-    entryType: text('entry_type', { enum: ['DEBIT', 'CREDIT'] }).notNull(),
+    entryType: text('entry_type', {
+      enum: ['DEBIT', 'CREDIT'],
+    }).notNull(),
+
     amount: int('amount').notNull().default(0), // paise
     balanceAfter: int('balance_after').notNull().default(0), // paise
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
+
   (table) => ({
-    walletFk: foreignKey({
+    ledgerWalletFk: foreignKey({
+      name: 'ledger_wallet_fk',
       columns: [table.walletId],
       foreignColumns: [walletTable.id],
     }),
 
-    transactionFk: foreignKey({
+    ledgerTransactionFk: foreignKey({
+      name: 'ledger_transaction_fk',
       columns: [table.transactionId],
       foreignColumns: [transactionTable.id],
     }),
 
-    refundFk: foreignKey({
+    ledgerRefundFk: foreignKey({
+      name: 'ledger_refund_fk',
       columns: [table.refundId],
       foreignColumns: [refundTable.id],
     }),
+
+    idxLedgerWalletCreated: index('idx_ledger_wallet_created').on(
+      table.walletId,
+      table.createdAt,
+    ),
+
+    idxLedgerTransaction: index('idx_ledger_transaction').on(
+      table.transactionId,
+    ),
   }),
 );

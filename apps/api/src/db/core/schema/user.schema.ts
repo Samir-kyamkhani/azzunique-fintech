@@ -4,24 +4,30 @@ import {
   foreignKey,
   varchar,
   text,
+  boolean,
+  uniqueIndex,
+  index,
 } from 'drizzle-orm/mysql-core';
+import { sql } from 'drizzle-orm';
+
 import { roleTable, tenantsTable } from './index';
 
 export const usersTable = mysqlTable(
   'users',
   {
-    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
+    id: varchar('id', { length: 36 })
+  .primaryKey()
+  .default(sql`(UUID())`),
 
-    userNumber: varchar('user_number', { length: 30 }).notNull().unique(),
-    // generate USER-XXXX in application layer
+    userNumber: varchar('user_number', { length: 30 }).notNull(),
 
     firstName: varchar('first_name', { length: 100 }).notNull(),
     lastName: varchar('last_name', { length: 100 }).notNull(),
 
-    email: varchar('email', { length: 255 }).notNull().unique(),
+    email: varchar('email', { length: 255 }).notNull(),
     emailVerifiedAt: timestamp('email_verified_at'),
 
-    mobileNumber: varchar('mobile_number', { length: 20 }).notNull().unique(),
+    mobileNumber: varchar('mobile_number', { length: 20 }).notNull(),
 
     profilePicture: varchar('profile_picture', { length: 255 }),
 
@@ -34,9 +40,8 @@ export const usersTable = mysqlTable(
       .notNull()
       .default('ACTIVE'),
 
-    isKycVerified: varchar('is_kyc_verified', { length: 5 })
-      .notNull()
-      .default('false'),
+    isKycVerified: boolean('is_kyc_verified').notNull().default(false),
+
     roleId: varchar('role_id', { length: 36 }).notNull(),
 
     refreshTokenHash: varchar('refresh_token_hash', { length: 255 }),
@@ -50,6 +55,7 @@ export const usersTable = mysqlTable(
     deletedAt: timestamp('deleted_at'),
 
     parentId: varchar('parent_id', { length: 36 }),
+
     createdByEmployeeId: varchar('created_by_employee_id', {
       length: 36,
     }).notNull(),
@@ -61,19 +67,35 @@ export const usersTable = mysqlTable(
   },
 
   (table) => ({
-    roleFk: foreignKey({
+    userRoleFk: foreignKey({
+      name: 'user_role_fk',
       columns: [table.roleId],
       foreignColumns: [roleTable.id],
     }),
 
-    parentFk: foreignKey({
+    userParentFk: foreignKey({
+      name: 'user_parent_fk',
       columns: [table.parentId],
       foreignColumns: [table.id],
     }),
 
-    tenantFk: foreignKey({
+    userTenantFk: foreignKey({
+      name: 'user_tenant_fk',
       columns: [table.tenantId],
       foreignColumns: [tenantsTable.id],
     }),
+
+    uniqUserNumber: uniqueIndex('uniq_user_number').on(table.userNumber),
+
+    uniqUserEmail: uniqueIndex('uniq_user_email').on(table.email),
+
+    uniqUserMobile: uniqueIndex('uniq_user_mobile').on(table.mobileNumber),
+
+    idxUserTenantStatus: index('idx_user_tenant_status').on(
+      table.tenantId,
+      table.userStatus,
+    ),
+
+    idxUserParent: index('idx_user_parent').on(table.parentId),
   }),
 );

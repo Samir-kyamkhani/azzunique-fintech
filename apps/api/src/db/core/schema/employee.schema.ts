@@ -4,29 +4,43 @@ import {
   text,
   timestamp,
   varchar,
+  index,
 } from 'drizzle-orm/mysql-core';
+import { sql } from 'drizzle-orm';
+
 import { departmentTable, tenantsTable } from './index';
 
 export const employeesTable = mysqlTable(
   'employees',
   {
-    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
+    id: varchar('id', { length: 36 })
+  .primaryKey()
+  .default(sql`(UUID())`),
+
     employeeNumber: varchar('employee_number', { length: 30 })
-      .unique()
-      .notNull(), // generate in app, cannot use sequence in MySQL
+      .notNull()
+      .unique(), // generated in app (MySQL-safe)
+
     firstName: varchar('first_name', { length: 100 }).notNull(),
     lastName: varchar('last_name', { length: 100 }).notNull(),
+
     email: varchar('email', { length: 255 }).notNull().unique(),
     emailVerifiedAt: timestamp('email_verified_at'),
+
     mobileNumber: varchar('mobile_number', { length: 20 }).notNull().unique(),
+
     profilePicture: varchar('profile_picture', { length: 255 }),
+
     passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+
     employeeStatus: text('employee_status', {
       enum: ['ACTIVE', 'INACTIVE', 'SUSPENDED'],
     })
       .notNull()
       .default('INACTIVE'),
+
     departmentId: varchar('department_id', { length: 36 }).notNull(),
+
     refreshTokenHash: varchar('refresh_token_hash', { length: 255 }),
     passwordResetTokenHash: varchar('password_reset_token_hash', {
       length: 255,
@@ -41,15 +55,25 @@ export const employeesTable = mysqlTable(
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
+
   (table) => ({
-    departmentFk: foreignKey({
+    employeeDepartmentFk: foreignKey({
+      name: 'emp_department_fk',
       columns: [table.departmentId],
       foreignColumns: [departmentTable.id],
     }),
-    tenantFk: foreignKey({
+
+    employeeTenantFk: foreignKey({
+      name: 'emp_tenant_fk',
       columns: [table.tenantId],
       foreignColumns: [tenantsTable.id],
     }),
-    // No need for raw SQL check, handled by enum option
+
+    idxEmployeeTenantStatus: index('idx_emp_tenant_status').on(
+      table.tenantId,
+      table.employeeStatus,
+    ),
+
+    idxEmployeeDepartment: index('idx_emp_department').on(table.departmentId),
   }),
 );

@@ -6,7 +6,10 @@ import {
   int,
   boolean,
   foreignKey,
+  uniqueIndex,
 } from 'drizzle-orm/mysql-core';
+import { sql } from 'drizzle-orm';
+
 import {
   platformServiceFeatureTable,
   platformServiceTable,
@@ -17,7 +20,9 @@ import {
 export const userCommissionSettingTable = mysqlTable(
   'user_commission_settings',
   {
-    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
+    id: varchar('id', { length: 36 })
+  .primaryKey()
+  .default(sql`(UUID())`),
 
     tenantId: varchar('tenant_id', { length: 36 }).notNull(),
     platformServiceId: varchar('platform_service_id', { length: 36 }).notNull(),
@@ -52,20 +57,33 @@ export const userCommissionSettingTable = mysqlTable(
 
   (table) => ({
     tenantFk: foreignKey({
+      name: 'ucs_tenant_fk',
       columns: [table.tenantId],
       foreignColumns: [tenantsTable.id],
     }),
+
     platformServiceFk: foreignKey({
+      name: 'ucs_platform_service_fk',
       columns: [table.platformServiceId],
       foreignColumns: [platformServiceTable.id],
     }),
+
     platformServiceFeatureFk: foreignKey({
+      name: 'ucs_platform_service_feature_fk',
       columns: [table.platformServiceFeatureId],
       foreignColumns: [platformServiceFeatureTable.id],
     }),
+
     userFk: foreignKey({
+      name: 'ucs_user_fk',
       columns: [table.userId],
       foreignColumns: [usersTable.id],
     }),
+
+    uniqUserCommission: uniqueIndex('uniq_user_commission_setting').on(
+      table.tenantId,
+      table.userId,
+      table.platformServiceFeatureId,
+    ),
   }),
 );

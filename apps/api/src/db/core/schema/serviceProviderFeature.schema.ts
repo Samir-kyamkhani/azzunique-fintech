@@ -1,12 +1,25 @@
-import { mysqlTable, timestamp, foreignKey } from 'drizzle-orm/mysql-core';
+import {
+  mysqlTable,
+  timestamp,
+  foreignKey,
+  varchar,
+  uniqueIndex,
+} from 'drizzle-orm/mysql-core';
+import { sql } from 'drizzle-orm';
+
 import { platformServiceFeatureTable, serviceProviderTable } from './index';
-import { varchar } from 'drizzle-orm/mysql-core';
 
 export const serviceProviderFeatureTable = mysqlTable(
   'service_provider_features',
   {
-    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
-    serviceProviderId: varchar('service_provider_id', { length: 36 }).notNull(),
+    id: varchar('id', { length: 36 })
+  .primaryKey()
+  .default(sql`(UUID())`),
+
+    serviceProviderId: varchar('service_provider_id', {
+      length: 36,
+    }).notNull(),
+
     platformServiceFeatureId: varchar('platform_service_feature_id', {
       length: 36,
     }).notNull(),
@@ -16,13 +29,21 @@ export const serviceProviderFeatureTable = mysqlTable(
   },
 
   (table) => ({
-    serviceProviderFk: foreignKey({
+    spfServiceProviderFk: foreignKey({
+      name: 'spf_service_provider_fk',
       columns: [table.serviceProviderId],
       foreignColumns: [serviceProviderTable.id],
     }),
-    platformServiceFeatureFk: foreignKey({
+
+    spfPlatformServiceFeatureFk: foreignKey({
+      name: 'spf_platform_service_feature_fk',
       columns: [table.platformServiceFeatureId],
       foreignColumns: [platformServiceFeatureTable.id],
     }),
+
+    uniqServiceProviderFeature: uniqueIndex('uniq_service_provider_feature').on(
+      table.serviceProviderId,
+      table.platformServiceFeatureId,
+    ),
   }),
 );
