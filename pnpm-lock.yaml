@@ -116,7 +116,7 @@ importers:
         specifier: ^4.17.17
         version: 4.17.25
       '@types/node':
-        specifier: ^22.10.7
+        specifier: ^22.19.0
         version: 22.19.0
       '@types/supertest':
         specifier: ^6.0.0
@@ -207,6 +207,9 @@ importers:
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.19.0
       ts-loader:
         specifier: ^9.4.3
         version: 9.5.4(typescript@5.5.4)(webpack@5.103.0)
