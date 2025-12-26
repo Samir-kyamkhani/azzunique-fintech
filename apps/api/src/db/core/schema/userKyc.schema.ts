@@ -1,41 +1,40 @@
 import {
-  pgTable,
-  uuid,
+  mysqlTable,
   timestamp,
-  foreignKey,
   varchar,
-  pgEnum,
-} from 'drizzle-orm/pg-core';
+  text,
+  foreignKey,
+} from 'drizzle-orm/mysql-core';
 import { usersTable } from './index';
 
-export const verificationStatus = pgEnum('verification_status', [
-  'PENDING',
-  'VERIFIED',
-  'REJECTED',
-]);
-
-export const usersKycTable = pgTable(
+export const usersKycTable = mysqlTable(
   'users_kyc',
   {
-    id: uuid().primaryKey().defaultRandom(),
+    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
 
-    verificationStatus: verificationStatus().default('PENDING').notNull(),
-    submittedByUserId: uuid('submitted_by_user_id'),
-    verifiedByUserId: uuid('verified_by_user_id').notNull(),
-    verifiedByEmployeeId: uuid('verified_by_employee_id'),
+    verificationStatus: text('verification_status', {
+      enum: ['PENDING', 'VERIFIED', 'REJECTED'],
+    })
+      .notNull()
+      .default('PENDING'),
+
+    submittedByUserId: varchar('submitted_by_user_id', { length: 36 }),
+    verifiedByUserId: varchar('verified_by_user_id', { length: 36 }).notNull(),
+    verifiedByEmployeeId: varchar('verified_by_employee_id', { length: 36 }),
 
     actionedAt: timestamp('actioned_at'),
     actionReason: varchar('action_reason', { length: 500 }),
+
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
 
   (table) => ({
-    submittedByUserIdFk: foreignKey({
+    submittedByUserFk: foreignKey({
       columns: [table.submittedByUserId],
       foreignColumns: [usersTable.id],
     }),
-    verifiedByUserIdFk: foreignKey({
+    verifiedByUserFk: foreignKey({
       columns: [table.verifiedByUserId],
       foreignColumns: [usersTable.id],
     }),

@@ -1,38 +1,36 @@
 import {
-  pgTable,
-  uuid,
+  mysqlTable,
+  varchar,
   timestamp,
   foreignKey,
-  pgEnum,
-  integer,
-} from 'drizzle-orm/pg-core';
+  text,
+  int,
+} from 'drizzle-orm/mysql-core';
 import { tenantsTable } from './index';
 
-export const walletOwnerType = pgEnum('wallet_owner_type', ['USER', 'TENANT']);
-
-export const walletType = pgEnum('wallet_type', [
-  'PRIMARY',
-  'COMMISSION',
-  'SURCHARGE',
-  'GST',
-  'HOLDING',
-]);
-export const walletStatus = pgEnum('wallet_status', [
-  'ACTIVE',
-  'BLOCKED',
-  'SUSPENDED',
-]);
-
-export const walletTable = pgTable(
+export const walletTable = mysqlTable(
   'wallets',
   {
-    id: uuid().primaryKey().defaultRandom(),
-    tenantId: uuid().notNull(),
-    ownerType: walletOwnerType().notNull(),
-    ownerId: uuid().notNull(),
-    walletType: walletType('wallet_type').notNull(),
-    balance: integer('balance').notNull().default(0), // paise
-    status: walletStatus('status').default('ACTIVE').notNull(),
+    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
+
+    tenantId: varchar('tenant_id', { length: 36 }).notNull(),
+    ownerType: text('owner_type', {
+      enum: ['USER', 'TENANT'],
+    }).notNull(),
+    ownerId: varchar('owner_id', { length: 36 }).notNull(),
+
+    walletType: text('wallet_type', {
+      enum: ['PRIMARY', 'COMMISSION', 'SURCHARGE', 'GST', 'HOLDING'],
+    }).notNull(),
+
+    balance: int('balance').notNull().default(0), // paise
+
+    status: text('status', {
+      enum: ['ACTIVE', 'BLOCKED', 'SUSPENDED'],
+    })
+      .notNull()
+      .default('ACTIVE'),
+
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },

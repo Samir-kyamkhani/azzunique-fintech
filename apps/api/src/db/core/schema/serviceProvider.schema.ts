@@ -1,18 +1,17 @@
 import {
-  pgTable,
-  uuid,
+  mysqlTable,
   timestamp,
   varchar,
   boolean,
   foreignKey,
-} from 'drizzle-orm/pg-core';
+} from 'drizzle-orm/mysql-core';
 import { platformServiceTable } from './index';
 
-export const serviceProviderTable = pgTable(
+export const serviceProviderTable = mysqlTable(
   'service_providers',
   {
-    id: uuid().primaryKey().defaultRandom(),
-    platformServiceId: uuid().notNull(),
+    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
+    platformServiceId: varchar('platform_service_id', { length: 36 }).notNull(),
     code: varchar('code', { length: 40 }).notNull().unique(), //-- PAYSPRINT_DMT
     providerName: varchar('provider_name', { length: 100 }).notNull(),
     handler: varchar('handler', { length: 200 }).notNull(),

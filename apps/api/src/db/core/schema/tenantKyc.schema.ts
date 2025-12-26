@@ -1,32 +1,32 @@
 import {
-  pgTable,
-  uuid,
+  mysqlTable,
   timestamp,
   foreignKey,
   varchar,
-  pgEnum,
-} from 'drizzle-orm/pg-core';
+  text,
+} from 'drizzle-orm/mysql-core';
 import { tenantsTable, usersTable } from './index';
 
-export const tenantKycVerificationStatus = pgEnum('verification_status', [
-  'PENDING',
-  'VERIFIED',
-  'REJECTED',
-]);
-
-export const tenantKycTable = pgTable(
+export const tenantKycTable = mysqlTable(
   'tenants_kyc',
   {
-    id: uuid().primaryKey().defaultRandom(),
+    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
 
-    tenantId: uuid('tenant_id').notNull(),
-    verificationStatus: tenantKycVerificationStatus().default('PENDING').notNull(),
-    submittedByUserId: uuid('submitted_by_user_id'),
-    verifiedByUserId: uuid('verified_by_user_id').notNull(),
-    verifiedByEmployeeId: uuid('verified_by_employee_id'),
+    tenantId: varchar('tenant_id', { length: 36 }).notNull(),
+
+    status: text('status', {
+      enum: ['PENDING', 'VERIFIED', 'REJECTED'],
+    })
+      .notNull()
+      .default('PENDING'),
+
+    submittedByUserId: varchar('submitted_by_user_id', { length: 36 }),
+    verifiedByUserId: varchar('verified_by_user_id', { length: 36 }),
+    verifiedByEmployeeId: varchar('verified_by_employee_id', { length: 36 }),
 
     actionedAt: timestamp('actioned_at'),
     actionReason: varchar('action_reason', { length: 500 }),
+
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
@@ -36,11 +36,13 @@ export const tenantKycTable = pgTable(
       columns: [table.tenantId],
       foreignColumns: [tenantsTable.id],
     }),
-    submittedByUserIdFk: foreignKey({
+
+    submittedByUserFk: foreignKey({
       columns: [table.submittedByUserId],
       foreignColumns: [usersTable.id],
     }),
-    verifiedByUserIdFk: foreignKey({
+
+    verifiedByUserFk: foreignKey({
       columns: [table.verifiedByUserId],
       foreignColumns: [usersTable.id],
     }),

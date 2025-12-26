@@ -1,64 +1,65 @@
-import { sql } from 'drizzle-orm';
 import {
-  pgTable,
-  uuid,
+  mysqlTable,
   timestamp,
   foreignKey,
   varchar,
-  pgEnum,
-  jsonb,
-  integer,
-  pgSequence,
-} from 'drizzle-orm/pg-core';
+  json,
+  int,
+  text,
+} from 'drizzle-orm/mysql-core';
 import { tenantsTable, usersTable } from './index';
 
-export const transactionStatus = pgEnum('transaction_status', [
-  'INITIATED',
-  'PENDING',
-  'SUCCESS',
-  'FAILED',
-  'CANCELLED',
-  'REFUNDED',
-]);
-
-export const txnSeq = pgSequence('txn_seq');
-
-export const transactionTable = pgTable(
+export const transactionTable = mysqlTable(
   'transactions',
   {
-    id: uuid().primaryKey().defaultRandom(),
-    tenantId: uuid().notNull(),
-    platformServiceId: uuid().notNull(),
-    platformServiceFeatureId: uuid(),
-    referenceId: varchar('reference_id', { length: 40 })
-      .default(
-        sql`
-    'TXN-' || to_char(now(), 'YYYYMMDD') || '-' || lpad(nextval('txn_seq')::text, 6, '0')
-  `,
-      )
-      .notNull(),
+    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
+
+    tenantId: varchar('tenant_id', { length: 36 }).notNull(),
+    platformServiceId: varchar('platform_service_id', { length: 36 }).notNull(),
+    platformServiceFeatureId: varchar('platform_service_feature_id', {
+      length: 36,
+    }),
+
+    referenceId: varchar('reference_id', { length: 40 }).notNull(),
     providerReferenceId: varchar('provider_reference_id', {
       length: 40,
     }).unique(),
 
-    amount: integer('balance').notNull().default(0), // paise
-    status: transactionStatus().default('INITIATED').notNull(),
+    amount: int('amount').notNull().default(0), // paise
+
+    status: text('status', {
+      enum: [
+        'INITIATED',
+        'PENDING',
+        'SUCCESS',
+        'FAILED',
+        'CANCELLED',
+        'REFUNDED',
+      ],
+    })
+      .notNull()
+      .default('INITIATED'),
+
     failureReason: varchar('failure_reason', { length: 500 }),
     idempotencyKey: varchar('idempotency_key', { length: 100 }).notNull(),
-    initiatedByUserId: uuid().notNull(),
-    metaData: jsonb('meta_data'), // dynamic data (beneficiary, bill info)
+
+    initiatedByUserId: varchar('initiated_by_user_id', {
+      length: 36,
+    }).notNull(),
+
+    metaData: json('meta_data'),
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
 
   (table) => ({
-    userIdFk: foreignKey({
+    userFk: foreignKey({
       columns: [table.initiatedByUserId],
       foreignColumns: [usersTable.id],
     }),
 
-    tenantIdFk: foreignKey({
+    tenantFk: foreignKey({
       columns: [table.tenantId],
       foreignColumns: [tenantsTable.id],
     }),

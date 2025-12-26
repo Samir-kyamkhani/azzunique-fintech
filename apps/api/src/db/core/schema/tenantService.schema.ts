@@ -1,18 +1,20 @@
 import {
-  pgTable,
-  uuid,
+  mysqlTable,
   timestamp,
   foreignKey,
+  varchar,
   boolean,
-} from 'drizzle-orm/pg-core';
+} from 'drizzle-orm/mysql-core';
 import { platformServiceTable, tenantsTable } from './index';
 
-export const tenantServiceTable = pgTable(
+export const tenantServiceTable = mysqlTable(
   'tenant_services',
   {
-    id: uuid().primaryKey().defaultRandom(),
-    tenantId: uuid().notNull(),
-    platformServiceId: uuid().notNull(),
+    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
+
+    tenantId: varchar('tenant_id', { length: 36 }).notNull(),
+    platformServiceId: varchar('platform_service_id', { length: 36 }).notNull(),
+
     isEnabled: boolean('is_enabled').default(true).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -23,6 +25,7 @@ export const tenantServiceTable = pgTable(
       columns: [table.tenantId],
       foreignColumns: [tenantsTable.id],
     }),
+
     platformServiceFk: foreignKey({
       columns: [table.platformServiceId],
       foreignColumns: [platformServiceTable.id],

@@ -8,6 +8,6 @@ export default defineConfig({
   out: './drizzle/core',
   dialect: 'mysql',
   dbCredentials: {
-    url: process.env.DATABASE_URL!,
+    url: process.env.CORE_DATABASE_URL!,
   },
 });

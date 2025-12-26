@@ -1,25 +1,17 @@
 import {
-  pgTable,
-  uuid,
+  mysqlTable,
   timestamp,
   foreignKey,
   varchar,
-  pgEnum,
   boolean,
-} from 'drizzle-orm/pg-core';
+  text,
+} from 'drizzle-orm/mysql-core';
 import { tenantsTable, usersTable } from './index';
 
-export const bankDetailVerificationStatus = pgEnum('verification_status', [
-  'PENDING',
-  'VERIFIED',
-  'REJECTED',
-]);
-
-
-export const bankDetailTable = pgTable(
+export const bankDetailTable = mysqlTable(
   'tenants_bank_detail',
   {
-    id: uuid().primaryKey().defaultRandom(),
+    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
     bankName: varchar('bank_name', { length: 255 }).notNull(),
     accountHolderName: varchar('account_holder_name', {
       length: 255,
@@ -31,19 +23,21 @@ export const bankDetailTable = pgTable(
     bankProofDocumentUrl: varchar('bank_proof_document_url', {
       length: 500,
     }).notNull(),
-    verificationStatus: bankDetailVerificationStatus().default('PENDING').notNull(),
+    verificationStatus: text('verification_status', {
+      enum: ['PENDING', 'VERIFIED', 'REJECTED'],
+    })
+      .notNull()
+      .default('PENDING'),
 
-    ownerId: uuid('owner_id').notNull(), // userid both tenant and user
-    tenantId: uuid('tenant_id').notNull(),
-
-    submittedByEmployeeId: uuid('submitted_by_employee_id'),
-    verifiedByUserId: uuid('verified_by_user_id').notNull(),
-    verifiedByEmployeeId: uuid('verified_by_employee_id'),
+    ownerId: varchar('owner_id', { length: 36 }).notNull(),
+    tenantId: varchar('tenant_id', { length: 36 }).notNull(),
+    submittedByEmployeeId: varchar('submitted_by_employee_id', { length: 36 }),
+    verifiedByUserId: varchar('verified_by_user_id', { length: 36 }).notNull(),
+    verifiedByEmployeeId: varchar('verified_by_employee_id', { length: 36 }),
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
-
   (table) => ({
     tenantFk: foreignKey({
       columns: [table.tenantId],

@@ -1,12 +1,13 @@
-import { pgTable, uuid, timestamp, foreignKey } from 'drizzle-orm/pg-core';
+import { mysqlTable, timestamp, foreignKey } from 'drizzle-orm/mysql-core';
 import { permissionTable, roleTable } from './index';
+import { varchar } from 'drizzle-orm/mysql-core';
 
-export const rolePermissionTable = pgTable(
+export const rolePermissionTable = mysqlTable(
   'role_permissions',
   {
-    id: uuid().primaryKey().defaultRandom(),
-    roleId: uuid('role_id').notNull(),
-    permissionId: uuid('permission_id').notNull(),
+    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
+    roleId: varchar('role_id', { length: 36 }).notNull(),
+    permissionId: varchar('permission_id', { length: 36 }).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },

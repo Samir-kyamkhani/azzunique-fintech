@@ -1,24 +1,30 @@
 import {
-  pgTable,
-  uuid,
+  mysqlTable,
   timestamp,
+  varchar,
+  text,
   foreignKey,
-  pgEnum,
-} from 'drizzle-orm/pg-core';
+} from 'drizzle-orm/mysql-core';
 import { permissionTable, usersTable } from './index';
 
-export const userEffact = pgEnum('effact', ['ALLOW', 'DENY']);
-
-export const userPermissionTable = pgTable(
+export const userPermissionTable = mysqlTable(
   'user_permissions',
   {
-    id: uuid().primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull(),
-    permissionId: uuid('permission_id').notNull(),
-    effact: userEffact().notNull(),
+    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
+
+    userId: varchar('user_id', { length: 36 }).notNull(),
+    permissionId: varchar('permission_id', { length: 36 }).notNull(),
+
+    effact: text('effact', {
+      enum: ['ALLOW', 'DENY'],
+    })
+      .notNull()
+      .default('ALLOW'),
+
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
+
   (table) => ({
     userFk: foreignKey({
       columns: [table.userId],

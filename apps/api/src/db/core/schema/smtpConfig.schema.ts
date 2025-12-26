@@ -1,16 +1,15 @@
 import {
-  pgTable,
-  uuid,
+  mysqlTable,
   timestamp,
   foreignKey,
   varchar,
-} from 'drizzle-orm/pg-core';
+} from 'drizzle-orm/mysql-core';
 import { tenantsTable, usersTable } from './index';
 
-export const smtpConfigTable = pgTable(
+export const smtpConfigTable = mysqlTable(
   'tenants_smtp_config',
   {
-    id: uuid().primaryKey().defaultRandom(),
+    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
     smtpHost: varchar('smtp_host', { length: 255 }).notNull(),
     smtpPort: varchar('smtp_port', { length: 10 }).notNull(),
     smtpUsername: varchar('smtp_username', { length: 255 }).notNull(),
@@ -19,9 +18,9 @@ export const smtpConfigTable = pgTable(
     fromName: varchar('from_name', { length: 255 }).notNull(),
     fromEmail: varchar('from_email', { length: 255 }).notNull(),
 
-    createdByUserId: uuid('created_by_user_id').notNull(),
-    createdByEmployeeId: uuid('created_by_employee_id'),
-    tenantId: uuid('tenant_id').notNull(),
+    createdByUserId: varchar('created_by_user_id', { length: 36 }).notNull(),
+    createdByEmployeeId: varchar('created_by_employee_id', { length: 36 }),
+    tenantId: varchar('tenant_id', { length: 36 }).notNull(),
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),

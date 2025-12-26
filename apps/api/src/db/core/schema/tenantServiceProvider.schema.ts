@@ -1,26 +1,30 @@
 import {
-  pgTable,
-  uuid,
+  mysqlTable,
   timestamp,
   foreignKey,
+  varchar,
   boolean,
-  jsonb,
-} from 'drizzle-orm/pg-core';
+  json,
+} from 'drizzle-orm/mysql-core';
 import {
   platformServiceTable,
   serviceProviderTable,
   tenantsTable,
 } from './index';
 
-export const tenantServiceProviderTable = pgTable(
+export const tenantServiceProviderTable = mysqlTable(
   'tenant_service_providers',
   {
-    id: uuid().primaryKey().defaultRandom(),
-    tenantId: uuid().notNull(),
-    platformServiceId: uuid().notNull(),
-    serviceProviderId: uuid().notNull(),
-    config: jsonb('config').notNull(), // Configuration specific to the tenant and service provider
+    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
+
+    tenantId: varchar('tenant_id', { length: 36 }).notNull(),
+    platformServiceId: varchar('platform_service_id', { length: 36 }).notNull(),
+    serviceProviderId: varchar('service_provider_id', { length: 36 }).notNull(),
+
+    config: json('config').notNull(),
+
     isActive: boolean('is_enabled').default(true).notNull(),
+
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
@@ -30,10 +34,12 @@ export const tenantServiceProviderTable = pgTable(
       columns: [table.tenantId],
       foreignColumns: [tenantsTable.id],
     }),
+
     platformServiceFk: foreignKey({
       columns: [table.platformServiceId],
       foreignColumns: [platformServiceTable.id],
     }),
+
     serviceProviderFk: foreignKey({
       columns: [table.serviceProviderId],
       foreignColumns: [serviceProviderTable.id],

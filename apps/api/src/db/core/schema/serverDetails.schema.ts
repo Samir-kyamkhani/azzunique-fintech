@@ -1,28 +1,24 @@
 import {
-  pgTable,
-  uuid,
+  mysqlTable,
+  varchar,
   timestamp,
   foreignKey,
-  varchar,
-  pgEnum,
-} from 'drizzle-orm/pg-core';
+  text,
+} from 'drizzle-orm/mysql-core';
 import { usersTable } from './index';
 
-export const serverDetailStatus = pgEnum('server_detail_status', [
-  'ACTIVE',
-  'INACTIVE',
-]);
-
-export const serverDetailTable = pgTable(
+export const serverDetailTable = mysqlTable(
   'server_details',
   {
-    id: uuid().primaryKey().defaultRandom(),
+    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
     recordType: varchar('record_type', { length: 50 }).notNull(),
     hostname: varchar('hostname', { length: 255 }).notNull(),
     value: varchar('value', { length: 45 }).notNull(),
-    status: serverDetailStatus().notNull(),
-    createdByUserId: uuid('created_by_user_id').notNull(),
-    createdByEmployeeId: uuid('created_by_employee_id'),
+    status: text('status', { enum: ['ACTIVE', 'INACTIVE'] })
+      .notNull()
+      .default('ACTIVE'),
+    createdByUserId: varchar('created_by_user_id', { length: 36 }).notNull(),
+    createdByEmployeeId: varchar('created_by_employee_id', { length: 36 }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },

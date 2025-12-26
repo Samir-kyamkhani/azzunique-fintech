@@ -1,24 +1,32 @@
 import {
-  pgTable,
-  uuid,
+  mysqlTable,
   timestamp,
   foreignKey,
   varchar,
-  boolean,
-} from 'drizzle-orm/pg-core';
+  text,
+} from 'drizzle-orm/mysql-core';
 import { tenantsTable, usersTable } from './index';
 
-export const tenantPagesTable = pgTable(
+export const tenantPagesTable = mysqlTable(
   'tenants_pages',
   {
-    id: uuid().primaryKey().defaultRandom(),
+    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
+
+    tenantId: varchar('tenant_id', { length: 36 }).notNull(),
+
     pageTitle: varchar('page_title', { length: 255 }).notNull(),
-    pageContent: varchar('page_content', { length: 5000 }),
+    pageContent: text('page_content'),
     pageUrl: varchar('page_url', { length: 255 }).notNull().unique(),
-    isPublished: boolean('is_published').notNull().default(false),
-    tenantId: uuid('tenant_id').notNull(),
-    createdByUserId: uuid('created_by_user_id').notNull(),
-    createdByEmployeeId: uuid('created_by_employee_id'),
+
+    status: text('status', {
+      enum: ['DRAFT', 'PUBLISHED', 'ARCHIVED'],
+    })
+      .notNull()
+      .default('DRAFT'),
+
+    createdByUserId: varchar('created_by_user_id', { length: 36 }).notNull(),
+    createdByEmployeeId: varchar('created_by_employee_id', { length: 36 }),
+
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
@@ -28,6 +36,7 @@ export const tenantPagesTable = pgTable(
       columns: [table.tenantId],
       foreignColumns: [tenantsTable.id],
     }),
+
     userFk: foreignKey({
       columns: [table.createdByUserId],
       foreignColumns: [usersTable.id],

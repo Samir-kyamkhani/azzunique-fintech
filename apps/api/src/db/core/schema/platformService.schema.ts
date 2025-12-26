@@ -1,13 +1,12 @@
 import {
-  pgTable,
-  uuid,
-  timestamp,
+  mysqlTable,
   varchar,
+  timestamp,
   boolean,
-} from 'drizzle-orm/pg-core';
+} from 'drizzle-orm/mysql-core';
 
-export const platformServiceTable = pgTable('platform_services', {
-  id: uuid().primaryKey().defaultRandom(),
+export const platformServiceTable = mysqlTable('platform_services', {
+  id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
   code: varchar('code', { length: 40 }).notNull().unique(), //-- DMT, BBPS
   name: varchar('name', { length: 100 }).notNull(),
   isActive: boolean('is_active').default(true).notNull(),

@@ -1,11 +1,11 @@
 import {
-  pgTable,
-  uuid,
+  mysqlTable,
+  varchar,
   timestamp,
   foreignKey,
-  pgEnum,
-  integer,
-} from 'drizzle-orm/pg-core';
+  int,
+  text,
+} from 'drizzle-orm/mysql-core';
 import {
   platformServiceFeatureTable,
   platformServiceTable,
@@ -15,63 +15,59 @@ import {
   walletTable,
 } from './index';
 
-export const commissionTypeEnum = pgEnum('commission_type', [
-  'FIXED',
-  'PERCENTAGE',
-]);
-
-export const surchargeTypeEnum = pgEnum('surcharge_type', [
-  'FIXED',
-  'PERCENTAGE',
-]);
-
-export const commissionEarningTable = pgTable(
+export const commissionEarningTable = mysqlTable(
   'commission_earnings',
   {
-    id: uuid().primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull(),
-    transactionId: uuid('transaction_id').notNull(),
-    tenantId: uuid('tenant_id').notNull(),
-    platformServiceId: uuid('platform_service_id').notNull(),
-    platformServiceFeatureId: uuid('platform_service_feature_id').notNull(),
-    walletId: uuid('wallet_id').notNull(),
-    commissionType: commissionTypeEnum('commission_type').notNull(),
-    commissionValue: integer('commission_value').notNull(),
-    commissionAmmount: integer('commission_amount').notNull(),
+    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
+    userId: varchar('user_id', { length: 36 }).notNull(),
+    transactionId: varchar('transaction_id', { length: 36 }).notNull(),
+    tenantId: varchar('tenant_id', { length: 36 }).notNull(),
+    platformServiceId: varchar('platform_service_id', { length: 36 }).notNull(),
+    platformServiceFeatureId: varchar('platform_service_feature_id', {
+      length: 36,
+    }).notNull(),
+    walletId: varchar('wallet_id', { length: 36 }).notNull(),
 
-    surchargeType: surchargeTypeEnum('surcharge_type').notNull(),
-    surchargeValue: integer('surcharge_value').notNull(),
-    surchargeAmmount: integer('surcharge_amount').notNull(),
+    commissionType: text('commission_type', {
+      enum: ['FIXED', 'PERCENTAGE'],
+    })
+      .notNull()
+      .default('FIXED'),
+    commissionValue: int('commission_value').notNull(),
+    commissionAmount: int('commission_amount').notNull(),
 
-    grossAmount: integer('gross_amount').notNull(),
-    gstAmmount: integer('gst_amount').notNull(),
-    netAmount: integer('net_amount').notNull(),
+    surchargeType: text('surcharge_type', {
+      enum: ['FIXED', 'PERCENTAGE'],
+    })
+      .notNull()
+      .default('FIXED'),
+    surchargeValue: int('surcharge_value').notNull(),
+    surchargeAmount: int('surcharge_amount').notNull(),
+
+    grossAmount: int('gross_amount').notNull(),
+    gstAmount: int('gst_amount').notNull(),
+    netAmount: int('net_amount').notNull(),
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
-
   (table) => ({
     tenantFk: foreignKey({
       columns: [table.tenantId],
       foreignColumns: [tenantsTable.id],
     }),
-
     platformServiceFk: foreignKey({
       columns: [table.platformServiceId],
       foreignColumns: [platformServiceTable.id],
     }),
-
     platformServiceFeatureFk: foreignKey({
       columns: [table.platformServiceFeatureId],
       foreignColumns: [platformServiceFeatureTable.id],
     }),
-
     userFk: foreignKey({
       columns: [table.userId],
       foreignColumns: [usersTable.id],
     }),
-
     transactionFk: foreignKey({
       columns: [table.transactionId],
       foreignColumns: [transactionTable.id],

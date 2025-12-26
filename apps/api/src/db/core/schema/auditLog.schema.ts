@@ -1,28 +1,28 @@
 import {
-  pgTable,
-  uuid,
+  mysqlTable,
   timestamp,
   foreignKey,
   varchar,
-  jsonb,
-} from 'drizzle-orm/pg-core';
+  json,
+} from 'drizzle-orm/mysql-core';
 import { tenantsTable, usersTable } from './index';
 
-export const auditLogTable = pgTable(
+export const auditLogTable = mysqlTable(
   'audit_log',
   {
-    id: uuid().primaryKey().defaultRandom(),
+    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
     entityType: varchar('entity_type', { length: 100 }).notNull(),
-    entityId: uuid().notNull(),
+    entityId: varchar('entity_id', { length: 36 }).notNull(),
     action: varchar('action', { length: 100 }).notNull(),
-    oldData: jsonb('old_data'),
-    newData: jsonb('new_data'),
-    performByUserId: uuid().notNull(),
-    performByEmployeeId: uuid(),
+    oldData: json('old_data'),
+    newData: json('new_data'),
+    performByUserId: varchar('perform_by_user_id', { length: 36 }).notNull(),
+    performByEmployeeId: varchar('perform_by_employee_id', { length: 36 }),
+
     ipAddress: varchar('ip_address', { length: 45 }),
     userAgent: varchar('user_agent', { length: 500 }),
-    tenantId: uuid().notNull(),
-    metaData: jsonb('meta_data'),
+    tenantId: varchar('tenant_id', { length: 36 }).notNull(),
+    metaData: json('meta_data'),
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),

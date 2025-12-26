@@ -1,32 +1,29 @@
 import {
-  pgTable,
-  uuid,
+  mysqlTable,
+  varchar,
   timestamp,
   foreignKey,
-  pgEnum,
-  integer,
-} from 'drizzle-orm/pg-core';
+  int,
+  text,
+} from 'drizzle-orm/mysql-core';
 import { tenantsTable, transactionTable, usersTable } from './index';
 
-export const refundStatus = pgEnum('refund_status', [
-  'PENDING',
-  'SUCCESS',
-  'FAILED',
-]);
-
-export const refundTable = pgTable(
+export const refundTable = mysqlTable(
   'refunds',
   {
-    id: uuid().primaryKey().defaultRandom(),
-    transactionId: uuid(),
-    tenantId: uuid().notNull(),
-    amount: integer('amount').notNull().default(0), // paise
-    status: refundStatus('status').default('PENDING').notNull(),
-    initiatedByUserId: uuid().notNull(),
+    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
+    transactionId: varchar('transaction_id', { length: 36 }),
+    tenantId: varchar('tenant_id', { length: 36 }).notNull(),
+    amount: int('amount').notNull().default(0), // paise
+    status: text('status', { enum: ['PENDING', 'SUCCESS', 'FAILED'] })
+      .notNull()
+      .default('PENDING'),
+    initiatedByUserId: varchar('initiated_by_user_id', {
+      length: 36,
+    }).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
-
   (table) => ({
     tenantFk: foreignKey({
       columns: [table.tenantId],

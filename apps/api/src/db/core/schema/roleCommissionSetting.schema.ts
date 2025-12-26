@@ -1,44 +1,50 @@
 import {
-  pgTable,
-  uuid,
+  mysqlTable,
+  varchar,
   timestamp,
-  foreignKey,
-  pgEnum,
-  integer,
+  text,
+  int,
   boolean,
-} from 'drizzle-orm/pg-core';
+  foreignKey,
+} from 'drizzle-orm/mysql-core';
 import {
   platformServiceFeatureTable,
   platformServiceTable,
-  roleTable,
   tenantsTable,
+  roleTable,
 } from './index';
 
-export const roleCommissionType = pgEnum('role_commission_type', ['FLAT', 'PERCENTAGE']);
-export const roleGstOnType = pgEnum('role_gst_on_type', [
-  'COMMISSION',
-  'SURCHARGE',
-  'BOTH',
-]);
-
-export const roleCommissionSettingTable = pgTable(
+export const roleCommissionSettingTable = mysqlTable(
   'role_commission_settings',
   {
-    id: uuid().primaryKey().defaultRandom(),
-    tenantId: uuid('tenant_id').notNull(),
-    platformServiceId: uuid('platform_service_id').notNull(),
-    platformServiceFeatureId: uuid('platform_service_feature_id').notNull(),
-    roleId: uuid('role_id').notNull(),
-    commissionType: roleCommissionType().notNull(),
-    commissionValue: integer('commission_value').notNull(),
-    surchargeType: roleCommissionType().notNull(),
-    surchargeValue: integer('surcharge_value').notNull(),
+    id: varchar('id', { length: 36 }).primaryKey().default('UUID()'),
+    tenantId: varchar('tenant_id', { length: 36 }).notNull(),
+    platformServiceId: varchar('platform_service_id', { length: 36 }).notNull(),
+    platformServiceFeatureId: varchar('platform_service_feature_id', {
+      length: 36,
+    }).notNull(),
+    roleId: varchar('role_id', { length: 36 }).notNull(),
+
+    // Enums
+    commissionType: text('commission_type', {
+      enum: ['FLAT', 'PERCENTAGE'],
+    }).notNull(),
+    commissionValue: int('commission_value').notNull(),
+
+    surchargeType: text('surcharge_type', {
+      enum: ['FLAT', 'PERCENTAGE'],
+    }).notNull(),
+    surchargeValue: int('surcharge_value').notNull(),
+
     gstApplicable: boolean('gst_applicable').default(false).notNull(),
-    gstRate: integer('gst_rate').default(18).notNull(),
-    gstOn: roleGstOnType().notNull(),
+    gstRate: int('gst_rate').default(18).notNull(),
+    gstOn: text('gst_on', {
+      enum: ['COMMISSION', 'SURCHARGE', 'BOTH'],
+    }).notNull(),
     gstInclusive: boolean('gst_inclusive').default(false).notNull(),
-    maxCommissionValue: integer('max_commission_value').default(0).notNull(),
+    maxCommissionValue: int('max_commission_value').default(0).notNull(),
     isActive: boolean('is_active').default(true).notNull(),
+
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
@@ -48,17 +54,14 @@ export const roleCommissionSettingTable = pgTable(
       columns: [table.tenantId],
       foreignColumns: [tenantsTable.id],
     }),
-
     platformServiceFk: foreignKey({
       columns: [table.platformServiceId],
       foreignColumns: [platformServiceTable.id],
     }),
-
     platformServiceFeatureFk: foreignKey({
       columns: [table.platformServiceFeatureId],
       foreignColumns: [platformServiceFeatureTable.id],
     }),
-
     roleFk: foreignKey({
       columns: [table.roleId],
       foreignColumns: [roleTable.id],
