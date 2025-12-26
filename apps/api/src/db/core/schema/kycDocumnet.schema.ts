@@ -3,7 +3,6 @@ import {
   varchar,
   timestamp,
   foreignKey,
-  text,
   index,
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
@@ -14,22 +13,18 @@ export const kycDocumentTable = mysqlTable(
   'kyc_documents',
   {
     id: varchar('id', { length: 36 })
-  .primaryKey()
-  .default(sql`(UUID())`),
+      .primaryKey()
+      .default(sql`(UUID())`),
 
-    ownerType: text('owner_type', {
-      enum: ['TENANT', 'USER'],
-    }).notNull(),
+    ownerType: varchar('owner_type', { length: 10 }).notNull(), // TENANT | USER
 
     ownerId: varchar('owner_id', { length: 36 }).notNull(),
 
     documentType: varchar('document_type', { length: 255 }).notNull(),
 
-    documentSide: text('document_side', {
-      enum: ['FRONT', 'BACK', 'SINGLE'],
-    })
+    documentSide: varchar('document_side', { length: 10 })
       .notNull()
-      .default('SINGLE'),
+      .default('SINGLE'), // FRONT | BACK | SINGLE
 
     documentUrl: varchar('document_url', { length: 500 }).notNull(),
     documentNumber: varchar('document_number', { length: 255 }),

@@ -3,7 +3,6 @@ import {
   varchar,
   timestamp,
   foreignKey,
-  text,
   index,
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
@@ -14,8 +13,8 @@ export const serverDetailTable = mysqlTable(
   'server_details',
   {
     id: varchar('id', { length: 36 })
-  .primaryKey()
-  .default(sql`(UUID())`),
+      .primaryKey()
+      .default(sql`(UUID())`),
 
     recordType: varchar('record_type', { length: 50 }).notNull(),
 
@@ -23,11 +22,7 @@ export const serverDetailTable = mysqlTable(
 
     value: varchar('value', { length: 45 }).notNull(),
 
-    status: text('status', {
-      enum: ['ACTIVE', 'INACTIVE'],
-    })
-      .notNull()
-      .default('ACTIVE'),
+    status: varchar('status', { length: 20 }).notNull().default('ACTIVE'), // ACTIVE | INACTIVE
 
     createdByUserId: varchar('created_by_user_id', {
       length: 36,

@@ -2,7 +2,6 @@ import {
   mysqlTable,
   varchar,
   timestamp,
-  text,
   int,
   boolean,
   foreignKey,
@@ -22,8 +21,8 @@ export const roleCommissionSettingTable = mysqlTable(
   'role_commission_settings',
   {
     id: varchar('id', { length: 36 })
-  .primaryKey()
-  .default(sql`(UUID())`),
+      .primaryKey()
+      .default(sql`(UUID())`),
 
     tenantId: varchar('tenant_id', { length: 36 }).notNull(),
     platformServiceId: varchar('platform_service_id', {
@@ -34,21 +33,16 @@ export const roleCommissionSettingTable = mysqlTable(
     }).notNull(),
     roleId: varchar('role_id', { length: 36 }).notNull(),
 
-    commissionType: text('commission_type', {
-      enum: ['FLAT', 'PERCENTAGE'],
-    }).notNull(),
+    commissionType: varchar('commission_type', { length: 20 }).notNull(),
+    // FLAT | PERCENTAGE
     commissionValue: int('commission_value').notNull(),
 
-    surchargeType: text('surcharge_type', {
-      enum: ['FLAT', 'PERCENTAGE'],
-    }).notNull(),
+    surchargeType: varchar('surcharge_type', { length: 20 }).notNull(), // FLAT | PERCENTAGE
     surchargeValue: int('surcharge_value').notNull(),
 
     gstApplicable: boolean('gst_applicable').default(false).notNull(),
     gstRate: int('gst_rate').default(18).notNull(),
-    gstOn: text('gst_on', {
-      enum: ['COMMISSION', 'SURCHARGE', 'BOTH'],
-    }).notNull(),
+    gstOn: varchar('gst_on', { length: 20 }).notNull(), // COMMISSION | SURCHARGE | BOTH
     gstInclusive: boolean('gst_inclusive').default(false).notNull(),
 
     maxCommissionValue: int('max_commission_value').default(0).notNull(),

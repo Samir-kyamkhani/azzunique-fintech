@@ -15,21 +15,19 @@ export const tenantPagesTable = mysqlTable(
   'tenants_pages',
   {
     id: varchar('id', { length: 36 })
-  .primaryKey()
-  .default(sql`(UUID())`),
+      .primaryKey()
+      .default(sql`(UUID())`),
 
     tenantId: varchar('tenant_id', { length: 36 }).notNull(),
 
     pageTitle: varchar('page_title', { length: 255 }).notNull(),
+
     pageContent: text('page_content'),
 
     pageUrl: varchar('page_url', { length: 255 }).notNull(),
 
-    status: text('status', {
-      enum: ['DRAFT', 'PUBLISHED', 'ARCHIVED'],
-    })
-      .notNull()
-      .default('DRAFT'),
+    status: varchar('status', { length: 20 }).notNull().default('DRAFT'),
+    // DRAFT | PUBLISHED | ARCHIVED
 
     createdByUserId: varchar('created_by_user_id', {
       length: 36,

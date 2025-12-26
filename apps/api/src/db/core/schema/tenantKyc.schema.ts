@@ -3,7 +3,6 @@ import {
   timestamp,
   foreignKey,
   varchar,
-  text,
   uniqueIndex,
   index,
 } from 'drizzle-orm/mysql-core';
@@ -15,16 +14,12 @@ export const tenantKycTable = mysqlTable(
   'tenants_kyc',
   {
     id: varchar('id', { length: 36 })
-  .primaryKey()
-  .default(sql`(UUID())`),
+      .primaryKey()
+      .default(sql`(UUID())`),
 
     tenantId: varchar('tenant_id', { length: 36 }).notNull(),
 
-    status: text('status', {
-      enum: ['PENDING', 'VERIFIED', 'REJECTED'],
-    })
-      .notNull()
-      .default('PENDING'),
+    status: varchar('status', { length: 20 }).notNull().default('PENDING'), // PENDING | VERIFIED | REJECTED
 
     submittedByUserId: varchar('submitted_by_user_id', {
       length: 36,

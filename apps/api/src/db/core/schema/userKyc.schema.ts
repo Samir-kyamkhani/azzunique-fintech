@@ -2,7 +2,6 @@ import {
   mysqlTable,
   timestamp,
   varchar,
-  text,
   foreignKey,
   uniqueIndex,
   index,
@@ -15,16 +14,15 @@ export const usersKycTable = mysqlTable(
   'users_kyc',
   {
     id: varchar('id', { length: 36 })
-  .primaryKey()
-  .default(sql`(UUID())`),
+      .primaryKey()
+      .default(sql`(UUID())`),
 
     userId: varchar('user_id', { length: 36 }).notNull(),
 
-    verificationStatus: text('verification_status', {
-      enum: ['PENDING', 'VERIFIED', 'REJECTED'],
-    })
+    verificationStatus: varchar('verification_status', { length: 20 })
       .notNull()
       .default('PENDING'),
+    // PENDING | VERIFIED | REJECTED
 
     submittedByUserId: varchar('submitted_by_user_id', { length: 36 }),
     verifiedByUserId: varchar('verified_by_user_id', { length: 36 }),

@@ -3,7 +3,6 @@ import {
   timestamp,
   foreignKey,
   varchar,
-  text,
   uniqueIndex,
   index,
 } from 'drizzle-orm/mysql-core';
@@ -24,9 +23,7 @@ export const tenantsDomainsTable = mysqlTable(
       length: 255,
     }).notNull(),
 
-    status: text('status', {
-      enum: ['ACTIVE', 'INACTIVE', 'SUSPENDED', 'DELETED'],
-    }).notNull(),
+    status: varchar('status', { length: 20 }).notNull(), // ACTIVE | INACTIVE | SUSPENDED | DELETED
 
     createdByEmployeeId: varchar('created_by_employee_id', {
       length: 36,

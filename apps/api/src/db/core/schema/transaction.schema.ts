@@ -5,7 +5,6 @@ import {
   varchar,
   json,
   int,
-  text,
   uniqueIndex,
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
@@ -16,8 +15,8 @@ export const transactionTable = mysqlTable(
   'transactions',
   {
     id: varchar('id', { length: 36 })
-  .primaryKey()
-  .default(sql`(UUID())`),
+      .primaryKey()
+      .default(sql`(UUID())`),
 
     tenantId: varchar('tenant_id', { length: 36 }).notNull(),
     platformServiceId: varchar('platform_service_id', { length: 36 }).notNull(),
@@ -32,18 +31,8 @@ export const transactionTable = mysqlTable(
 
     amount: int('amount').notNull().default(0), // stored in paise
 
-    status: text('status', {
-      enum: [
-        'INITIATED',
-        'PENDING',
-        'SUCCESS',
-        'FAILED',
-        'CANCELLED',
-        'REFUNDED',
-      ],
-    })
-      .notNull()
-      .default('INITIATED'),
+    status: varchar('status', { length: 20 }).notNull().default('INITIATED'),
+    // INITIATED | PENDING | SUCCESS | FAILED | CANCELLED | REFUNDED
 
     failureReason: varchar('failure_reason', { length: 500 }),
 

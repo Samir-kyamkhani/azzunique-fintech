@@ -3,7 +3,6 @@ import {
   timestamp,
   foreignKey,
   varchar,
-  text,
   boolean,
   uniqueIndex,
   index,
@@ -16,8 +15,8 @@ export const usersTable = mysqlTable(
   'users',
   {
     id: varchar('id', { length: 36 })
-  .primaryKey()
-  .default(sql`(UUID())`),
+      .primaryKey()
+      .default(sql`(UUID())`),
 
     userNumber: varchar('user_number', { length: 30 }).notNull(),
 
@@ -34,9 +33,7 @@ export const usersTable = mysqlTable(
     passwordHash: varchar('password_hash', { length: 255 }).notNull(),
     transactionPinHash: varchar('transaction_pin_hash', { length: 255 }),
 
-    userStatus: text('user_status', {
-      enum: ['ACTIVE', 'INACTIVE', 'SUSPENDED', 'DELETED'],
-    })
+    userStatus: varchar('user_status', { length: 20 })
       .notNull()
       .default('ACTIVE'),
 

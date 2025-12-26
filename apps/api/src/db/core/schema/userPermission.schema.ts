@@ -2,7 +2,6 @@ import {
   mysqlTable,
   timestamp,
   varchar,
-  text,
   foreignKey,
   uniqueIndex,
 } from 'drizzle-orm/mysql-core';
@@ -14,17 +13,13 @@ export const userPermissionTable = mysqlTable(
   'user_permissions',
   {
     id: varchar('id', { length: 36 })
-  .primaryKey()
-  .default(sql`(UUID())`),
+      .primaryKey()
+      .default(sql`(UUID())`),
 
     userId: varchar('user_id', { length: 36 }).notNull(),
     permissionId: varchar('permission_id', { length: 36 }).notNull(),
 
-    effect: text('effect', {
-      enum: ['ALLOW', 'DENY'],
-    })
-      .notNull()
-      .default('ALLOW'),
+    effect: varchar('effect', { length: 20 }).notNull().default('ALLOW'), // ALLOW | DENY
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),

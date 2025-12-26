@@ -4,7 +4,6 @@ import {
   timestamp,
   foreignKey,
   boolean,
-  text,
   uniqueIndex,
   index,
 } from 'drizzle-orm/mysql-core';
@@ -16,8 +15,8 @@ export const piiConsentTable = mysqlTable(
   'pii_consent',
   {
     id: varchar('id', { length: 36 })
-  .primaryKey()
-  .default(sql`(UUID())`),
+      .primaryKey()
+      .default(sql`(UUID())`),
 
     userId: varchar('user_id', { length: 36 }).notNull(),
     tenantId: varchar('tenant_id', { length: 36 }).notNull(),
@@ -26,9 +25,7 @@ export const piiConsentTable = mysqlTable(
 
     consentGiven: boolean('consent_given').notNull(),
 
-    consentSource: text('consent_source', {
-      enum: ['WEB', 'MOBILE'],
-    }).notNull(),
+    consentSource: varchar('consent_source', { length: 10 }).notNull(), // WEB | MOBILE
 
     consentVersion: varchar('consent_version', { length: 50 }).notNull(),
 

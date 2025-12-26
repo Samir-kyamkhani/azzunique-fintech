@@ -3,7 +3,6 @@ import {
   varchar,
   timestamp,
   foreignKey,
-  text,
   uniqueIndex,
   index,
 } from 'drizzle-orm/mysql-core';
@@ -13,8 +12,8 @@ export const tenantsTable = mysqlTable(
   'tenants',
   {
     id: varchar('id', { length: 36 })
-  .primaryKey()
-  .default(sql`(UUID())`),
+      .primaryKey()
+      .default(sql`(UUID())`),
 
     tenantNumber: varchar('tenant_number', { length: 30 }).notNull(),
 
@@ -23,13 +22,11 @@ export const tenantsTable = mysqlTable(
       length: 255,
     }).notNull(),
 
-    tenantType: text('tenant_type', {
-      enum: ['PROPRIETORSHIP', 'PARTNERSHIP', 'PRIVATE_LIMITED'],
-    }).notNull(),
+    tenantType: varchar('tenant_type', { length: 30 }).notNull(),
+    // PROPRIETORSHIP | PARTNERSHIP | PRIVATE_LIMITED
 
-    userType: text('user_type', {
-      enum: ['AZZUNIQUE', 'RESELLER', 'WHITELABEL'],
-    }).notNull(),
+    userType: varchar('user_type', { length: 20 }).notNull(),
+    // AZZUNIQUE | RESELLER | WHITELABEL
 
     tenantEmail: varchar('tenant_email', {
       length: 255,
@@ -47,9 +44,8 @@ export const tenantsTable = mysqlTable(
       length: 36,
     }),
 
-    tenantStatus: text('tenant_status', {
-      enum: ['ACTIVE', 'INACTIVE', 'SUSPENDED', 'DELETED'],
-    }).notNull(),
+    tenantStatus: varchar('tenant_status', { length: 20 }).notNull(),
+    // ACTIVE | INACTIVE | SUSPENDED | DELETED
 
     tenantMobileNumber: varchar('tenant_mobile_number', {
       length: 20,

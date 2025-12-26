@@ -4,7 +4,6 @@ import {
   timestamp,
   foreignKey,
   int,
-  text,
   index,
   uniqueIndex,
 } from 'drizzle-orm/mysql-core';
@@ -16,8 +15,8 @@ export const refundTable = mysqlTable(
   'refunds',
   {
     id: varchar('id', { length: 36 })
-  .primaryKey()
-  .default(sql`(UUID())`),
+      .primaryKey()
+      .default(sql`(UUID())`),
 
     transactionId: varchar('transaction_id', { length: 36 }),
 
@@ -25,11 +24,7 @@ export const refundTable = mysqlTable(
 
     amount: int('amount').notNull().default(0), // paise
 
-    status: text('status', {
-      enum: ['PENDING', 'SUCCESS', 'FAILED'],
-    })
-      .notNull()
-      .default('PENDING'),
+    status: varchar('status', { length: 20 }).notNull().default('PENDING'), // PENDING | SUCCESS | FAILED
 
     initiatedByUserId: varchar('initiated_by_user_id', {
       length: 36,

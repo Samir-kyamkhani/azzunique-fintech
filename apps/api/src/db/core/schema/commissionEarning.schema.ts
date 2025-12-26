@@ -4,7 +4,6 @@ import {
   timestamp,
   foreignKey,
   int,
-  text,
   uniqueIndex,
   index,
 } from 'drizzle-orm/mysql-core';
@@ -23,8 +22,8 @@ export const commissionEarningTable = mysqlTable(
   'commission_earnings',
   {
     id: varchar('id', { length: 36 })
-  .primaryKey()
-  .default(sql`(UUID())`),
+      .primaryKey()
+      .default(sql`(UUID())`),
 
     userId: varchar('user_id', { length: 36 }).notNull(),
     tenantId: varchar('tenant_id', { length: 36 }).notNull(),
@@ -42,16 +41,12 @@ export const commissionEarningTable = mysqlTable(
       length: 36,
     }).notNull(),
 
-    commissionType: text('commission_type', {
-      enum: ['FLAT', 'PERCENTAGE'],
-    }).notNull(),
+    commissionType: varchar('commission_type', { length: 20 }).notNull(), // FLAT | PERCENTAGE
 
     commissionValue: int('commission_value').notNull(),
     commissionAmount: int('commission_amount').notNull(),
 
-    surchargeType: text('surcharge_type', {
-      enum: ['FLAT', 'PERCENTAGE'],
-    }).notNull(),
+    surchargeType: varchar('surcharge_type', { length: 20 }).notNull(), // FLAT | PERCENTAGE
 
     surchargeValue: int('surcharge_value').notNull(),
     surchargeAmount: int('surcharge_amount').notNull(),

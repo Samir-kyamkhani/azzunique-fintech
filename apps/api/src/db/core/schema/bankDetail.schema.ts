@@ -4,7 +4,6 @@ import {
   foreignKey,
   varchar,
   boolean,
-  text,
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 
@@ -14,8 +13,8 @@ export const bankDetailTable = mysqlTable(
   'tenants_bank_detail',
   {
     id: varchar('id', { length: 36 })
-  .primaryKey()
-  .default(sql`(UUID())`),
+      .primaryKey()
+      .default(sql`(UUID())`),
 
     bankName: varchar('bank_name', { length: 255 }).notNull(),
     accountHolderName: varchar('account_holder_name', {
@@ -31,11 +30,11 @@ export const bankDetailTable = mysqlTable(
       length: 500,
     }).notNull(),
 
-    verificationStatus: text('verification_status', {
-      enum: ['PENDING', 'VERIFIED', 'REJECTED'],
+    verificationStatus: varchar('verification_status', {
+      length: 20,
     })
       .notNull()
-      .default('PENDING'),
+      .default('PENDING'), // PENDING | VERIFIED | REJECTED
 
     ownerId: varchar('owner_id', { length: 36 }).notNull(),
     tenantId: varchar('tenant_id', { length: 36 }).notNull(),

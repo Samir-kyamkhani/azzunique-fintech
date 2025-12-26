@@ -1,7 +1,6 @@
 import {
   foreignKey,
   mysqlTable,
-  text,
   timestamp,
   varchar,
   index,
@@ -14,8 +13,8 @@ export const employeesTable = mysqlTable(
   'employees',
   {
     id: varchar('id', { length: 36 })
-  .primaryKey()
-  .default(sql`(UUID())`),
+      .primaryKey()
+      .default(sql`(UUID())`),
 
     employeeNumber: varchar('employee_number', { length: 30 })
       .notNull()
@@ -33,11 +32,9 @@ export const employeesTable = mysqlTable(
 
     passwordHash: varchar('password_hash', { length: 255 }).notNull(),
 
-    employeeStatus: text('employee_status', {
-      enum: ['ACTIVE', 'INACTIVE', 'SUSPENDED'],
-    })
+    employeeStatus: varchar('employee_status', { length: 20 })
       .notNull()
-      .default('INACTIVE'),
+      .default('INACTIVE'), // ACTIVE | INACTIVE | SUSPENDED
 
     departmentId: varchar('department_id', { length: 36 }).notNull(),
 
