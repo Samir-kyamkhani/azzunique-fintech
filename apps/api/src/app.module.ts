@@ -8,6 +8,12 @@ import { RolesModule } from './roles/roles.module';
 import { UsersModule } from './users/users.module';
 import { EmployeesModule } from './employees/employees.module';
 import { AuditlogModule } from './auditlog/auditlog.module';
+import { RolesPermissionsModule } from './roles-permissions/roles-permissions.module';
+import { PermissionsModule } from './permissions/permissions.module';
+import { UsersPermissionsModule } from './users-permissions/users-permissions.module';
+import { EmployeesPermissionsModule } from './employees-permissions/employees-permissions.module';
+import { DepartmentsPermissionsModule } from './departments-permissions/departments-permissions.module';
+import { DepartmentsModule } from './departments/departments.module';
 
 @Module({
   controllers: [HealthController],
@@ -20,6 +26,12 @@ import { AuditlogModule } from './auditlog/auditlog.module';
     UsersModule,
     EmployeesModule,
     AuditlogModule,
+    RolesPermissionsModule,
+    PermissionsModule,
+    UsersPermissionsModule,
+    EmployeesPermissionsModule,
+    DepartmentsPermissionsModule,
+    DepartmentsModule,
   ],
 })
 export class AppModule {}
