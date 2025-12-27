@@ -6,11 +6,10 @@ import { AuditLogQueryDto, CreateAuditLogDto, LoginAuditDto } from '@repo/api';
 
 @Injectable()
 export class AuditlogService {
-  // =========================
-  // CREATE
-  // =========================
+  constructor(private readonly db: CoreDbService) {}
+
   async create(dto: CreateAuditLogDto) {
-    const [result] = await CoreDbService.insert(auditLogTable)
+    const [result] = await this.db.insert(auditLogTable)
       .values({
         entityType: dto.entityType,
         entityId: dto.entityId,
@@ -45,7 +44,7 @@ export class AuditlogService {
     if (action) filters.push(eq(auditLogTable.action, action));
     if (tenantId) filters.push(eq(auditLogTable.tenantId, tenantId));
 
-    const data = await CoreDbService.select()
+    const data = await this.db.select()
       .from(auditLogTable)
       .where(filters.length ? and(...filters) : undefined)
       .limit(limit)
@@ -64,7 +63,7 @@ export class AuditlogService {
   // GET ONE
   // =========================
   async getById(id: string) {
-    const [log] = await CoreDbService.select()
+    const [log] = await this.db.select()
       .from(auditLogTable)
       .where(eq(auditLogTable.id, id))
       .limit(1);
@@ -80,7 +79,7 @@ export class AuditlogService {
   // DELETE (Hard delete)
   // =========================
   async delete(id: string) {
-    const exists = await CoreDbService.select({ id: auditLogTable.id })
+    const exists = await this.db.select({ id: auditLogTable.id })
       .from(auditLogTable)
       .where(eq(auditLogTable.id, id))
       .limit(1);
@@ -89,7 +88,7 @@ export class AuditlogService {
       throw new NotFoundException('Audit log not found');
     }
 
-    await CoreDbService.delete(auditLogTable).where(eq(auditLogTable.id, id));
+    await this.db.delete(auditLogTable).where(eq(auditLogTable.id, id));
 
     return { success: true };
   }
