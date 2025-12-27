@@ -1,1 +1,0 @@
-ALTER TABLE `audit_log` DROP COLUMN `meta_data_2`;

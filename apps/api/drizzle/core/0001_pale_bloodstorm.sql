@@ -1,1 +1,0 @@
-ALTER TABLE `audit_log` ADD `meta_data_2` json;
