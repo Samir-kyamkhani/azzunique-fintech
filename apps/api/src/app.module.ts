@@ -13,11 +13,14 @@ import { UsersPermissionsModule } from './users-permissions/users-permissions.mo
 import { EmployeesPermissionsModule } from './employees-permissions/employees-permissions.module';
 import { DepartmentsPermissionsModule } from './departments-permissions/departments-permissions.module';
 import { DepartmentsModule } from './departments/departments.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  controllers: [HealthController],
-  providers: [HealthService],
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
     TenantsModule,
     TenantDomainsModule,
     RolesModule,
@@ -31,5 +34,7 @@ import { DepartmentsModule } from './departments/departments.module';
     DepartmentsPermissionsModule,
     DepartmentsModule,
   ],
+  controllers: [HealthController],
+  providers: [HealthService],
 })
 export class AppModule {}
