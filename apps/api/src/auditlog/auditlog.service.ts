@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { and, desc, eq, SQL } from 'drizzle-orm';
-import { coreDb } from 'src/db/core/drizzle';
+import { CoreDbService } from 'src/db/core/drizzle';
 import { auditLogTable } from 'src/db/core/schema';
 import { AuditLogQueryDto, CreateAuditLogDto, LoginAuditDto } from '@repo/api';
 
@@ -10,8 +10,7 @@ export class AuditlogService {
   // CREATE
   // =========================
   async create(dto: CreateAuditLogDto) {
-    const [result] = await coreDb
-      .insert(auditLogTable)
+    const [result] = await CoreDbService.insert(auditLogTable)
       .values({
         entityType: dto.entityType,
         entityId: dto.entityId,
@@ -46,8 +45,7 @@ export class AuditlogService {
     if (action) filters.push(eq(auditLogTable.action, action));
     if (tenantId) filters.push(eq(auditLogTable.tenantId, tenantId));
 
-    const data = await coreDb
-      .select()
+    const data = await CoreDbService.select()
       .from(auditLogTable)
       .where(filters.length ? and(...filters) : undefined)
       .limit(limit)
@@ -66,8 +64,7 @@ export class AuditlogService {
   // GET ONE
   // =========================
   async getById(id: string) {
-    const [log] = await coreDb
-      .select()
+    const [log] = await CoreDbService.select()
       .from(auditLogTable)
       .where(eq(auditLogTable.id, id))
       .limit(1);
@@ -83,8 +80,7 @@ export class AuditlogService {
   // DELETE (Hard delete)
   // =========================
   async delete(id: string) {
-    const exists = await coreDb
-      .select({ id: auditLogTable.id })
+    const exists = await CoreDbService.select({ id: auditLogTable.id })
       .from(auditLogTable)
       .where(eq(auditLogTable.id, id))
       .limit(1);
@@ -93,7 +89,7 @@ export class AuditlogService {
       throw new NotFoundException('Audit log not found');
     }
 
-    await coreDb.delete(auditLogTable).where(eq(auditLogTable.id, id));
+    await CoreDbService.delete(auditLogTable).where(eq(auditLogTable.id, id));
 
     return { success: true };
   }
