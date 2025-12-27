@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@nestjs/mapped-types':
+        specifier: '*'
+        version: 2.1.0(@nestjs/common@11.1.9)(reflect-metadata@0.2.2)
     devDependencies:
       '@repo/eslint-config':
         specifier: workspace:*
