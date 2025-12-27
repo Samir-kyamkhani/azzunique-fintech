@@ -13,6 +13,8 @@ import {
 import { RolesService } from './roles.service';
 import { CreateRoleDto } from './dtos/create-role.dto';
 import { UpdateRoleDto } from './dtos/update-role.dto';
+import { BulkCreateRoleDto } from './dtos/bulk-create-role.dto';
+import { BulkDeleteRoleDto } from './dtos/bulk-delete-role.dto';
 
 @Controller('roles')
 export class RolesController {
@@ -42,6 +44,19 @@ export class RolesController {
   @Patch(':id')
   async update(@Param('id') id: string, @Body() dto: UpdateRoleDto) {
     return this.rolesService.update(id, dto);
+  }
+
+  @Post('bulk-create')
+  @HttpCode(HttpStatus.CREATED)
+  async bulkCreate(@Body() dto: BulkCreateRoleDto) {
+    return this.rolesService.bulkCreate(dto.roles);
+  }
+
+  @Delete('bulk-delete')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async bulkDelete(@Body() dto: BulkDeleteRoleDto) {
+    await this.rolesService.bulkDelete(dto.ids);
+    return null;
   }
 
   @Delete(':id')

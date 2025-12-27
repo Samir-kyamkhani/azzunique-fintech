@@ -3,7 +3,7 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
-import { eq, sql } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 
 import { CoreDbService } from '../db/core/drizzle';
@@ -114,5 +114,67 @@ export class RolesService {
     return {
       message: 'Role deleted successfully',
     };
+  }
+
+  async bulkCreate(dtos: CreateRoleDto[]) {
+    const roleCodes = dtos.map((r) => r.roleCode);
+    const uniqueCodes = new Set(roleCodes);
+
+    if (uniqueCodes.size !== roleCodes.length) {
+      throw new ConflictException('Duplicate roleCode in request payload');
+    }
+
+    const existing = await this.db
+      .select({ roleCode: roleTable.roleCode })
+      .from(roleTable)
+      .where(inArray(roleTable.roleCode, roleCodes));
+
+    if (existing.length) {
+      throw new ConflictException(
+        `Role codes already exist: ${existing
+          .map((r) => r.roleCode)
+          .join(', ')}`,
+      );
+    }
+
+    const values = dtos.map((dto) => ({
+      id: randomUUID(),
+      roleCode: dto.roleCode,
+      roleName: dto.roleName,
+      roleDescription: dto.roleDescription ?? null,
+    }));
+
+    await this.db.insert(roleTable).values(values);
+
+    return {
+      count: values.length,
+      message: 'Roles created successfully',
+    };
+  }
+
+  async bulkDelete(ids: string[]) {
+    if (!ids.length) {
+      return { count: 0 };
+    }
+
+    return this.db.transaction(async (tx) => {
+      const existing = await tx
+        .select({ id: roleTable.id })
+        .from(roleTable)
+        .where(eq(roleTable.id, ids[0]));
+
+      if (!existing.length) {
+        throw new NotFoundException('No roles found for deletion');
+      }
+
+      for (const id of ids) {
+        await tx.delete(roleTable).where(eq(roleTable.id, id));
+      }
+
+      return {
+        count: ids.length,
+        message: 'Roles deleted successfully',
+      };
+    });
   }
 }
