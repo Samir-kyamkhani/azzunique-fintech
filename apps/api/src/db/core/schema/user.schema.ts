@@ -35,7 +35,7 @@ export const usersTable = mysqlTable(
 
     userStatus: varchar('user_status', { length: 20 })
       .notNull()
-      .default('ACTIVE'),
+      .default('INACTIVE'),
 
     isKycVerified: boolean('is_kyc_verified').notNull().default(false),
 
@@ -55,7 +55,7 @@ export const usersTable = mysqlTable(
 
     createdByEmployeeId: varchar('created_by_employee_id', {
       length: 36,
-    }).notNull(),
+    }),
 
     tenantId: varchar('tenant_id', { length: 36 }).notNull(),
 

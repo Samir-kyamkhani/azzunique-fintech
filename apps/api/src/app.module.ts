@@ -15,6 +15,7 @@ import { DepartmentsPermissionsModule } from './departments-permissions/departme
 import { DepartmentsModule } from './departments/departments.module';
 import { ConfigModule } from '@nestjs/config';
 import { ServerDetailsModule } from './server-details/server-details.module';
+import { EmailsModule } from './emails/emails.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { ServerDetailsModule } from './server-details/server-details.module';
     DepartmentsPermissionsModule,
     DepartmentsModule,
     ServerDetailsModule,
+    EmailsModule,
   ],
   controllers: [HealthController],
   providers: [HealthService],
