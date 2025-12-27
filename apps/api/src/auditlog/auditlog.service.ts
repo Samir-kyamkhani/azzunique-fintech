@@ -2,14 +2,17 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { and, desc, eq, SQL } from 'drizzle-orm';
 import { CoreDbService } from 'src/db/core/drizzle';
 import { auditLogTable } from 'src/db/core/schema';
-import { AuditLogQueryDto, CreateAuditLogDto, LoginAuditDto } from '@repo/api';
+import { CreateAuditLogDto } from './dto/auditlog-create.dto';
+import { AuditLogQueryDto } from './dto/auditlog-query.dto';
+import { LoginAuditDto } from './dto/login-audit.dto';
 
 @Injectable()
 export class AuditlogService {
   constructor(private readonly db: CoreDbService) {}
 
   async create(dto: CreateAuditLogDto) {
-    const [result] = await this.db.insert(auditLogTable)
+    const [result] = await this.db
+      .insert(auditLogTable)
       .values({
         entityType: dto.entityType,
         entityId: dto.entityId,
@@ -44,7 +47,8 @@ export class AuditlogService {
     if (action) filters.push(eq(auditLogTable.action, action));
     if (tenantId) filters.push(eq(auditLogTable.tenantId, tenantId));
 
-    const data = await this.db.select()
+    const data = await this.db
+      .select()
       .from(auditLogTable)
       .where(filters.length ? and(...filters) : undefined)
       .limit(limit)
@@ -63,7 +67,8 @@ export class AuditlogService {
   // GET ONE
   // =========================
   async getById(id: string) {
-    const [log] = await this.db.select()
+    const [log] = await this.db
+      .select()
       .from(auditLogTable)
       .where(eq(auditLogTable.id, id))
       .limit(1);
@@ -79,7 +84,8 @@ export class AuditlogService {
   // DELETE (Hard delete)
   // =========================
   async delete(id: string) {
-    const exists = await this.db.select({ id: auditLogTable.id })
+    const exists = await this.db
+      .select({ id: auditLogTable.id })
       .from(auditLogTable)
       .where(eq(auditLogTable.id, id))
       .limit(1);

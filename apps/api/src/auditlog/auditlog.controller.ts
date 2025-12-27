@@ -1,6 +1,6 @@
 import { Controller, Get, Delete, Param, Query } from '@nestjs/common';
 import { AuditlogService } from './auditlog.service';
-import { AuditLogQueryDto } from '@repo/api';
+import { AuditLogQueryDto } from './dto/auditlog-query.dto';
 
 @Controller('auditlog')
 export class AuditlogController {
