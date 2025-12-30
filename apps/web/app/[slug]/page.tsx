@@ -1,1 +1,0 @@
-// CMS pages (about, contact, etc.)

@@ -25,7 +25,6 @@ import { UtilsModule } from './lib/utils/utils.module';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
-      load: [() => import('./lib/config/env.config').then((m) => m.default())],
     }),
     TenantsModule,
     TenantDomainsModule,
