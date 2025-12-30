@@ -3,7 +3,7 @@ import {
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
-import { and, eq, isNull, or } from 'drizzle-orm';
+import { and, eq, InferSelectModel, isNull, or } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 
 import { CoreDbService } from '../db/core/drizzle';
@@ -11,19 +11,33 @@ import { usersTable } from '../db/core/schema';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
 
+type User = InferSelectModel<typeof usersTable>;
+
 @Injectable()
 export class UsersService {
   constructor(private readonly db: CoreDbService) {}
 
   async create(dto: CreateUserDto) {
+    const {
+      userNumber,
+      firstName,
+      lastName,
+      email,
+      mobileNumber,
+      roleId,
+      tenantId,
+      parentId,
+      createdByEmployeeId,
+    } = dto;
+
     const existing = await this.db
       .select({ id: usersTable.id })
       .from(usersTable)
       .where(
         or(
-          eq(usersTable.email, dto.email),
-          eq(usersTable.mobileNumber, dto.mobileNumber),
-          eq(usersTable.userNumber, dto.userNumber),
+          eq(usersTable.email, email),
+          eq(usersTable.mobileNumber, mobileNumber),
+          eq(usersTable.userNumber, userNumber),
         ),
       )
       .limit(1);
@@ -34,21 +48,33 @@ export class UsersService {
       );
     }
 
+    if (parentId) {
+      const [parent] = await this.db
+        .select({ id: usersTable.id })
+        .from(usersTable)
+        .where(eq(usersTable.id, parentId))
+        .limit(1);
+
+      if (!parent) {
+        throw new NotFoundException('Invalid parent user');
+      }
+    }
+
     const id = randomUUID();
 
     await this.db.insert(usersTable).values({
       id,
-      userNumber: dto.userNumber,
-      firstName: dto.firstName,
-      lastName: dto.lastName,
-      email: dto.email,
-      mobileNumber: dto.mobileNumber,
+      userNumber,
+      firstName,
+      lastName,
+      email,
+      mobileNumber,
       passwordHash: dto.passwordHash,
       transactionPinHash: dto.transactionPinHash ?? null,
-      roleId: dto.roleId,
-      tenantId: dto.tenantId,
-      parentId: dto.parentId ?? null,
-      createdByEmployeeId: dto.createdByEmployeeId,
+      roleId,
+      tenantId,
+      parentId: parentId ?? null,
+      createdByEmployeeId: createdByEmployeeId ?? null,
     });
 
     return {
@@ -61,7 +87,9 @@ export class UsersService {
     return this.db
       .select()
       .from(usersTable)
-      .where(eq(usersTable.tenantId, tenantId));
+      .where(
+        and(eq(usersTable.tenantId, tenantId), isNull(usersTable.deletedAt)),
+      );
   }
 
   async findOne(id: string) {
@@ -76,7 +104,7 @@ export class UsersService {
     }
 
     return users[0];
-  } 
+  }
 
   async update(id: string, dto: UpdateUserDto) {
     await this.findOne(id);
@@ -124,10 +152,13 @@ export class UsersService {
       .orderBy(usersTable.createdAt);
   }
 
-  async getAllDescendants(rootUserId: string, tenantId: string) {
-    const result: any[] = [];
+  async getAllDescendants(
+    rootUserId: string,
+    tenantId: string,
+  ): Promise<User[]> {
+    const result: User[] = [];
 
-    const fetch = async (parentId: string) => {
+    const fetch = async (parentId: string): Promise<void> => {
       const children = await this.db
         .select()
         .from(usersTable)
@@ -146,7 +177,6 @@ export class UsersService {
     };
 
     await fetch(rootUserId);
-
     return result;
   }
 }

@@ -19,6 +19,9 @@ export class CreateUserDto {
   @MaxLength(100)
   lastName!: string;
 
+  @IsString()
+  profileImage!: string;
+
   @IsEmail()
   email!: string;
 
