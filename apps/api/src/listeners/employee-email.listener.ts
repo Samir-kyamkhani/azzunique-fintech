@@ -15,17 +15,19 @@ export class EmployeeEmailListener {
   }
 
   private register() {
-    this.eventBus.on(
-      'employee.created',
-      async (payload: EmployeeCreatedEvent) => {
-        try {
-          console.log(`Sending email to ${payload.email}`);
-          await this.emailService.sendEmployeeCredentials(payload);
-          console.log(`Sending email to ${payload.email} - Success`);
-        } catch (err) {
-          this.logger.error(`Email failed for ${payload.email}`, err);
-        }
-      },
-    );
+    this.eventBus.on('employee.created', (payload: EmployeeCreatedEvent) => {
+      // 👇 explicitly ignore returned promise
+      void this.handleEmployeeCreated(payload);
+    });
+  }
+
+  private async handleEmployeeCreated(payload: EmployeeCreatedEvent) {
+    try {
+      this.logger.log(`Sending email to ${payload.email}`);
+      await this.emailService.sendEmployeeCredentials(payload);
+      this.logger.log(`Email sent to ${payload.email}`);
+    } catch (err) {
+      this.logger.error(`Email failed for ${payload.email}`, err);
+    }
   }
 }

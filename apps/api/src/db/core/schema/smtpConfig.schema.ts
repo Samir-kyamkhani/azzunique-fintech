@@ -13,8 +13,8 @@ export const smtpConfigTable = mysqlTable(
   'tenants_smtp_config',
   {
     id: varchar('id', { length: 36 })
-  .primaryKey()
-  .default(sql`(UUID())`),
+      .primaryKey()
+      .default(sql`(UUID())`),
 
     smtpHost: varchar('smtp_host', { length: 255 }).notNull(),
     smtpPort: varchar('smtp_port', { length: 10 }).notNull(),
