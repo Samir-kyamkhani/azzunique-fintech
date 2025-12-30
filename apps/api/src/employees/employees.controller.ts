@@ -14,7 +14,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Request } from 'express';
+import type { Request } from 'express';
 
 import { EmployeesService } from './employees.service';
 import { GetEmployeesDto } from './dto/get-employees-dto';

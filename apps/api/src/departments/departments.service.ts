@@ -45,10 +45,12 @@ export class DepartmentsService {
       .limit(limit)
       .offset(offset);
 
-    const [{ count }] = await this.db
+    const [result = { count: 0 }] = await this.db
       .select({ count: sql<number>`COUNT(*)` })
       .from(departmentTable)
       .where(and(...conditions));
+
+    const count = result.count;
 
     return {
       data,
@@ -88,12 +90,13 @@ export class DepartmentsService {
         createdByEmployeeId: actor.employeeId ?? null,
       });
     } catch (err: any) {
-      if (err?.code === 'ER_DUP_ENTRY') {
+      if ((err as { code?: string }).code === 'ER_DUP_ENTRY') {
         throw new BadRequestException(
           'Department code already exists for this tenant',
         );
       }
-      throw err;
+
+      throw err; // rethrow other errors
     }
 
     // 🧾 AUDIT LOG
@@ -101,10 +104,10 @@ export class DepartmentsService {
       entityType: 'DEPARTMENT',
       entityId: departmentId,
       action: 'CREATE',
-      oldData: null,
+      oldData: undefined,
       newData: dto,
-      performByUserId: actor.userId ?? null,
-      performByEmployeeId: actor.employeeId ?? null,
+      performByUserId: actor.userId! ?? null,
+      performByEmployeeId: actor.employeeId! ?? null,
       ipAddress: req.ipAddress,
       userAgent: req.userAgent,
       tenantId: actor.tenantId,
@@ -149,8 +152,8 @@ export class DepartmentsService {
       action: 'UPDATE',
       oldData: existing,
       newData: dto,
-      performByUserId: actor.userId ?? null,
-      performByEmployeeId: actor.employeeId ?? null,
+      performByUserId: actor.userId! ?? null,
+      performByEmployeeId: actor.employeeId! ?? null,
       ipAddress: req.ipAddress,
       userAgent: req.userAgent,
       tenantId: actor.tenantId,
@@ -185,9 +188,9 @@ export class DepartmentsService {
       entityId: departmentId,
       action: 'DELETE',
       oldData: existing,
-      newData: null,
-      performByUserId: actor.userId ?? null,
-      performByEmployeeId: actor.employeeId ?? null,
+      newData: undefined,
+      performByUserId: actor.userId! ?? null,
+      performByEmployeeId: actor.employeeId! ?? null,
       ipAddress: req.ipAddress,
       userAgent: req.userAgent,
       tenantId: actor.tenantId,

@@ -90,7 +90,7 @@ export class AuthUtilsService {
     const rnd = randomBytes(length);
 
     for (let i = 0; i < length; i++) {
-      result += chars[rnd[i] % chars.length];
+      result += chars[rnd[i]! % chars.length];
     }
     return result;
   }

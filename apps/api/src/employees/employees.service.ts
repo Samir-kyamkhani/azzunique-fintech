@@ -45,13 +45,18 @@ export class EmployeesService {
     }
 
     if (query.search) {
-      conditions.push(
-        or(
-          like(employeesTable.firstName, `%${query.search}%`),
-          like(employeesTable.lastName, `%${query.search}%`),
-          like(employeesTable.email, `%${query.search}%`),
-        ),
+      const search = `%${query.search}%`;
+
+      const searchCondition = or(
+        like(employeesTable.firstName, search),
+        like(employeesTable.lastName, search),
+        like(employeesTable.email, search),
       );
+
+      if (searchCondition) {
+        // only push if it's defined
+        conditions.push(searchCondition);
+      }
     }
 
     const data = await this.db
@@ -67,7 +72,7 @@ export class EmployeesService {
       this.authUtils.stripSensitive(emp, ['passwordHash', 'refreshTokenHash']),
     );
 
-    const [{ count }] = await this.db
+    const [{ count = 0 } = {}] = await this.db
       .select({ count: sql<number>`COUNT(*)` })
       .from(employeesTable)
       .where(and(...conditions));
@@ -133,7 +138,7 @@ export class EmployeesService {
       lastName: dto.lastName,
       email: dto.email,
       mobileNumber: dto.mobileNumber,
-      profilePicture: profilePictureUrl,
+      profilePicture: profilePictureUrl! ?? null,
       passwordHash: encryptedPassword,
       employeeStatus: dto.employeeStatus ?? 'INACTIVE',
       departmentId: dto.departmentId,

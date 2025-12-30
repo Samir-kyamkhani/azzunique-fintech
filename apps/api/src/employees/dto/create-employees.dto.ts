@@ -10,25 +10,25 @@ import {
 export class CreateEmployeeDto {
   @IsNotEmpty()
   @IsString()
-  firstName: string;
+  firstName!: string;
 
   @IsNotEmpty()
   @IsString()
-  lastName: string;
+  lastName!: string;
 
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsNotEmpty()
   @IsString()
-  mobileNumber: string;
+  mobileNumber!: string;
 
   @IsOptional()
   @IsString()
   profilePicture?: string;
 
   @IsUUID()
-  departmentId: string;
+  departmentId!: string;
 
   @IsOptional()
   @IsIn(['ACTIVE', 'INACTIVE', 'SUSPENDED'])

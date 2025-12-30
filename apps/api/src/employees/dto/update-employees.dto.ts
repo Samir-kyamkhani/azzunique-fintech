@@ -17,11 +17,11 @@ export class UpdateEmployeeDto {
 
   @IsOptional()
   @IsEmail()
-  email: string;
+  email?: string;
 
   @IsNotEmpty()
   @IsString()
-  mobileNumber: string;
+  mobileNumber?: string;
 
   @IsOptional()
   @IsUUID()

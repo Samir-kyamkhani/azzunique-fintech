@@ -3,5 +3,5 @@ import { IsIn } from 'class-validator';
 
 export class UpdateServerStatusDto {
   @IsIn(['ACTIVE', 'INACTIVE', 'SUSPENDED'])
-  status: string;
+  status!: string;
 }

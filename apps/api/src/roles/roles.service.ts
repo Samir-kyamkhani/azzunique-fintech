@@ -75,6 +75,9 @@ export class RolesService {
 
   async update(id: string, dto: UpdateRoleDto) {
     const existing = await this.findOne(id);
+    if (!existing) {
+      throw new Error('Role not found');
+    }
 
     if (dto.roleCode && dto.roleCode !== existing.roleCode) {
       const conflict = await this.db
@@ -158,16 +161,23 @@ export class RolesService {
     }
 
     return this.db.transaction(async (tx) => {
+      // Use a filter to ensure only defined IDs are used
+      const firstId = ids[0];
+      if (!firstId) {
+        throw new Error('Invalid ID');
+      }
+
       const existing = await tx
         .select({ id: roleTable.id })
         .from(roleTable)
-        .where(eq(roleTable.id, ids[0]));
+        .where(eq(roleTable.id, firstId));
 
       if (!existing.length) {
         throw new NotFoundException('No roles found for deletion');
       }
 
       for (const id of ids) {
+        if (!id) continue; // skip undefined just in case
         await tx.delete(roleTable).where(eq(roleTable.id, id));
       }
 

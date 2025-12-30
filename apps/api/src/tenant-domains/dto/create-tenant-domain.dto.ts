@@ -9,14 +9,14 @@ import {
 export class CreateTenantDomainDto {
   @IsString()
   @IsNotEmpty()
-  domainName: string;
+  domainName!: string;
 
   @IsIn(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'DELETED'])
-  status: string;
+  status!: string;
 
   @IsOptional()
   @IsUUID()
-  createdByUserId: string;
+  createdByUserId!: string;
 
   @IsOptional()
   @IsUUID()
@@ -24,5 +24,5 @@ export class CreateTenantDomainDto {
 
   @IsOptional()
   @IsUUID()
-  serverDetailId: string;
+  serverDetailId!: string;
 }

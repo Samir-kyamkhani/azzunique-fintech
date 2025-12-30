@@ -3,5 +3,5 @@ import { IsIn } from 'class-validator';
 
 export class UpdateTenantDomainStatusDto {
   @IsIn(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'DELETED'])
-  status: string;
+  status!: string;
 }

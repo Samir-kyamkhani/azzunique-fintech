@@ -56,12 +56,14 @@ export class TenantDomainsService {
       .limit(limit)
       .offset(offset);
 
-    const [{ count }] = await this.db
+    const countResult = await this.db
       .select({
         count: sql<number>`count(*)`,
       })
       .from(tenantsDomainsTable)
-      .where(and(...conditions));
+      .where(conditions.length ? and(...conditions) : undefined);
+
+    const count = countResult[0]?.count ?? 0;
 
     return {
       data,
@@ -99,7 +101,7 @@ export class TenantDomainsService {
     }
 
     const domainId = randomUUID();
-    const tenantNumberId = await this.generateTenantNumber();
+    const tenantNumberId = this.generateTenantNumber();
 
     await this.db.insert(tenantsDomainsTable).values({
       id: domainId,
@@ -116,9 +118,9 @@ export class TenantDomainsService {
       entityType: 'TENANT_DOMAIN',
       entityId: domainId,
       action: 'CREATE',
-      oldData: null,
+      oldData: undefined,
       newData: dto,
-      performByUserId: actor.userId,
+      performByUserId: actor.userId!,
       performByEmployeeId: actor.employeeId,
       ipAddress: req.ipAddress,
       userAgent: req.userAgent,
@@ -160,7 +162,7 @@ export class TenantDomainsService {
       action: 'UPDATE',
       oldData: existing,
       newData: dto,
-      performByUserId: actor.userId,
+      performByUserId: actor.userId!,
       performByEmployeeId: actor.employeeId,
       ipAddress: req.ipAddress,
       userAgent: req.userAgent,
@@ -200,9 +202,9 @@ export class TenantDomainsService {
       entityType: 'TENANT_DOMAIN',
       entityId: domainId,
       action: 'STATUS_CHANGE',
-      oldData: { status: existing.status },
+      oldData: { status: existing?.status ?? 'UNKNOWN' },
       newData: { status: dto.status },
-      performByUserId: actor.userId,
+      performByUserId: actor.userId!,
       performByEmployeeId: actor.employeeId,
       ipAddress: req.ipAddress,
       userAgent: req.userAgent,
@@ -232,7 +234,7 @@ export class TenantDomainsService {
     return result[0];
   }
 
-  private async generateTenantNumber() {
+  private generateTenantNumber() {
     const num = Math.floor(1000 + Math.random() * 9000);
     return `TEN-DOM-${num}`;
   }

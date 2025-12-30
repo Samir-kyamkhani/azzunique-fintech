@@ -10,10 +10,10 @@ export class LoginAuditDto {
   employeeId?: string;
 
   @IsString()
-  tenantId: string;
+  tenantId!: string;
 
   @IsBoolean()
-  success: boolean;
+  success!: boolean;
 
   @IsOptional()
   @IsString()

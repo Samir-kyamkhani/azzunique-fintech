@@ -6,5 +6,5 @@ export class BulkCreateRoleDto {
   @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => CreateRoleDto)
-  roles: CreateRoleDto[];
+  roles!: CreateRoleDto[];
 }

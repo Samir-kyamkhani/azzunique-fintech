@@ -108,14 +108,14 @@ export class AuditlogService {
       entityId: dto.employeeId ?? dto.userId!,
       action: dto.success ? 'LOGIN_SUCCESS' : 'LOGIN_FAILED',
 
-      oldData: null,
+      oldData: undefined,
       newData: {
         success: dto.success,
         reason: dto.reason ?? null,
       },
 
       performByUserId: dto.userId ?? dto.employeeId!,
-      performByEmployeeId: dto.employeeId ?? null,
+      performByEmployeeId: dto.employeeId! ?? null,
 
       tenantId: dto.tenantId,
       ipAddress: dto.ipAddress,

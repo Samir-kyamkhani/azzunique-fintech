@@ -2,13 +2,13 @@ import { IsOptional, IsString, IsObject } from 'class-validator';
 
 export class CreateAuditLogDto {
   @IsString()
-  entityType: string;
+  entityType!: string;
 
   @IsString()
-  entityId: string;
+  entityId!: string;
 
   @IsString()
-  action: string;
+  action!: string;
 
   @IsOptional()
   @IsObject()
@@ -19,7 +19,7 @@ export class CreateAuditLogDto {
   newData?: Record<string, any>;
 
   @IsString()
-  performByUserId: string;
+  performByUserId!: string;
 
   @IsOptional()
   @IsString()
@@ -34,7 +34,7 @@ export class CreateAuditLogDto {
   userAgent?: string;
 
   @IsString()
-  tenantId: string;
+  tenantId!: string;
 
   @IsOptional()
   @IsObject()
