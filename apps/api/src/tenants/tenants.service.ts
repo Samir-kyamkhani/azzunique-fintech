@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, eq, like, sql } from 'drizzle-orm';
+import { and, eq, isNull, like, sql } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 
 import { CoreDbService } from 'src/db/core/drizzle';
@@ -36,8 +36,7 @@ export class TenantsService {
     const offset = (page - 1) * limit;
 
     // const conditions = [eq(tenantsTable.parentTenantId, actor.tenantId)];
-    const conditions = [eq(tenantsTable.parentTenantId, null)];
-
+    const conditions = [isNull(tenantsTable.parentTenantId)];
     if (query.tenantStatus) {
       conditions.push(eq(tenantsTable.tenantStatus, query.tenantStatus));
     }
@@ -54,12 +53,14 @@ export class TenantsService {
       .limit(limit)
       .offset(offset);
 
-    const [{ count }] = await this.db
+    const countResult = await this.db
       .select({
         count: sql<number>`count(*)`,
       })
       .from(tenantsTable)
       .where(and(...conditions));
+
+    const count = countResult[0]?.count ?? 0;
 
     return {
       data,
@@ -273,7 +274,7 @@ export class TenantsService {
     return tenant;
   }
 
-  private async generateTenantNumber() {
+  private generateTenantNumber() {
     const num = Math.floor(1000 + Math.random() * 9000);
     return `TEN-${num}`;
   }

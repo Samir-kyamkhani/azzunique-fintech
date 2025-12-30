@@ -9,35 +9,35 @@ import {
 export class CreateUserDto {
   @IsString()
   @MaxLength(30)
-  userNumber: string;
+  userNumber!: string;
 
   @IsString()
   @MaxLength(100)
-  firstName: string;
+  firstName!: string;
 
   @IsString()
   @MaxLength(100)
-  lastName: string;
+  lastName!: string;
 
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsString()
   @MaxLength(20)
-  mobileNumber: string;
+  mobileNumber!: string;
 
   @IsString()
-  passwordHash: string;
+  passwordHash!: string;
 
   @IsOptional()
   @IsString()
   transactionPinHash?: string;
 
   @IsUUID()
-  roleId: string;
+  roleId!: string;
 
   @IsUUID()
-  tenantId: string;
+  tenantId!: string;
 
   @IsOptional()
   @IsUUID()

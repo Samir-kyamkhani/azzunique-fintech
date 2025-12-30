@@ -7,33 +7,31 @@ import {
 } from 'class-validator';
 
 export class CreateTenantDto {
- 
+  @IsNotEmpty()
+  @IsString()
+  tenantName!: string;
 
   @IsNotEmpty()
   @IsString()
-  tenantName: string;
-
-  @IsNotEmpty()
-  @IsString()
-  tenantLegalName: string;
+  tenantLegalName!: string;
 
   @IsIn(['PROPRIETORSHIP', 'PARTNERSHIP', 'PRIVATE_LIMITED'])
-  tenantType: string;
+  tenantType!: string;
 
   @IsIn(['AZZUNIQUE', 'RESELLER', 'WHITELABEL'])
-  userType: string;
+  userType!: string;
 
   @IsEmail()
-  tenantEmail: string;
+  tenantEmail!: string;
 
   @IsNotEmpty()
-  tenantWhatsapp: string;
+  tenantWhatsapp!: string;
 
   @IsNotEmpty()
-  tenantMobileNumber: string;
+  tenantMobileNumber!: string;
 
   @IsOptional()
-  parentTenantId: string;
+  parentTenantId?: string;
 
   @IsOptional()
   createdByEmployeeId?: string;
