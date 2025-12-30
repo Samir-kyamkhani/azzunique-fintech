@@ -82,8 +82,6 @@ export class S3UtilsService {
       const mimeType =
         typeof lookup === 'string' ? lookup : 'application/octet-stream';
 
-      this.logger.error('11111111', mimeType);
-
       const fileStream = createReadStream(localFilePath);
       const fileName = path.basename(localFilePath);
       const uniqueFileName = `${Date.now()}_${fileName}`;

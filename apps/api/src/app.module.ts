@@ -16,12 +16,16 @@ import { DepartmentsModule } from './departments/departments.module';
 import { ConfigModule } from '@nestjs/config';
 import { ServerDetailsModule } from './server-details/server-details.module';
 import { EmailsModule } from './emails/emails.module';
+import { EventsModule } from './events/events.module';
+import { ListenersModule } from './listeners/listeners.module';
+import { UtilsModule } from './lib/utils/utils.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+      load: [() => import('./lib/config/env.config').then((m) => m.default())],
     }),
     TenantsModule,
     TenantDomainsModule,
@@ -37,6 +41,9 @@ import { EmailsModule } from './emails/emails.module';
     DepartmentsModule,
     ServerDetailsModule,
     EmailsModule,
+    EventsModule,
+    ListenersModule,
+    UtilsModule,
   ],
   controllers: [HealthController],
   providers: [HealthService],

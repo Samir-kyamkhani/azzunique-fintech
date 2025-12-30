@@ -25,7 +25,7 @@ export class AuthUtilsService {
     const key = this.configService.get<string>('security.encryptSecretKey');
 
     if (!key) {
-      throw new Error('Environment variable AUTH_SECRET_KEY is not set');
+      throw new Error('Environment variable ENCRYPT_SECRET_KEY is not set');
     }
 
     const keyBuffer = Buffer.from(key, 'hex');
