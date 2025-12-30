@@ -24,7 +24,7 @@ import { UtilsModule } from './lib/utils/utils.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      envFilePath: 'apps/api/.env',
     }),
     TenantsModule,
     TenantDomainsModule,
