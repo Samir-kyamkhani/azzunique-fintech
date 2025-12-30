@@ -19,12 +19,14 @@ import { EmailsModule } from './emails/emails.module';
 import { EventsModule } from './events/events.module';
 import { ListenersModule } from './listeners/listeners.module';
 import { UtilsModule } from './lib/utils/utils.module';
+import envConfig from './lib/config/env.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: 'apps/api/.env',
+      envFilePath: '.env',
+      load: [envConfig],
     }),
     TenantsModule,
     TenantDomainsModule,
