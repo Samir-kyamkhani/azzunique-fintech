@@ -1,16 +1,17 @@
 import { ApiError } from '../lib/ApiError.js';
 
-export const validate =
-  (schema, source = 'body') =>
-  (req, res, next) => {
-    const result = schema.safeParse(req[source]);
-
-    if (!result.success) {
-      return next(
-        ApiError.badRequest('Validation failed', 400, result.error.issues),
-      );
-    }
-
-    req[source] = result.data; // sanitized
+export const validate = (schema) => (req, res, next) => {
+  try {
+    req.body = schema.parse(req.body);
     next();
-  };
+  } catch (err) {
+    throw ApiError.badRequest(
+      'Validation failed',
+      400,
+      err.errors?.map((e) => ({
+        field: e.path.join('.'),
+        message: e.message,
+      })),
+    );
+  }
+};
