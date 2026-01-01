@@ -3,7 +3,7 @@ dotenv.config({ path: './.env' });
 import app from './app.js';
 import { corePool } from './database/core/mysql.js';
 
-async function bootstrap() {
+(async function bootstrap() {
   try {
     const conn = await corePool.getConnection();
     await conn.ping();
@@ -19,6 +19,4 @@ async function bootstrap() {
     console.error('❌ Startup error:', error);
     process.exit(1);
   }
-}
-
-bootstrap();
+})();

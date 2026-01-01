@@ -1,6 +1,4 @@
 export const httpExceptionFilter = (err, req, res, next) => {
-  console.error('🔥 REAL ERROR:', err);
-
   let status = err.statusCode || 500;
   let message = err.message || 'Internal server error';
   let errors = err.errors || [];
