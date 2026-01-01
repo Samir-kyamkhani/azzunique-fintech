@@ -4,7 +4,7 @@ import helmet from 'helmet';
 import { rateLimiterMiddleware } from './middleware/rateLimiter.middleware.js';
 import indexRoutes from './routes/index.js';
 import { ApiError } from './lib/ApiError.js';
-import { errorHandler } from './middleware/errorHandler.middleware.js';
+import { httpExceptionFilter } from './middleware/httpExceptionFilter.middleware.js';
 
 const app = express();
 
@@ -30,6 +30,5 @@ app.use((req, res, next) => {
 });
 
 // ❌ GLOBAL ERROR HANDLER (ALWAYS LAST)
-app.use(errorHandler);
-
+app.use(httpExceptionFilter);
 export default app;
