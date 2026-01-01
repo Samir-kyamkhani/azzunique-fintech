@@ -1,5 +1,8 @@
-import tenantRoutes from '../tenants/tenants.routes.js';
+import { Router } from 'express';
+import tenantRoutes from './tenant.routes.js';
 
-export function indexRoutes(app) {
-  app.use('/tenants', tenantRoutes);
-}
+const router = Router();
+
+router.use('/tenants', tenantRoutes);
+
+export default router;

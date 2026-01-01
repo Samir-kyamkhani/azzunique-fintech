@@ -2,7 +2,7 @@ import cookieParser from 'cookie-parser';
 import express from 'express';
 import helmet from 'helmet';
 import { rateLimiterMiddleware } from './middleware/rateLimiter.middleware.js';
-import { indexRoutes } from './routes/index.js';
+import indexRoutes from './routes/index.js';
 // import { errorHandler } from './middlewares/errorHandler.js';
 
 const app = express();
@@ -20,7 +20,7 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', requestId: req.requestId });
 });
 
-app.use('/api/v1', indexRoutes(app));
+app.use('/api/v1', indexRoutes);
 
 // app.use(errorHandler);
 
