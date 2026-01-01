@@ -3,7 +3,8 @@ import express from 'express';
 import helmet from 'helmet';
 import { rateLimiterMiddleware } from './middleware/rateLimiter.middleware.js';
 import indexRoutes from './routes/index.js';
-// import { errorHandler } from './middlewares/errorHandler.js';
+import { ApiError } from './lib/ApiError.js';
+import { errorHandler } from './middleware/errorHandler.middleware.js';
 
 const app = express();
 
@@ -20,8 +21,15 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', requestId: req.requestId });
 });
 
+// ✅ Routes
 app.use('/api/v1', indexRoutes);
 
-// app.use(errorHandler);
+// ❌ 404 handler (AFTER routes)
+app.use((req, res, next) => {
+  next(ApiError.notFound('Route not found'));
+});
+
+// ❌ GLOBAL ERROR HANDLER (ALWAYS LAST)
+app.use(errorHandler);
 
 export default app;

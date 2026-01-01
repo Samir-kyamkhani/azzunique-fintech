@@ -15,7 +15,7 @@ import {
   platformServiceTable,
   tenantsTable,
   roleTable,
-} from './index';
+} from './index.js';
 
 export const roleCommissionSettingTable = mysqlTable(
   'role_commission_settings',

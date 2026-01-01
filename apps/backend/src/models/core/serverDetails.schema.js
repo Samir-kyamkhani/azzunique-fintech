@@ -7,7 +7,7 @@ import {
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 
-import { usersTable } from './index';
+import { usersTable } from './index.js';
 
 export const serverDetailTable = mysqlTable(
   'server_details',

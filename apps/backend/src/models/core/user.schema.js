@@ -9,7 +9,7 @@ import {
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 
-import { roleTable, tenantsTable } from './index';
+import { roleTable, tenantsTable } from './index.js';
 
 export const usersTable = mysqlTable(
   'users',

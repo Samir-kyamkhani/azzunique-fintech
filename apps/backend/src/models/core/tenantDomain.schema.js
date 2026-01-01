@@ -8,7 +8,7 @@ import {
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 
-import { serverDetailTable, tenantsTable, usersTable } from './index';
+import { serverDetailTable, tenantsTable, usersTable } from './index.js';
 
 export const tenantsDomainsTable = mysqlTable(
   'tenants_domains',

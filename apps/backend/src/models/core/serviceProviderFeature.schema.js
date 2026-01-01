@@ -7,7 +7,7 @@ import {
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 
-import { platformServiceFeatureTable, serviceProviderTable } from './index';
+import { platformServiceFeatureTable, serviceProviderTable } from './index.js';
 
 export const serviceProviderFeatureTable = mysqlTable(
   'service_provider_features',

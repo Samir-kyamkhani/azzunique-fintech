@@ -8,7 +8,7 @@ import {
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 
-import { usersTable } from './index';
+import { usersTable } from './index.js';
 
 export const usersKycTable = mysqlTable(
   'users_kyc',

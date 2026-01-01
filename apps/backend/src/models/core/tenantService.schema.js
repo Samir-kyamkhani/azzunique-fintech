@@ -9,7 +9,7 @@ import {
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 
-import { platformServiceTable, tenantsTable } from './index';
+import { platformServiceTable, tenantsTable } from './index.js';
 
 export const tenantServiceTable = mysqlTable(
   'tenant_services',

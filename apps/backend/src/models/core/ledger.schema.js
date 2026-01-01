@@ -8,7 +8,7 @@ import {
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 
-import { refundTable, transactionTable, walletTable } from './index';
+import { refundTable, transactionTable, walletTable } from './index.js';
 
 export const ledgerTable = mysqlTable(
   'ledgers',

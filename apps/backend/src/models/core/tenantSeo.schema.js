@@ -8,7 +8,7 @@ import {
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 
-import { tenantPagesTable } from './index';
+import { tenantPagesTable } from './index.js';
 
 export const tenantSeoTable = mysqlTable(
   'tenants_seo',

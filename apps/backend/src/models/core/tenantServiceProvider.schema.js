@@ -12,7 +12,7 @@ import {
   platformServiceTable,
   serviceProviderTable,
   tenantsTable,
-} from './index';
+} from './index.js';
 
 export const tenantServiceProviderTable = mysqlTable(
   'tenant_service_providers',

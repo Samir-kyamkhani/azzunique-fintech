@@ -16,7 +16,7 @@ import {
   transactionTable,
   usersTable,
   walletTable,
-} from './index';
+} from './index.js';
 
 export const commissionEarningTable = mysqlTable(
   'commission_earnings',

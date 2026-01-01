@@ -9,7 +9,7 @@ import {
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 
-import { tenantsTable, transactionTable, usersTable } from './index';
+import { tenantsTable, transactionTable, usersTable } from './index.js';
 
 export const refundTable = mysqlTable(
   'refunds',

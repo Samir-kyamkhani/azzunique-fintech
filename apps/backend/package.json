@@ -28,7 +28,8 @@
     "express": "^5.2.1",
     "express-rate-limit": "^8.2.1",
     "helmet": "^8.1.0",
-    "mysql2": "^3.16.0"
+    "mysql2": "^3.16.0",
+    "zod": "^4.2.1"
   },
   "devDependencies": {
     "drizzle-kit": "^0.31.8"

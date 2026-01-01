@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "084a5182-f765-493e-864b-88ad07a8bc4b",
+  "id": "1d765760-f706-4084-8842-1a2a57d43687",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "audit_log": {
@@ -157,8 +157,7 @@
           "type": "varchar(36)",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "(UUID())"
+          "autoincrement": false
         },
         "user_number": {
           "name": "user_number",
@@ -193,7 +192,8 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": null
         },
         "mobile_number": {
           "name": "mobile_number",
@@ -265,7 +265,8 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": null
         },
         "action_reason": {
           "name": "action_reason",
@@ -279,14 +280,16 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": null
         },
         "deleted_at": {
           "name": "deleted_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": null
         },
         "parent_id": {
           "name": "parent_id",
@@ -323,6 +326,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
+          "onUpdate": true,
           "default": "(now())"
         }
       },

@@ -7,7 +7,7 @@ import {
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 
-import { departmentTable, permissionTable } from './index';
+import { departmentTable, permissionTable } from './index.js';
 
 export const departmentPermissionTable = mysqlTable(
   'department_permissions',

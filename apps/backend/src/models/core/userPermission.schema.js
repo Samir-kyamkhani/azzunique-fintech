@@ -7,7 +7,7 @@ import {
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 
-import { permissionTable, usersTable } from './index';
+import { permissionTable, usersTable } from './index.js';
 
 export const userPermissionTable = mysqlTable(
   'user_permissions',
