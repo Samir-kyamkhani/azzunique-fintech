@@ -8,5 +8,6 @@ import { UtilsModule } from 'src/lib/utils/utils.module';
   imports: [DbModule, UtilsModule],
   controllers: [SmtpConfigsController],
   providers: [SmtpConfigsService],
+  exports: [SmtpConfigsService],
 })
 export class SmtpConfigsModule {}

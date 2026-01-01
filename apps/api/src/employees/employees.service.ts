@@ -7,7 +7,12 @@ import { and, eq, like, or, sql } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 
 import { CoreDbService } from 'src/db/core/drizzle';
-import { employeesTable, departmentTable } from 'src/db/core/schema';
+import {
+  employeesTable,
+  departmentTable,
+  tenantsTable,
+  tenantsDomainsTable,
+} from 'src/db/core/schema';
 
 import { GetEmployeesDto } from './dto/get-employees-dto';
 import { CreateEmployeeDto } from './dto/create-employees.dto';
@@ -112,6 +117,38 @@ export class EmployeesService {
       throw new BadRequestException('Invalid department');
     }
 
+    const [emp] = await this.db
+      .select()
+      .from(employeesTable)
+      .where(and(eq(employeesTable.email, dto.email)))
+      .limit(1);
+
+    if (emp) {
+      throw new NotFoundException('Employee already exists');
+    }
+
+    const [tenant] = await this.db
+      .select({
+        tenantId: tenantsTable.id,
+        tenantName: tenantsTable.tenantName,
+        tenantEmail: tenantsTable.tenantEmail,
+        domainName: tenantsDomainsTable.domainName,
+      })
+      .from(tenantsTable)
+      .leftJoin(
+        tenantsDomainsTable,
+        and(
+          eq(tenantsDomainsTable.tenantId, tenantsTable.id),
+          eq(tenantsDomainsTable.status, 'ACTIVE'),
+        ),
+      )
+      .where(eq(tenantsTable.id, actor.tenantId))
+      .limit(1);
+
+    if (!tenant) {
+      throw new NotFoundException('Tenant not found');
+    }
+
     const employeeId = randomUUID();
     const employeeNumber = this.generateEmployeeNumber();
 
@@ -151,6 +188,8 @@ export class EmployeesService {
       employeeNumber,
       password: plainPassword,
       tenantId: actor.tenantId,
+      tenantName: tenant.tenantName,
+      domain: tenant.domainName,
     });
 
     console.log('Event Success send');

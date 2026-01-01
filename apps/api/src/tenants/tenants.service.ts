@@ -111,7 +111,7 @@ export class TenantsService {
     }
 
     const tenantId = randomUUID();
-    const tenantNumber = await this.generateTenantNumber();
+    const tenantNumber = this.generateTenantNumber();
 
     await this.db.insert(tenantsTable).values({
       id: tenantId,

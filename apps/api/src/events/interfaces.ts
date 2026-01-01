@@ -4,4 +4,6 @@ export interface EmployeeCreatedEvent {
   employeeNumber: string;
   password: string;
   tenantId: string;
+  tenantName?: string;
+  domain: string;
 }

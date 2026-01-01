@@ -53,7 +53,7 @@ export class SmtpConfigsService {
     }
 
     // ================= CREATE =================
-    const insertData: typeof smtpConfigTable.$inferInsert = {
+    const insertData = {
       smtpHost: dto.smtpHost,
       smtpPort: dto.smtpPort,
       smtpUsername: dto.smtpUsername,
@@ -89,22 +89,5 @@ export class SmtpConfigsService {
       ...config,
       smtpPassword: this.authUtils.decrypt(config.smtpPassword),
     };
-  }
-
-  // =====================================================
-  // GET SAFE (DASHBOARD)
-  // =====================================================
-  async getSafe(tenantId: string) {
-    const [config] = await this.db
-      .select()
-      .from(smtpConfigTable)
-      .where(eq(smtpConfigTable.tenantId, tenantId))
-      .limit(1);
-
-    if (!config) {
-      throw new NotFoundException('SMTP config not found');
-    }
-
-    return this.authUtils.stripSensitive(config, ['smtpPassword']);
   }
 }
