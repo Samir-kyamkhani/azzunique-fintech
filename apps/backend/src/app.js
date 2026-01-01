@@ -5,6 +5,7 @@ import { rateLimiterMiddleware } from './middleware/rateLimiter.middleware.js';
 import indexRoutes from './routes/index.js';
 import { ApiError } from './lib/ApiError.js';
 import { httpExceptionFilter } from './middleware/httpExceptionFilter.middleware.js';
+import { httpResponseFilter } from './middleware/httpResponseFilter.middleware.js';
 
 const app = express();
 
@@ -16,6 +17,8 @@ app.use(express.static('public'));
 app.use(cookieParser());
 app.use(helmet());
 app.use(rateLimiterMiddleware);
+
+app.use(httpResponseFilter);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', requestId: req.requestId });

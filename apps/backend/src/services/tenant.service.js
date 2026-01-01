@@ -6,16 +6,6 @@ import { db } from '../database/core/core-db.js';
 class TenantService {
   // ================= CREATE =================
   static async create(payload) {
-    if (
-      !payload.tenantEmail ||
-      !payload.tenantName ||
-      !payload.tenantType ||
-      !payload.userType ||
-      !payload.tenantWhatsapp ||
-      !payload.tenantLegalName ||
-      !payload.tenantMobileNumber
-    ) {
-    }
     const existing = await db
       .select()
       .from(tenantsTable)
@@ -28,10 +18,22 @@ class TenantService {
 
     const tenantNumber = `TN-${Math.floor(100000 + Math.random() * 900000)}`;
 
+    // 🔹 INSERT
+    const result = await db.insert(tenantsTable).values({
+      ...payload,
+      tenantNumber,
+      tenantStatus: 'ACTIVE',
+    });
+
+    // 🔹 MySQL insertId
+    const insertId = result[0]?.insertId;
+
+    // 🔹 Fetch inserted row
     const [tenant] = await db
-      .insert(tenantsTable)
-      .values({ ...payload, tenantNumber, tenantStatus: 'ACTIVE' })
-      .$returningId();
+      .select()
+      .from(tenantsTable)
+      .where(eq(tenantsTable.id, insertId))
+      .limit(1);
 
     return tenant;
   }
