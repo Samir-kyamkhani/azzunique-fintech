@@ -11,6 +11,9 @@ import {
 } from 'node:crypto';
 import type { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
+import { JwtPayload, TokenPair } from '../types/auth.type';
+import { JwtService } from '@nestjs/jwt';
+import type { StringValue } from 'ms';
 
 @Injectable()
 export class AuthUtilsService {
@@ -21,7 +24,10 @@ export class AuthUtilsService {
   private readonly KEY_LENGTH = 32; // 256 bits
   private readonly secretKey: Buffer;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
+  ) {
     const key = this.configService.get<string>('security.encryptSecretKey');
 
     if (!key) {
@@ -146,5 +152,34 @@ export class AuthUtilsService {
 
   getClientUserAgent(req: Request): string | null {
     return (req.headers['user-agent'] as string) || null;
+  }
+
+  generateTokens(payload: JwtPayload): TokenPair {
+    const accessToken = this.jwtService.sign(payload, {
+      secret: this.configService.getOrThrow('jwtSecret'),
+      expiresIn: this.configService.getOrThrow(
+        'jwtSecretExpiries',
+      ) as StringValue,
+      issuer: 'fintech-platform',
+      audience: 'admin-app',
+    });
+
+    const refreshToken = this.jwtService.sign(
+      {
+        sub: payload.sub,
+        principalType: payload.principalType,
+        tenantId: payload.tenantId,
+      },
+      {
+        secret: this.configService.getOrThrow('jwtRefreshSecret'),
+        expiresIn: this.configService.getOrThrow(
+          'jwtRefreshSecretExpiries',
+        ) as StringValue,
+        issuer: 'fintech-platform',
+        audience: 'admin-app',
+      },
+    );
+
+    return { accessToken, refreshToken };
   }
 }

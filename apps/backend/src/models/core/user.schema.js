@@ -45,7 +45,9 @@ export const usersTable = mysqlTable(
     passwordResetTokenHash: varchar('password_reset_token_hash', {
       length: 255,
     }),
-    passwordResetTokenExpiry: timestamp('password_reset_token_expiry'),
+    passwordResetTokenExpiry: timestamp('password_reset_token_expiry').default(
+      null,
+    ),
 
     actionReason: varchar('action_reason', { length: 500 }),
     actionedAt: timestamp('actioned_at'),

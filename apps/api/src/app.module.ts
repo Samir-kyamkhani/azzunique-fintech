@@ -20,6 +20,7 @@ import { EventsModule } from './events/events.module';
 import { ListenersModule } from './listeners/listeners.module';
 import { UtilsModule } from './lib/utils/utils.module';
 import { SmtpConfigsModule } from './smtp-configs/smtp-configs.module';
+import { AuthModule } from './auth/auth.module';
 import envConfig from './lib/config/env.config';
 
 @Module({
@@ -47,6 +48,7 @@ import envConfig from './lib/config/env.config';
     ListenersModule,
     UtilsModule,
     SmtpConfigsModule,
+    AuthModule,
   ],
   controllers: [HealthController],
   providers: [HealthService],
