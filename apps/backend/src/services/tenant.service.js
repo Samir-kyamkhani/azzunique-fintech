@@ -22,6 +22,8 @@ class TenantService {
     const result = await db.insert(tenantsTable).values({
       ...payload,
       tenantNumber,
+      // parentTenantId:
+      // createdByEmployeeId:
       tenantStatus: 'ACTIVE',
     });
 
@@ -60,48 +62,46 @@ class TenantService {
 
   // ================= UPDATE =================
   static async update(id, payload) {
-    const [existing] = await db
-      .select()
-      .from(tenantsTable)
-      .where(eq(tenantsTable.id, id))
-      .limit(1);
-
-    if (!existing) {
-      throw ApiError.notFound('Tenant not found');
-    }
+    const tenant = await this.getById(id);
 
     await db
       .update(tenantsTable)
-      .set({
-        ...payload,
-        updatedAt: new Date(),
-      })
+      .set({ ...payload, updatedAt: new Date() })
       .where(eq(tenantsTable.id, id));
 
     return this.getById(id);
   }
 
   // ================= DELETE (SOFT) =================
-  static async remove(id) {
-    const [existing] = await db
-      .select()
-      .from(tenantsTable)
-      .where(eq(tenantsTable.id, id))
-      .limit(1);
-
-    if (!existing) {
-      throw ApiError.notFound('Tenant not found');
-    }
+  static async softDelete(id) {
+    await this.getById(id);
 
     await db
       .update(tenantsTable)
       .set({
-        tenantStatus: 'DELETED',
+        tenantStatus: 'INACTIVE',
+        actionedAt: new Date(),
+        actionReason: 'Soft deleted',
+        updatedAt: new Date(),
+      })
+      .where(eq(tenantsTable.id, id));
+  }
+
+  // ================= update status =======================
+  static async updateStatus(id, status) {
+    await this.getById(id);
+
+    await db
+      .update(tenantsTable)
+      .set({
+        tenantStatus: status,
+        actionReason: status === 'ACTIVE' ? null : payload.actionReason,
+        actionedAt: new Date(),
         updatedAt: new Date(),
       })
       .where(eq(tenantsTable.id, id));
 
-    return true;
+    return this.getById(id);
   }
 }
 

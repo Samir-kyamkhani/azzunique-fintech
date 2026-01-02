@@ -1,9 +1,24 @@
 import { ApiError } from '../lib/ApiError.js';
 import { ZodError } from 'zod';
 
-export const validate = (schema) => (req, res, next) => {
+export const validate = (schemas) => (req, res, next) => {
   try {
-    req.body = schema.parse(req.body);
+    if (schemas?.parse) {
+      req.body = schemas.parse(req.body);
+      return next();
+    }
+
+    if (schemas.body) {
+      req.body = schemas.body.parse(req.body);
+    }
+
+    if (schemas.params) {
+      req.params = schemas.params.parse(req.params);
+    }
+
+    if (schemas.query) {
+      req.query = schemas.query.parse(req.query);
+    }
     next();
   } catch (err) {
     if (err instanceof ZodError) {

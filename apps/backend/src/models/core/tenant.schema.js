@@ -45,11 +45,14 @@ export const tenantsTable = mysqlTable(
     }),
 
     tenantStatus: varchar('tenant_status', { length: 20 }).notNull(),
-    // ACTIVE | INACTIVE | SUSPENDED | DELETED
+    // ACTIVE | INACTIVE | SUSPENDED
 
     tenantMobileNumber: varchar('tenant_mobile_number', {
       length: 20,
     }).notNull(),
+
+    actionReason: varchar('action_reason', { length: 255 }),
+    actionedAt: timestamp('actioned_at'),
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),

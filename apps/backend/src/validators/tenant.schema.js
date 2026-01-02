@@ -18,10 +18,6 @@ export const createTenantSchema = z.object({
   tenantMobileNumber: z
     .string()
     .regex(/^[0-9]{10,15}$/, 'Invalid mobile number'),
-
-  parentTenantId: z.string().uuid('Invalid parent tenant id').optional(),
-
-  createdByEmployeeId: z.string().uuid('Invalid employee id').optional(),
 });
 
 export const updateTenantSchema = z.object({
@@ -52,8 +48,27 @@ export const updateTenantSchema = z.object({
     .string()
     .regex(/^[0-9]{10,15}$/, 'Invalid mobile number')
     .optional(),
-
-  parentTenantId: z.string().uuid('Invalid parent tenant id').optional(),
-
-  createdByEmployeeId: z.string().uuid('Invalid employee id').optional(),
 });
+
+export const idParamSchema = z.object({
+  id: z.string().uuid('Invalid tenant id'),
+});
+
+export const statusSchema = z
+  .object({
+    tenantStatus: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED']),
+    actionReason: z.string().max(255).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (
+      (data.tenantStatus === 'INACTIVE' || data.tenantStatus === 'SUSPENDED') &&
+      !data.actionReason
+    ) {
+      ctx.addIssue({
+        path: ['actionReason'],
+        message:
+          'Action reason is required when status is INACTIVE or SUSPENDED',
+        code: z.ZodIssueCode.custom,
+      });
+    }
+  });

@@ -1,29 +1,32 @@
 import {
   mysqlTable,
+  varchar,
   timestamp,
   foreignKey,
-  varchar,
   uniqueIndex,
   index,
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
-
-import { serverDetailTable, tenantsTable, usersTable } from './index.js';
+import { tenantsTable } from './tenant.schema.js';
+import { usersTable } from './user.schema.js';
+import { serverDetailTable } from './serverDetails.schema.js';
 
 export const tenantsDomainsTable = mysqlTable(
   'tenants_domains',
   {
     id: varchar('id', { length: 36 })
-  .primaryKey()
-  .default(sql`(UUID())`),
+      .primaryKey()
+      .default(sql`(UUID())`),
 
     tenantId: varchar('tenant_id', { length: 36 }).notNull(),
 
-    domainName: varchar('domain_name', {
-      length: 255,
-    }).notNull(),
+    domainName: varchar('domain_name', { length: 255 }).notNull(),
 
-    status: varchar('status', { length: 20 }).notNull(), // ACTIVE | INACTIVE | SUSPENDED | DELETED
+    status: varchar('status', { length: 20 }).notNull(),
+    // ACTIVE | INACTIVE | SUSPENDED | DELETED
+
+    actionReason: varchar('action_reason', { length: 255 }),
+    actionedAt: timestamp('actioned_at'),
 
     createdByEmployeeId: varchar('created_by_employee_id', {
       length: 36,
@@ -40,7 +43,6 @@ export const tenantsDomainsTable = mysqlTable(
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
-
   (table) => ({
     tenantDomainTenantFk: foreignKey({
       name: 'td_tenant_fk',
