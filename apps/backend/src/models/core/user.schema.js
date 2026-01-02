@@ -6,6 +6,7 @@ import {
   boolean,
   uniqueIndex,
   index,
+  text,
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 
@@ -41,10 +42,8 @@ export const usersTable = mysqlTable(
 
     roleId: varchar('role_id', { length: 36 }).notNull(),
 
-    refreshTokenHash: varchar('refresh_token_hash', { length: 255 }),
-    passwordResetTokenHash: varchar('password_reset_token_hash', {
-      length: 255,
-    }),
+    refreshTokenHash: text('refresh_token_hash'),
+    passwordResetTokenHash: text('password_reset_token_hash'),
     passwordResetTokenExpiry: timestamp('password_reset_token_expiry').default(
       null,
     ),

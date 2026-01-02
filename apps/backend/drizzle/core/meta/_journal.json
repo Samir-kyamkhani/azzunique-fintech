@@ -8,6 +8,13 @@
       "when": 1767349140406,
       "tag": "0000_absent_ironclad",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1767352515943,
+      "tag": "0001_simple_nighthawk",
+      "breakpoints": true
     }
   ]
 }

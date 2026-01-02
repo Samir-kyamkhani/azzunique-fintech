@@ -1,7 +1,7 @@
 import { db } from '../database/core/core-db.js';
 import { usersTable, employeesTable, roleTable } from '../models/core/index.js';
 import { eq, and, or } from 'drizzle-orm';
-import { encrypt, generateTokens, verifyPassword } from '../lib/lib.js';
+import { generateTokens, hashToken, verifyPassword } from '../lib/lib.js';
 import { ApiError } from '../lib/ApiError.js';
 
 class AuthService {
@@ -16,7 +16,7 @@ class AuthService {
         parentId: usersTable.parentId,
         userStatus: usersTable.userStatus,
         roleId: usersTable.roleId,
-        roleCode: roleTable.code,
+        roleCode: roleTable.roleCode,
       })
       .from(usersTable)
       .leftJoin(roleTable, eq(usersTable.roleId, roleTable.id))
@@ -54,7 +54,7 @@ class AuthService {
 
     await db
       .update(usersTable)
-      .set({ refreshTokenHash: await encrypt(tokens.refreshToken) })
+      .set({ refreshTokenHash: hashToken(tokens.refreshToken) })
       .where(eq(usersTable.id, user.id));
 
     return {
@@ -87,7 +87,7 @@ class AuthService {
       throw ApiError.forbidden('Employee inactive');
     }
 
-    const valid = verifyPassword(password, employee.passwordHash);
+    const valid = verifyPassword(data.password, employee.passwordHash);
     if (!valid) {
       throw ApiError.unauthorized('Invalid credentials');
     }
@@ -101,10 +101,17 @@ class AuthService {
 
     await db
       .update(employeesTable)
-      .set({ refreshTokenHash: await encrypt(tokens.refreshToken) })
+      .set({ refreshTokenHash: hashToken(tokens.refreshToken) })
       .where(eq(employeesTable.id, employee.id));
 
-    return { employee, ...tokens };
+    return {
+      id: employee.id,
+      tenantId: employee.tenantId,
+      type: 'EMPLOYEE',
+      departmentId: employee.departmentId,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    };
   }
 
   async logout({ userId, type }) {
