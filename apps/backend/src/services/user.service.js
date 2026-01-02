@@ -8,7 +8,7 @@ import {
 } from '../lib/lib.js';
 import { db } from '../database/core/core-db.js';
 import { ApiError } from '../lib/ApiError.js';
-import { eq, and, or } from 'drizzle-orm';
+import { eq, and, or, desc } from 'drizzle-orm';
 
 class UserService {
   async create(data, actor) {
@@ -95,21 +95,22 @@ class UserService {
     let builder = db
       .select()
       .from(usersTable)
-      .where(usersTable.tenantId.eq(actor.tenantId));
+      .where(eq(usersTable.tenantId, actor.tenantId));
 
     if (query.status) {
-      builder = builder.and(usersTable.userStatus.eq(query.status));
+      builder = builder.and(eq(usersTable.userStatus, query.status));
     }
 
     const page = query.page ? parseInt(query.page, 10) : 1;
     const limit = query.limit ? parseInt(query.limit, 10) : 20;
     const offset = (page - 1) * limit;
 
-    builder = builder.limit(limit).offset(offset);
+    builder = builder
+      .limit(limit)
+      .offset(offset)
+      .orderBy(desc(usersTable.createdAt));
 
-    builder = builder.orderBy(usersTable.createdAt.desc());
-
-    const users = await builder.all();
+    const users = await builder; // <- just await the builder, no .all()
     return users;
   }
 
