@@ -1,21 +1,32 @@
-import { roleTable, usersTable } from '../models/core/index.js';
+import { roleTable, tenantsTable, usersTable } from '../models/core/index.js';
 import { randomUUID } from 'crypto';
-import { encrypt, generateNumber } from '../lib/lib.js';
+import {
+  encrypt,
+  generateNumber,
+  generatePassword,
+  generateTransactionPin,
+} from '../lib/lib.js';
 import { db } from '../database/core/core-db.js';
 import { ApiError } from '../lib/ApiError.js';
+import { eq, and, or } from 'drizzle-orm';
 
 class UserService {
   async create(data, actor) {
-    const existingUser = await db
+    console.log(actor);
+
+    const [existingUser] = await db
       .select()
       .from(usersTable)
       .where(
-        usersTable.email
-          .eq(data.email)
-          .or(usersTable.mobileNumber.eq(data.mobileNumber))
-          .and(usersTable.tenantId.eq(actor.tenantId)),
+        and(
+          or(
+            eq(usersTable.email, data.email),
+            eq(usersTable.mobileNumber, data.mobileNumber),
+          ),
+          eq(usersTable.tenantId, data.tenantId),
+        ),
       )
-      .get();
+      .limit(1);
 
     if (existingUser) {
       throw ApiError.badRequest(
@@ -23,17 +34,28 @@ class UserService {
       );
     }
 
-    const role = await db
+    const [role] = await db
       .select()
       .from(roleTable)
-      .where(roleTable.id.eq(data.roleId))
-      .get();
+      .where(eq(roleTable.id, data.roleId))
+      .limit(1);
 
     if (!role) {
       throw ApiError.badRequest('Invalid role ID');
     }
 
+    const [tenant] = await db
+      .select()
+      .from(tenantsTable)
+      .where(eq(tenantsTable.id, data.tenantId))
+      .limit(1);
+
+    if (!tenant) {
+      throw ApiError.badRequest('Invalid tenant ID');
+    }
+
     const generatedPassword = generatePassword();
+
     const generatedTransactionPin = generateTransactionPin();
     const passwordHash = encrypt(generatedPassword);
     const transactionPinHash = encrypt(generatedTransactionPin);
@@ -41,10 +63,9 @@ class UserService {
     const userPayload = {
       id: randomUUID(),
       userNumber: generateNumber('USR'),
-      ...validatedData,
+      ...data,
       passwordHash,
       transactionPinHash,
-      tenantId: actor.tenantId,
       parentId: actor.type === 'USER' ? actor.id : null,
       createdByEmployeeId: actor.type === 'EMPLOYEE' ? actor.id : null,
       userStatus: 'INACTIVE',
@@ -59,11 +80,13 @@ class UserService {
 
     // Send credentials email
 
-    // Insert into database
+    await db.insert(usersTable).values(userPayload);
+
     const [newUser] = await db
-      .insert(usersTable)
-      .values(userPayload)
-      .returning();
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.id, userPayload.id))
+      .limit(1);
 
     return newUser;
   }
@@ -78,6 +101,14 @@ class UserService {
       builder = builder.and(usersTable.userStatus.eq(query.status));
     }
 
+    const page = query.page ? parseInt(query.page, 10) : 1;
+    const limit = query.limit ? parseInt(query.limit, 10) : 20;
+    const offset = (page - 1) * limit;
+
+    builder = builder.limit(limit).offset(offset);
+
+    builder = builder.orderBy(usersTable.createdAt.desc());
+
     const users = await builder.all();
     return users;
   }
@@ -86,13 +117,17 @@ class UserService {
     const user = await db
       .select()
       .from(usersTable)
-      .where(usersTable.id.eq(id))
+      .where(
+        and(
+          usersTable.id.eq(id),
+          usersTable.tenantId.eq(actor.tenantId), // tenant-safe query
+        ),
+      )
       .get();
 
-    if (!user) throw ApiError.notFound('User not found');
-
-    if (user.tenantId !== actor.tenantId)
-      throw ApiError.forbidden('Access denied');
+    if (!user) {
+      throw ApiError.notFound('User not found');
+    }
 
     return user;
   }

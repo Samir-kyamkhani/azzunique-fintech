@@ -90,7 +90,10 @@ export const usersTable = mysqlTable(
       table.email,
     ),
 
-    uniqUserMobile: uniqueIndex('uniq_user_mobile').on(table.mobileNumber),
+    uniqUserMobile: uniqueIndex('uniq_user_mobile').on(
+      table.tenantId,
+      table.mobileNumber,
+    ),
 
     idxUserTenantStatus: index('idx_user_tenant_status').on(
       table.tenantId,

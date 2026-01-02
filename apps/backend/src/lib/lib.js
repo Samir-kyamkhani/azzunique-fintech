@@ -137,3 +137,61 @@ export function generateNumber(prefix, length = 6) {
 
   return `${prefix}-${Math.floor(min + Math.random() * (max - min + 1))}`;
 }
+
+export const generatePassword = (length = 12) => {
+  if (length < 4) {
+    throw new Error('Password length must be at least 4 characters.');
+  }
+
+  const charset =
+    'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+
+  const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const numbers = '0123456789';
+  const symbols = '!@#$%^&*';
+
+  let password = '';
+
+  password += lowercase.charAt(Math.floor(Math.random() * lowercase.length));
+  password += uppercase.charAt(Math.floor(Math.random() * uppercase.length));
+  password += numbers.charAt(Math.floor(Math.random() * numbers.length));
+  password += symbols.charAt(Math.floor(Math.random() * symbols.length));
+
+  for (let i = 4; i < length; i++) {
+    password += charset.charAt(Math.floor(Math.random() * charset.length));
+  }
+
+  const passwordArray = password.split('');
+  for (let i = passwordArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [passwordArray[i], passwordArray[j]] = [passwordArray[j], passwordArray[i]];
+  }
+
+  const shuffledPassword = passwordArray.join('');
+
+  return shuffledPassword;
+};
+
+export const generateTransactionPin = (length = 4) => {
+  if (length < 1) {
+    throw new Error('PIN length must be at least 1 digit.');
+  }
+
+  const numbers = '0123456789';
+  let pin = '';
+
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    const randomValues = new Uint32Array(length);
+    crypto.getRandomValues(randomValues);
+    for (let i = 0; i < length; i++) {
+      pin += numbers.charAt(randomValues[i] % numbers.length);
+    }
+  } else {
+    for (let i = 0; i < length; i++) {
+      pin += numbers.charAt(Math.floor(Math.random() * numbers.length));
+    }
+  }
+
+  return pin;
+};

@@ -23,12 +23,6 @@ export const AuthMiddleware = (req, res, next) => {
       throw ApiError.unauthorized('Invalid token payload');
     }
 
-    const requestTenant = req.headers['x-tenant-id'] || req.body?.tenantId;
-
-    if (requestTenant && requestTenant !== decoded.tenantId) {
-      throw ApiError.forbidden('Tenant mismatch');
-    }
-
     req.user = {
       id: decoded.sub,
       tenantId: decoded.tenantId,

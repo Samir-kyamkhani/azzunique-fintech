@@ -25,7 +25,11 @@ router.use(AuthMiddleware);
 
 router.post('/', validate(createUserSchema), asyncHandler(createUser));
 
-router.get('/', validate(listUsersQuerySchema), asyncHandler(findAllUsers));
+router.get(
+  '/',
+  validate({ query: listUsersQuerySchema }),
+  asyncHandler(findAllUsers),
+);
 
 router.get(
   '/:id',
@@ -35,8 +39,7 @@ router.get(
 
 router.put(
   '/:id',
-  validate(updateUserSchema),
-  validate({ params: userIdParamSchema }),
+  validate({ body: updateUserSchema, params: userIdParamSchema }),
   asyncHandler(updateUser),
 );
 
