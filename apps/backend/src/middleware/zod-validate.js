@@ -17,7 +17,7 @@ export const validate = (schemas) => (req, res, next) => {
     }
 
     if (schemas.query) {
-      req.query = schemas.query.parse(req.query);
+      req.validatedQuery = schemas.query.parse(req.query);
     }
     next();
   } catch (err) {
