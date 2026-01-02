@@ -23,25 +23,4 @@ const updateTenant = async (req, res) => {
   res.json(tenant);
 };
 
-const deleteTenant = async (req, res) => {
-  await TenantService.softDelete(req.params.id);
-  res.json({ message: 'Tenant deleted successfully' });
-};
-
-const changeTenantStatus = async (req, res) => {
-  const tenant = await TenantService.updateStatus(
-    req.params.id,
-    req.body.tenantStatus,
-  );
-
-  res.json(tenant);
-};
-
-export {
-  createTenant,
-  getTenants,
-  getTenantById,
-  updateTenant,
-  deleteTenant,
-  changeTenantStatus,
-};
+export { createTenant, getTenants, getTenantById, updateTenant };

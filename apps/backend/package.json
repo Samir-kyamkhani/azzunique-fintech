@@ -16,7 +16,8 @@
     "db:core:push": "pnpm drizzle-kit push --config src/database/core/drizzle.config.js",
     "db:dmt:push": "pnpm drizzle-kit push --config src/database/dmt/drizzle.config.js",
     "db:core:pull": "pnpm drizzle-kit pull --config src/database/core/drizzle.config.js",
-    "db:dmt:pull": "pnpm drizzle-kit pull --config src/database/dmt/drizzle.config.js"
+    "db:dmt:pull": "pnpm drizzle-kit pull --config src/database/dmt/drizzle.config.js",
+    "db:core:seed": "node src/database/core/seeds/index.js"
   },
   "keywords": [],
   "author": "",

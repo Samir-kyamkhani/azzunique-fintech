@@ -1,5 +1,5 @@
 import authService from '../services/auth.service.js';
-import { cookieOptions, refreshCookieOptions } from './auth.cookies.js';
+import { cookieOptions, refreshCookieOptions } from '../lib/auth.cookies.js';
 
 export const login = async (req, res) => {
   const { identifier, password, tenantId, type } = req.body;

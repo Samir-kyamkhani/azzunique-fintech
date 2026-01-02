@@ -1,8 +1,8 @@
 import { db } from '../database/core/core-db.js';
 import { usersTable, employeesTable } from '../models/core/index.js';
 import { eq, and, or } from 'drizzle-orm';
-import { ApiError } from '../utils/ApiError.js';
 import { encrypt, generateTokens } from '../lib/lib.js';
+import { ApiError } from '../lib/ApiError.js';
 
 class AuthService {
   async loginUser({ identifier, password, tenantId }) {

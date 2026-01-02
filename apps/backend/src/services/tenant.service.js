@@ -22,6 +22,7 @@ class TenantService {
     const result = await db.insert(tenantsTable).values({
       ...payload,
       tenantNumber,
+
       // parentTenantId:
       // createdByEmployeeId:
       tenantStatus: 'ACTIVE',
@@ -66,7 +67,15 @@ class TenantService {
 
     await db
       .update(tenantsTable)
-      .set({ ...payload, updatedAt: new Date() })
+      .set({
+        ...payload,
+        tenantStatus: payload.tenantStatus,
+        actionReason:
+          payload.tenantStatus === 'ACTIVE' ? null : payload.actionReason,
+        actionedAt: payload.tenantStatus === 'ACTIVE' ? null : new Date(),
+        deleteAt: payload.tenantStatus === 'DELETED' ? new Date() : null,
+        updatedAt: new Date(),
+      })
       .where(eq(tenantsTable.id, id));
 
     return this.getById(id);

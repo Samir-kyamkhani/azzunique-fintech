@@ -1,8 +1,8 @@
-import { db } from '../database/core/db.js';
 import { roleTable, usersTable } from '../models/core/index.js';
-import { ApiError } from '../utils/ApiError.js';
 import { randomUUID } from 'crypto';
 import { encrypt, generateNumber } from '../lib/lib.js';
+import { db } from '../database/core/core-db.js';
+import { ApiError } from '../lib/ApiError.js';
 
 class UserService {
   async create(data, actor) {
