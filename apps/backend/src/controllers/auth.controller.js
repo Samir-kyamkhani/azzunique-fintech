@@ -19,12 +19,12 @@ export const login = async (req, res) => {
 
 export const logout = async (req, res) => {
   await authService.logout({
-    userId: req.user.sub,
+    userId: req.user.id,
     type: req.user.type,
   });
 
   res
     .clearCookie('accessToken', cookieOptions)
     .clearCookie('refreshToken', refreshCookieOptions)
-    .json(null);
+    .json({ data: null, message: 'logout success' });
 };
