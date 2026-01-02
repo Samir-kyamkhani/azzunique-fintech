@@ -29,13 +29,13 @@ export const createTenantSchema = z
     if (
       (data.tenantStatus === 'INACTIVE' ||
         data.tenantStatus === 'SUSPENDED' ||
-        data.tenantStatus === 'DELETE') &&
+        data.tenantStatus === 'DELETED') &&
       !data.actionReason
     ) {
       ctx.addIssue({
         path: ['actionReason'],
         message:
-          'Action reason is required when status is INACTIVE or SUSPENDED or DELETE',
+          'Action reason is required when status is INACTIVE or SUSPENDED or DELETED',
         code: z.ZodIssueCode.custom,
       });
     }
@@ -80,13 +80,13 @@ export const updateTenantSchema = z
     if (
       (data.tenantStatus === 'INACTIVE' ||
         data.tenantStatus === 'SUSPENDED' ||
-        data.tenantStatus === 'DELETE') &&
+        data.tenantStatus === 'DELETED') &&
       !data.actionReason
     ) {
       ctx.addIssue({
         path: ['actionReason'],
         message:
-          'Action reason is required when status is INACTIVE or SUSPENDED or DELETE',
+          'Action reason is required when status is INACTIVE or SUSPENDED or DELETED',
         code: z.ZodIssueCode.custom,
       });
     }
@@ -94,4 +94,11 @@ export const updateTenantSchema = z
 
 export const idParamSchema = z.object({
   id: z.string().uuid('Invalid tenant id'),
+});
+
+export const getAllTenantSchema = z.object({
+  search: z.string().optional(),
+  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'DELETED']).optional(),
+  limit: z.coerce.number().min(1).max(100).optional().default(20),
+  page: z.coerce.number().min(1).optional().default(1),
 });

@@ -1,49 +1,96 @@
-import { eq } from 'drizzle-orm';
+import { eq, like, or, and } from 'drizzle-orm';
 import { tenantsTable } from '../models/core/tenant.schema.js';
 import { ApiError } from '../lib/ApiError.js';
 import { db } from '../database/core/core-db.js';
+import { generateNumber } from '../lib/lib.js';
 
 class TenantService {
   // ================= CREATE =================
-  static async create(payload) {
-    const existing = await db
+  static async create(payload, actor) {
+    const existingEmail = await db
       .select()
       .from(tenantsTable)
       .where(eq(tenantsTable.tenantEmail, payload.tenantEmail))
       .limit(1);
 
-    if (existing.length) {
+    if (existingEmail.length) {
       throw ApiError.conflict('Tenant with this email already exists');
     }
 
-    const tenantNumber = `TN-${Math.floor(100000 + Math.random() * 900000)}`;
+    // Enforce single AZZUNIQUE tenant
+    if (payload.userType.toUpperCase() === 'AZZUNIQUE') {
+      const existingAzzunique = await db
+        .select()
+        .from(tenantsTable)
+        .where(eq(tenantsTable.userType, 'AZZUNIQUE'))
+        .limit(1);
 
-    // 🔹 INSERT
-    const result = await db.insert(tenantsTable).values({
+      if (existingAzzunique.length) {
+        throw ApiError.conflict('There can be only one AZZUNIQUE tenant');
+      }
+    }
+
+    await db.insert(tenantsTable).values({
       ...payload,
-      tenantNumber,
-
-      // parentTenantId:
-      // createdByEmployeeId:
-      tenantStatus: 'ACTIVE',
+      userType: payload.userType.toUpperCase(),
+      tenantType: payload.tenantType.toUpperCase(),
+      actionedAt: ['INACTIVE', 'SUSPENDED', 'DELETED'].includes(
+        payload.tenantStatus,
+      )
+        ? new Date()
+        : null,
+      tenantNumber: generateNumber('TNT'),
+      parentTenantId: actor.tenantId,
+      createdByEmployeeId: actor.type === 'EMPLOYEE' ? actor.id : null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
 
-    // 🔹 MySQL insertId
-    const insertId = result[0]?.insertId;
-
-    // 🔹 Fetch inserted row
-    const [tenant] = await db
+    // Fetch inserted tenant
+    const [insertedTenant] = await db
       .select()
       .from(tenantsTable)
-      .where(eq(tenantsTable.id, insertId))
+      .where(eq(tenantsTable.tenantEmail, payload.tenantEmail))
       .limit(1);
 
-    return tenant;
+    return insertedTenant;
   }
 
   // ================= GET ALL =================
-  static async getAll() {
-    return db.select().from(tenantsTable);
+  static async getAll(payload = {}, actor) {
+    const { search, status, limit = 20, page = 1 } = payload;
+
+    const parentTenantId = actor.tenantId;
+    const offset = (page - 1) * limit;
+
+    const conditions = [eq(tenantsTable.parentTenantId, parentTenantId)];
+
+    if (search) {
+      conditions.push(
+        or(
+          like(tenantsTable.tenantName, `%${search}%`),
+          like(tenantsTable.tenantEmail, `%${search}%`),
+        ),
+      );
+    }
+
+    if (status) {
+      conditions.push(eq(tenantsTable.tenantStatus, status));
+    }
+
+    const tenants = await db
+      .select()
+      .from(tenantsTable)
+      .where(and(...conditions))
+      .limit(limit)
+      .offset(offset)
+      .orderBy(tenantsTable.createdAt);
+
+    if (!tenants.length) {
+      throw ApiError.notFound('No tenants found');
+    }
+
+    return tenants;
   }
 
   // ================= GET BY ID =================
@@ -73,39 +120,6 @@ class TenantService {
         actionReason:
           payload.tenantStatus === 'ACTIVE' ? null : payload.actionReason,
         actionedAt: payload.tenantStatus === 'ACTIVE' ? null : new Date(),
-        deleteAt: payload.tenantStatus === 'DELETED' ? new Date() : null,
-        updatedAt: new Date(),
-      })
-      .where(eq(tenantsTable.id, id));
-
-    return this.getById(id);
-  }
-
-  // ================= DELETE (SOFT) =================
-  static async softDelete(id) {
-    await this.getById(id);
-
-    await db
-      .update(tenantsTable)
-      .set({
-        tenantStatus: 'INACTIVE',
-        actionedAt: new Date(),
-        actionReason: 'Soft deleted',
-        updatedAt: new Date(),
-      })
-      .where(eq(tenantsTable.id, id));
-  }
-
-  // ================= update status =======================
-  static async updateStatus(id, status) {
-    await this.getById(id);
-
-    await db
-      .update(tenantsTable)
-      .set({
-        tenantStatus: status,
-        actionReason: status === 'ACTIVE' ? null : payload.actionReason,
-        actionedAt: new Date(),
         updatedAt: new Date(),
       })
       .where(eq(tenantsTable.id, id));

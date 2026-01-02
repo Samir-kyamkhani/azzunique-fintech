@@ -1,16 +1,22 @@
 import { TenantService } from '../services/tenant.service.js';
 
 const createTenant = async (req, res) => {
-  const tenant = await TenantService.create(req.body);
+  const tenant = await TenantService.create(req.body, req.user);
+
   console.log(tenant);
 
-  res.status(201).json(tenant);
+  res
+    .status(201)
+    .json({ data: tenant, message: 'Tenant created successfully' });
 };
 
 const getTenants = async (req, res) => {
-  const tenants = await TenantService.getAll();
+  const tenants = await TenantService.getAll(req.query, req.user);
 
-  res.json(tenants);
+  res.json({
+    data: tenants,
+    message: 'Tenant fetched successfully',
+  });
 };
 
 const getTenantById = async (req, res) => {
