@@ -8,8 +8,6 @@ export const loginSchema = z.object({
 
   password: z.string().min(8, 'Password must be at least 8 characters'),
 
-  tenantId: z.string().uuid('Invalid tenant id'),
-
   type: z.enum(['USER', 'EMPLOYEE'], {
     errorMap: () => ({ message: 'Type must be USER or EMPLOYEE' }),
   }),

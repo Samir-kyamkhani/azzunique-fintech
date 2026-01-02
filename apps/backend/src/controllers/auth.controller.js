@@ -2,12 +2,10 @@ import authService from '../services/auth.service.js';
 import { cookieOptions, refreshCookieOptions } from '../lib/auth.cookies.js';
 
 export const login = async (req, res) => {
-  const { identifier, password, tenantId, type } = req.body;
-
   const result =
-    type === 'EMPLOYEE'
-      ? await authService.loginEmployee({ identifier, password, tenantId })
-      : await authService.loginUser({ identifier, password, tenantId });
+    data.type === 'EMPLOYEE'
+      ? await authService.loginEmployee(req.body)
+      : await authService.loginUser(req.body);
 
   const { accessToken, refreshToken, ...rest } = result;
 

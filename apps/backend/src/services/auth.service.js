@@ -1,25 +1,29 @@
 import { db } from '../database/core/core-db.js';
-import { usersTable, employeesTable } from '../models/core/index.js';
+import { usersTable, employeesTable, roleTable } from '../models/core/index.js';
 import { eq, and, or } from 'drizzle-orm';
-import { encrypt, generateTokens } from '../lib/lib.js';
+import { encrypt, generateTokens, verifyPassword } from '../lib/lib.js';
 import { ApiError } from '../lib/ApiError.js';
 
 class AuthService {
-  async loginUser({ identifier, password, tenantId }) {
-    if (!identifier || !password || !tenantId) {
-      throw ApiError.badRequest('Missing credentials');
-    }
-
+  async loginUser(data) {
     const [user] = await db
-      .select()
+      .select({
+        id: usersTable.id,
+        email: usersTable.email,
+        mobileNumber: usersTable.mobileNumber,
+        passwordHash: usersTable.passwordHash,
+        tenantId: usersTable.tenantId,
+        parentId: usersTable.parentId,
+        userStatus: usersTable.userStatus,
+        roleId: usersTable.roleId,
+        roleCode: roleTable.code,
+      })
       .from(usersTable)
+      .leftJoin(roleTable, eq(usersTable.roleId, roleTable.id))
       .where(
-        and(
-          eq(usersTable.tenantId, tenantId),
-          or(
-            eq(usersTable.email, identifier),
-            eq(usersTable.mobileNumber, identifier),
-          ),
+        or(
+          eq(usersTable.email, data.identifier),
+          eq(usersTable.mobileNumber, data.identifier),
         ),
       )
       .limit(1);
@@ -32,9 +36,11 @@ class AuthService {
       throw ApiError.forbidden('User is inactive');
     }
 
-    await this.validateHierarchy(user.id, user.parentId, tenantId);
+    if (user.roleCode !== 'AZZUNIQUE') {
+      await this.validateHierarchy(user.id, user.parentId, user.tenantId);
+    }
 
-    const isValid = verifyPassword(password, user.passwordHash);
+    const isValid = verifyPassword(data.password, user.passwordHash);
     if (!isValid) {
       throw ApiError.unauthorized('Invalid credentials');
     }
@@ -43,7 +49,7 @@ class AuthService {
       sub: user.id,
       tenantId: user.tenantId,
       type: 'USER',
-      roleId: user.roleId, // 🔑 IMPORTANT
+      roleId: user.roleId,
     });
 
     await db
@@ -51,20 +57,24 @@ class AuthService {
       .set({ refreshTokenHash: await encrypt(tokens.refreshToken) })
       .where(eq(usersTable.id, user.id));
 
-    return { user, ...tokens };
+    return {
+      id: user.id,
+      tenantId: user.tenantId,
+      roleId: user.roleId,
+      type: 'USER',
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    };
   }
 
-  async loginEmployee({ identifier, password, tenantId }) {
+  async loginEmployee(data) {
     const [employee] = await db
       .select()
       .from(employeesTable)
       .where(
-        and(
-          eq(employeesTable.tenantId, tenantId),
-          or(
-            eq(employeesTable.email, identifier),
-            eq(employeesTable.mobileNumber, identifier),
-          ),
+        or(
+          eq(employeesTable.email, data.identifier),
+          eq(employeesTable.mobileNumber, data.identifier),
         ),
       )
       .limit(1);
@@ -84,7 +94,7 @@ class AuthService {
 
     const tokens = generateTokens({
       sub: employee.id,
-      tenantId: tenantId,
+      tenantId: employee.tenantId,
       type: 'EMPLOYEE',
       departmentId: employee.departmentId, // 🔑 IMPORTANT
     });
