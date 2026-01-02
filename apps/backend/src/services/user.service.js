@@ -68,6 +68,20 @@ class UserService {
     return newUser;
   }
 
+  async findAll(query = {}, actor) {
+    let builder = db
+      .select()
+      .from(usersTable)
+      .where(usersTable.tenantId.eq(actor.tenantId));
+
+    if (query.status) {
+      builder = builder.and(usersTable.userStatus.eq(query.status));
+    }
+
+    const users = await builder.all();
+    return users;
+  }
+
   async findOne(id, actor) {
     const user = await db
       .select()
@@ -75,25 +89,20 @@ class UserService {
       .where(usersTable.id.eq(id))
       .get();
 
-    if (!user) {
-      throw ApiError.notFound('User not found');
-    }
+    if (!user) throw ApiError.notFound('User not found');
 
-    // Optional: enforce tenant check
-    if (user.tenantId !== actor.tenantId) {
+    if (user.tenantId !== actor.tenantId)
       throw ApiError.forbidden('Access denied');
-    }
 
     return user;
   }
 
   async update(id, data, actor) {
-    const validatedData = updateUserSchema.parse(data);
-
-    const user = await this.findOne(id, actor);
+    await this.findOne(id, actor);
 
     const updatedPayload = {
-      ...validatedData,
+      ...data,
+      deletedAt: data.userStatus === 'DELETED' && new Date(),
       updatedAt: new Date(),
     };
 
@@ -106,33 +115,22 @@ class UserService {
     return updatedUser;
   }
 
-  async remove(id, actor) {
-    const user = await this.findOne(id, actor);
-
-    const [deletedUser] = await db
-      .update(usersTable)
-      .set({
-        deletedAt: new Date(),
-        userStatus: 'DELETED',
-        updatedAt: new Date(),
-      })
-      .where(usersTable.id.eq(id))
-      .returning();
-
-    return deletedUser;
-  }
-
   async getDirectChildren(userId, actor) {
+    await this.findOne(userId, actor);
+
     const children = await db
       .select()
       .from(usersTable)
       .where(usersTable.parentId.eq(userId))
+      .and(usersTable.deletedAt.isNull())
       .all();
 
     return children;
   }
 
   async getAllDescendants(userId, actor) {
+    await this.findOne(userId, actor);
+
     const descendants = [];
 
     const fetchChildren = async (parentIds) => {
@@ -142,6 +140,7 @@ class UserService {
         .select()
         .from(usersTable)
         .where(usersTable.parentId.in(parentIds))
+        .and(usersTable.deletedAt.isNull())
         .all();
 
       if (children.length) {
@@ -151,7 +150,6 @@ class UserService {
     };
 
     await fetchChildren([userId]);
-
     return descendants;
   }
 }

@@ -20,11 +20,6 @@ export const updateUser = async (req, res) => {
   res.json(null);
 };
 
-export const removeUser = async (req, res) => {
-  await userService.remove(req.params.id, req.user);
-  res.json(null);
-};
-
 export const getDirectChildren = async (req, res) => {
   const data = await userService.getDirectChildren(req.params.id, req.user);
   res.json(data);
