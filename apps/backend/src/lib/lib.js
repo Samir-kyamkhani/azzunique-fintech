@@ -4,20 +4,20 @@ import jwt from 'jsonwebtoken';
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 16; // 128-bit
 const KEY_LENGTH = 32; // 256-bit
-const SECRET_KEY_HEX = process.env.CRYPTO_SECRET_KEY;
+const SECRET_KEY_HEX = process.env.ENCRYPT_SECRET_KEY;
 
 /* ---------------- INTERNAL HELPERS ---------------- */
 
 const getKey = () => {
   if (!SECRET_KEY_HEX) {
-    throw new Error('CRYPTO_SECRET_KEY is missing');
+    throw new Error('ENCRYPT_SECRET_KEY is missing');
   }
 
   const key = Buffer.from(SECRET_KEY_HEX, 'hex');
 
   if (key.length !== KEY_LENGTH) {
     throw new Error(
-      'Invalid CRYPTO_SECRET_KEY length. Must be 32 bytes (64 hex chars).',
+      'Invalid ENCRYPT_SECRET_KEY length. Must be 32 bytes (64 hex chars).',
     );
   }
 
