@@ -1,0 +1,62 @@
+import { Router } from 'express';
+import asyncHandler from '../lib/AsyncHandler.js';
+import { AuthMiddleware } from '../middleware/auth.middleware.js';
+import { validate } from '../middleware/zod-validate.js';
+
+import {
+  createUser,
+  findAllUsers,
+  findUser,
+  updateUser,
+  removeUser,
+  getDirectChildren,
+  getAllDescendants,
+} from '../controllers/user.controller.js';
+
+import {
+  createUserSchema,
+  updateUserSchema,
+  listUsersQuerySchema,
+  userIdParamSchema,
+} from '../validators/user.schema.js';
+
+const router = Router();
+
+router.use(AuthMiddleware);
+
+router.post('/', validate(createUserSchema), asyncHandler(createUser));
+
+router.get('/', validate(listUsersQuerySchema), asyncHandler(findAllUsers));
+
+router.get(
+  '/:id',
+  validate({ params: userIdParamSchema }),
+  asyncHandler(findUser),
+);
+
+router.put(
+  '/:id',
+  validate(updateUserSchema),
+  validate({ params: userIdParamSchema }),
+  asyncHandler(updateUser),
+);
+
+router.delete(
+  '/:id',
+  validate({ params: userIdParamSchema }),
+  asyncHandler(removeUser),
+);
+
+router.get(
+  '/:id/children',
+  validate({ params: userIdParamSchema }),
+  asyncHandler(getDirectChildren),
+);
+
+router.get(
+  '/:id/descendants',
+  validate({ params: userIdParamSchema }),
+  asyncHandler(getAllDescendants),
+);
+
+export default router;

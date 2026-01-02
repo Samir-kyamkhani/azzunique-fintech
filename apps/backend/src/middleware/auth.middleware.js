@@ -28,8 +28,9 @@ export const AuthMiddleware = (req, res, next) => {
     if (requestTenant && requestTenant !== decoded.tenantId) {
       throw ApiError.forbidden('Tenant mismatch');
     }
+
     req.user = {
-      sub: decoded.sub,
+      id: decoded.sub,
       tenantId: decoded.tenantId,
       type: decoded.type,
 

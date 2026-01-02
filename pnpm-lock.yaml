@@ -304,6 +304,9 @@ importers:
       helmet:
         specifier: ^8.1.0
         version: 8.1.0
+      jsonwebtoken:
+        specifier: ^9.0.3
+        version: 9.0.3
       mysql2:
         specifier: ^3.16.0
         version: 3.16.0

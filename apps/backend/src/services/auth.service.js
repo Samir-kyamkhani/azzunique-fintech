@@ -1,4 +1,4 @@
-import { db } from '../database/core/db.js';
+import { db } from '../database/core/core-db.js';
 import { usersTable, employeesTable } from '../models/core/index.js';
 import { eq, and, or } from 'drizzle-orm';
 import { ApiError } from '../utils/ApiError.js';
@@ -84,7 +84,7 @@ class AuthService {
 
     const tokens = generateTokens({
       sub: employee.id,
-      tenantId,
+      tenantId: tenantId,
       type: 'EMPLOYEE',
       departmentId: employee.departmentId, // 🔑 IMPORTANT
     });
