@@ -10,8 +10,8 @@ export const roleTable = mysqlTable(
   'roles',
   {
     id: varchar('id', { length: 36 })
-  .primaryKey()
-  .default(sql`(UUID())`),
+      .primaryKey()
+      .default(sql`(UUID())`),
 
     roleCode: varchar('role_code', { length: 50 }).notNull(),
 

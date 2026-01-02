@@ -1,3 +1,4 @@
+import { seedRoles } from './role.seed.js';
 import { seedTenants } from './tenants.seed.js';
 import { seedUsers } from './user.seed.js';
 
@@ -5,6 +6,10 @@ async function run() {
   console.log('🌱 Seeding started...\n');
 
   try {
+    console.log('➡️ Seeding roles...');
+    await seedRoles();
+    console.log('✅ Roles seeded successfully\n');
+
     console.log('➡️ Seeding tenants...');
     const tenantId = await seedTenants();
     console.log(`✅ Tenants seeded successfully`);
