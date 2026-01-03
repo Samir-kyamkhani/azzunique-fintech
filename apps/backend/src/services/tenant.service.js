@@ -1,4 +1,4 @@
-import { and, eq, or } from 'drizzle-orm';
+import { and, eq, like, or } from 'drizzle-orm';
 import { tenantsTable } from '../models/core/tenant.schema.js';
 import { ApiError } from '../lib/ApiError.js';
 import { db } from '../database/core/core-db.js';
@@ -73,19 +73,34 @@ class TenantService {
   // ================= GET ALL =================
   static async getAll(payload = {}, actor) {
     const { search, status, limit = 20, page = 1 } = payload;
-
-    const parentTenantId = payload?.tenantId ?? actor.tenantId;
     const offset = (page - 1) * limit;
 
-    const conditions = [eq(tenantsTable.parentTenantId, parentTenantId)];
+    const isUUID = (value) =>
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        value,
+      );
+
+    let conditions = [];
 
     if (search) {
-      conditions.push(
-        or(
-          like(tenantsTable.tenantName, `%${search}%`),
-          like(tenantsTable.tenantEmail, `%${search}%`),
-        ),
-      );
+      if (isUUID(search)) {
+        // Only children of the searched tenant, exclude the tenant itself
+        conditions.push(eq(tenantsTable.parentTenantId, search));
+      } else {
+        // normal search: actor children filtered by name/email
+        conditions.push(
+          and(
+            eq(tenantsTable.parentTenantId, actor.tenantId),
+            or(
+              like(tenantsTable.tenantName, `%${search}%`),
+              like(tenantsTable.tenantEmail, `%${search}%`),
+            ),
+          ),
+        );
+      }
+    } else {
+      // no search → just actor's children
+      conditions.push(eq(tenantsTable.parentTenantId, actor.tenantId));
     }
 
     if (status) {
