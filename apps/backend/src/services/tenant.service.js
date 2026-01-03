@@ -17,6 +17,7 @@ class TenantService {
           or(
             eq(tenantsTable.tenantEmail, payload.tenantEmail),
             eq(tenantsTable.tenantMobileNumber, payload.tenantMobileNumber),
+            eq(tenantsTable.tenantWhatsapp, payload.tenantWhatsapp),
           ),
           eq(tenantsTable.parentTenantId, actor.tenantId),
         ),
@@ -25,7 +26,7 @@ class TenantService {
 
     if (existingEmail) {
       throw ApiError.conflict(
-        'Tenant with this email, mobile number already exists',
+        'Tenant with this email, mobile number and whatsapp already exists',
       );
     }
 
@@ -42,7 +43,6 @@ class TenantService {
       }
     }
     console.log(actor);
-    
 
     await db.insert(tenantsTable).values({
       ...payload,

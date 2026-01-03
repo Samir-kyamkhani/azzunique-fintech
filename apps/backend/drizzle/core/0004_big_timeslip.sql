@@ -1,0 +1,2 @@
+ALTER TABLE `tenants` ADD CONSTRAINT `uniq_tenant_whatsapp` UNIQUE(`tenant_whatsapp`);--> statement-breakpoint
+ALTER TABLE `tenants` ADD CONSTRAINT `uniq_tenant_mobile_number` UNIQUE(`tenant_mobile_number`);
