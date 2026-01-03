@@ -75,13 +75,9 @@ class TenantService {
     const { search, status, limit = 20, page = 1 } = payload;
 
     const parentTenantId = payload?.tenantId ?? actor.tenantId;
-
     const offset = (page - 1) * limit;
 
-    const conditions = [
-      eq(tenantsTable.parentTenantId, parentTenantId),
-      eq(tenantsTable.id, actor.tenantId),
-    ];
+    const conditions = [eq(tenantsTable.parentTenantId, parentTenantId)];
 
     if (search) {
       conditions.push(
@@ -104,7 +100,7 @@ class TenantService {
       .offset(offset)
       .orderBy(tenantsTable.createdAt);
 
-    if (!tenants.length) {
+    if (tenants.length === 0) {
       throw ApiError.notFound('No tenants found');
     }
 
