@@ -12,19 +12,58 @@ class TenantDomainService {
       .where(eq(tenantsDomainsTable.id, id))
       .limit(1);
 
-    if (!domain || domain.status === 'DELETED') {
+    if (!domain) {
       throw ApiError.notFound('Domain not found');
     }
 
     return domain;
   }
 
-  // GET ALL (exclude deleted)
-  static async getAll() {
-    return db
-      .select()
+  // GET ALL
+  static async getAll(payload = {}, actor) {
+    const { search, status, limit = 20, page = 1 } = payload;
+
+    const parentTenantId = actor.tenantId;
+    const offset = (page - 1) * limit;
+
+    const conditions = [eq(tenantsDomainsTable.parentTenantId, parentTenantId)];
+
+    if (status) {
+      conditions.push(eq(tenantsDomainsTable.tenantStatus, status));
+    }
+
+    if (search) {
+      conditions.push(
+        or(
+          like(tenantsDomainsTable.domainName, `%${search}%`),
+          like(tenantsTable.tenantName, `%${search}%`),
+        ),
+      );
+    }
+
+    const tenants = await db
+      .select({
+        domainName: tenantsDomainsTable.domainName,
+        tenantId: tenantsTable.id,
+        tenantName: tenantsTable.tenantName,
+        tenantStatus: tenantsDomainsTable.tenantStatus,
+        createdAt: tenantsDomainsTable.createdAt,
+      })
       .from(tenantsDomainsTable)
-      .where(eq(tenantsDomainsTable.status, 'ACTIVE'));
+      .innerJoin(
+        tenantsTable,
+        eq(tenantsDomainsTable.tenantId, tenantsTable.id),
+      )
+      .where(and(...conditions))
+      .orderBy(tenantsDomainsTable.createdAt)
+      .limit(limit)
+      .offset(offset);
+
+    if (!tenants.length) {
+      throw ApiError.notFound('No tenants found');
+    }
+
+    return tenants;
   }
 
   // CREATE
@@ -34,7 +73,11 @@ class TenantDomainService {
     await db.insert(tenantsDomainsTable).values({
       id,
       ...payload,
-      status: 'ACTIVE',
+      actionReason: payload.status === 'ACTIVE' ? null : payload.actionReason,
+      actionedAt: payload.status ? actionedAt : null,
+      status: payload.status ? payload.status : 'ACTIVE',
+      createdByUserId: actor.type === 'USER' ? actor.id : null,
+      createdByEmployeeId: actor.type === 'EMPLOYEE' ? actor.id : null,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -46,45 +89,14 @@ class TenantDomainService {
   static async update(id, payload) {
     const domain = await this.getById(id);
 
-    if (domain.status === 'DELETED') {
-      throw ApiError.badRequest('Cannot update a deleted domain');
-    }
-
-    await db
-      .update(tenantsDomainsTable)
-      .set({ ...payload, updatedAt: new Date() })
-      .where(eq(tenantsDomainsTable.id, id));
-
-    return this.getById(id);
-  }
-
-  // SOFT DELETE
-  static async softDelete(id, actionReason) {
-    const domain = await this.getById(id);
-
     await db
       .update(tenantsDomainsTable)
       .set({
-        status: 'DELETED',
-        actionReason,
-        actionedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(tenantsDomainsTable.id, id));
-
-    return true;
-  }
-
-  // STATUS CHANGE (ACTIVE / INACTIVE / SUSPENDED)
-  static async updateStatus(id, payload) {
-    const domain = await this.getById(id);
-
-    await db
-      .update(tenantsDomainsTable)
-      .set({
-        status: payload.status,
+        ...payload,
         actionReason: payload.status === 'ACTIVE' ? null : payload.actionReason,
-        actionedAt: new Date(),
+        actionedAt: payload.status ? actionedAt : null,
+        status: payload.status ? payload.status : 'ACTIVE',
+        updatedAt: new Date(),
       })
       .where(eq(tenantsDomainsTable.id, id));
 

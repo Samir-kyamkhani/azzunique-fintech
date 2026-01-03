@@ -10,22 +10,8 @@ export const updateTenantDomain = async (req, res) => {
   res.json(domain);
 };
 
-export const deleteTenantDomain = async (req, res) => {
-  const { actionReason } = req.body;
-  await TenantDomainService.softDelete(req.params.id, actionReason);
-  res.status(200).json({ message: 'Domain deleted successfully' });
-};
-
-export const changeTenantDomainStatus = async (req, res) => {
-  const domain = await TenantDomainService.updateStatus(
-    req.params.id,
-    req.body,
-  );
-  res.json(domain);
-};
-
 export const getTenantDomains = async (req, res) => {
-  const domains = await TenantDomainService.getAll();
+  const domains = await TenantDomainService.getAll(req.query);
   res.json(domains);
 };
 

@@ -10,19 +10,6 @@ export const updateServerDetail = async (req, res) => {
   res.json(server);
 };
 
-export const deleteServerDetail = async (req, res) => {
-  await ServerDetailService.softDelete(req.params.id);
-  res.status(200).json({ message: 'Server detail marked as INACTIVE' });
-};
-
-export const changeServerDetailStatus = async (req, res) => {
-  const server = await ServerDetailService.updateStatus(
-    req.params.id,
-    req.body,
-  );
-  res.json(server);
-};
-
 export const getServerDetails = async (req, res) => {
   const servers = await ServerDetailService.getAll();
   res.json(servers);

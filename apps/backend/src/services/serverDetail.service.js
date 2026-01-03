@@ -29,13 +29,15 @@ class ServerDetailService {
   }
 
   // CREATE
-  static async create(payload) {
+  static async create(payload = {}, actor) {
     const id = crypto.randomUUID();
 
     await db.insert(serverDetailTable).values({
       id,
       ...payload,
-      status: 'ACTIVE',
+      status: payload.status ? payload.status : 'ACTIVE',
+      createdByUserId: actor.type === 'USER' ? actor.id : null,
+      createdByEmployeeId: actor.type === 'EMPLOYEE' ? actor.id : null,
       createdAt: new Date(),
     });
 
@@ -43,39 +45,19 @@ class ServerDetailService {
   }
 
   // UPDATE
-  static async update(id, payload) {
-    const server = await this.getById(id);
-
-    await db
-      .update(serverDetailTable)
-      .set({ ...payload, updatedAt: new Date() })
-      .where(eq(serverDetailTable.id, id));
-
-    return this.getById(id);
-  }
-
-  // STATUS CHANGE
-  static async updateStatus(id, payload) {
+  static async update(id, payload = {}) {
     const server = await this.getById(id);
 
     await db
       .update(serverDetailTable)
       .set({
-        status: payload.status,
+        ...payload,
+        status: payload.status ? payload.status : 'ACTIVE',
         updatedAt: new Date(),
       })
       .where(eq(serverDetailTable.id, id));
 
     return this.getById(id);
-  }
-
-  // DELETE
-  static async softDelete(id) {
-    const server = await this.getById(id);
-
-    await db.delete(serverDetailTable).where(eq(serverDetailTable.id, id));
-
-    return true;
   }
 }
 
