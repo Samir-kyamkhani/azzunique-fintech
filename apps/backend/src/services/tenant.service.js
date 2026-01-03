@@ -7,19 +7,14 @@ import { generateNumber } from '../lib/lib.js';
 class TenantService {
   // ================= CREATE =================
   static async create(payload, actor) {
-    console.log(payload);
-
     const [existingEmail] = await db
       .select()
       .from(tenantsTable)
       .where(
-        and(
-          or(
-            eq(tenantsTable.tenantEmail, payload.tenantEmail),
-            eq(tenantsTable.tenantMobileNumber, payload.tenantMobileNumber),
-            eq(tenantsTable.tenantWhatsapp, payload.tenantWhatsapp),
-          ),
-          eq(tenantsTable.parentTenantId, actor.tenantId),
+        or(
+          eq(tenantsTable.tenantEmail, payload.tenantEmail),
+          eq(tenantsTable.tenantMobileNumber, payload.tenantMobileNumber),
+          eq(tenantsTable.tenantWhatsapp, payload.tenantWhatsapp),
         ),
       )
       .limit(1);
@@ -42,7 +37,6 @@ class TenantService {
         throw ApiError.conflict('There can be only one AZZUNIQUE tenant');
       }
     }
-    console.log(actor);
 
     await db.insert(tenantsTable).values({
       ...payload,
