@@ -1,43 +1,27 @@
 import { Router } from 'express';
 import {
-  createServerDetail,
-  updateServerDetail,
-  getServerDetails,
   getServerDetailById,
+  upsertServerDetail,
 } from '../controllers/serverDetail.controller.js';
 import { validate } from '../middleware/zod-validate.js';
 import {
-  createServerDetailSchema,
-  updateServerDetailSchema,
   idParamSchema,
+  serverDetailSchema,
 } from '../validators/serverDetail.schema.js';
 import asyncHandler from '../lib/AsyncHandler.js';
+import { AuthMiddleware } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
-// CREATE
+router.use(AuthMiddleware);
+
 router.post(
   '/',
-  validate(createServerDetailSchema),
-  asyncHandler(createServerDetail),
+  validate({ body: serverDetailSchema }),
+  asyncHandler(upsertServerDetail),
 );
 
-// GET ALL
-router.get('/', getServerDetails);
-
-// GET BY ID
-router.get(
-  '/:id',
-  validate({ params: idParamSchema }),
-  asyncHandler(getServerDetailById),
-);
-
-// UPDATE
-router.put(
-  '/:id',
-  validate({ params: idParamSchema, body: updateServerDetailSchema }),
-  asyncHandler(updateServerDetail),
-);
-
+// GET BY actor 's tenantId
+router.get('/', asyncHandler(getServerDetailById));
 
 export default router;

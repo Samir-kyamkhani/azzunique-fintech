@@ -1,21 +1,11 @@
 import { ServerDetailService } from '../services/serverDetail.service.js';
 
-export const createServerDetail = async (req, res) => {
-  const server = await ServerDetailService.create(req.body);
-  res.status(201).json(server);
-};
-
-export const updateServerDetail = async (req, res) => {
-  const server = await ServerDetailService.update(req.params.id, req.body);
-  res.json(server);
-};
-
-export const getServerDetails = async (req, res) => {
-  const servers = await ServerDetailService.getAll();
-  res.json(servers);
+export const upsertServerDetail = async (req, res) => {
+  const record = await ServerDetailService.upsert(req.body, req.user);
+  res.json(record);
 };
 
 export const getServerDetailById = async (req, res) => {
-  const server = await ServerDetailService.getById(req.params.id);
+  const server = await ServerDetailService.getByTenantId(req.user);
   res.json(server);
 };

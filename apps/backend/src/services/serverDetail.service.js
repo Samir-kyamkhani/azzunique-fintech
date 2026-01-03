@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { serverDetailTable } from '../models/core/serverDetails.schema.js';
 import { db } from '../database/core/core-db.js';
 import { ApiError } from '../lib/ApiError.js';
@@ -6,11 +6,11 @@ import crypto from 'node:crypto';
 
 class ServerDetailService {
   // GET BY ID
-  static async getById(id) {
+  static async getByTenantId(actor) {
     const [server] = await db
       .select()
       .from(serverDetailTable)
-      .where(eq(serverDetailTable.id, id))
+      .where(eq(serverDetailTable.tenantId, actor.tenantId))
       .limit(1);
 
     if (!server) {
@@ -20,44 +20,64 @@ class ServerDetailService {
     return server;
   }
 
-  // GET ALL ACTIVE
-  static async getAll() {
-    return db
+  // UPSERT SERVER DETAIL
+  static async upsert(payload = {}, actor) {
+    if (!actor?.tenantId) {
+      throw ApiError.unauthorized('Invalid actor');
+    }
+
+    const normalizedHostname = payload.hostname.trim().toLowerCase();
+
+    // Check if record already exists for this tenant
+    const [existingRecord] = await db
       .select()
       .from(serverDetailTable)
-      .where(eq(serverDetailTable.status));
-  }
+      .where(
+        and(
+          eq(serverDetailTable.tenantId, actor.tenantId),
+          eq(serverDetailTable.recordType, payload.recordType),
+          eq(serverDetailTable.hostname, normalizedHostname),
+        ),
+      )
+      .limit(1);
 
-  // CREATE
-  static async create(payload = {}, actor) {
+    if (existingRecord) {
+      // UPDATE existing record
+      await db
+        .update(serverDetailTable)
+        .set({
+          value: payload.value,
+          status: payload.status ?? existingRecord.status,
+          updatedAt: new Date(),
+        })
+        .where(eq(serverDetailTable.id, existingRecord.id));
+
+      return {
+        ...existingRecord,
+        value: payload.value,
+        status: payload.status ?? existingRecord.status,
+        updatedAt: new Date(),
+      };
+    }
+
+    // CREATE new record if it doesn't exist
     const id = crypto.randomUUID();
-
-    await db.insert(serverDetailTable).values({
+    const data = {
       id,
-      ...payload,
-      status: payload.status ? payload.status : 'ACTIVE',
+      tenantId: actor.tenantId,
+      recordType: payload.recordType,
+      hostname: normalizedHostname,
+      value: payload.value,
+      status: payload.status ?? 'ACTIVE',
       createdByUserId: actor.type === 'USER' ? actor.id : null,
       createdByEmployeeId: actor.type === 'EMPLOYEE' ? actor.id : null,
       createdAt: new Date(),
-    });
+      updatedAt: new Date(),
+    };
 
-    return this.getById(id);
-  }
+    await db.insert(serverDetailTable).values(data);
 
-  // UPDATE
-  static async update(id, payload = {}) {
-    const server = await this.getById(id);
-
-    await db
-      .update(serverDetailTable)
-      .set({
-        ...payload,
-        status: payload.status ? payload.status : 'ACTIVE',
-        updatedAt: new Date(),
-      })
-      .where(eq(serverDetailTable.id, id));
-
-    return this.getById(id);
+    return data;
   }
 }
 

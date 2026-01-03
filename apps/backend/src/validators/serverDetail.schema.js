@@ -1,19 +1,11 @@
 import { z } from 'zod';
 
 // CREATE SERVER DETAIL
-export const createServerDetailSchema = z.object({
+export const serverDetailSchema = z.object({
   recordType: z.enum(['CNAME', 'IP', 'OTHER']),
-  hostname: z.string().min(3).max(255),
+  hostname: z.string().min(1).max(255), // example: api.azz.com
   value: z.string().min(1).max(45),
-  status: z.enum(['ACTIVE', 'INACTIVE']),
-});
-
-// UPDATE SERVER DETAIL
-export const updateServerDetailSchema = z.object({
-  recordType: z.enum(['CNAME', 'IP', 'OTHER']).optional(),
-  hostname: z.string().min(3).max(255).optional(),
-  value: z.string().min(1).max(45).optional(),
-  status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
+  status: z.enum(['ACTIVE', 'INACTIVE']).optional(), // default ACTIVE
 });
 
 // ID PARAM
