@@ -20,12 +20,7 @@ class AuthService {
       })
       .from(usersTable)
       .leftJoin(roleTable, eq(usersTable.roleId, roleTable.id))
-      .where(
-        or(
-          eq(usersTable.email, data.identifier),
-          eq(usersTable.mobileNumber, data.identifier),
-        ),
-      )
+      .where(or(eq(usersTable.userNumber, data.identifier)))
       .limit(1);
 
     if (!user) {
@@ -37,7 +32,12 @@ class AuthService {
     }
 
     if (user.roleCode !== 'AZZUNIQUE') {
-      await this.validateHierarchy(user.id, user.parentId, user.tenantId);
+      await this.validateHierarchy(
+        user.id,
+        user.parentId,
+        user.tenantId,
+        user.roleCode,
+      );
     }
 
     const isValid = verifyPassword(data.password, user.passwordHash);
@@ -71,12 +71,8 @@ class AuthService {
     const [employee] = await db
       .select()
       .from(employeesTable)
-      .where(
-        or(
-          eq(employeesTable.email, data.identifier),
-          eq(employeesTable.mobileNumber, data.identifier),
-        ),
-      )
+      .where(or(eq(employeesTable.employeeNumber, data.identifier)))
+
       .limit(1);
 
     if (!employee) {
@@ -123,20 +119,31 @@ class AuthService {
       .where(eq(table.id, userId));
   }
 
-  async validateHierarchy(userId, parentId, tenantId) {
+  async validateHierarchy(userId, parentId, tenantId, roleCode) {
     let currentParent = parentId;
+    const skipTenantCheckRoles = ['AZZUNIQUE', 'RESELLER', 'WHITE_LABEL'];
 
     while (currentParent) {
-      const [parent] = await db
-        .select()
-        .from(usersTable)
-        .where(
-          and(
-            eq(usersTable.id, currentParent),
-            eq(usersTable.tenantId, tenantId),
-          ),
-        )
-        .limit(1);
+      let parent;
+
+      if (skipTenantCheckRoles.includes(roleCode)) {
+        [parent] = await db
+          .select()
+          .from(usersTable)
+          .where(eq(usersTable.id, currentParent))
+          .limit(1);
+      } else {
+        [parent] = await db
+          .select()
+          .from(usersTable)
+          .where(
+            and(
+              eq(usersTable.id, currentParent),
+              eq(usersTable.tenantId, tenantId),
+            ),
+          )
+          .limit(1);
+      }
 
       if (!parent) {
         throw ApiError.forbidden('Invalid hierarchy');
