@@ -12,7 +12,30 @@ import { eq, and, or, desc, isNull, like, inArray } from 'drizzle-orm';
 
 class UserService {
   async create(data, actor) {
-    console.log(actor);
+    const [role] = await db
+      .select()
+      .from(roleTable)
+      .where(eq(roleTable.id, data.roleId))
+      .limit(1);
+
+    if (!role) {
+      throw ApiError.badRequest('Invalid role ID');
+    }
+    console.log(role.roleCode);
+
+    if (role.roleCode === 'AZZUNIQUE') {
+      const [existingAzzUnique] = await db
+        .select()
+        .from(usersTable)
+        .where(eq(usersTable.roleId, role.id))
+        .limit(1);
+
+      if (existingAzzUnique) {
+        throw ApiError.badRequest(
+          'AZZUNIQUE user already exists in the system',
+        );
+      }
+    }
 
     const [existingUser] = await db
       .select()
@@ -32,16 +55,6 @@ class UserService {
       throw ApiError.badRequest(
         'User with this email or mobile number already exists',
       );
-    }
-
-    const [role] = await db
-      .select()
-      .from(roleTable)
-      .where(eq(roleTable.id, data.roleId))
-      .limit(1);
-
-    if (!role) {
-      throw ApiError.badRequest('Invalid role ID');
     }
 
     const [tenant] = await db
