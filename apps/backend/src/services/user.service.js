@@ -8,7 +8,7 @@ import {
 } from '../lib/lib.js';
 import { db } from '../database/core/core-db.js';
 import { ApiError } from '../lib/ApiError.js';
-import { eq, and, or, desc } from 'drizzle-orm';
+import { eq, and, or, desc, isNull, like, inArray } from 'drizzle-orm';
 
 class UserService {
   async create(data, actor) {
@@ -92,39 +92,69 @@ class UserService {
   }
 
   async findAll(query = {}, actor) {
-    let builder = db
-      .select()
-      .from(usersTable)
-      .where(eq(usersTable.tenantId, actor.tenantId));
-
-    if (query.status) {
-      builder = builder.and(eq(usersTable.userStatus, query.status));
-    }
-
     const page = query.page ? parseInt(query.page, 10) : 1;
     const limit = query.limit ? parseInt(query.limit, 10) : 20;
     const offset = (page - 1) * limit;
 
-    builder = builder
-      .limit(limit)
-      .offset(offset)
-      .orderBy(desc(usersTable.createdAt));
+    const conditions = [
+      eq(tenantsTable.parentTenantId, actor.tenantId),
+      eq(usersTable.parentId, actor.id),
+    ];
 
-    const users = await builder; // <- just await the builder, no .all()
-    return users;
+    if (query.status) {
+      conditions.push(eq(usersTable.userStatus, query.status));
+    }
+
+    if (query.search) {
+      const searchTerm = `%${query.search}%`;
+
+      conditions.push(
+        or(
+          like(usersTable.email, searchTerm),
+          like(usersTable.mobileNumber, searchTerm),
+          like(usersTable.userNumber, searchTerm),
+          like(tenantsTable.tenantNumber, searchTerm),
+        ),
+      );
+    }
+
+    // Fetch users with tenant info
+    const rows = await db
+      .select()
+      .from(usersTable)
+      .leftJoin(tenantsTable, eq(usersTable.tenantId, tenantsTable.id))
+      .where(and(...conditions))
+      .orderBy(desc(usersTable.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    // Group users by tenant
+    const tenantMap = {};
+
+    rows.forEach((row) => {
+      const tenantId = row.tenants.id;
+
+      if (!tenantMap[tenantId]) {
+        tenantMap[tenantId] = {
+          tenant: row.tenants,
+          users: [],
+        };
+      }
+
+      tenantMap[tenantId].users.push(row.users);
+    });
+
+    return Object.values(tenantMap);
   }
 
   async findOne(id, actor) {
-    const user = await db
+    const [user] = await db
       .select()
       .from(usersTable)
       .where(
-        and(
-          usersTable.id.eq(id),
-          usersTable.tenantId.eq(actor.tenantId), // tenant-safe query
-        ),
+        and(eq(usersTable.id, id), eq(usersTable.tenantId, actor.tenantId)),
       )
-      .get();
+      .limit(1);
 
     if (!user) {
       throw ApiError.notFound('User not found');
@@ -151,42 +181,46 @@ class UserService {
     return updatedUser;
   }
 
-  async getDirectChildren(userId, actor) {
+  async getAllDescendants(userId, actor, query = {}) {
     await this.findOne(userId, actor);
 
-    const children = await db
-      .select()
-      .from(usersTable)
-      .where(usersTable.parentId.eq(userId))
-      .and(usersTable.deletedAt.isNull())
-      .all();
-
-    return children;
-  }
-
-  async getAllDescendants(userId, actor) {
-    await this.findOne(userId, actor);
+    const page = query.page ? parseInt(query.page, 10) : 1;
+    const limit = query.limit ? parseInt(query.limit, 10) : 20;
+    const offset = (page - 1) * limit;
 
     const descendants = [];
 
     const fetchChildren = async (parentIds) => {
       if (!parentIds.length) return;
 
+      const conditions = [
+        inArray(usersTable.parentId, parentIds),
+        isNull(usersTable.deletedAt),
+      ];
+
       const children = await db
         .select()
         .from(usersTable)
-        .where(usersTable.parentId.in(parentIds))
-        .and(usersTable.deletedAt.isNull())
-        .all();
+        .where(and(...conditions))
+        .orderBy(desc(usersTable.createdAt));
 
       if (children.length) {
         descendants.push(...children);
+        // Recurse to next level
         await fetchChildren(children.map((c) => c.id));
       }
     };
 
     await fetchChildren([userId]);
-    return descendants;
+
+    const paginated = descendants.slice(offset, offset + limit);
+
+    return {
+      total: descendants.length,
+      page,
+      limit,
+      data: paginated,
+    };
   }
 }
 

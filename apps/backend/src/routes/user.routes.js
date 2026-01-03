@@ -8,7 +8,6 @@ import {
   findAllUsers,
   findUser,
   updateUser,
-  getDirectChildren,
   getAllDescendants,
 } from '../controllers/user.controller.js';
 
@@ -41,12 +40,6 @@ router.put(
   '/:id',
   validate({ body: updateUserSchema, params: userIdParamSchema }),
   asyncHandler(updateUser),
-);
-
-router.get(
-  '/:id/children',
-  validate({ params: userIdParamSchema }),
-  asyncHandler(getDirectChildren),
 );
 
 router.get(

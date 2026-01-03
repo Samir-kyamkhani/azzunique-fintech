@@ -20,11 +20,6 @@ export const updateUser = async (req, res) => {
   res.json(null);
 };
 
-export const getDirectChildren = async (req, res) => {
-  const data = await userService.getDirectChildren(req.params.id, req.user);
-  res.json(data);
-};
-
 export const getAllDescendants = async (req, res) => {
   const data = await userService.getAllDescendants(req.params.id, req.user);
   res.json(data);
