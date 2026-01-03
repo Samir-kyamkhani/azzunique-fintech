@@ -1,4 +1,4 @@
-import { and, eq, inArray, like, or } from 'drizzle-orm';
+import { and, eq, like, or } from 'drizzle-orm';
 import { tenantsTable } from '../models/core/tenant.schema.js';
 import { ApiError } from '../lib/ApiError.js';
 import { db } from '../database/core/core-db.js';
@@ -7,25 +7,42 @@ import { generateNumber } from '../lib/lib.js';
 class TenantService {
   // ================= CREATE =================
   static async create(payload, actor) {
-    const [existingEmail] = await db
+    const [currentTenant] = await db
+      .select({
+        id: tenantsTable.id,
+        parentTenantId: tenantsTable.parentTenantId,
+      })
+      .from(tenantsTable)
+      .where(eq(tenantsTable.id, actor.tenantId))
+      .limit(1);
+
+    if (!currentTenant) {
+      throw ApiError.notFound('Actor tenant not found');
+    }
+
+    const scopeTenantId = currentTenant.parentTenantId ?? currentTenant.id;
+
+    const [existingTenant] = await db
       .select()
       .from(tenantsTable)
       .where(
-        or(
-          eq(tenantsTable.tenantEmail, payload.tenantEmail),
-          eq(tenantsTable.tenantMobileNumber, payload.tenantMobileNumber),
-          eq(tenantsTable.tenantWhatsapp, payload.tenantWhatsapp),
+        and(
+          or(
+            eq(tenantsTable.tenantEmail, payload.tenantEmail),
+            eq(tenantsTable.tenantMobileNumber, payload.tenantMobileNumber),
+            eq(tenantsTable.tenantWhatsapp, payload.tenantWhatsapp),
+          ),
+          eq(tenantsTable.parentTenantId, scopeTenantId),
         ),
       )
       .limit(1);
 
-    if (existingEmail) {
+    if (existingTenant) {
       throw ApiError.conflict(
-        'Tenant with this email, mobile number and whatsapp already exists',
+        'Tenant with this email, mobile number or whatsapp already exists in this tenant group',
       );
     }
 
-    // Enforce single AZZUNIQUE tenant
     if (payload.userType.toUpperCase() === 'AZZUNIQUE') {
       const existingAzzunique = await db
         .select()
@@ -48,17 +65,21 @@ class TenantService {
         ? new Date()
         : null,
       tenantNumber: generateNumber('TNT'),
-      parentTenantId: actor.tenantId,
+      parentTenantId: scopeTenantId,
       createdByEmployeeId: actor.type === 'EMPLOYEE' ? actor.id : null,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
 
-    // Fetch inserted tenant
     const [insertedTenant] = await db
       .select()
       .from(tenantsTable)
-      .where(eq(tenantsTable.tenantEmail, payload.tenantEmail))
+      .where(
+        and(
+          eq(tenantsTable.tenantEmail, payload.tenantEmail),
+          eq(tenantsTable.parentTenantId, scopeTenantId),
+        ),
+      )
       .limit(1);
 
     return insertedTenant;

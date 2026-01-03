@@ -67,7 +67,20 @@ export const tenantsTable = mysqlTable(
 
     uniqTenantNumber: uniqueIndex('uniq_tenant_number').on(table.tenantNumber),
 
-    uniqTenantEmail: uniqueIndex('uniq_tenant_email').on(table.tenantEmail),
+    uniqTenantWhatsapp: uniqueIndex('uniq_tenant_whatsapp').on(
+      table.parentTenantId,
+      table.tenantWhatsapp,
+    ),
+
+    uniqTenantMobileNumber: uniqueIndex('uniq_tenant_mobile_number').on(
+      table.parentTenantId,
+      table.tenantMobileNumber,
+    ),
+
+    uniqTenantEmail: uniqueIndex('uniq_tenant_email').on(
+      table.parentTenantId,
+      table.tenantEmail,
+    ),
 
     idxTenantParent: index('idx_tenant_parent').on(table.parentTenantId),
 
