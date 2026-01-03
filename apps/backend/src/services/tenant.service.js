@@ -1,4 +1,4 @@
-import { eq, like, or, and } from 'drizzle-orm';
+import { and, eq, or } from 'drizzle-orm';
 import { tenantsTable } from '../models/core/tenant.schema.js';
 import { ApiError } from '../lib/ApiError.js';
 import { db } from '../database/core/core-db.js';
@@ -10,7 +10,15 @@ class TenantService {
     const existingEmail = await db
       .select()
       .from(tenantsTable)
-      .where(eq(tenantsTable.tenantEmail, payload.tenantEmail))
+      .where(
+        and(
+          or(
+            eq(tenantsTable.tenantEmail, payload.tenantEmail),
+            eq(tenantsTable.tenantMobileNumber, payload.tenantMobileNumber),
+          ),
+          eq(tenantsTable.parentTenantId, actor.tenantId),
+        ),
+      )
       .limit(1);
 
     if (existingEmail.length) {
@@ -60,10 +68,14 @@ class TenantService {
   static async getAll(payload = {}, actor) {
     const { search, status, limit = 20, page = 1 } = payload;
 
-    const parentTenantId = actor.tenantId;
+    const parentTenantId = payload?.tenantId ?? actor.tenantId;
+
     const offset = (page - 1) * limit;
 
-    const conditions = [eq(tenantsTable.parentTenantId, parentTenantId)];
+    const conditions = [
+      eq(tenantsTable.parentTenantId, parentTenantId),
+      eq(tenantsTable.id, actor.tenantId),
+    ];
 
     if (search) {
       conditions.push(
