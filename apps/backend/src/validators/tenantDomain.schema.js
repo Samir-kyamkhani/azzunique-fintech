@@ -46,7 +46,13 @@ export const idParamSchema = z.object({
 
 export const getAllTenantDomain = z.object({
   search: z.string().optional(),
-  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'DELETED']).optional(),
-  limit: z.coerce.number().min(1).max(100).optional().default(20),
-  page: z.coerce.number().min(1).optional().default(1),
+  status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
+  limit: z.preprocess(
+    (val) => (val !== undefined ? Number(val) : 20),
+    z.number().min(1).max(100),
+  ),
+  page: z.preprocess(
+    (val) => (val !== undefined ? Number(val) : 1),
+    z.number().min(1),
+  ),
 });

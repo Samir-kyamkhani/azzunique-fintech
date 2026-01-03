@@ -1,7 +1,7 @@
 import { TenantDomainService } from '../services/tenantDomain.service.js';
 
 export const createTenantDomain = async (req, res) => {
-  const domain = await TenantDomainService.create(req.body);
+  const domain = await TenantDomainService.create(req.body, req.user);
   res.status(201).json(domain);
 };
 
@@ -11,7 +11,7 @@ export const updateTenantDomain = async (req, res) => {
 };
 
 export const getTenantDomains = async (req, res) => {
-  const domains = await TenantDomainService.getAll(req.query);
+  const domains = await TenantDomainService.getAll(req.query, req.user);
   res.json(domains);
 };
 

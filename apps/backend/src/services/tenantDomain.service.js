@@ -1,7 +1,8 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { tenantsDomainsTable } from '../models/core/tenantDomain.schema.js';
 import { db } from '../database/core/core-db.js';
 import { ApiError } from '../lib/ApiError.js';
+import { tenantsTable } from '../models/core/tenant.schema.js';
 
 class TenantDomainService {
   // GET BY ID
@@ -20,10 +21,15 @@ class TenantDomainService {
   }
 
   // GET ALL
-  static async getAll(payload = {}, actor) {
-    const { search, status, limit = 20, page = 1 } = payload;
+  static async getAll(query = {}, actor) {
+    const { search, status, limit = 20, page = 1 } = query;
 
     const parentTenantId = actor.tenantId;
+
+    if (!parentTenantId) {
+      throw ApiError.forbidden('Tenant access required');
+    }
+
     const offset = (page - 1) * limit;
 
     const conditions = [eq(tenantsDomainsTable.parentTenantId, parentTenantId)];
@@ -67,14 +73,27 @@ class TenantDomainService {
   }
 
   // CREATE
-  static async create(payload) {
+  static async create(payload, actor) {
+    const existingDomain = await db
+      .select()
+      .from(tenantsDomainsTable)
+      .where(
+        eq(tenantsDomainsTable.domainName, payload.domainName),
+        eq(tenantsDomainsTable.tenantId, payload.tenantId),
+      )
+      .limit(1);
+
+    if (existingDomain.length) {
+      throw ApiError.conflict('Domain name, tenant already exists');
+    }
+
     const id = crypto.randomUUID();
 
     await db.insert(tenantsDomainsTable).values({
       id,
       ...payload,
       actionReason: payload.status === 'ACTIVE' ? null : payload.actionReason,
-      actionedAt: payload.status ? actionedAt : null,
+      actionedAt: payload.status ? new Date() : null,
       status: payload.status ? payload.status : 'ACTIVE',
       createdByUserId: actor.type === 'USER' ? actor.id : null,
       createdByEmployeeId: actor.type === 'EMPLOYEE' ? actor.id : null,
@@ -94,7 +113,7 @@ class TenantDomainService {
       .set({
         ...payload,
         actionReason: payload.status === 'ACTIVE' ? null : payload.actionReason,
-        actionedAt: payload.status ? actionedAt : null,
+        actionedAt: payload.status ? new Date() : null,
         status: payload.status ? payload.status : 'ACTIVE',
         updatedAt: new Date(),
       })
