@@ -3,6 +3,7 @@ import { usersTable, employeesTable, roleTable } from '../models/core/index.js';
 import { eq, and, or } from 'drizzle-orm';
 import { generateTokens, hashToken, verifyPassword } from '../lib/lib.js';
 import { ApiError } from '../lib/ApiError.js';
+import { skipTenantCheckRoles } from '../config/constant.js';
 
 class AuthService {
   async loginUser(data) {
@@ -121,7 +122,6 @@ class AuthService {
 
   async validateHierarchy(userId, parentId, tenantId, roleCode) {
     let currentParent = parentId;
-    const skipTenantCheckRoles = ['AZZUNIQUE', 'RESELLER', 'WHITE_LABEL'];
 
     while (currentParent) {
       let parent;

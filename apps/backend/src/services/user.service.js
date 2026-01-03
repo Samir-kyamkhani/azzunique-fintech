@@ -163,9 +163,7 @@ class UserService {
     const [user] = await db
       .select()
       .from(usersTable)
-      .where(
-        and(eq(usersTable.id, id), eq(usersTable.tenantId, actor.tenantId)),
-      )
+      .where(and(eq(usersTable.id, id)))
       .limit(1);
 
     if (!user) {
@@ -194,19 +192,15 @@ class UserService {
   }
 
   async getAllDescendants(userId, actor, query = {}) {
-    await this.findOne(userId, actor);
+    const rootUser = await this.findOne(userId, actor);
 
     const page = query.page ? parseInt(query.page, 10) : 1;
     const limit = query.limit ? parseInt(query.limit, 10) : 20;
     const offset = (page - 1) * limit;
 
-    const descendants = [];
-
-    const fetchChildren = async (parentIds) => {
-      if (!parentIds.length) return;
-
+    const fetchChildrenTree = async (parentId) => {
       const conditions = [
-        inArray(usersTable.parentId, parentIds),
+        inArray(usersTable.parentId, [parentId]),
         isNull(usersTable.deletedAt),
       ];
 
@@ -216,22 +210,35 @@ class UserService {
         .where(and(...conditions))
         .orderBy(desc(usersTable.createdAt));
 
-      if (children.length) {
-        descendants.push(...children);
-        // Recurse to next level
-        await fetchChildren(children.map((c) => c.id));
-      }
+      if (!children.length) return [];
+
+      const childrenWithSub = await Promise.all(
+        children.map(async (child) => ({
+          ...child,
+          children: await fetchChildrenTree(child.id),
+        })),
+      );
+
+      return childrenWithSub;
     };
 
-    await fetchChildren([userId]);
+    const descendantsTree = await fetchChildrenTree(userId);
 
-    const paginated = descendants.slice(offset, offset + limit);
+    const fullTree = {
+      ...rootUser,
+      children: descendantsTree,
+    };
+
+    const paginatedChildren = fullTree.children.slice(offset, offset + limit);
 
     return {
-      total: descendants.length,
+      total: descendantsTree.length,
       page,
       limit,
-      data: paginated,
+      data: {
+        ...fullTree,
+        children: paginatedChildren,
+      },
     };
   }
 }
