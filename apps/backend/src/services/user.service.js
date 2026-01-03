@@ -21,7 +21,6 @@ class UserService {
     if (!role) {
       throw ApiError.badRequest('Invalid role ID');
     }
-    console.log(role.roleCode);
 
     if (role.roleCode === 'AZZUNIQUE') {
       const [existingAzzUnique] = await db
