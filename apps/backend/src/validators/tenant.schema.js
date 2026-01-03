@@ -96,8 +96,9 @@ export const idParamSchema = z.object({
   id: z.string().uuid('Invalid tenant id'),
 });
 
-export const getAllTenantSchema = z.object({
-  search: z.string().optional(),
+// ================= GET ALL TENANTS / CHILDREN-GRANDCHILDREN QUERY SCHEMA =================
+export const getChildrenGrandchildrenSchema = z.object({
+  search: z.string().optional(), // tenantNumber, tenantName, tenantMobileNumber, tenantWhatsapp
   status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'DELETED']).optional(),
   limit: z.coerce.number().min(1).max(100).optional().default(20),
   page: z.coerce.number().min(1).optional().default(1),

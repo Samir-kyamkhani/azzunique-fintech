@@ -1,4 +1,4 @@
-import { and, eq, like, or } from 'drizzle-orm';
+import { and, eq, inArray, like, or } from 'drizzle-orm';
 import { tenantsTable } from '../models/core/tenant.schema.js';
 import { ApiError } from '../lib/ApiError.js';
 import { db } from '../database/core/core-db.js';
@@ -70,37 +70,23 @@ class TenantService {
     return insertedTenant;
   }
 
-  // ================= GET ALL =================
-  static async getAll(payload = {}, actor) {
-    const { search, status, limit = 20, page = 1 } = payload;
+  // ================= GET OWN CHILDREN =================
+  static async getAllChildren(actor, query = {}) {
+    const { search, status, limit = 20, page = 1 } = query;
     const offset = (page - 1) * limit;
 
-    const isUUID = (value) =>
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-        value,
-      );
+    const conditions = [eq(tenantsTable.parentTenantId, actor.tenantId)];
 
-    let conditions = [];
-
+    // Search across multiple fields
     if (search) {
-      if (isUUID(search)) {
-        // Only children of the searched tenant, exclude the tenant itself
-        conditions.push(eq(tenantsTable.parentTenantId, search));
-      } else {
-        // normal search: actor children filtered by name/email
-        conditions.push(
-          and(
-            eq(tenantsTable.parentTenantId, actor.tenantId),
-            or(
-              like(tenantsTable.tenantName, `%${search}%`),
-              like(tenantsTable.tenantEmail, `%${search}%`),
-            ),
-          ),
-        );
-      }
-    } else {
-      // no search → just actor's children
-      conditions.push(eq(tenantsTable.parentTenantId, actor.tenantId));
+      conditions.push(
+        or(
+          like(tenantsTable.tenantNumber, `%${search}%`),
+          like(tenantsTable.tenantName, `%${search}%`),
+          like(tenantsTable.tenantMobileNumber, `%${search}%`),
+          like(tenantsTable.tenantWhatsapp, `%${search}%`),
+        ),
+      );
     }
 
     if (status) {
@@ -116,10 +102,58 @@ class TenantService {
       .orderBy(tenantsTable.createdAt);
 
     if (tenants.length === 0) {
-      throw ApiError.notFound('No tenants found');
+      throw ApiError.notFound('No children found');
     }
 
     return tenants;
+  }
+
+  // ================= GET CHILDREN + GRANDCHILDREN =================
+  static async getTenantDescendants(params, actor, query = {}) {
+    const { tenantId } = params;
+    const { search, status, limit = 20, page = 1 } = query;
+    const offset = (page - 1) * limit;
+
+    // ----------------- STEP 0: Fetch tenant itself -----------------
+    const [tenant] = await db
+      .select()
+      .from(tenantsTable)
+      .where(eq(tenantsTable.id, tenantId));
+
+    if (!tenant) {
+      throw ApiError.notFound('Tenant not found');
+    }
+
+    // ----------------- STEP 1: Fetch direct children -----------------
+    const childConditions = [eq(tenantsTable.parentTenantId, tenantId)];
+
+    if (search) {
+      childConditions.push(
+        or(
+          like(tenantsTable.tenantNumber, `%${search}%`),
+          like(tenantsTable.tenantName, `%${search}%`),
+          like(tenantsTable.tenantMobileNumber, `%${search}%`),
+          like(tenantsTable.tenantWhatsapp, `%${search}%`),
+        ),
+      );
+    }
+
+    if (status) {
+      childConditions.push(eq(tenantsTable.tenantStatus, status));
+    }
+
+    const children = await db
+      .select()
+      .from(tenantsTable)
+      .where(and(...childConditions))
+      .limit(limit)
+      .offset(offset)
+      .orderBy(tenantsTable.createdAt);
+
+    return {
+      tenant,
+      children,
+    };
   }
 
   // ================= GET BY ID =================
