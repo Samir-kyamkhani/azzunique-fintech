@@ -7,6 +7,10 @@ import crypto from 'node:crypto';
 class ServerDetailService {
   // GET BY ID
   static async getByTenantId(actor) {
+    if (!actor?.tenantId) {
+      throw ApiError.unauthorized('Invalid actor');
+    }
+
     const [server] = await db
       .select()
       .from(serverDetailTable)
