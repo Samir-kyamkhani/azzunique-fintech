@@ -36,6 +36,20 @@
       "when": 1767420865927,
       "tag": "0004_big_timeslip",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1767438217235,
+      "tag": "0005_lazy_pandemic",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1767442219541,
+      "tag": "0006_soft_shaman",
+      "breakpoints": true
     }
   ]
 }
