@@ -11,7 +11,7 @@ export const updateTenantDomain = async (req, res) => {
 };
 
 export const getTenantDomains = async (req, res) => {
-  const domains = await TenantDomainService.getAll(req.query, req.user);
+  const domains = await TenantDomainService.getAll(req.user, req.query);
   res.json(domains);
 };
 

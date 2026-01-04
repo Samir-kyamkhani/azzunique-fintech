@@ -27,11 +27,7 @@ router.post(
 );
 
 // GET ALL
-router.get(
-  '/',
-  validate({ query: getAllTenantDomain }),
-  asyncHandler(getTenantDomains),
-);
+router.get('/', asyncHandler(getTenantDomains));
 
 // GET BY ID
 router.get(

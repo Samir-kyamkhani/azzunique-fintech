@@ -2,7 +2,6 @@ import { and, eq } from 'drizzle-orm';
 import { tenantsDomainsTable } from '../models/core/tenantDomain.schema.js';
 import { db } from '../database/core/core-db.js';
 import { ApiError } from '../lib/ApiError.js';
-import { tenantsTable } from '../models/core/tenant.schema.js';
 
 class TenantDomainService {
   // GET BY ID
@@ -21,52 +20,31 @@ class TenantDomainService {
   }
 
   // GET ALL
-  static async getAll(query = {}, actor) {
+  static async getAll(actor, query = {}) {
     const { search, status, limit = 20, page = 1 } = query;
-
-    const parentTenantId = actor.tenantId;
-
-    if (!parentTenantId) {
-      throw ApiError.forbidden('Tenant access required');
-    }
-
     const offset = (page - 1) * limit;
 
-    const conditions = [eq(tenantsDomainsTable.parentTenantId, parentTenantId)];
+    const conditions = [eq(tenantsDomainsTable.tenantId, actor.tenantId)];
 
-    if (status) {
-      conditions.push(eq(tenantsDomainsTable.tenantStatus, status));
+    // Search across multiple fields
+    if (search) {
+      conditions.push(or(like(tenantsDomainsTable.domainName, `%${search}%`)));
     }
 
-    if (search) {
-      conditions.push(
-        or(
-          like(tenantsDomainsTable.domainName, `%${search}%`),
-          like(tenantsTable.tenantName, `%${search}%`),
-        ),
-      );
+    if (status) {
+      conditions.push(eq(tenantsDomainsTable.status, status));
     }
 
     const tenants = await db
-      .select({
-        domainName: tenantsDomainsTable.domainName,
-        tenantId: tenantsTable.id,
-        tenantName: tenantsTable.tenantName,
-        tenantStatus: tenantsDomainsTable.tenantStatus,
-        createdAt: tenantsDomainsTable.createdAt,
-      })
+      .select()
       .from(tenantsDomainsTable)
-      .innerJoin(
-        tenantsTable,
-        eq(tenantsDomainsTable.tenantId, tenantsTable.id),
-      )
       .where(and(...conditions))
-      .orderBy(tenantsDomainsTable.createdAt)
       .limit(limit)
-      .offset(offset);
+      .offset(offset)
+      .orderBy(tenantsDomainsTable.createdAt);
 
-    if (!tenants.length) {
-      throw ApiError.notFound('No tenants found');
+    if (tenants.length === 0) {
+      throw ApiError.notFound('Tenant Domain not found');
     }
 
     return tenants;
