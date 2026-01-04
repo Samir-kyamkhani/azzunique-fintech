@@ -2,28 +2,39 @@ import { Router } from 'express';
 import {
   createDepartment,
   updateDepartment,
-  changeDepartmentStatus,
   getDepartmentById,
-  getDepartments,
+  getAllDepartments,
+  delelteDepartment,
 } from '../controllers/department.controller.js';
-import { validate } from '../middleware/zod-validate.js';
 import {
   createDepartmentSchema,
   updateDepartmentSchema,
-  departmentStatusSchema,
   idParamSchema,
 } from '../validators/department.schema.js';
+import { AuthMiddleware } from '../middleware/auth.middleware.js';
+import { validate } from '../middleware/zod-validate.js';
+import asyncHandler from '../lib/AsyncHandler.js';
 
 const router = Router();
 
+router.use(AuthMiddleware);
+
 // CREATE DEPARTMENT
-router.post('/', validate(createDepartmentSchema), asyncHandler(createDepartment));
+router.post(
+  '/',
+  validate({ body: createDepartmentSchema }),
+  asyncHandler(createDepartment),
+);
 
 // GET ALL DEPARTMENTS (by tenant ID)
-router.get('/:tenantId', asyncHandler(getDepartments));
+router.get('/', asyncHandler(getAllDepartments));
 
 // GET DEPARTMENT BY ID
-router.get('/:id', validate({ params: idParamSchema }), asyncHandler(getDepartmentById));
+router.get(
+  '/:id',
+  validate({ params: idParamSchema }),
+  asyncHandler(getDepartmentById),
+);
 
 // UPDATE DEPARTMENT
 router.put(
@@ -32,11 +43,10 @@ router.put(
   asyncHandler(updateDepartment),
 );
 
-// DELETE
 router.delete(
-  '/:id/delete',
+  '/:id',
   validate({ params: idParamSchema }),
-  asyncHandler(changeDepartmentStatus),
+  asyncHandler(delelteDepartment),
 );
 
 export default router;

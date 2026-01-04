@@ -1,15 +1,15 @@
 import { DepartmentService } from '../services/department.service.js';
 
-export const createDepartment = async (req, res, next) => {
+const createDepartment = async (req, res, next) => {
   try {
-    const department = await DepartmentService.create(req.body);
+    const department = await DepartmentService.create(req.body, req.user);
     res.status(201).json(department);
   } catch (err) {
     next(err);
   }
 };
 
-export const updateDepartment = async (req, res, next) => {
+const updateDepartment = async (req, res, next) => {
   try {
     const department = await DepartmentService.update(req.params.id, req.body);
     res.json(department);
@@ -18,19 +18,7 @@ export const updateDepartment = async (req, res, next) => {
   }
 };
 
-export const changeDepartmentStatus = async (req, res, next) => {
-  try {
-    const department = await DepartmentService.updateStatus(
-      req.params.id,
-      req.body,
-    );
-    res.json(department);
-  } catch (err) {
-    next(err);
-  }
-};
-
-export const getDepartmentById = async (req, res, next) => {
+const getDepartmentById = async (req, res, next) => {
   try {
     const department = await DepartmentService.getById(req.params.id);
     res.json(department);
@@ -39,11 +27,28 @@ export const getDepartmentById = async (req, res, next) => {
   }
 };
 
-export const getDepartments = async (req, res, next) => {
+const getAllDepartments = async (req, res, next) => {
   try {
-    const departments = await DepartmentService.getAll(req.params.tenantId);
+    const departments = await DepartmentService.getAll(req.user);
     res.json(departments);
   } catch (err) {
     next(err);
   }
+};
+
+const delelteDepartment = async (req, res, next) => {
+  try {
+    const departments = await DepartmentService.delete(req.params.id);
+    res.json(departments);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export {
+  createDepartment,
+  updateDepartment,
+  getDepartmentById,
+  getAllDepartments,
+  delelteDepartment,
 };

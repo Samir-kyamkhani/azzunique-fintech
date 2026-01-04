@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { departmentTable } from '../models/core/department.schema.js';
 import { db } from '../database/core/core-db.js';
 import { ApiError } from '../lib/ApiError.js';
@@ -6,25 +6,40 @@ import crypto from 'crypto';
 
 class DepartmentService {
   // CREATE DEPARTMENT
-  static async create(payload) {
+  static async create(payload, actor) {
     // Check if department already exists for this tenant with the same department code
+    if (!actor.tenantId) {
+      throw ApiError.badRequest('Tenant context is missing');
+    }
+
     const [existing] = await db
       .select()
       .from(departmentTable)
-      .where(eq(departmentTable.departmentCode, payload.departmentCode))
-      .where(eq(departmentTable.tenantId, payload.tenantId))
+      .where(
+        and(
+          eq(
+            departmentTable.departmentCode,
+            payload.departmentCode.toUpperCase(),
+          ),
+          eq(departmentTable.tenantId, actor.tenantId),
+        ),
+      )
       .limit(1);
 
     if (existing) {
-      throw ApiError.conflict('Department with this code already exists');
+      throw ApiError.conflict('department code already in this tenant');
     }
 
     const id = crypto.randomUUID();
+    const normalizedCode = payload.departmentCode.toUpperCase();
     await db.insert(departmentTable).values({
       id,
       ...payload,
+      tenantId: actor.tenantId,
+      departmentCode: normalizedCode,
+      createdByUserId: actor.type === 'USER' ? actor.id : null,
+      createdByEmployeeId: actor.type === 'EMPLOYEE' ? actor.id : null,
       createdAt: new Date(),
-      updatedAt: new Date(),
     });
 
     return this.getById(id);
@@ -38,7 +53,7 @@ class DepartmentService {
       .where(eq(departmentTable.id, id))
       .limit(1);
 
-    if (!department || department.status === 'DELETED') {
+    if (!department) {
       throw ApiError.notFound('Department not found');
     }
 
@@ -46,12 +61,15 @@ class DepartmentService {
   }
 
   // GET ALL DEPARTMENTS
-  static async getAll(tenantId) {
+  static async getAll(actor) {
+    if (!actor.tenantId) {
+      throw ApiError.badRequest('Tenant context is missing');
+    }
+
     return db
       .select()
       .from(departmentTable)
-      .where(eq(departmentTable.tenantId, tenantId))
-      .where(eq(departmentTable.status, 'ACTIVE'));
+      .where(eq(departmentTable.tenantId, actor.tenantId));
   }
 
   // UPDATE DEPARTMENT
@@ -67,7 +85,7 @@ class DepartmentService {
   }
 
   // DELETE
-  static async delete(id, payload) {
+  static async delete(id) {
     const department = await this.getById(id);
 
     await db.delete(departmentTable).where(eq(departmentTable.id, id));
