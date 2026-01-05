@@ -11,8 +11,11 @@ import {
   idParamSchema,
 } from '../validators/smtpConfig.schema.js';
 import asyncHandler from '../lib/AsyncHandler.js';
+import { AuthMiddleware } from '../middleware/auth.middleware.js';
 
 const router = Router();
+
+router.use(AuthMiddleware)
 
 // ONE-TIME CREATE
 router.post(
