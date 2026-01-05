@@ -1,28 +1,21 @@
-import dotenv from "dotenv";
-dotenv.config({
-    path: "../.env"
-});
+import dotenv from 'dotenv';
 
-export default {
-  development: {
-    username: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_NAME,
+dotenv.config(); // always from project root
+
+export const env = {
+  nodeEnv: process.env.NODE_ENV || 'development',
+
+  db: {
+    user: process.env.DB_USER,
+    pass: process.env.DB_PASS,
+    name: process.env.DB_NAME,
     host: process.env.DB_HOST,
-    dialect: "mysql",
   },
-  test: {
-    username: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_NAME_TEST,
-    host: process.env.DB_HOST,
-    dialect: "mysql",
-  },
-  production: {
-    username: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_NAME,
-    host: process.env.DB_HOST,
-    dialect: "mysql",
+
+  s3: {
+    accessKey: process.env.S3_ACCESS_KEY,
+    secretKey: process.env.S3_SECRET_KEY,
+    region: process.env.S3_REGION,
+    bucket: process.env.S3_BUCKET,
   },
 };

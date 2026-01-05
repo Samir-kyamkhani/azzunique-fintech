@@ -14,7 +14,7 @@ const router = Router();
 router.use('/tenants', tenantRoutes);
 router.use('/tenant-domain', tenantDomainRoutes);
 router.use('/server-detail', serverDetailRoutes);
-router.use('/smtp-config', smtpConfigRoutes);
+router.use('/smtp-configs', smtpConfigRoutes);
 router.use('/audit-log', auditLogRoutes);
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
