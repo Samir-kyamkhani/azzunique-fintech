@@ -14,6 +14,7 @@ import {
 } from '../validators/employee.schema.js';
 import asyncHandler from '../lib/AsyncHandler.js';
 import { AuthMiddleware } from '../middleware/auth.middleware.js';
+import upload from '../middleware/multer.middleware.js';
 
 const router = Router();
 
@@ -35,6 +36,7 @@ router.get(
 // UPDATE EMPLOYEE
 router.put(
   '/:id',
+  upload.single('profilePicture'),
   validate({ params: idParamSchema, body: updateEmployeeSchema }),
   asyncHandler(updateEmployee),
 );

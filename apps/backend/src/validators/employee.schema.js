@@ -26,29 +26,14 @@ export const updateEmployeeSchema = z
   })
   .superRefine((data, ctx) => {
     if (
-      (data.userStatus === 'INACTIVE' || data.userStatus === 'SUSPENDED') &&
+      (data.employeeStatus === 'INACTIVE' ||
+        data.employeeStatus === 'SUSPENDED') &&
       !data.actionReason
     ) {
       ctx.addIssue({
         path: ['actionReason'],
         message:
           'Action reason is required when status is INACTIVE or SUSPENDED',
-        code: z.ZodIssueCode.custom,
-      });
-    }
-  });
-
-// STATUS CHANGE / SOFT DELETE
-export const employeeStatusSchema = z
-  .object({
-    employeeStatus: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED']),
-    actionReason: z.string().max(255).optional(),
-  })
-  .superRefine((data, ctx) => {
-    if (data.employeeStatus !== 'ACTIVE' && !data.actionReason) {
-      ctx.addIssue({
-        path: ['actionReason'],
-        message: 'Action reason is required when status is not ACTIVE',
         code: z.ZodIssueCode.custom,
       });
     }

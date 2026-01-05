@@ -15,6 +15,7 @@ const updateEmployee = async (req, res, next) => {
       req.params.id,
       req.body,
       req.user,
+      req.file,
     );
     res.json(employee);
   } catch (err) {
@@ -33,7 +34,7 @@ const getEmployeeById = async (req, res, next) => {
 
 const getAllEmployees = async (req, res, next) => {
   try {
-    const employees = await EmployeeService.getAll(req.params.tenantId);
+    const employees = await EmployeeService.findAll(req.query, req.user);
     res.json(employees);
   } catch (err) {
     next(err);
@@ -42,8 +43,8 @@ const getAllEmployees = async (req, res, next) => {
 
 const deleteEmployee = async (req, res, next) => {
   try {
-    await EmployeeService.delete(req.params.id);
-    res.status(204).send();
+    const employee = await EmployeeService.delete(req.params.id, req.user);
+    res.json(employee);
   } catch (err) {
     next(err);
   }
