@@ -6,27 +6,37 @@ export const createEmployeeSchema = z.object({
   lastName: z.string().min(1).max(100),
   email: z.string().email(),
   mobileNumber: z.string().regex(/^[0-9]{10,15}$/, 'Invalid mobile number'),
-  profilePicture: z.string().max(255).optional(),
-  passwordHash: z.string().min(6),
   departmentId: z.string().uuid(),
-  tenantId: z.string().uuid(),
-  createdByUserId: z.string().uuid(),
-  createdByEmployeeId: z.string().uuid().optional(),
 });
 
 // UPDATE EMPLOYEE
-export const updateEmployeeSchema = z.object({
-  firstName: z.string().min(1).max(100).optional(),
-  lastName: z.string().min(1).max(100).optional(),
-  email: z.string().email().optional(),
-  mobileNumber: z
-    .string()
-    .regex(/^[0-9]{10,15}$/, 'Invalid mobile number')
-    .optional(),
-  profilePicture: z.string().max(255).optional(),
-  passwordHash: z.string().min(6).optional(),
-  departmentId: z.string().uuid().optional(),
-});
+export const updateEmployeeSchema = z
+  .object({
+    firstName: z.string().min(1).max(100).optional(),
+    lastName: z.string().min(1).max(100).optional(),
+    email: z.string().email().optional(),
+    mobileNumber: z
+      .string()
+      .regex(/^[0-9]{10,15}$/, 'Invalid mobile number')
+      .optional(),
+    profilePicture: z.string().max(255).optional(),
+    employeeStatus: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED']).optional(),
+    actionReason: z.string().max(500).optional(),
+    departmentId: z.string().uuid().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (
+      (data.userStatus === 'INACTIVE' || data.userStatus === 'SUSPENDED') &&
+      !data.actionReason
+    ) {
+      ctx.addIssue({
+        path: ['actionReason'],
+        message:
+          'Action reason is required when status is INACTIVE or SUSPENDED',
+        code: z.ZodIssueCode.custom,
+      });
+    }
+  });
 
 // STATUS CHANGE / SOFT DELETE
 export const employeeStatusSchema = z

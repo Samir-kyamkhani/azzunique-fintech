@@ -1,28 +1,20 @@
 import { EmployeeService } from '../services/employee.service.js';
 
-export const createEmployee = async (req, res, next) => {
+const createEmployee = async (req, res, next) => {
   try {
-    const employee = await EmployeeService.create(req.body);
+    const employee = await EmployeeService.create(req.body, req.user);
     res.status(201).json(employee);
   } catch (err) {
     next(err);
   }
 };
 
-export const updateEmployee = async (req, res, next) => {
+const updateEmployee = async (req, res, next) => {
   try {
-    const employee = await EmployeeService.update(req.params.id, req.body);
-    res.json(employee);
-  } catch (err) {
-    next(err);
-  }
-};
-
-export const changeEmployeeStatus = async (req, res, next) => {
-  try {
-    const employee = await EmployeeService.updateStatus(
+    const employee = await EmployeeService.update(
       req.params.id,
       req.body,
+      req.user,
     );
     res.json(employee);
   } catch (err) {
@@ -30,16 +22,16 @@ export const changeEmployeeStatus = async (req, res, next) => {
   }
 };
 
-export const getEmployeeById = async (req, res, next) => {
+const getEmployeeById = async (req, res, next) => {
   try {
-    const employee = await EmployeeService.getById(req.params.id);
+    const employee = await EmployeeService.getById(req.params.id, req.user);
     res.json(employee);
   } catch (err) {
     next(err);
   }
 };
 
-export const getEmployees = async (req, res, next) => {
+const getAllEmployees = async (req, res, next) => {
   try {
     const employees = await EmployeeService.getAll(req.params.tenantId);
     res.json(employees);
@@ -48,11 +40,19 @@ export const getEmployees = async (req, res, next) => {
   }
 };
 
-export const deleteEmployee = async (req, res, next) => {
+const deleteEmployee = async (req, res, next) => {
   try {
-    await EmployeeService.hardDelete(req.params.id);
+    await EmployeeService.delete(req.params.id);
     res.status(204).send();
   } catch (err) {
     next(err);
   }
+};
+
+export {
+  createEmployee,
+  updateEmployee,
+  getEmployeeById,
+  getAllEmployees,
+  deleteEmployee,
 };

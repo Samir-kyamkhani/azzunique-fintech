@@ -7,6 +7,7 @@ import auditLogRoutes from './auditLog.routes.js';
 import authRoutes from './auth.routes.js';
 import userRoutes from './user.routes.js';
 import departmentRoutes from './department.route.js';
+import employeeRoutes from './employee.route.js';
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use('/audit-log', auditLogRoutes);
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/departments', departmentRoutes);
+router.use('/employees', employeeRoutes);
 
 export default router;

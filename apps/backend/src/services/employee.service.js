@@ -1,39 +1,101 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, or } from 'drizzle-orm';
 import { employeesTable } from '../models/core/employee.schema.js';
 import { db } from '../database/core/core-db.js';
 import { ApiError } from '../lib/ApiError.js';
-import crypto from 'crypto';
+import { randomUUID } from 'node:crypto';
+import { departmentTable } from '../models/core/department.schema.js';
+import { tenantsTable } from '../models/core/tenant.schema.js';
+import { encrypt, generateNumber, generatePassword } from '../lib/lib.js';
 
 class EmployeeService {
   // CREATE EMPLOYEE
-  static async create(payload) {
+  static async create(payload, actor) {
+    const [tenant] = await db
+      .select()
+      .from(tenantsTable)
+      .where(eq(tenantsTable.id, actor.tenantId))
+      .limit(1);
+
+    if (!tenant) {
+      throw ApiError.badRequest('Invalid tenant ID');
+    }
+
+    const [department] = await db
+      .select()
+      .from(departmentTable)
+      .where(eq(departmentTable.id, payload.departmentId))
+      .limit(1);
+
+    if (!department) {
+      throw ApiError.badRequest('Invalid department ID');
+    }
+
     const [existing] = await db
       .select()
       .from(employeesTable)
-      .where(eq(employeesTable.email, payload.email))
+      .where(
+        and(
+          or(
+            eq(employeesTable.email, payload.email),
+            eq(employeesTable.mobileNumber, payload.mobileNumber),
+          ),
+          eq(employeesTable.tenantId, actor.tenantId),
+        ),
+      )
       .limit(1);
 
     if (existing) {
-      throw ApiError.conflict('Employee with this email already exists');
+      throw ApiError.conflict(
+        'User with this email or mobile number already exists',
+      );
     }
 
-    const id = crypto.randomUUID();
-    await db.insert(employeesTable).values({
-      id,
+    const generatedPassword = generatePassword();
+    const passwordHash = encrypt(generatedPassword);
+
+    console.log(generatedPassword);
+
+    const employeePayload = {
+      id: randomUUID(),
+      employeeNumber: generateNumber('EMP'),
       ...payload,
+      passwordHash,
+      employeeStatus: 'INACTIVE',
+      tenantId: actor.tenantId,
+      emailVerifiedAt: new Date(),
+      actionReason:
+        'Kindly contact the administrator to have your account activated.',
+      actionedAt: new Date(),
       createdAt: new Date(),
       updatedAt: new Date(),
-    });
+    };
 
-    return this.getById(id);
+    // Send credentials email
+
+    await db.insert(employeesTable).values(employeePayload);
+
+    return this.getById(employeePayload.id, actor);
   }
 
   // GET EMPLOYEE BY ID
-  static async getById(id) {
+  static async getById(id, actor) {
+    if (!id) {
+      throw ApiError.badRequest('Employee id missing');
+    }
+
+    if (!actor.tenantId) {
+      throw ApiError.badRequest('Tenant id missing');
+    }
+
     const [employee] = await db
       .select()
       .from(employeesTable)
-      .where(eq(employeesTable.id, id))
+      .where(
+        and(
+          eq(employeesTable.id, id),
+          eq(employeesTable.tenantId, actor.tenantId),
+        ),
+      )
       .limit(1);
 
     if (!employee) {
@@ -44,7 +106,11 @@ class EmployeeService {
   }
 
   // GET ALL EMPLOYEES
-  static async getAll(tenantId) {
+  static async getAll(query, actor) {
+    if (!actor.tenantId) {
+      throw ApiError.badRequest('Tenant ID Missing');
+    }
+
     return db
       .select()
       .from(employeesTable)
@@ -53,28 +119,22 @@ class EmployeeService {
   }
 
   // UPDATE EMPLOYEE
-  static async update(id, payload) {
-    const employee = await this.getById(id);
+  static async update(id, payload, actor) {
+    if (!id) {
+      throw ApiError.badRequest('Employee id is missing');
+    }
 
-    await db
-      .update(employeesTable)
-      .set({ ...payload, updatedAt: new Date() })
-      .where(eq(employeesTable.id, id));
-
-    return this.getById(id);
-  }
-
-  // STATUS CHANGE
-  static async updateStatus(id, payload) {
-    const employee = await this.getById(id);
+    await this.getById(id);
+    // upload s3
 
     await db
       .update(employeesTable)
       .set({
+        ...payload,
         employeeStatus: payload.employeeStatus,
-        actionReason:
-          payload.employeeStatus === 'ACTIVE' ? null : payload.actionReason,
-        actionedAt: payload.employeeStatus === 'ACTIVE' ? null : new Date(),
+        tenantId: actor.tenantId,
+        actionReason: payload.actionReason,
+        actionedAt: new Date(),
         updatedAt: new Date(),
       })
       .where(eq(employeesTable.id, id));
@@ -82,8 +142,8 @@ class EmployeeService {
     return this.getById(id);
   }
 
-  // HARD DELETE
-  static async hardDelete(id) {
+  // DELETE
+  static async delete(id) {
     const employee = await this.getById(id);
 
     await db.delete(employeesTable).where(eq(employeesTable.id, id));
