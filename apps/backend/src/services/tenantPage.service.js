@@ -1,17 +1,22 @@
 import { db } from '../database/core/core-db.js';
 import { tenantPagesTable } from '../models/core/tenantPage.schema.js';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, ne } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { ApiError } from '../lib/ApiError.js';
+import { tenantsTable } from '../models/core/tenant.schema.js';
 
 export class TenantPageService {
   // ================= CREATE =================
   static async create(payload, actor) {
+    const tenant = await ensureActiveTenant(actor.tenantId);
+
+    await this.ensurePageUrlUnique(actor.tenantId, payload.pageUrl);
+
     const id = randomUUID();
 
     await db.insert(tenantPagesTable).values({
       id,
-      tenantId: actor.tenantId,
+      tenantId: tenant.id,
       pageTitle: payload.pageTitle,
       pageContent: payload.pageContent,
       pageUrl: payload.pageUrl,
@@ -27,7 +32,20 @@ export class TenantPageService {
 
   // ================= UPDATE =================
   static async update(id, payload, actor) {
-    await this.getById(id, actor);
+    const existing = await this.getById(id, actor);
+
+    const tenant = await ensureActiveTenant(actor.tenantId);
+
+    await this.ensurePageUrlUnique(actor.tenantId, payload.pageUrl);
+
+    // pageUrl change case
+    if (payload.pageUrl && payload.pageUrl !== existing.pageUrl) {
+      await this.ensurePageUrlUnique(
+        actor.tenantId,
+        payload.pageUrl,
+        id, // exclude self
+      );
+    }
 
     await db
       .update(tenantPagesTable)
@@ -82,7 +100,7 @@ export class TenantPageService {
   }
 
   // ================= PUBLIC GET ALL =================
-  static async getPublicPages(tenantId) {
+  static async getAll(tenantId) {
     return db
       .select({
         pageTitle: tenantPagesTable.pageTitle,
@@ -96,5 +114,49 @@ export class TenantPageService {
           eq(tenantPagesTable.status, 'PUBLISHED'),
         ),
       );
+  }
+
+  static async ensurePageUrlUnique(tenantId, pageUrl, excludeId = null) {
+    const where = excludeId
+      ? and(
+          eq(tenantPagesTable.tenantId, tenantId),
+          eq(tenantPagesTable.pageUrl, pageUrl),
+          ne(tenantPagesTable.id, excludeId),
+        )
+      : and(
+          eq(tenantPagesTable.tenantId, tenantId),
+          eq(tenantPagesTable.pageUrl, pageUrl),
+        );
+
+    const [existing] = await db
+      .select({ id: tenantPagesTable.id })
+      .from(tenantPagesTable)
+      .where(where)
+      .limit(1);
+
+    if (existing) {
+      throw ApiError.conflict(`Page with URL "${pageUrl}" already exists`);
+    }
+  }
+
+  static async ensureActiveTenant(tenantId) {
+    const [tenant] = await db
+      .select({
+        id: tenantsTable.id,
+        tenantStatus: tenantsTable.tenantStatus,
+      })
+      .from(tenantsTable)
+      .where(eq(tenantsTable.id, tenantId))
+      .limit(1);
+
+    if (!tenant) {
+      throw ApiError.forbidden('Tenant not found');
+    }
+
+    if (tenant.tenantStatus !== 'ACTIVE') {
+      throw ApiError.forbidden('Tenant is not active');
+    }
+
+    return tenant;
   }
 }
