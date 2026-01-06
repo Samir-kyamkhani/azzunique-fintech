@@ -8,7 +8,7 @@ import { tenantsTable } from '../models/core/tenant.schema.js';
 import { encrypt, generateNumber, generatePassword } from '../lib/lib.js';
 import { eventBus } from '../events/events.js';
 import { EVENTS } from '../events/events.constants.js';
-import S3Service from '../lib/S3Service.js';
+import s3Service from '../lib/S3Service.js';
 
 class EmployeeService {
   // CREATE EMPLOYEE
@@ -118,7 +118,7 @@ class EmployeeService {
     return {
       ...employee,
       profilePictureUrl: employee.profilePicture
-        ? S3Service.buildS3Url(employee.profilePicture)
+        ? s3Service.buildS3Url(employee.profilePicture)
         : null,
     };
   }
@@ -167,30 +167,48 @@ class EmployeeService {
     return {
       ...rows,
       profilePictureUrl: employee.profilePicture
-        ? S3Service.buildS3Url(employee.profilePicture)
+        ? s3Service.buildS3Url(employee.profilePicture)
         : null,
     };
   }
 
   // UPDATE EMPLOYEE
   static async update(id, payload, actor, file) {
-    if (!id) {
-      throw ApiError.badRequest('Employee id is missing');
-    }
-
     const existing = await this.getById(id, actor);
 
     // ================= PROFILE PICTURE =================
     let profilePicture = existing.profilePicture;
 
     if (file) {
-      const uploaded = await S3Service.upload(file.path, 'employee-profile');
+      const uploaded = await s3Service.upload(file.path, 'employee-profile');
 
       if (existing.profilePicture) {
-        await S3Service.deleteByKey(existing.profilePicture);
+        await s3Service.deleteByKey(existing.profilePicture);
       }
 
       profilePicture = uploaded.key;
+    }
+
+    // ================= DEPARTMENT VALIDATION =================
+    let departmentId = existing.departmentId;
+
+    if (payload.departmentId) {
+      const [department] = await db
+        .select()
+        .from(departmentTable)
+        .where(
+          and(
+            eq(departmentTable.id, payload.departmentId),
+            eq(departmentTable.tenantId, actor.tenantId),
+          ),
+        )
+        .limit(1);
+
+      if (!department) {
+        throw ApiError.badRequest('Invalid department ID');
+      }
+
+      departmentId = payload.departmentId;
     }
 
     // ================= UPDATE DB =================
@@ -199,6 +217,7 @@ class EmployeeService {
       .set({
         ...payload,
         profilePicture,
+        departmentId,
         employeeStatus: payload.employeeStatus ?? existing.employeeStatus,
         tenantId: actor.tenantId,
         actionReason: payload.actionReason,
@@ -232,15 +251,11 @@ class EmployeeService {
 
   // DELETE
   static async delete(id, actor) {
-    if (!id) {
-      throw ApiError.badRequest('Employee id is missing');
-    }
-
     const employee = await this.getById(id, actor);
 
     if (employee.profilePicture) {
       try {
-        await S3Service.deleteByKey(employee.profilePicture);
+        await s3Service.deleteByKey(employee.profilePicture);
       } catch (err) {
         console.error(
           'Failed to delete employee profile picture from S3:',

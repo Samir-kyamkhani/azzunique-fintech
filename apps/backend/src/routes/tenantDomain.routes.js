@@ -37,7 +37,7 @@ router.get(
 );
 
 // UPDATE
-router.put(
+router.put(    
   '/:id',
   validate({ params: idParamSchema, body: updateTenantDomainSchema }),
   asyncHandler(updateTenantDomain),

@@ -28,6 +28,7 @@ const ALLOWED_CATEGORIES = [
   'kyc',
   'documents',
   'logos',
+  'favicons',
 ];
 
 // ================= SERVICE =================

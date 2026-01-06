@@ -1,13 +1,14 @@
 import { Router } from 'express';
-import tenantRoutes from './tenant.route.js';
-import tenantDomainRoutes from './tenantDomain.route.js';
-import serverDetailRoutes from './serverDetail.route.js';
-import smtpConfigRoutes from './smtpConfig.route.js';
+import tenantRoutes from './tenant.routes.js';
+import tenantDomainRoutes from './tenantDomain.routes.js';
+import serverDetailRoutes from './serverDetail.routes.js';
+import smtpConfigRoutes from './smtpConfig.routes.js';
 import auditLogRoutes from './auditLog.routes.js';
 import authRoutes from './auth.routes.js';
 import userRoutes from './user.routes.js';
-import departmentRoutes from './department.route.js';
-import employeeRoutes from './employee.route.js';
+import departmentRoutes from './department.routes.js';
+import employeeRoutes from './employee.routes.js';
+import tenantWebsiteRoutes from './tenantWebsite.routes.js';
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/departments', departmentRoutes);
 router.use('/employees', employeeRoutes);
+router.use('/tenants-website', tenantWebsiteRoutes);
 
 export default router;
