@@ -1,5 +1,5 @@
-// EMPLOYEE Created TEMPLATE
-export function employeeCreatedTemplate(data) {
+// user Created TEMPLATE
+export function userCreatedTemplate(data) {
   return {
     subject: `Welcome to ${data.tenantName} - Account Created`,
     html: `
@@ -45,11 +45,11 @@ export function employeeCreatedTemplate(data) {
               
               <!-- Welcome Message -->
               <h2 style="margin:0 0 16px; font-size:22px; color:#1a1a1a; font-weight:600;">
-                Hello ${data.employeeName || 'there'}! 👋
+                Hello ${data.userName || 'there'}! 👋
               </h2>
               
               <p style="margin:0 0 24px; font-size:15px; line-height:1.6; color:#4a4a4a;">
-                Your employee account has been created. Use the credentials below to access your account.
+                Your user account has been created. Use the credentials below to access your account.
               </p>
 
               <!-- Credentials Card -->
@@ -57,17 +57,17 @@ export function employeeCreatedTemplate(data) {
                 <tr>
                   <td style="padding:20px;">
                     
-                    <!-- Employee ID -->
+                    <!-- user ID -->
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:12px;">
                       <tr>
-                        <td style="font-size:13px; color:#6b7280; padding-bottom:4px;">Employee ID</td>
+                        <td style="font-size:13px; color:#6b7280; padding-bottom:4px;">user ID</td>
                       </tr>
                       <tr>
-                        <td style="font-size:16px; color:#111827; font-weight:600;">${data.employeeNumber}</td>
+                        <td style="font-size:16px; color:#111827; font-weight:600;">${data.userNumber}</td>
                       </tr>
                     </table>
 
-                  
+                   
 
                     <!-- Password -->
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -76,6 +76,16 @@ export function employeeCreatedTemplate(data) {
                       </tr>
                       <tr>
                         <td style="font-size:16px; color:#111827; font-weight:600; font-family:monospace; background:#ffffff; padding:8px 12px; border-radius:6px; display:inline-block;">${data.password}</td>
+                      </tr>
+                    </table>
+
+                    <!-- Transaction Pin -->
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="font-size:13px; color:#6b7280; padding-bottom:4px;">Temporary Transaction Pin</td>
+                      </tr>
+                      <tr>
+                        <td style="font-size:16px; color:#111827; font-weight:600; font-family:monospace; background:#ffffff; padding:8px 12px; border-radius:6px; display:inline-block;">${data.transactionPin}</td>
                       </tr>
                     </table>
 
@@ -149,8 +159,8 @@ export function employeeCreatedTemplate(data) {
   };
 }
 
-// EMPLOYEE ACTIVATED TEMPLATE
-export function employeeActivatedTemplate(data) {
+// user ACTIVATED TEMPLATE
+export function userActivatedTemplate(data) {
   return {
     subject: `Account Activated - ${data.tenantName}`,
     html: `
@@ -193,7 +203,7 @@ export function employeeActivatedTemplate(data) {
               </h2>
               
               <p style="margin:0 0 24px; font-size:15px; line-height:1.6; color:#4a4a4a;">
-                Great news! Your employee account has been successfully activated. You now have full access to the platform and can start using all features.
+                Great news! Your user account has been successfully activated. You now have full access to the platform and can start using all features.
               </p>
 
               <!-- Status Card -->
@@ -238,7 +248,6 @@ export function employeeActivatedTemplate(data) {
             <td style="background:#f9fafb; padding:20px 24px; text-align:center; border-radius:0 0 12px 12px; border-top:1px solid #e5e7eb;">
               <p style="margin:0; font-size:12px; color:#9ca3af; line-height:1.5;">
                 © ${new Date().getFullYear()} ${data.tenantName}. All rights reserved.<br>
-                <span style="color:#d1d5db;">Account Type: ${data.userType}</span>
               </p>
             </td>
           </tr>
@@ -255,8 +264,8 @@ export function employeeActivatedTemplate(data) {
   };
 }
 
-// EMPLOYEE INACTIVE TEMPLATE
-export function employeeInactiveTemplate(data) {
+// user INACTIVE TEMPLATE
+export function userInactiveTemplate(data) {
   return {
     subject: `Account Status Update - ${data.tenantName}`,
     html: `
@@ -298,7 +307,7 @@ export function employeeInactiveTemplate(data) {
               </h2>
               
               <p style="margin:0 0 24px; font-size:15px; line-height:1.6; color:#4a4a4a;">
-                Your employee account has been marked as inactive. This means your access to the platform is currently restricted.
+                Your user account has been marked as inactive. This means your access to the platform is currently restricted.
               </p>
 
               <!-- Status Card -->
@@ -372,8 +381,8 @@ export function employeeInactiveTemplate(data) {
   };
 }
 
-// EMPLOYEE SUSPENDED TEMPLATE
-export function employeeSuspendedTemplate(data) {
+// user SUSPENDED TEMPLATE
+export function userSuspendedTemplate(data) {
   return {
     subject: `Important: Account Suspended - ${data.tenantName}`,
     html: `
@@ -416,7 +425,7 @@ export function employeeSuspendedTemplate(data) {
               </h2>
               
               <p style="margin:0 0 24px; font-size:15px; line-height:1.6; color:#4a4a4a;">
-                Your employee account has been suspended due to administrative action or policy violation. Access to the platform has been temporarily restricted.
+                Your user account has been suspended due to administrative action or policy violation. Access to the platform has been temporarily restricted.
               </p>
 
               <!-- Status Card -->
@@ -461,6 +470,123 @@ export function employeeSuspendedTemplate(data) {
                 <tr>
                   <td style="font-size:13px; color:#6b7280; line-height:1.6;">
                     <strong style="color:#374151;">Contact Support Immediately</strong><br>
+                    Email: <a href="mailto:${data.smtpFromEmail}" style="color:#dc2626; text-decoration:none;">${data.smtpFromEmail}</a><br>
+                    WhatsApp: ${data.tenantWhatsapp || 'Contact Admin'}
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f9fafb; padding:20px 24px; text-align:center; border-radius:0 0 12px 12px; border-top:1px solid #e5e7eb;">
+              <p style="margin:0; font-size:12px; color:#9ca3af; line-height:1.5;">
+                © ${new Date().getFullYear()} ${data.tenantName}. All rights reserved.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
+    `,
+  };
+}
+
+// user DELETED TEMPLATE
+export function userDeletedTemplate(data) {
+  return {
+    subject: `Account Deleted - ${data.tenantName}`,
+    html: `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Account Deleted</title>
+</head>
+
+<body style="margin:0; padding:0; background-color:#f5f5f5; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+  
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f5f5f5;">
+    <tr>
+      <td align="center" style="padding:20px 10px;">
+        
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px; background:#ffffff; border-radius:12px; box-shadow:0 4px 16px rgba(0,0,0,0.08);">
+          
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg, #dc2626 0%, #ef4444 100%); padding:32px 24px; text-align:center; border-radius:12px 12px 0 0;">
+              <h1 style="margin:0; font-size:26px; color:#ffffff; font-weight:700; letter-spacing:-0.5px;">
+                ${data.tenantName}
+              </h1>
+              <p style="margin:8px 0 0; font-size:14px; color:#fee2e2; font-weight:500;">
+                Account Status Update
+              </p>
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding:32px 24px;">
+              
+              <h2 style="margin:0 0 16px; font-size:22px; color:#1a1a1a; font-weight:600;">
+                Account Deleted
+              </h2>
+              
+              <p style="margin:0 0 24px; font-size:15px; line-height:1.6; color:#4a4a4a;">
+                Your user account has been permanently deleted from the platform. You no longer have access to this account or its associated data.
+              </p>
+
+              <!-- Status Card -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fef2f2; border:1px solid #fecaca; border-radius:10px; margin-bottom:20px;">
+                <tr>
+                  <td style="padding:20px; text-align:center;">
+                    <div style="font-size:14px; color:#991b1b; font-weight:600;">
+                      🗑 Account Status: <span style="color:#dc2626;">DELETED</span>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+
+              ${
+                data.actionReason
+                  ? `
+              <!-- Reason Box -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fee2e2; border-left:4px solid #dc2626; border-radius:8px; margin-bottom:24px;">
+                <tr>
+                  <td style="padding:16px; font-size:14px; line-height:1.5; color:#7f1d1d;">
+                    <strong>Reason:</strong> ${data.actionReason}
+                  </td>
+                </tr>
+              </table>
+              `
+                  : ''
+              }
+
+              <!-- Info Box -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; margin-bottom:24px;">
+                <tr>
+                  <td style="padding:18px; font-size:14px; line-height:1.6; color:#4a4a4a;">
+                    <strong style="color:#1a1a1a;">What to do next?</strong><br>
+                    If you believe this action was taken in error or need further clarification, please contact your administrator or support team immediately.
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Support Info -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #e5e7eb; padding-top:20px;">
+                <tr>
+                  <td style="font-size:13px; color:#6b7280; line-height:1.6;">
+                    <strong style="color:#374151;">Contact Support</strong><br>
                     Email: <a href="mailto:${data.smtpFromEmail}" style="color:#dc2626; text-decoration:none;">${data.smtpFromEmail}</a><br>
                     WhatsApp: ${data.tenantWhatsapp || 'Contact Admin'}
                   </td>

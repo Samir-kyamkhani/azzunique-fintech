@@ -26,6 +26,7 @@ export const updateUserSchema = z
       .regex(/^[0-9]{10,15}$/)
       .optional(),
 
+    profilePicture: z.string().max(255).optional(),
     userStatus: z
       .enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'DELETED'])
       .optional(),

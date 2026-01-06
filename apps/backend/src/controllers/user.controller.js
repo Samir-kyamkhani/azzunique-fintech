@@ -16,8 +16,13 @@ export const findUser = async (req, res) => {
 };
 
 export const updateUser = async (req, res) => {
-  await userService.update(req.params.id, req.body, req.user);
-  res.json(null);
+  const result = await userService.update(
+    req.params.id,
+    req.body,
+    req.user,
+    req.file,
+  );
+  res.json(result);
 };
 
 export const getAllDescendants = async (req, res) => {

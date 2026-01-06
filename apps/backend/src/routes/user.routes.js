@@ -17,6 +17,7 @@ import {
   listUsersQuerySchema,
   userIdParamSchema,
 } from '../validators/user.schema.js';
+import upload from '../middleware/multer.middleware.js';
 
 const router = Router();
 
@@ -38,6 +39,7 @@ router.get(
 
 router.put(
   '/:id',
+  upload.single('profilePicture'),
   validate({ body: updateUserSchema, params: userIdParamSchema }),
   asyncHandler(updateUser),
 );

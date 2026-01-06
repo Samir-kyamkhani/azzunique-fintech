@@ -8,7 +8,10 @@ import {
 } from '../lib/lib.js';
 import { db } from '../database/core/core-db.js';
 import { ApiError } from '../lib/ApiError.js';
-import { eq, and, or, desc, isNull, like, inArray } from 'drizzle-orm';
+import { eq, and, or, desc, isNull, like, inArray, ne } from 'drizzle-orm';
+import { eventBus } from '../events/events.js';
+import { EVENTS } from '../events/events.constants.js';
+import s3Service from '../lib/S3Service.js';
 
 class UserService {
   async create(data, actor) {
@@ -91,8 +94,19 @@ class UserService {
     // Create wallet for state_head, master_distributer, distributer, reatiler user
 
     // Send credentials email
+    const sentMail = eventBus.emit(EVENTS.USER_CREATED, {
+      userId: userPayload.id,
+      userNumber: userPayload.userNumber,
+      transactionPin: generatedTransactionPin,
+      password: generatedPassword,
+      tenantId: actor.tenantId,
+    });
 
-    await db.insert(usersTable).values(userPayload);
+    if (sentMail) {
+      await db.insert(usersTable).values(userPayload);
+    } else {
+      throw ApiError.internal('Failed to send user credentials.');
+    }
 
     const [newUser] = await db
       .select()
@@ -130,7 +144,6 @@ class UserService {
       );
     }
 
-    // Fetch users with tenant info
     const rows = await db
       .select()
       .from(usersTable)
@@ -140,11 +153,11 @@ class UserService {
       .limit(limit)
       .offset(offset);
 
-    // Group users by tenant
     const tenantMap = {};
 
     rows.forEach((row) => {
       const tenantId = row.tenants.id;
+      const user = row.users;
 
       if (!tenantMap[tenantId]) {
         tenantMap[tenantId] = {
@@ -153,7 +166,12 @@ class UserService {
         };
       }
 
-      tenantMap[tenantId].users.push(row.users);
+      tenantMap[tenantId].users.push({
+        ...user,
+        profilePictureUrl: user.profilePicture
+          ? s3Service.buildS3Url(user.profilePicture)
+          : null,
+      });
     });
 
     return Object.values(tenantMap);
@@ -170,25 +188,122 @@ class UserService {
       throw ApiError.notFound('User not found');
     }
 
-    return user;
+    return {
+      ...user,
+      profilePictureUrl: user.profilePicture
+        ? s3Service.buildS3Url(user.profilePicture)
+        : null,
+    };
   }
 
-  async update(id, data, actor) {
-    await this.findOne(id, actor);
+  async update(id, data, actor, file) {
+    const existingUser = await this.findOne(id, actor);
+
+    // EMAIL DUPLICATE CHECK
+    if (data.email && data.email !== existingUser.email) {
+      const [emailExists] = await db
+        .select({ id: usersTable.id })
+        .from(usersTable)
+        .where(
+          and(
+            eq(usersTable.email, data.email),
+            eq(usersTable.tenantId, existingUser.tenantId),
+            ne(usersTable.id, id),
+          ),
+        )
+        .limit(1);
+
+      if (emailExists) {
+        throw ApiError.badRequest('Email already exists');
+      }
+    }
+
+    // MOBILE DUPLICATE CHECK
+    if (data.mobileNumber && data.mobileNumber !== existingUser.mobileNumber) {
+      const [mobileExists] = await db
+        .select({ id: usersTable.id })
+        .from(usersTable)
+        .where(
+          and(
+            eq(usersTable.mobileNumber, data.mobileNumber),
+            eq(usersTable.tenantId, existingUser.tenantId),
+            ne(usersTable.id, id),
+          ),
+        )
+        .limit(1);
+
+      if (mobileExists) {
+        throw ApiError.badRequest('Mobile number already exists');
+      }
+    }
+
+    // ROLE VALIDATION
+    if (data.roleId && data.roleId !== existingUser.roleId) {
+      const [role] = await db
+        .select()
+        .from(roleTable)
+        .where(eq(roleTable.id, data.roleId))
+        .limit(1);
+
+      if (!role) {
+        throw ApiError.badRequest('Invalid role ID');
+      }
+
+      if (role.roleCode === 'AZZUNIQUE') {
+        const [existingAzzUnique] = await db
+          .select()
+          .from(usersTable)
+          .where(eq(usersTable.roleId, role.id))
+          .limit(1);
+
+        if (existingAzzUnique) {
+          throw ApiError.badRequest(
+            'AZZUNIQUE user already exists in the system',
+          );
+        }
+      }
+    }
 
     const updatedPayload = {
-      ...data,
-      deletedAt: data.userStatus === 'DELETED' && new Date(),
       updatedAt: new Date(),
     };
 
-    const [updatedUser] = await db
+    if (data.firstName !== undefined) updatedPayload.firstName = data.firstName;
+    if (data.lastName !== undefined) updatedPayload.lastName = data.lastName;
+    if (data.email !== undefined) updatedPayload.email = data.email;
+    if (data.userStatus !== undefined)
+      updatedPayload.userStatus = data.userStatus;
+    if (data.mobileNumber !== undefined)
+      updatedPayload.mobileNumber = data.mobileNumber;
+    if (data.roleId !== undefined) updatedPayload.roleId = data.roleId;
+
+    if (file) {
+      const uploaded = await s3Service.upload(file.path, 'user-profile');
+
+      if (existingUser.profilePicture) {
+        await s3Service.deleteByKey(existingUser.profilePicture);
+      }
+
+      updatedPayload.profilePicture = uploaded.key;
+    }
+
+    if (data.userStatus && data.userStatus !== existingUser.userStatus) {
+      eventBus.emit(EVENTS.USER_STATUS_CHANGED, {
+        tenantId: actor.tenantId,
+        userId: id,
+        email: existingUser.email,
+        oldStatus: existingUser.userStatus,
+        newStatus: data.userStatus,
+        actionReason: data.actionReason || null,
+      });
+    }
+
+    await db
       .update(usersTable)
       .set(updatedPayload)
-      .where(usersTable.id.eq(id))
-      .returning();
+      .where(eq(usersTable.id, id));
 
-    return updatedUser;
+    return await this.findOne(id, actor);
   }
 
   async getAllDescendants(userId, actor, query = {}) {

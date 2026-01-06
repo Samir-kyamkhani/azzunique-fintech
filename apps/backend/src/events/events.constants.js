@@ -3,8 +3,7 @@ export const EVENTS = {
 
   EMPLOYEE_CREATED: 'employee.created',
   EMPLOYEE_STATUS_CHANGED: 'employee.status.changed',
-  
-  PASSWORD_RESET: 'password.reset',
 
-  AUDIT_LOG: 'audit.log',
+  USER_CREATED: 'user.created',
+  USER_STATUS_CHANGED: 'users.status.changed',
 };
