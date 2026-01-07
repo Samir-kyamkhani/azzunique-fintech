@@ -1,3 +1,4 @@
+import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import helmet from 'helmet';
@@ -8,6 +9,13 @@ import { httpExceptionFilter } from './middleware/httpExceptionFilter.middleware
 import { httpResponseFilter } from './middleware/httpResponseFilter.middleware.js';
 
 const app = express();
+
+app.use(
+  cors({
+    origin: [process.env.CLIENT_URL, "http://localhost:3001", "http://localhost:3000"],
+    credentials: true,
+  }),
+);
 
 app.set('trust proxy', 1);
 
