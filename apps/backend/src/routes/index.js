@@ -9,6 +9,7 @@ import userRoutes from './user.routes.js';
 import departmentRoutes from './department.routes.js';
 import employeeRoutes from './employee.routes.js';
 import tenantWebsiteRoutes from './tenantWebsite.routes.js';
+import tenantSocialMediaRoutes from './tenantSocialMedia.routes.js';
 
 const router = Router();
 
@@ -22,5 +23,6 @@ router.use('/users', userRoutes);
 router.use('/departments', departmentRoutes);
 router.use('/employees', employeeRoutes);
 router.use('/tenants-website', tenantWebsiteRoutes);
+router.use('/social-media', tenantSocialMediaRoutes);
 
 export default router;
