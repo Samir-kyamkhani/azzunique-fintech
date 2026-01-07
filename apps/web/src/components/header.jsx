@@ -26,6 +26,7 @@ export function Header() {
 
   // Get user from Redux store (adjust based on your actual auth state structure)
   const { isAuthenticated, user } = useSelector((state) => state.auth || {});
+
   const userType = user?.type || "USER";
 
   const handleLogout = () => {

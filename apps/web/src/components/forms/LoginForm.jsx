@@ -6,9 +6,12 @@ import { useDispatch } from "react-redux";
 import { loginSuccess } from "@/store/authSlice";
 import { Eye, EyeOff, Shield, Building, Users, Lock } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
   const dispatch = useDispatch();
+  const router = useRouter();
+
   const { mutate, isPending, error } = useLogin();
   const [showPassword, setShowPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("USER");
@@ -25,6 +28,7 @@ export default function LoginForm() {
     mutate(data, {
       onSuccess: (res) => {
         dispatch(loginSuccess(res));
+        router.push("/dashboard");
       },
     });
   };
