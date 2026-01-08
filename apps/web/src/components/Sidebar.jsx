@@ -15,6 +15,7 @@ import {
   Wallet,
   BadgeIndianRupee,
   FileCode,
+  Building2,
 } from "lucide-react";
 import { useLogout } from "@/hooks/useAuth";
 import Button from "./ui/Button";
