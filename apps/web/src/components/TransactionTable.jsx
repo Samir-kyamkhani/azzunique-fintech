@@ -1,12 +1,19 @@
 "use client";
 
-import { ArrowDownRight } from "lucide-react";
-import { ArrowUpRight } from "lucide-react";
-import { Search } from "lucide-react";
-import { Filter } from "lucide-react";
-import { Eye, Download, CheckCircle, Clock, XCircle } from "lucide-react";
-import Link from "next/link";
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  Search,
+  Filter,
+  Eye,
+  Download,
+  CheckCircle,
+  Clock,
+  XCircle,
+} from "lucide-react";
 import { useState } from "react";
+import Button from "@/components/ui/Button";
+import Link from "next/link";
 
 const transactions = [
   {
@@ -16,6 +23,8 @@ const transactions = [
     type: "credit",
     status: "completed",
     date: "2024-01-15",
+    category: "Income",
+    time: "10:30 AM",
   },
   {
     id: "TXN002",
@@ -24,6 +33,8 @@ const transactions = [
     type: "debit",
     status: "completed",
     date: "2024-01-14",
+    category: "Shopping",
+    time: "03:15 PM",
   },
   {
     id: "TXN003",
@@ -32,6 +43,8 @@ const transactions = [
     type: "debit",
     status: "pending",
     date: "2024-01-14",
+    category: "Utilities",
+    time: "11:45 AM",
   },
   {
     id: "TXN004",
@@ -40,6 +53,8 @@ const transactions = [
     type: "credit",
     status: "completed",
     date: "2024-01-13",
+    category: "Income",
+    time: "02:20 PM",
   },
   {
     id: "TXN005",
@@ -48,19 +63,14 @@ const transactions = [
     type: "debit",
     status: "failed",
     date: "2024-01-12",
+    category: "Entertainment",
+    time: "09:10 AM",
   },
 ];
 
 // Mock data for the dashboard
 const dashboardStats = {
-  totalBalance: 125845.67,
-  totalRevenue: 85420.5,
-  totalExpenses: 42310.25,
-  netProfit: 43110.25,
-  activeUsers: 2548,
   transactions: 18456,
-  pendingTransfers: 12,
-  failedTransactions: 5,
 };
 
 const formatCurrency = (amount) => {
@@ -113,13 +123,14 @@ export function TransactionTable() {
               <input
                 type="text"
                 placeholder="Search transactions..."
-                className="w-full pl-10 pr-4 py-2 border border-input bg-background rounded-border focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-input bg-background text-foreground rounded-border focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
               />
             </div>
-            <button className="flex items-center gap-2 px-4 py-2 border border-input hover:bg-accent rounded-border transition-colors">
-              <Filter className="h-4 w-4" />
-              <span>Filter</span>
-            </button>
+            <Button variant="outline" icon={Filter}>
+              Filter
+            </Button>
           </div>
         </div>
       </div>
@@ -149,7 +160,7 @@ export function TransactionTable() {
             </tr>
           </thead>
           <tbody>
-            {transactions.map((transaction) => (
+            {filteredTransactions.map((transaction) => (
               <tr
                 key={transaction.id}
                 className="border-b border-border hover:bg-accent/50 transition-colors"
@@ -174,7 +185,7 @@ export function TransactionTable() {
                         {transaction.description}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        ID: TXN{transaction.id.toString().padStart(6, "0")}
+                        ID: {transaction.id}
                       </p>
                     </div>
                   </div>
@@ -216,12 +227,18 @@ export function TransactionTable() {
                 </td>
                 <td className="py-4 px-6">
                   <div className="flex items-center space-x-2">
-                    <button className="p-1 hover:bg-accent rounded-border transition-colors">
-                      <Eye className="h-4 w-4 text-muted-foreground" />
-                    </button>
-                    <button className="p-1 hover:bg-accent rounded-border transition-colors">
-                      <Download className="h-4 w-4 text-muted-foreground" />
-                    </button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="hover:bg-accent"
+                      icon={Eye}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="hover:bg-accent"
+                      icon={Download}
+                    />
                   </div>
                 </td>
               </tr>
@@ -231,16 +248,14 @@ export function TransactionTable() {
       </div>
 
       <div className="p-6 border-t border-border">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="text-sm text-muted-foreground">
-            Showing 5 of {dashboardStats.transactions} transactions
+            Showing {filteredTransactions.length} of{" "}
+            {dashboardStats.transactions} transactions
           </div>
-          <Link
-            href="/dashboard/transactions"
-            className="px-4 py-2 bg-gradient-theme text-primary-foreground rounded-border hover:opacity-90 transition-colors"
-          >
+          <Button href="/dashboard/transactions" variant="default">
             View All Transactions
-          </Link>
+          </Button>
         </div>
       </div>
     </div>

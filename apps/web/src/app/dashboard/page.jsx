@@ -20,6 +20,7 @@ import {
 import { QuickActions } from "@/components/QuickActions";
 import { RevenueChart } from "@/components/RevenueChart";
 import { TransactionTable } from "@/components/TransactionTable";
+import Button from "@/components/ui/Button";
 
 export default function Dashboard() {
   const [timeRange, setTimeRange] = useState("monthly");
@@ -78,16 +79,15 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="flex items-center space-x-3 mt-4 md:mt-0">
-          <button
+          <Button
             onClick={refreshData}
             disabled={isLoading}
-            className="flex items-center gap-2 px-4 py-2 border border-input hover:bg-accent rounded-border transition-colors"
+            variant="outline"
+            icon={RefreshCw}
+            loading={isLoading}
           >
-            <RefreshCw
-              className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
-            />
-            <span>{isLoading ? "Refreshing..." : "Refresh"}</span>
-          </button>
+            {isLoading ? "Refreshing..." : "Refresh"}
+          </Button>
           <div className="relative">
             <select
               value={timeRange}
@@ -207,9 +207,12 @@ export default function Dashboard() {
                 Monthly expenses by category
               </p>
             </div>
-            <button className="p-2 hover:bg-accent rounded-border transition-colors">
-              <PieChart className="h-4 w-4" />
-            </button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:bg-accent"
+              icon={PieChart}
+            />
           </div>
 
           <div className="space-y-4">
@@ -253,7 +256,6 @@ export default function Dashboard() {
       </div>
 
       {/* Recent Transactions */}
-
       <TransactionTable />
 
       {/* Bottom Stats */}
