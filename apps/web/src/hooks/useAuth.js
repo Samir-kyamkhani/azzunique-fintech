@@ -9,3 +9,11 @@ export const useLogin = () =>
         body: JSON.stringify(payload),
       }),
   });
+
+export const useLogout = () =>
+  useMutation({
+    mutationFn: async () =>
+      apiClient("/auth/logout", {
+        method: "POST",
+      }),
+  });

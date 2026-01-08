@@ -3,8 +3,6 @@
 import { useState } from "react";
 import {
   Shield,
-  Menu,
-  X,
   Bell,
   User,
   LogOut,
@@ -15,17 +13,17 @@ import {
   Wallet,
 } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
-import { logout } from "@/store/authSlice";
+import { logout as logoutAction } from "@/store/authSlice";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { ThemeToggle } from "./theme/ThemeToggle";
 import Button from "@/components/ui/Button";
 import Link from "next/link";
 import { Sun } from "lucide-react";
 import { Moon } from "lucide-react";
+import { useLogout } from "@/hooks/useAuth";
 
 export function Header() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { mutate: logoutMutate, isPending } = useLogout();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const dispatch = useDispatch();
   const router = useRouter();
@@ -36,10 +34,15 @@ export function Header() {
   const userType = user?.type || "USER";
 
   const handleLogout = () => {
-    dispatch(logout());
-    router.push("/login");
-    setIsProfileOpen(false);
-    setIsMenuOpen(false);
+    logoutMutate(undefined, {
+      onSuccess: () => {
+        dispatch(logoutAction());
+        router.push("/login");
+      },
+      onSettled: () => {
+        setIsProfileOpen(false);
+      },
+    });
   };
 
   const toggleDarkMode = () => {
@@ -223,6 +226,7 @@ export function Header() {
                           variant="default"
                           className="w-full"
                           icon={LogOut}
+                          loading={isPending}
                           onClick={handleLogout}
                         >
                           Sign Out
