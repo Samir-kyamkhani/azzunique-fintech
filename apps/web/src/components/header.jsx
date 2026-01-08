@@ -15,19 +15,16 @@ import {
 import { useSelector, useDispatch } from "react-redux";
 import { logout as logoutAction } from "@/store/authSlice";
 import { useRouter } from "next/navigation";
-import { useTheme } from "next-themes";
 import Button from "@/components/ui/Button";
 import Link from "next/link";
-import { Sun } from "lucide-react";
-import { Moon } from "lucide-react";
 import { useLogout } from "@/hooks/useAuth";
+import { ThemeToggle } from "./theme/ThemeToggle";
 
 export function Header() {
   const { mutate: logoutMutate, isPending } = useLogout();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const dispatch = useDispatch();
   const router = useRouter();
-  const { theme, setTheme } = useTheme();
 
   const { isAuthenticated, user } = useSelector((state) => state.auth || {});
 
@@ -43,10 +40,6 @@ export function Header() {
         setIsProfileOpen(false);
       },
     });
-  };
-
-  const toggleDarkMode = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
   };
 
   const navigationLinks = [
@@ -141,17 +134,11 @@ export function Header() {
 
           {/* Right side - User actions */}
           <div className="flex items-center space-x-3">
+            {/* Theme Toggle Button */}
+            <ThemeToggle />
+
             {isAuthenticated ? (
               <>
-                {/* Theme Toggle Button */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/10"
-                  onClick={toggleDarkMode}
-                  icon={theme === "dark" ? Sun : Moon}
-                />
-
                 {/* Notifications */}
                 <Button
                   variant="ghost"

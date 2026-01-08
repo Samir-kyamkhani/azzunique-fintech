@@ -62,7 +62,7 @@ export default function HomePage() {
             </div>
             <h1 className="text-5xl md:text-6xl font-bold mb-6">
               Secure Enterprise
-              <span className="block text-gradient-theme">Platform</span>
+              <span className="block">Platform</span>
             </h1>
             <p className="text-xl text-primary-foreground/90 mb-8 max-w-2xl mx-auto">
               All-in-one solution for business authentication, employee

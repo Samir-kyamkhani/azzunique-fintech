@@ -6,27 +6,18 @@ import {
   X,
   User,
   Search,
-  Moon,
-  Sun,
   HelpCircle,
   ChevronDown,
   Settings,
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
-import { useTheme } from "next-themes";
-import dynamic from "next/dynamic";
+import { ThemeToggle } from "./theme/ThemeToggle";
 
 const DashboardNavbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const { theme, setTheme } = useTheme();
-
-  const ThemeToggle = dynamic(
-    () => import("./theme/ThemeToggle").then((m) => m.ThemeToggle),
-    { ssr: false }
-  );
 
   // Empty functions (no logic)
   const handleLogout = () => {
@@ -35,10 +26,6 @@ const DashboardNavbar = () => {
 
   const handleSearch = () => {
     // No logic - empty function
-  };
-
-  const toggleDarkMode = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
   };
 
   // Static user data (UI only)
@@ -231,16 +218,7 @@ const DashboardNavbar = () => {
               ))}
             </div>
             <div className="flex items-center justify-between pt-3 border-t border-border">
-              <button
-                onClick={toggleDarkMode}
-                className="flex items-center p-2 text-muted-foreground hover:text-primary"
-              >
-                {theme === "dark" ? (
-                  <Sun className="h-5 w-5 mr-2" />
-                ) : (
-                  <Moon className="h-5 w-5 mr-2" />
-                )}
-              </button>
+              <ThemeToggle />
             </div>
           </div>
         )}
