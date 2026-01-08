@@ -57,6 +57,12 @@ const Sidebar = () => {
           path: "/dashboard/request-fund",
         },
         {
+          id: "tenants",
+          label: "Tenants",
+          icon: Building2,
+          path: "/dashboard/tenants",
+        },
+        {
           id: "members",
           label: "Members",
           icon: Users,
