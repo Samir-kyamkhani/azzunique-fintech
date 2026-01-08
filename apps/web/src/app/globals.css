@@ -541,3 +541,54 @@ body {
 .text-chart-5 {
   color: var(--chart-5);
 }
+
+.bg-primary-foreground\/10 {
+  background-color: color-mix(
+    in oklch,
+    var(--primary-foreground) 10%,
+    transparent
+  );
+}
+
+.bg-primary-foreground\/20 {
+  background-color: color-mix(
+    in oklch,
+    var(--primary-foreground) 20%,
+    transparent
+  );
+}
+
+.bg-primary-foreground\/90 {
+  background-color: color-mix(
+    in oklch,
+    var(--primary-foreground) 90%,
+    transparent
+  );
+}
+
+/* Text opacity utilities */
+.text-primary-foreground\/90 {
+  color: color-mix(in oklch, var(--primary-foreground) 90%, transparent);
+}
+
+/* Grid pattern utility */
+.bg-grid-primary-foreground\/10 {
+  background-image:
+    linear-gradient(to right, currentColor 1px, transparent 1px),
+    linear-gradient(to bottom, currentColor 1px, transparent 1px);
+  background-size: 20px 20px;
+  color: color-mix(in oklch, var(--primary-foreground) 10%, transparent);
+}
+
+/* Border with opacity */
+.border-primary-foreground\/30 {
+  border-color: color-mix(in oklch, var(--primary-foreground) 30%, transparent);
+}
+
+/* Fix for text-gradient-theme class */
+.text-gradient-theme {
+  background: var(--theme-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

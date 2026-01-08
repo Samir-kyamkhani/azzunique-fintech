@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3,
   ArrowDownCircle,
@@ -16,12 +16,25 @@ import {
   BadgeIndianRupee,
   FileCode,
 } from "lucide-react";
-import { Building2 } from "lucide-react";
+import { useLogout } from "@/hooks/useAuth";
+import Button from "./ui/Button";
+import { useDispatch } from "react-redux";
+import { logout as logoutAction } from "@/store/authSlice";
 
 const Sidebar = () => {
   const pathname = usePathname();
+  const { mutate: logoutMutate, isPending } = useLogout();
+  const dispatch = useDispatch();
+  const router = useRouter();
 
-  const handleLogout = () => {};
+  const handleLogout = () => {
+    logoutMutate(undefined, {
+      onSuccess: () => {
+        dispatch(logoutAction());
+        router.push("/login");
+      },
+    });
+  };
 
   const getPanelType = () => {
     return "";
@@ -223,15 +236,16 @@ const Sidebar = () => {
         ))}
       </div>
 
-      {/* Logout */}
       <div className="p-4 border-t border-border">
-        <button
+        <Button
+          variant="ghost"
+          className="w-full justify-start text-destructive hover:bg-destructive/10"
+          icon={LogOut}
+          loading={isPending}
           onClick={handleLogout}
-          className="w-full cursor-pointer hover:bg-destructive/10 flex items-center px-3 py-2.5 rounded-border transition-all duration-200 group"
         >
-          <LogOut className="h-5 w-5 mr-3 text-destructive group-hover:scale-105 transition-transform duration-200" />
-          <span className="font-medium text-destructive">Logout</span>
-        </button>
+          Logout
+        </Button>
       </div>
     </div>
   );

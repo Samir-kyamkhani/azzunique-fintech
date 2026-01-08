@@ -10,7 +10,7 @@ import {
   MapPin,
   Globe,
 } from "lucide-react";
-import Link from "next/link";
+import Button from "@/components/ui/Button";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -44,22 +44,22 @@ export function Footer() {
 
   const socialLinks = [
     {
-      icon: <Facebook className="h-5 w-5" />,
+      icon: Facebook,
       href: "https://facebook.com",
       label: "Facebook",
     },
     {
-      icon: <Twitter className="h-5 w-5" />,
+      icon: Twitter,
       href: "https://twitter.com",
       label: "Twitter",
     },
     {
-      icon: <Linkedin className="h-5 w-5" />,
+      icon: Linkedin,
       href: "https://linkedin.com",
       label: "LinkedIn",
     },
     {
-      icon: <Mail className="h-5 w-5" />,
+      icon: Mail,
       href: "mailto:contact@secureportal.com",
       label: "Email",
     },
@@ -113,12 +113,13 @@ export function Footer() {
                 <ul className="space-y-3">
                   {links.map((link) => (
                     <li key={link.name}>
-                      <Link
+                      <Button
                         href={link.href}
-                        className="text-muted-foreground hover:text-primary-foreground transition-colors"
+                        variant="link"
+                        className="text-muted-foreground hover:text-primary-foreground p-0 h-auto"
                       >
                         {link.name}
-                      </Link>
+                      </Button>
                     </li>
                   ))}
                 </ul>
@@ -130,14 +131,15 @@ export function Footer() {
           <div className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-4 mb-4 md:mb-0">
               {socialLinks.map((social) => (
-                <Link
+                <Button
                   key={social.label}
                   href={social.href}
-                  className="p-2 bg-card hover:bg-accent rounded-border transition-colors"
+                  variant="ghost"
+                  size="icon"
+                  className="bg-card hover:bg-accent"
                   aria-label={social.label}
-                >
-                  {social.icon}
-                </Link>
+                  icon={social.icon}
+                />
               ))}
             </div>
 
@@ -151,9 +153,9 @@ export function Footer() {
                   <option>Deutsch</option>
                 </select>
               </div>
-              <button className="px-4 py-2 bg-gradient-theme text-primary-foreground rounded-border hover:opacity-90 transition-all">
+              <Button href="/register" className="hover:opacity-90">
                 Get Started
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -165,30 +167,34 @@ export function Footer() {
               © {currentYear} SecurePortal. All rights reserved.
             </p>
             <div className="flex items-center space-x-6">
-              <Link
+              <Button
                 href="/terms"
-                className="text-muted-foreground hover:text-primary-foreground text-sm transition-colors"
+                variant="link"
+                className="text-muted-foreground hover:text-primary-foreground p-0 h-auto"
               >
                 Terms of Service
-              </Link>
-              <Link
+              </Button>
+              <Button
                 href="/privacy"
-                className="text-muted-foreground hover:text-primary-foreground text-sm transition-colors"
+                variant="link"
+                className="text-muted-foreground hover:text-primary-foreground p-0 h-auto"
               >
                 Privacy Policy
-              </Link>
-              <Link
+              </Button>
+              <Button
                 href="/cookies"
-                className="text-muted-foreground hover:text-primary-foreground text-sm transition-colors"
+                variant="link"
+                className="text-muted-foreground hover:text-primary-foreground p-0 h-auto"
               >
                 Cookie Policy
-              </Link>
-              <Link
+              </Button>
+              <Button
                 href="/sitemap"
-                className="text-muted-foreground hover:text-primary-foreground text-sm transition-colors"
+                variant="link"
+                className="text-muted-foreground hover:text-primary-foreground p-0 h-auto"
               >
                 Sitemap
-              </Link>
+              </Button>
             </div>
           </div>
 

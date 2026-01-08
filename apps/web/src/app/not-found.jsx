@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Button from "@/components/ui/Button";
 import { AlertTriangle, Home, ArrowLeft } from "lucide-react";
 
 export default function NotFound() {
@@ -32,23 +32,27 @@ export default function NotFound() {
           or you don&apos;t have permission to view it.
         </p>
 
-        {/* Actions */}
+        {/* Actions - Using Button Component */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link
+          <Button
             href="/dashboard"
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-theme text-primary-foreground rounded-border hover:opacity-90 transition-all font-medium shadow-border"
+            variant="default"
+            icon={Home}
+            iconPosition="left"
+            size="default"
           >
-            <Home className="h-4 w-4" />
             Go to Dashboard
-          </Link>
+          </Button>
 
-          <Link
+          <Button
             href="/"
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-border text-foreground rounded-border hover:bg-accent transition-all font-medium"
+            variant="secondary"
+            icon={ArrowLeft}
+            iconPosition="left"
+            size="default"
           >
-            <ArrowLeft className="h-4 w-4" />
             Go Home
-          </Link>
+          </Button>
         </div>
 
         {/* Footer note */}
