@@ -153,19 +153,24 @@ const Sidebar = () => {
     return (
       <Link
         href={item.path}
-        className={`group flex items-center px-3 py-2.5 rounded-border text-sm font-medium transition-all duration-200 ${
-          isActive ? "bg-accent shadow-xs" : "hover:bg-accent/50"
+        className={`group flex items-center px-3 py-2.5 rounded-border text-sm font-medium transition-all ${
+          isActive
+            ? "bg-primary/10 border border-primary/20 shadow-sm"
+            : "hover:bg-[var(--sidebar-hover)]"
         }`}
       >
         <Icon
-          className={`h-5 w-5 mr-3 transition-transform duration-200 ${
+          className={`h-5 w-5 mr-3 ${
             isActive
-              ? "scale-110 text-primary"
-              : "text-muted-foreground group-hover:scale-105 group-hover:text-foreground"
+              ? "text-primary"
+              : "text-muted-foreground group-hover:text-foreground"
           }`}
         />
+
         <span
-          className={`truncate ${isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`}
+          className={
+            isActive ? "text-primary font-semibold" : "text-muted-foreground"
+          }
         >
           {item.label}
         </span>
@@ -192,7 +197,7 @@ const Sidebar = () => {
   const initials = firstName ? firstName[0].toUpperCase() : "U";
 
   return (
-    <div className="w-64 h-full flex flex-col border-r border-border bg-card overflow-y-auto">
+    <div className="w-64 h-full flex flex-col border-r border-border bg-sidebar">
       {/* Header */}
       <div className="px-6 py-2.5 bg-gradient-secondry border-b border-border shadow-border">
         <div className="flex items-center gap-3">
@@ -212,14 +217,14 @@ const Sidebar = () => {
       <div className="p-4">
         <div className="glass rounded-xl border border-border overflow-hidden">
           {/* Wallet Section */}
-          <div className="bg-accent rounded-border p-3">
+          <div className="bg-muted rounded-border p-3 border border-border">
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">
                 Wallet Balance
               </span>
               <Wallet className="h-4 w-4 text-muted-foreground" />
             </div>
-            <p className="text-lg font-bold mt-1 text-foreground">
+            <p className="text-lg font-bold mt-1 text-primary">
               ₹{walletBalance.toLocaleString()}
             </p>
           </div>
