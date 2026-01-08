@@ -15,7 +15,7 @@ export default function DashboardLayout({ children }) {
           <DashboardNavbar />
         </header>
 
-        <main className="flex-1 bg-gradient-secondry p-6 overflow-auto">
+        <main className="flex-1 bg-gradient-secondry p-8 overflow-auto">
           {children}
         </main>
       </div>
