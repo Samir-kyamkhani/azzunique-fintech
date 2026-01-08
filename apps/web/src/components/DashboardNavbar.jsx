@@ -12,9 +12,14 @@ import {
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
-import { ThemeToggle } from "./theme/ThemeToggle";
+import dynamic from "next/dynamic";
 
 const DashboardNavbar = () => {
+  const ThemeToggle = dynamic(
+    () => import("./theme/ThemeToggle").then((m) => m.ThemeToggle),
+    { ssr: false }
+  );
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");

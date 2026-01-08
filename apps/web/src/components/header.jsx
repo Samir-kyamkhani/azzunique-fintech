@@ -18,9 +18,11 @@ import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import Link from "next/link";
 import { useLogout } from "@/hooks/useAuth";
-import { ThemeToggle } from "./theme/ThemeToggle";
+import dynamic from "next/dynamic";
 
 export function Header() {
+  const ThemeToggle = dynamic(() => import("./theme/ThemeToggle").then((m) => m.ThemeToggle),{ ssr: false });
+
   const { mutate: logoutMutate, isPending } = useLogout();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const dispatch = useDispatch();
