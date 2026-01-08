@@ -156,7 +156,7 @@ const Sidebar = () => {
         className={`group flex items-center px-3 py-2.5 rounded-border text-sm font-medium transition-all ${
           isActive
             ? "bg-primary/10 border border-primary/20 shadow-sm"
-            : "hover:bg-[var(--sidebar-hover)]"
+            : "hover:bg-(--sidebar-hover)"
         }`}
       >
         <Icon
