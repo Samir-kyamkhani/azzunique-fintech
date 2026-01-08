@@ -8,6 +8,7 @@ import { Eye, EyeOff, Shield, Building, Users, Lock } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
+import InputField from "@/components/ui/InputField";
 
 export default function LoginForm() {
   const dispatch = useDispatch();
@@ -42,7 +43,6 @@ export default function LoginForm() {
 
   return (
     <div className="bg-card border border-border rounded-lg-border shadow-xl w-full max-w-md overflow-hidden">
-      {/* Header with Gradient */}
       <div className="bg-gradient-theme px-6 py-8">
         <div className="text-center">
           <div className="flex justify-center mb-4">
@@ -59,7 +59,6 @@ export default function LoginForm() {
         </div>
       </div>
 
-      {/* Tab Navigation */}
       <div className="border-b border-border">
         <div className="flex">
           <button
@@ -76,6 +75,7 @@ export default function LoginForm() {
               User
             </div>
           </button>
+
           <button
             type="button"
             onClick={() => handleTabClick("EMPLOYEE")}
@@ -93,9 +93,7 @@ export default function LoginForm() {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="p-6">
-        {/* Error Messages */}
         {error && (
           <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-border mb-4">
             <p className="text-destructive-foreground text-sm font-medium">
@@ -105,48 +103,33 @@ export default function LoginForm() {
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              {activeTab === "EMPLOYEE" ? "Employee ID" : "User ID"} *
-            </label>
-            <input
-              {...register("identifier")}
-              autoComplete="username"
-              required
-              className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-border focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors placeholder:text-muted-foreground"
-              placeholder={
-                activeTab === "EMPLOYEE"
-                  ? "Enter your Employee ID"
-                  : "Enter your User ID"
-              }
-              disabled={isPending}
-            />
-          </div>
+          <InputField
+            label={activeTab === "EMPLOYEE" ? "Employee ID" : "User ID"}
+            name="identifier"
+            register={register}
+            required
+            disabled={isPending}
+            autoComplete="username"
+            placeholder={
+              activeTab === "EMPLOYEE"
+                ? "Enter your Employee ID"
+                : "Enter your User ID"
+            }
+          />
 
-          <div className="relative">
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Password *
-            </label>
-            <input
-              {...register("password")}
-              type={showPassword ? "text" : "password"}
-              autoComplete="current-password"
-              required
-              className="w-full px-3 py-2 pr-10 border border-input bg-background text-foreground rounded-border focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors placeholder:text-muted-foreground"
-              placeholder="Enter your password"
-              disabled={isPending}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-9 text-muted-foreground hover:text-foreground transition-colors"
-              disabled={isPending}
-            >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-          </div>
+          <InputField
+            label="Password"
+            name="password"
+            type={showPassword ? "text" : "password"}
+            register={register}
+            required
+            disabled={isPending}
+            autoComplete="current-password"
+            placeholder="Enter your password"
+            rightIcon={showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            onRightIconClick={() => setShowPassword((prev) => !prev)}
+          />
 
-          {/* Hidden select for form submission */}
           <select {...register("type")} id="type" className="hidden">
             <option value="USER">User</option>
             <option value="EMPLOYEE">Employee</option>
@@ -164,19 +147,16 @@ export default function LoginForm() {
           </Button>
         </form>
 
-        {/* Footer Info */}
-        <div className="mt-6 pt-4 border-t border-border">
-          <div className="text-center">
-            <div className="flex items-center justify-center text-muted-foreground mb-2">
-              <Lock className="h-3 w-3 mr-1" />
-              <p className="text-xs">Your credentials are secure</p>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {activeTab === "EMPLOYEE"
-                ? "Use your Employee ID to login"
-                : "Use your User ID to login"}
-            </p>
+        <div className="mt-6 pt-4 border-t border-border text-center">
+          <div className="flex items-center justify-center text-muted-foreground mb-2">
+            <Lock className="h-3 w-3 mr-1" />
+            <p className="text-xs">Your credentials are secure</p>
           </div>
+          <p className="text-xs text-muted-foreground">
+            {activeTab === "EMPLOYEE"
+              ? "Use your Employee ID to login"
+              : "Use your User ID to login"}
+          </p>
         </div>
       </div>
     </div>
