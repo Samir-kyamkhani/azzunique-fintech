@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Users, Filter, Download } from "lucide-react";
+import { Users, Download } from "lucide-react";
 
 import TableShell from "./core/TableShell";
 import TableHeader from "./core/TableHeader";
@@ -16,11 +16,11 @@ import { ShieldCheck } from "lucide-react";
 export default function UsersTable() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState("all");
+
   const perPage = 10;
 
-  // -----------------------------
   // MOCK DATA (API later)
-  // -----------------------------
   const users = Array.from({ length: 50 }, (_, i) => ({
     id: i + 1,
     name: `User ${i + 1}`,
@@ -30,17 +30,22 @@ export default function UsersTable() {
     joinDate: `2024-01-${String(i + 1).padStart(2, "0")}`,
   }));
 
-  // -----------------------------
   // SEARCH
-  // -----------------------------
   const filtered = useMemo(() => {
-    return users.filter(
-      (u) =>
+    return users.filter((u) => {
+      // STATUS FILTER
+      if (statusFilter === "active" && u.status !== "Active") return false;
+      if (statusFilter === "inactive" && u.status !== "Inactive") return false;
+      if (statusFilter === "admin" && u.role !== "Admin") return false;
+
+      // SEARCH FILTER
+      return (
         u.name.toLowerCase().includes(search.toLowerCase()) ||
         u.email.toLowerCase().includes(search.toLowerCase()) ||
         u.role.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [users, search]);
+      );
+    });
+  }, [users, search, statusFilter]);
 
   // reset page on search
   if ((page - 1) * perPage >= filtered.length && page !== 1) {
@@ -49,10 +54,7 @@ export default function UsersTable() {
 
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
 
-  // -----------------------------
   // STATS
-  // -----------------------------
-
   const stats = [
     {
       title: "Total Users",
@@ -93,9 +95,8 @@ export default function UsersTable() {
       // footer: "From last month",
     },
   ];
-  // -----------------------------
+
   // COLUMNS
-  // -----------------------------
   const columns = [
     { key: "id", label: "ID" },
 
@@ -182,26 +183,39 @@ export default function UsersTable() {
         <TableHeader
           title="All Users"
           subtitle={`${filtered.length} users found`}
+          /* SEARCH */
           search={search}
           setSearch={setSearch}
-          actions={
-            <>
-              <button className="flex items-center gap-2 px-4 py-2 border rounded-border hover:bg-accent">
-                <Filter className="h-4 w-4" />
-                Filter
-              </button>
-
-              <button className="flex items-center gap-2 px-4 py-2 bg-gradient-theme text-primary-foreground rounded-border">
-                <Users className="h-4 w-4" />
-                Add User
-              </button>
-
-              <button className="flex items-center gap-2 px-4 py-2 border rounded-border hover:bg-accent">
-                <Download className="h-4 w-4" />
-                Export
-              </button>
-            </>
-          }
+          searchPlaceholder="Search users..."
+          /* FILTER */
+          filterValue={statusFilter}
+          onFilterChange={setStatusFilter}
+          filterPlaceholder="Status"
+          filterOptions={[
+            { label: "All", value: "all" },
+            {
+              label: "Active",
+              value: "active",
+              count: users.filter((u) => u.status === "Active").length,
+            },
+            {
+              label: "Inactive",
+              value: "inactive",
+              count: users.filter((u) => u.status === "Inactive").length,
+            },
+            {
+              label: "Admins",
+              value: "admin",
+              count: users.filter((u) => u.role === "Admin").length,
+            },
+          ]}
+          /* ACTIONS */
+          onAdd={() => console.log("Add User")}
+          onExport={() => console.log("Export Users")}
+          addLabel="Add User"
+          exportLabel="Export"
+          addIcon={Users}
+          exportIcon={Download}
         />
 
         <TableBody columns={columns} data={paginated} />
