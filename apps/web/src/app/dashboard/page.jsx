@@ -5,10 +5,7 @@ import {
   TrendingUp,
   TrendingDown,
   Wallet,
-  DollarSign,
   Users,
-  ArrowUpRight,
-  ArrowDownRight,
   RefreshCw,
   Calendar,
   PieChart,
@@ -20,6 +17,8 @@ import {
 import { QuickActions } from "@/components/QuickActions";
 import { RevenueChart } from "@/components/RevenueChart";
 import { TransactionTable } from "@/components/TransactionTable";
+import QuickStats from "@/components/QuickStats";
+import { CreditCard } from "lucide-react";
 
 export default function Dashboard() {
   const [timeRange, setTimeRange] = useState("monthly");
@@ -60,6 +59,49 @@ export default function Dashboard() {
       minimumFractionDigits: 2,
     }).format(amount);
   };
+
+  const stats = [
+    {
+      title: "Total Balance",
+      value: "₹125,845.67",
+      change: "+12.5%",
+      isPositive: true,
+      icon: Wallet,
+      color: "text-primary",
+      bgColor: "bg-primary/10",
+      footer: "From last month",
+    },
+    {
+      title: "Monthly Revenue",
+      value: "₹85,420.50",
+      change: "+8.2%",
+      isPositive: true,
+      icon: TrendingUp,
+      color: "text-success",
+      bgColor: "bg-success/10",
+      footer: "From last month",
+    },
+    {
+      title: "Total Expenses",
+      value: "₹42,310.25",
+      change: "-3.5%",
+      isPositive: false,
+      icon: TrendingDown,
+      color: "text-warning",
+      bgColor: "bg-warning/10",
+      footer: "From last month",
+    },
+    {
+      title: "Active Cards",
+      value: "4",
+      change: "+1 this month",
+      isPositive: true,
+      icon: CreditCard,
+      color: "text-info",
+      bgColor: "bg-info/10",
+      footer: "Updated recently",
+    },
+  ];
 
   return (
     <div className="p-6">
@@ -106,87 +148,7 @@ export default function Dashboard() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Total Balance Card */}
-        <div className="bg-card border border-border rounded-lg-border p-6">
-          <div className="flex justify-between items-start mb-4">
-            <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center">
-              <Wallet className="h-6 w-6 text-primary" />
-            </div>
-            <div className="text-xs font-medium px-2 py-1 bg-success/10 text-success rounded-full">
-              +12.5%
-            </div>
-          </div>
-          <h3 className="text-sm text-muted-foreground mb-1">Total Balance</h3>
-          <p className="text-2xl font-bold text-foreground mb-2">
-            {formatCurrency(dashboardStats.totalBalance)}
-          </p>
-          <div className="flex items-center text-sm text-success">
-            <TrendingUp className="h-4 w-4 mr-1" />
-            <span>₹12,845 growth this month</span>
-          </div>
-        </div>
-
-        {/* Total Revenue Card */}
-        <div className="bg-card border border-border rounded-lg-border p-6">
-          <div className="flex justify-between items-start mb-4">
-            <div className="h-12 w-12 bg-success/10 rounded-lg flex items-center justify-center">
-              <TrendingUp className="h-6 w-6 text-success" />
-            </div>
-            <div className="text-xs font-medium px-2 py-1 bg-success/10 text-success rounded-full">
-              +8.2%
-            </div>
-          </div>
-          <h3 className="text-sm text-muted-foreground mb-1">Total Revenue</h3>
-          <p className="text-2xl font-bold text-foreground mb-2">
-            {formatCurrency(dashboardStats.totalRevenue)}
-          </p>
-          <div className="flex items-center text-sm text-success">
-            <ArrowUpRight className="h-4 w-4 mr-1" />
-            <span>₹8,420 increase from last month</span>
-          </div>
-        </div>
-
-        {/* Total Expenses Card */}
-        <div className="bg-card border border-border rounded-lg-border p-6">
-          <div className="flex justify-between items-start mb-4">
-            <div className="h-12 w-12 bg-warning/10 rounded-lg flex items-center justify-center">
-              <TrendingDown className="h-6 w-6 text-warning" />
-            </div>
-            <div className="text-xs font-medium px-2 py-1 bg-success/10 text-success rounded-full">
-              -3.5%
-            </div>
-          </div>
-          <h3 className="text-sm text-muted-foreground mb-1">Total Expenses</h3>
-          <p className="text-2xl font-bold text-foreground mb-2">
-            {formatCurrency(dashboardStats.totalExpenses)}
-          </p>
-          <div className="flex items-center text-sm text-success">
-            <ArrowDownRight className="h-4 w-4 mr-1" />
-            <span>₹1,510 decrease from last month</span>
-          </div>
-        </div>
-
-        {/* Net Profit Card */}
-        <div className="bg-card border border-border rounded-lg-border p-6">
-          <div className="flex justify-between items-start mb-4">
-            <div className="h-12 w-12 bg-info/10 rounded-lg flex items-center justify-center">
-              <DollarSign className="h-6 w-6 text-info" />
-            </div>
-            <div className="text-xs font-medium px-2 py-1 bg-success/10 text-success rounded-full">
-              +15.3%
-            </div>
-          </div>
-          <h3 className="text-sm text-muted-foreground mb-1">Net Profit</h3>
-          <p className="text-2xl font-bold text-foreground mb-2">
-            {formatCurrency(dashboardStats.netProfit)}
-          </p>
-          <div className="flex items-center text-sm text-success">
-            <TrendingUp className="h-4 w-4 mr-1" />
-            <span>₹5,690 growth this month</span>
-          </div>
-        </div>
-      </div>
+      <QuickStats stats={stats} />
 
       {/* Quick Actions */}
       <QuickActions />

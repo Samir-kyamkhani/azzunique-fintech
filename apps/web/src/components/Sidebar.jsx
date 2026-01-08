@@ -16,6 +16,7 @@ import {
   BadgeIndianRupee,
   FileCode,
 } from "lucide-react";
+import { Building2 } from "lucide-react";
 
 const Sidebar = () => {
   const pathname = usePathname();
@@ -41,6 +42,12 @@ const Sidebar = () => {
           label: "Add Fund",
           icon: BadgeIndianRupee,
           path: "/dashboard/request-fund",
+        },
+        {
+          id: "tenants",
+          label: "Tenants",
+          icon: Building2,
+          path: "/dashboard/tenants",
         },
         {
           id: "members",
