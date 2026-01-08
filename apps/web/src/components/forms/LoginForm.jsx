@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import { useLogin } from "@/hooks/useLogin";
+import { useLogin } from "@/hooks/useAuth";
 import { useDispatch } from "react-redux";
 import { loginSuccess } from "@/store/authSlice";
 import { Eye, EyeOff, Shield, Building, Users, Lock } from "lucide-react";
