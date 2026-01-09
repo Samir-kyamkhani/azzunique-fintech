@@ -13,12 +13,12 @@ export const apiClient = async (url, options = {}) => {
   const data = await res.json();
 
   if (!res.ok) {
-    const error = new Error(data?.message || "Something went wrong");
+    const error = new Error(data?.message || "Request failed");
 
-    // attach useful info
-    error.status = res.status;
-    error.errors = data?.errors || [];
-    error.data = data;
+    const errors = Array.isArray(data?.errors) ? data.errors : [];
+
+    error.type = (errors.length > 0) && "FIELD";
+    error.errors = errors;
 
     throw error;
   }

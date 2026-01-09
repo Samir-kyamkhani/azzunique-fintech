@@ -1,4 +1,4 @@
-import LoginForm from "@/components/forms/LoginForm";
+import LoginClient from "@/components/client/LoginClient";
 
 export const metadata = {
   title: "Login",
@@ -8,7 +8,7 @@ export const metadata = {
 export default function LoginPage() {
   return (
     <div className="flex items-center justify-center min-h-screen p-4 bg-background">
-      <LoginForm />
+      <LoginClient />
     </div>
   );
 }

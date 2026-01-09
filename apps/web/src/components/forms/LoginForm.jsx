@@ -1,24 +1,21 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import { useLogin } from "@/hooks/useAuth";
-import { useDispatch } from "react-redux";
-import { loginSuccess } from "@/store/authSlice";
 import { Eye, EyeOff, Shield, Building, Users, Lock } from "lucide-react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 
-export default function LoginForm() {
-  const dispatch = useDispatch();
-  const router = useRouter();
-
-  const { mutate, isPending, error } = useLogin();
+export default function LoginForm({ login, isPending }) {
   const [showPassword, setShowPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("USER");
 
-  const { register, handleSubmit } = useForm({
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm({
     defaultValues: {
       identifier: "",
       password: "",
@@ -27,18 +24,11 @@ export default function LoginForm() {
   });
 
   const onSubmit = (data) => {
-    mutate(data, {
-      onSuccess: (res) => {
-        dispatch(loginSuccess(res));
-        router.push("/dashboard");
-      },
-    });
+    login(data, setError);
   };
 
   const handleTabClick = (tabValue) => {
     setActiveTab(tabValue);
-    const select = document.getElementById("type");
-    if (select) select.value = tabValue;
   };
 
   return (
@@ -94,10 +84,10 @@ export default function LoginForm() {
       </div>
 
       <div className="p-6">
-        {error && (
+        {errors?.root && (
           <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-border mb-4">
-            <p className="text-destructive-foreground text-sm font-medium">
-              {error.message}
+            <p className=" text-sm font-medium text-red-500 leading-tight">
+              {errors.root.message}
             </p>
           </div>
         )}
@@ -115,6 +105,7 @@ export default function LoginForm() {
                 ? "Enter your Employee ID"
                 : "Enter your User ID"
             }
+            error={errors.identifier}
           />
 
           <InputField
@@ -128,6 +119,7 @@ export default function LoginForm() {
             placeholder="Enter your password"
             rightIcon={showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             onRightIconClick={() => setShowPassword((prev) => !prev)}
+            error={errors.password}
           />
 
           <select {...register("type")} id="type" className="hidden">

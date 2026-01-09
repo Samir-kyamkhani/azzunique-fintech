@@ -17,7 +17,7 @@ export default function InputField({
   pattern,
   maxLength,
   onInput,
-  error, // { message }
+  error,
 }) {
   return (
     <div className="space-y-1.5">
@@ -70,9 +70,7 @@ export default function InputField({
 
       {/* FIELD ERROR */}
       {error && (
-        <p className="text-xs text-red-500 leading-tight">
-          {error.message}
-        </p>
+        <p className="text-xs text-red-500 leading-tight">{error.message}</p>
       )}
     </div>
   );
