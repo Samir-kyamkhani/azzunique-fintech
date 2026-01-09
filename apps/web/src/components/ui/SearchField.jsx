@@ -7,7 +7,7 @@ export default function SearchField({
   value,
   onChange,
   placeholder = "Search...",
-  width = "md:w-64",
+  width = "md:w-105",
   className,
 }) {
   return (

@@ -2,17 +2,22 @@ export const httpResponseFilter = (req, res, next) => {
   const originalJson = res.json.bind(res);
 
   res.json = (payload) => {
-    console.log(payload);
-    
     // ❌ error responses untouched
     if (payload?.success === false) {
       return originalJson(payload);
     }
 
-    // ApiResponse instance OR plain data
     const message = payload?.message ?? 'Success';
+
     const data =
-      payload instanceof Object && 'data' in payload ? payload.data : payload;
+      payload && typeof payload === 'object' && 'data' in payload
+        ? payload.data
+        : payload;
+
+    const meta =
+      payload && typeof payload === 'object' && 'meta' in payload
+        ? payload.meta
+        : undefined;
 
     return originalJson({
       success: true,
@@ -20,6 +25,7 @@ export const httpResponseFilter = (req, res, next) => {
       timestamp: new Date().toISOString(),
       path: req.originalUrl,
       data,
+      ...(meta && { meta }),
     });
   };
 

@@ -30,3 +30,13 @@ export const formatDateTime = (isoString) => {
     hour12: true,
   });
 };
+
+export const onlyDigits = (maxLength) => (e) => {
+  let value = e.target.value.replace(/\D/g, "");
+
+  if (maxLength) {
+    value = value.slice(0, maxLength);
+  }
+
+  e.target.value = value;
+};

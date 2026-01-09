@@ -23,10 +23,11 @@ const updateTenant = async (req, res) => {
 
 // ================= GET OWN CHILDREN =================
 const getAllTenants = async (req, res) => {
-  const tenants = await TenantService.getAllChildren(req.user, req.query);
+  const result = await TenantService.getAllChildren(req.user, req.query);
 
   res.json({
-    data: tenants,
+    data: result.data,
+    meta: result.meta,
     message: 'fetched successfully',
   });
 };

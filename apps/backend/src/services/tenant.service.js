@@ -1,4 +1,4 @@
-import { and, eq, like, or } from 'drizzle-orm';
+import { and, count, desc, eq, like, or } from 'drizzle-orm';
 import { tenantsTable } from '../models/core/tenant.schema.js';
 import { ApiError } from '../lib/ApiError.js';
 import { db } from '../database/core/core-db.js';
@@ -87,13 +87,15 @@ class TenantService {
 
   // ================= GET OWN CHILDREN =================
   static async getAllChildren(actor, query = {}) {
-    const { search, status, limit = 20, page = 1 } = query;
+    let { search = '', status = 'all', limit = 20, page = 1 } = query;
+    limit = Number(limit);
+    page = Number(page);
+    search = search.trim();
     const offset = (page - 1) * limit;
 
     const conditions = [eq(tenantsTable.parentTenantId, actor.tenantId)];
 
-    // Search across multiple fields
-    if (search) {
+    if (search.length > 0) {
       conditions.push(
         or(
           like(tenantsTable.tenantNumber, `%${search}%`),
@@ -104,29 +106,43 @@ class TenantService {
       );
     }
 
-    if (status) {
+    if (status && status !== 'all') {
       conditions.push(eq(tenantsTable.tenantStatus, status));
     }
 
-    const tenants = await db
+    const data = await db
       .select()
       .from(tenantsTable)
       .where(and(...conditions))
       .limit(limit)
       .offset(offset)
-      .orderBy(tenantsTable.createdAt);
+      .orderBy(desc(tenantsTable.createdAt));
 
-    if (tenants.length === 0) {
-      throw ApiError.notFound('No children found');
-    }
+    /* ---------------- COUNT ---------------- */
+    const [{ total }] = await db
+      .select({ total: count() })
+      .from(tenantsTable)
+      .where(and(...conditions));
 
-    return tenants;
+    return {
+      data,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   // ================= GET CHILDREN + GRANDCHILDREN =================
   static async getTenantDescendants(params, actor, query = {}) {
     const { tenantId } = params;
-    const { search, status, limit = 20, page = 1 } = query;
+    const { search = '', status = 'all', limit = 20, page = 1 } = query;
+    limit = Number(limit);
+    page = Number(page);
+    search = search.trim();
+
     const offset = (page - 1) * limit;
 
     // ----------------- STEP 0: Fetch tenant itself -----------------
@@ -142,7 +158,7 @@ class TenantService {
     // ----------------- STEP 1: Fetch direct children -----------------
     const childConditions = [eq(tenantsTable.parentTenantId, tenantId)];
 
-    if (search) {
+    if (search.length > 0) {
       childConditions.push(
         or(
           like(tenantsTable.tenantNumber, `%${search}%`),
@@ -153,7 +169,7 @@ class TenantService {
       );
     }
 
-    if (status) {
+    if (status && status !== 'all') {
       childConditions.push(eq(tenantsTable.tenantStatus, status));
     }
 

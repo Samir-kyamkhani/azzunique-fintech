@@ -1,5 +1,7 @@
 "use client";
 
+import { cn } from "@/lib/utils";
+
 export default function InputField({
   label,
   type = "text",
@@ -11,37 +13,66 @@ export default function InputField({
   rightIcon,
   onRightIconClick,
   autoComplete,
+  inputMode,
+  pattern,
+  maxLength,
+  onInput,
+  error, // { message }
 }) {
   return (
-    <div className="relative">
+    <div className="space-y-1.5">
+      {/* LABEL */}
       {label && (
-        <label className="block text-sm font-medium text-foreground mb-1">
-          {label} {required && "*"}
+        <label className="block text-sm font-medium text-foreground">
+          {label} {required && <span className="text-destructive">*</span>}
         </label>
       )}
 
-      <input
-        {...register(name)}
-        type={type}
-        autoComplete={autoComplete}
-        required={required}
-        disabled={disabled}
-        placeholder={placeholder}
-        className={`w-full px-3 py-2 border border-input bg-background text-foreground rounded-border
-          focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring
-          transition-colors placeholder:text-muted-foreground
-          ${rightIcon ? "pr-10" : ""}`}
-      />
-
-      {rightIcon && (
-        <button
-          type="button"
-          onClick={onRightIconClick}
+      {/* INPUT */}
+      <div className="relative">
+        <input
+          {...(register ? register(name) : {})}
+          type={type}
+          inputMode={inputMode}
+          pattern={pattern}
+          maxLength={maxLength}
+          autoComplete={autoComplete}
+          required={required}
           disabled={disabled}
-          className="absolute right-3 top-9 text-muted-foreground hover:text-foreground transition-colors"
-        >
-          {rightIcon}
-        </button>
+          placeholder={placeholder}
+          onInput={onInput}
+          className={cn(
+            `
+            w-full h-10 px-3 pr-10
+            rounded-border border bg-background text-foreground
+            transition focus:outline-none focus:ring-2
+            placeholder:text-muted-foreground
+            disabled:opacity-60 disabled:cursor-not-allowed
+          `,
+            error
+              ? "border-destructive focus:ring-destructive/30"
+              : "border-input focus:ring-ring"
+          )}
+        />
+
+        {/* RIGHT ICON */}
+        {rightIcon && (
+          <button
+            type="button"
+            onClick={onRightIconClick}
+            disabled={disabled}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {rightIcon}
+          </button>
+        )}
+      </div>
+
+      {/* FIELD ERROR */}
+      {error && (
+        <p className="text-xs text-red-500 leading-tight">
+          {error.message}
+        </p>
       )}
     </div>
   );

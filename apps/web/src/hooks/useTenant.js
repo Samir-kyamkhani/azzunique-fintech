@@ -39,8 +39,12 @@ export const useTenantById = (tenantId) =>
   });
 
 /* ================= LIST ================= */
-export const useTenants = () =>
+export const useTenants = ({ page, limit, search, status }) =>
   useQuery({
-    queryKey: ["tenants"],
-    queryFn: () => apiClient("/tenants"),
+    queryKey: ["tenants", page, limit, search, status],
+    queryFn: () =>
+      apiClient(
+        `/tenants?page=${page}&limit=${limit}&search=${search}&status=${status}`
+      ),
+    keepPreviousData: true, // smooth pagination
   });
