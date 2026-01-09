@@ -12,9 +12,6 @@ export const apiClient = async (url, options = {}) => {
 
   const data = await res.json();
 
-  console.log("API RESPONSE:", data);
-
-  // ❌ ERROR RESPONSE
   if (!res.ok) {
     const error = new Error(data?.message || "Something went wrong");
 
@@ -26,6 +23,5 @@ export const apiClient = async (url, options = {}) => {
     throw error;
   }
 
-  // ✅ SUCCESS
   return data;
 };
