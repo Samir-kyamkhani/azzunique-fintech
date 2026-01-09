@@ -5,16 +5,19 @@ export function cn(...inputs) {
 export const statusColor = {
   ACTIVE: {
     label: "Active",
-    className: "bg-success/10 text-success border border-success/20",
+    className: "status-active",
   },
   INACTIVE: {
     label: "Inactive",
-    className: "bg-warning/10 text-warning border border-warning/20",
+    className: "status-inactive",
   },
   SUSPENDED: {
     label: "Suspended",
-    className:
-      "bg-destructive/10 text-destructive border border-destructive/20",
+    className: "status-suspended",
+  },
+  DELETED: {
+    label: "Deleted",
+    className: "status-deleted",
   },
 };
 

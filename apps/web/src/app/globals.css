@@ -579,3 +579,25 @@ body {
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
+/* Status badge utilities */
+
+.status-active {
+  background-color: color-mix(in oklch, var(--success) 10%, transparent);
+  color: var(--success);
+  border: 1px solid color-mix(in oklch, var(--success) 20%, transparent);
+}
+
+.status-inactive {
+  background-color: color-mix(in oklch, var(--warning) 10%, transparent);
+  color: var(--warning);
+  border: 1px solid color-mix(in oklch, var(--warning) 20%, transparent);
+}
+
+.status-suspended,
+.status-deleted {
+  background-color: color-mix(in oklch, var(--destructive) 10%, transparent);
+  color: var(--destructive);
+  border: 1px solid color-mix(in oklch, var(--destructive) 20%, transparent);
+}
+

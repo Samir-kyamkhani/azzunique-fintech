@@ -111,9 +111,9 @@ export default function MemberForm({
       {/* BODY */}
       <div>
         {(error || Object.keys(errors).length > 0) && (
-          <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-border mb-4">
+          <div className="p-3 mb-4 rounded-border bg-destructive/10 border border-destructive/20">
             <div className="flex items-center gap-2 text-destructive-foreground">
-              <AlertCircle className="h-4 w-4" />
+              <AlertCircle className="h-4 w-4 shrink-0" />
               <p className="text-sm font-medium">
                 {error?.message || Object.values(errors)[0]?.message}
               </p>

@@ -8,7 +8,7 @@ import {
 } from '../lib/lib.js';
 import { db } from '../database/core/core-db.js';
 import { ApiError } from '../lib/ApiError.js';
-import { eq, and, or, desc, isNull, like, inArray, ne } from 'drizzle-orm';
+import { eq, and, or, desc, isNull, like, inArray, ne, sql } from 'drizzle-orm';
 import { eventBus } from '../events/events.js';
 import { EVENTS } from '../events/events.constants.js';
 import s3Service from '../lib/S3Service.js';
@@ -133,7 +133,6 @@ class UserService {
 
     if (query.search) {
       const searchTerm = `%${query.search}%`;
-
       conditions.push(
         or(
           like(usersTable.email, searchTerm),
@@ -143,6 +142,33 @@ class UserService {
         ),
       );
     }
+
+    const [{ count }] = await db
+      .select({ count: sql`COUNT(*)`.mapWith(Number) })
+      .from(usersTable)
+      .leftJoin(tenantsTable, eq(usersTable.tenantId, tenantsTable.id))
+      .where(and(...conditions));
+
+    const statsRows = await db
+      .select({
+        status: usersTable.userStatus,
+        count: sql`COUNT(*)`.mapWith(Number),
+      })
+      .from(usersTable)
+      .leftJoin(tenantsTable, eq(usersTable.tenantId, tenantsTable.id))
+      .where(and(...conditions))
+      .groupBy(usersTable.userStatus);
+
+    const stats = {
+      ACTIVE: 0,
+      INACTIVE: 0,
+      SUSPENDED: 0,
+      DELETED: 0,
+    };
+
+    statsRows.forEach((row) => {
+      stats[row.status] = row.count;
+    });
 
     const rows = await db
       .select()
@@ -174,7 +200,15 @@ class UserService {
       });
     });
 
-    return Object.values(tenantMap);
+    return {
+      data: Object.values(tenantMap),
+      meta: {
+        total: count,
+        page,
+        limit,
+        stats,
+      },
+    };
   }
 
   async findOne(id, actor) {

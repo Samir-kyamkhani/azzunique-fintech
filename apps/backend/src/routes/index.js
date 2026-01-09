@@ -19,7 +19,7 @@ router.use('/server-detail', serverDetailRoutes);
 router.use('/smtp-configs', smtpConfigRoutes);
 router.use('/audit-log', auditLogRoutes);
 router.use('/auth', authRoutes);
-router.use('/users', userRoutes);
+router.use('/members', userRoutes);
 router.use('/departments', departmentRoutes);
 router.use('/employees', employeeRoutes);
 router.use('/tenants-website', tenantWebsiteRoutes);

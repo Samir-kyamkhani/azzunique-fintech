@@ -1,63 +1,80 @@
 "use client";
 
-import { Users, Download } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
 import TableShell from "./core/TableShell";
 import TableHeader from "./core/TableHeader";
 import TableBody from "./core/TableBody";
 import TablePagination from "./core/TablePagination";
 
-const options = [
-  { label: "All", value: "all" },
-  { label: "Active", value: "active" },
-  { label: "Inactive", value: "inactive" },
-  { label: "Admins", value: "admin" },
-];
+import {
+  setSearch,
+  setStatusFilter,
+  setPage,
+  openCreate,
+  selectMembers,
+  selectPagination,
+} from "@/store/memberSlice";
+import { formatDateTime, statusColor } from "@/lib/utils";
 
 export const columns = [
   { key: "id", label: "ID" },
-  { key: "name", label: "Name" },
+
+  { key: "firstName", label: "First Name" },
+
+  { key: "lastName", label: "Last Name" },
+
   { key: "email", label: "Email" },
-  { key: "role", label: "Role" },
-  { key: "status", label: "Status" },
-  { key: "joinDate", label: "Join Date" },
+
+  {
+    key: "userStatus",
+    label: "Status",
+    render: (row) => {
+      const status = statusColor[row.userStatus] ?? {
+        label: row.userStatus,
+        className: "bg-muted text-muted-foreground border border-border",
+      };
+
+      return (
+        <span
+          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${status.className}`}
+        >
+          {status.label}
+        </span>
+      );
+    },
+  },
+
+  {
+    key: "createdAt",
+    label: "Created At",
+    render: (row) => formatDateTime(row.createdAt),
+  },
+
   { key: "actions", label: "Actions" },
 ];
 
-export default function UsersTable({
-  users,
-  total,
-  page,
-  perPage,
-  onPageChange,
-  search,
-  onSearch,
-  statusFilter,
-  onStatusFilterChange,
-  onAddUser,
-}) {
+export default function UsersTable() {
+  const dispatch = useDispatch();
+
+  const users = useSelector(selectMembers);
+  const { page, perPage, total } = useSelector(selectPagination);
+  const { search, statusFilter } = useSelector((state) => state.member);
+
   return (
     <TableShell>
       <TableHeader
-        title="All Users"
-        subtitle={`${total} users found`}
         search={search}
-        setSearch={onSearch}
+        setSearch={(v) => dispatch(setSearch(v))}
         filterValue={statusFilter}
-        onFilterChange={onStatusFilterChange}
-        filterPlaceholder="Status"
-        filterOptions={options}
-        onAdd={onAddUser}
-        addLabel="Add User"
-        addIcon={Users}
-        onExport={() => console.log("Export")}
-        exportIcon={Download}
+        onFilterChange={(v) => dispatch(setStatusFilter(v))}
+        onAdd={() => dispatch(openCreate())}
       />
 
       <TableBody columns={columns} data={users} />
 
       <TablePagination
         page={page}
-        setPage={onPageChange}
+        setPage={(p) => dispatch(setPage(p))}
         total={total}
         perPage={perPage}
       />

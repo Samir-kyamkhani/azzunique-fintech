@@ -1,10 +1,16 @@
 import DataTableSearchEmpty from "./DataTableSearchEmpty";
 import TableRow from "./TableRow";
 
-export default function TableBody({ columns, data, onView, onEdit, onDelete }) {
+export default function TableBody({
+  columns = [],
+  data = [],
+  onView,
+  onEdit,
+  onDelete,
+}) {
   return (
-    <div className="relative overflow-x-auto overflow-y-visible">
-      <table className="w-full">
+    <div className="relative overflow-x-auto">
+      <table className="w-full border-collapse">
         <thead>
           <tr className="border-b border-border">
             {columns.map((col) => (
@@ -21,7 +27,7 @@ export default function TableBody({ columns, data, onView, onEdit, onDelete }) {
         <tbody>
           {data.length === 0 ? (
             <tr>
-              <td colSpan={columns.length}>
+              <td colSpan={columns.length} className="py-10">
                 <DataTableSearchEmpty
                   isEmpty
                   emptyTitle="No results found"
@@ -30,9 +36,9 @@ export default function TableBody({ columns, data, onView, onEdit, onDelete }) {
               </td>
             </tr>
           ) : (
-            data.map((row, i) => (
+            data.map((row, index) => (
               <TableRow
-                key={i}
+                key={index}
                 row={row}
                 columns={columns}
                 onView={onView}
