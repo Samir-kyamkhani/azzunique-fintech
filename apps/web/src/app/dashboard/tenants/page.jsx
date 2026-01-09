@@ -12,10 +12,13 @@ import QuickStats from "@/components/QuickStats";
 import { Building2, UserX, CheckCircle, Ban } from "lucide-react";
 
 import { formatDateTime } from "@/lib/utils";
-import RefreshButton from "@/components/RefreshButton";
+import Button from "@/components/ui/Button";
+import { RefreshCw } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function TenantsPage() {
   const dispatch = useDispatch();
+  const router = useRouter();
 
   /* ================= UI STATE ================= */
   const [search, setSearch] = useState("");
@@ -97,6 +100,10 @@ export default function TenantsPage() {
     });
   };
 
+  const handleViewTenant = (tenant) => {
+    router.push(`/dashboard/tenants/${tenant.id}`);
+  };
+
   return (
     <>
       {/* ================= HEADER ================= */}
@@ -109,8 +116,15 @@ export default function TenantsPage() {
             Centralized control for onboarding, plans, and tenant activity
           </p>
         </div>
-
-        <RefreshButton onClick={refetch} loading={isLoading} />
+        <Button
+          onClick={refetch}
+          disabled={isLoading}
+          variant="outline"
+          icon={RefreshCw}
+          loading={isLoading}
+        >
+          {isLoading ? "Refreshing..." : "Refresh"}
+        </Button>
       </div>
 
       {/* ================= STATS ================= */}
@@ -132,6 +146,7 @@ export default function TenantsPage() {
         }}
         onAddTenant={() => setOpenCreate(true)}
         loading={isLoading}
+        onViewTenant={handleViewTenant}
       />
 
       {/* ================= MODAL ================= */}

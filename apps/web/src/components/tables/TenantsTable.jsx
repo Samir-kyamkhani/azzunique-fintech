@@ -38,6 +38,9 @@ export default function TenantsTable({
   statusFilter,
   onStatusFilterChange,
   onAddTenant,
+  onViewTenant,
+  onEditTenant,
+  onDeleteTenant,
 }) {
   return (
     <TableShell>
@@ -46,7 +49,7 @@ export default function TenantsTable({
         subtitle={`${total} tenants found`}
         search={search}
         setSearch={onSearch}
-        searchPlaceholder={'Search by tenant name, email or tenant number…'}
+        searchPlaceholder={"Search by tenant name, email or tenant number…"}
         filterValue={statusFilter}
         onFilterChange={onStatusFilterChange}
         filterPlaceholder="Status"
@@ -58,7 +61,13 @@ export default function TenantsTable({
         exportIcon={Download}
       />
 
-      <TableBody columns={columns} data={tenants} />
+      <TableBody
+        columns={columns}
+        data={tenants}
+        onView={onViewTenant}
+        onEdit={onEditTenant}
+        onDelete={onDeleteTenant}
+      />
 
       <TablePagination
         page={page}
