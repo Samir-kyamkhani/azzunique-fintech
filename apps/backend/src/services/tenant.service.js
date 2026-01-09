@@ -3,86 +3,98 @@ import { tenantsTable } from '../models/core/tenant.schema.js';
 import { ApiError } from '../lib/ApiError.js';
 import { db } from '../database/core/core-db.js';
 import { generateNumber } from '../lib/lib.js';
+import { employeesTable } from '../models/core/employee.schema.js';
 
 class TenantService {
   // ================= CREATE =================
   static async create(payload, actor) {
-    const [currentTenant] = await db
+    const [actorTenant] = await db
       .select({
         id: tenantsTable.id,
+        userType: tenantsTable.userType,
         parentTenantId: tenantsTable.parentTenantId,
       })
       .from(tenantsTable)
       .where(eq(tenantsTable.id, actor.tenantId))
       .limit(1);
 
-    if (!currentTenant) {
+    if (!actorTenant) {
       throw ApiError.notFound('Actor tenant not found');
     }
 
-    const scopeTenantId = currentTenant.parentTenantId ?? currentTenant.id;
+    const actorTenantType = actorTenant.userType;
+    const targetUserType = payload.userType?.toUpperCase();
+
+    const allowedMap = {
+      AZZUNIQUE: ['RESELLER'],
+      RESELLER: ['WHITELABEL'],
+      WHITELABEL: [],
+    };
+
+    if (!allowedMap[actorTenantType]?.includes(targetUserType)) {
+      throw ApiError.forbidden(
+        `${actorTenantType} cannot create ${targetUserType} tenant`,
+      );
+    }
+
+    let parentTenantId;
+
+    if (actorTenantType === 'AZZUNIQUE') {
+      parentTenantId = actorTenant.id;
+    } else if (actorTenantType === 'RESELLER') {
+      parentTenantId = actorTenant.id;
+    } else {
+      throw ApiError.forbidden('WHITELABEL cannot create tenants');
+    }
 
     const [existingTenant] = await db
       .select()
       .from(tenantsTable)
       .where(
         and(
+          eq(tenantsTable.parentTenantId, parentTenantId),
           or(
             eq(tenantsTable.tenantEmail, payload.tenantEmail),
             eq(tenantsTable.tenantMobileNumber, payload.tenantMobileNumber),
             eq(tenantsTable.tenantWhatsapp, payload.tenantWhatsapp),
           ),
-          eq(tenantsTable.parentTenantId, scopeTenantId),
         ),
       )
       .limit(1);
 
     if (existingTenant) {
       throw ApiError.conflict(
-        'Tenant with this email, mobile number or whatsapp already exists in this tenant group',
+        'Tenant with this email, mobile number or WhatsApp already exists in this group',
       );
     }
 
-    if (payload.userType.toUpperCase() === 'AZZUNIQUE') {
-      const existingAzzunique = await db
-        .select()
-        .from(tenantsTable)
-        .where(eq(tenantsTable.userType, 'AZZUNIQUE'))
-        .limit(1);
-
-      if (existingAzzunique.length) {
-        throw ApiError.conflict('There can be only one AZZUNIQUE tenant');
-      }
-    }
+    const id = crypto.randomUUID();
 
     await db.insert(tenantsTable).values({
+      id,
       ...payload,
-      userType: payload.userType.toUpperCase(),
+      userType: targetUserType,
       tenantType: payload.tenantType.toUpperCase(),
+      parentTenantId,
+      tenantNumber: generateNumber('TNT'),
       actionedAt: ['INACTIVE', 'SUSPENDED', 'DELETED'].includes(
         payload.tenantStatus,
       )
         ? new Date()
         : null,
-      tenantNumber: generateNumber('TNT'),
-      parentTenantId: scopeTenantId,
+      createdByUserId: actor.type === 'USER' ? actor.id : null,
       createdByEmployeeId: actor.type === 'EMPLOYEE' ? actor.id : null,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
 
-    const [insertedTenant] = await db
+    const [createdTenant] = await db
       .select()
       .from(tenantsTable)
-      .where(
-        and(
-          eq(tenantsTable.tenantEmail, payload.tenantEmail),
-          eq(tenantsTable.parentTenantId, scopeTenantId),
-        ),
-      )
+      .where(eq(tenantsTable.id, id))
       .limit(1);
 
-    return insertedTenant;
+    return createdTenant;
   }
 
   // ================= GET OWN CHILDREN =================
@@ -189,17 +201,29 @@ class TenantService {
 
   // ================= GET BY ID =================
   static async getById(id) {
-    const [tenant] = await db
-      .select()
+    const [result] = await db
+      .select({
+        tenant: tenantsTable,
+        employeeNumber: employeesTable.employeeNumber,
+      })
       .from(tenantsTable)
+      .leftJoin(
+        employeesTable,
+        eq(employeesTable.id, tenantsTable.createdByEmployeeId),
+      )
       .where(eq(tenantsTable.id, id))
       .limit(1);
 
-    if (!tenant) {
+    if (!result) {
       throw ApiError.notFound('Tenant not found');
     }
 
-    return tenant;
+    return {
+      ...result.tenant,
+      employee: {
+        employeeNumber: result.employeeNumber,
+      },
+    };
   }
 
   // ================= UPDATE =================

@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { useMemo, useEffect } from "react";
 import { AlertCircle, Lock } from "lucide-react";
 
@@ -16,16 +16,16 @@ export default function TenantForm({
   isEditing = false,
   onSubmit,
   isPending = false,
-  error = null, // string
-  formErrors = [], // [{ field, message }]
+  currentUser,
 }) {
   const {
     register,
     handleSubmit,
-    setValue,
+    control,
     watch,
-    setError,
     clearErrors,
+    setError,
+    setValue,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -42,26 +42,35 @@ export default function TenantForm({
     },
   });
 
-  const tenantStatus = watch("tenantStatus");
+  const tenantStatus = useWatch({
+    control,
+    name: "tenantStatus",
+  });
 
-  const actionReasonRequired = useMemo(
-    () => CRITICAL_STATUSES.includes(tenantStatus),
-    [tenantStatus]
-  );
+  const actionReasonRequired = CRITICAL_STATUSES.includes(tenantStatus);
 
-  /* ================= BACKEND FIELD ERRORS ================= */
-  useEffect(() => {
-    if (Array.isArray(formErrors) && formErrors.length) {
-      clearErrors();
-      formErrors.forEach((e) => {
-        setError(e.field, { type: "server", message: e.message });
-      });
+  const userTypeOptions = useMemo(() => {
+    if ("AZZUNIQUE" === "AZZUNIQUE") {
+      return [{ value: "RESELLER", label: "Reseller" }];
     }
-  }, [JSON.stringify(formErrors)]);
 
-  const allErrors = Object.values(errors);
+    if (currentUser?.userType === "RESELLER") {
+      return [{ value: "WHITELABEL", label: "White Label" }];
+    }
 
-  /* ================= SUBMIT ================= */
+    return [];
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (currentUser?.userType === "AZZUNIQUE") {
+      setValue("userType", "RESELLER");
+    }
+
+    if (currentUser?.userType === "RESELLER") {
+      setValue("userType", "WHITELABEL");
+    }
+  }, [currentUser, setValue]);
+
   const onFormSubmit = (data) => {
     clearErrors();
 
@@ -72,28 +81,21 @@ export default function TenantForm({
       return;
     }
 
-    onSubmit(data);
+    onSubmit(data, setError);
   };
 
   return (
     <>
-      {/* ================= ERROR BANNER ================= */}
-      {(error || allErrors.length > 0) && (
-        <div className="rounded-lg border border-red-500 p-4 mb-6">
-          {/* Header */}
+      {errors?.root && (
+        <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-4 mb-6">
           <div className="flex items-start gap-3">
-            <div className="mt-0.5 rounded-full  p-1.5">
-              <AlertCircle className="h-4 w-4 text-red-500 " />
-            </div>
-
-            <div className="flex-1">
-              <h4 className="text-sm font-semibold text-red-500">
+            <AlertCircle className="h-4 w-4 text-destructive mt-0.5" />
+            <div>
+              <h4 className="text-sm font-semibold text-destructive">
                 Submission failed
               </h4>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Please review the{" "}
-                <span className="text-red-500">highlighted fields</span> and try
-                again
+                {errors.root.message}
               </p>
             </div>
           </div>
@@ -101,7 +103,6 @@ export default function TenantForm({
       )}
 
       <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
-        {/* ================= GRID ================= */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <InputField
             label="Tenant Name"
@@ -131,7 +132,7 @@ export default function TenantForm({
           <InputField
             label="WhatsApp Number"
             name="tenantWhatsapp"
-            type="text" // ✅ FIX
+            type="text"
             inputMode="numeric"
             maxLength={10}
             register={register}
@@ -143,7 +144,7 @@ export default function TenantForm({
           <InputField
             label="Mobile Number"
             name="tenantMobileNumber"
-            type="text" // ✅ FIX
+            type="text"
             inputMode="numeric"
             maxLength={10}
             register={register}
@@ -152,66 +153,74 @@ export default function TenantForm({
             error={errors.tenantMobileNumber}
           />
 
-          {/* STATUS */}
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-foreground">
               Tenant Status <span className="text-red-500">*</span>
             </label>
 
-            <SelectField
-              value={tenantStatus}
-              onChange={(v) => setValue("tenantStatus", v)}
-              options={[
-                { value: "ACTIVE", label: "Active" },
-                { value: "INACTIVE", label: "Inactive" },
-                { value: "SUSPENDED", label: "Suspended" },
-                { value: "DELETED", label: "Deleted" },
-              ]}
-              placeholder="Select status"
-              error={errors.tenantStatus}
+            <Controller
+              name="tenantStatus"
+              control={control}
+              render={({ field }) => (
+                <SelectField
+                  {...field}
+                  options={[
+                    { value: "ACTIVE", label: "Active" },
+                    { value: "INACTIVE", label: "Inactive" },
+                    { value: "SUSPENDED", label: "Suspended" },
+                    { value: "DELETED", label: "Deleted" },
+                  ]}
+                  placeholder="Select status"
+                  error={errors.tenantStatus}
+                />
+              )}
             />
           </div>
 
-          {/* TENANT TYPE */}
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-foreground">
               Tenant Type <span className="text-red-500">*</span>
             </label>
 
-            <SelectField
-              value={watch("tenantType")}
-              onChange={(v) => setValue("tenantType", v)}
-              options={[
-                { value: "PROPRIETORSHIP", label: "Proprietorship" },
-                { value: "PARTNERSHIP", label: "Partnership" },
-                { value: "PRIVATE_LIMITED", label: "Private Limited" },
-              ]}
-              placeholder="Select tenant type"
-              error={errors.tenantType}
+            <Controller
+              name="tenantType"
+              control={control}
+              render={({ field }) => (
+                <SelectField
+                  {...field}
+                  options={[
+                    { value: "PROPRIETORSHIP", label: "Proprietorship" },
+                    { value: "PARTNERSHIP", label: "Partnership" },
+                    { value: "PRIVATE_LIMITED", label: "Private Limited" },
+                  ]}
+                  placeholder="Select tenant type"
+                  error={errors.tenantType}
+                />
+              )}
             />
           </div>
 
-          {/* USER TYPE */}
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-foreground">
               User Type <span className="text-red-500">*</span>
             </label>
 
-            <SelectField
-              value={watch("userType")}
-              onChange={(v) => setValue("userType", v)}
-              options={[
-                { value: "RESELLER", label: "Reseller" },
-                { value: "AZZUNIQUE", label: "Azzunique" },
-                { value: "WHITELABEL", label: "White Label" },
-              ]}
-              placeholder="Select user type"
-              error={errors.userType}
+            <Controller
+              name="userType"
+              control={control}
+              render={({ field }) => (
+                <SelectField
+                  {...field}
+                  options={userTypeOptions}
+                  placeholder="Select user type"
+                  error={errors.userType}
+                  disabled={userTypeOptions.length === 0}
+                />
+              )}
             />
           </div>
         </div>
 
-        {/* ACTION REASON */}
         {actionReasonRequired && (
           <InputField
             label="Action Reason"
@@ -231,7 +240,6 @@ export default function TenantForm({
           {isEditing ? "Update Tenant" : "Create Tenant"}
         </Button>
 
-        {/* FOOTER */}
         <div className="pt-4 border-t border-border text-center">
           <div className="flex items-center justify-center text-muted-foreground gap-1">
             <Lock className="h-3 w-3" />

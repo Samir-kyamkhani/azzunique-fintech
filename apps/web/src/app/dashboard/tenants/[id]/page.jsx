@@ -1,167 +1,254 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
 import {
   ArrowLeft,
   Building2,
+  Users,
+  Key,
   Mail,
   Phone,
-  Shield,
-  Calendar,
+  Ban,
+  CheckCircle,
+  Settings,
 } from "lucide-react";
 
-import { useTenantById } from "@/hooks/useTenant";
+import { useTenantById, useUpdateTenantStatus } from "@/hooks";
+
 import Button from "@/components/ui/Button";
 import { formatDateTime } from "@/lib/utils";
+import { toast } from "@/lib/toast";
+
+/* reusable view components */
+import ProfileHeader from "@/components/Details/ProfileHeader";
+import TabsNav from "@/components/Details/TabsNav";
+import InfoCard from "@/components/Details/InfoCard";
+import InfoItem from "@/components/Details/InfoItem";
+import CopyableInfoItem from "@/components/Details/CopyableInfoItem";
+import QuickActionsCard from "@/components/Details/QuickActionsCard";
+import PageSkeleton from "@/components/Details/PageSkeleton";
 
 export default function TenantViewPage() {
   const { id } = useParams();
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState("overview");
 
-  const { data, isLoading, error } = useTenantById(id);
+  /* ================= API ================= */
+  const { data, isLoading, error, refetch } = useTenantById(id);
+
+  const { mutate: updateStatus, isPending: isUpdating } =
+    useUpdateTenantStatus();
+
   const tenant = data?.data;
 
-  if (isLoading) return <TenantSkeleton />;
+  /* ================= LOADING / ERROR ================= */
+  if (isLoading) return <PageSkeleton />;
 
   if (error || !tenant) {
     return (
-      <div className="p-6 text-destructive font-medium">Tenant not found</div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="bg-card border rounded-xl p-8 text-center">
+          <Ban className="h-10 w-10 text-destructive mx-auto mb-3" />
+          <h2 className="text-xl font-semibold mb-2">Tenant not found</h2>
+          <Button
+            variant="outline"
+            icon={ArrowLeft}
+            onClick={() => router.push("/dashboard/tenants")}
+          >
+            Back to Tenants
+          </Button>
+        </div>
+      </div>
     );
   }
 
+  /* ================= HELPERS ================= */
+  const copy = (value, label) => {
+    navigator.clipboard.writeText(value);
+    toast.success(`${label} copied`);
+  };
+
+  const handleToggleStatus = () => {
+    const nextStatus =
+      tenant.tenantStatus === "ACTIVE" ? "SUSPENDED" : "ACTIVE";
+
+    updateStatus(
+      {
+        id: tenant.id,
+        payload: {
+          tenantStatus: nextStatus,
+          actionReason:
+            nextStatus === "SUSPENDED"
+              ? "Suspended by admin"
+              : "Activated by admin",
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success(`Tenant ${nextStatus.toLowerCase()} successfully`);
+          refetch();
+        },
+        onError: (err) => {
+          toast.error(err?.message || "Failed to update tenant");
+        },
+      }
+    );
+  };
+
+  const tabs = ["overview", "activity", "settings"];
+
+  /* ================= RENDER ================= */
   return (
-    <div className="space-y-8">
-      {/* ================= HEADER ================= */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          <div className="h-11 w-11 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Building2 className="h-6 w-6 text-primary" />
+    <div className="min-h-screen bg-background px-8 py-6 space-y-6">
+      {/* BACK */}
+      <Button
+        variant="ghost"
+        icon={ArrowLeft}
+        onClick={() => router.push("/dashboard/tenants")}
+      >
+        Back to Tenants
+      </Button>
+
+      {/* HEADER */}
+      <ProfileHeader
+        icon={Building2}
+        title={tenant.tenantName}
+        subtitle={tenant.tenantLegalName}
+        meta={[
+          { icon: Key, value: tenant.tenantNumber },
+          { icon: Users, value: tenant.userType },
+        ]}
+        onEdit={() => router.push(`/dashboard/tenants/${tenant.id}/edit`)}
+      />
+
+      {/* TABS */}
+      <TabsNav tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
+
+      {/* ================= OVERVIEW ================= */}
+      {activeTab === "overview" && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* LEFT */}
+          <div className="lg:col-span-2 space-y-6">
+            <InfoCard icon={Building2} title="Basic Information">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <InfoItem
+                  label="Tenant Name"
+                  value={tenant.tenantName}
+                  icon={Users}
+                />
+                <InfoItem
+                  label="Legal Name"
+                  value={tenant.tenantLegalName}
+                  icon={Users}
+                />
+                <InfoItem
+                  label="Tenant Type"
+                  value={tenant.tenantType}
+                  icon={Users}
+                />
+                <InfoItem
+                  label="User Type"
+                  value={tenant.userType}
+                  icon={Users}
+                />
+              </div>
+            </InfoCard>
+
+            <InfoCard icon={Mail} title="Contact Information">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <InfoItem
+                  label="Email"
+                  value={tenant.tenantEmail}
+                  icon={Mail}
+                  onClick={() => window.open(`mailto:${tenant.tenantEmail}`)}
+                />
+                <InfoItem
+                  label="Mobile"
+                  value={tenant.tenantMobileNumber}
+                  icon={Phone}
+                  onClick={() =>
+                    window.open(`tel:${tenant.tenantMobileNumber}`)
+                  }
+                />
+                <InfoItem
+                  label="WhatsApp"
+                  value={tenant.tenantWhatsapp}
+                  icon={Phone}
+                />
+              </div>
+            </InfoCard>
+
+            <InfoCard icon={Settings} title="System Information">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <CopyableInfoItem
+                  label="Tenant ID"
+                  value={tenant.id}
+                  icon={Key}
+                  onCopy={() => copy(tenant.id, "Tenant ID")}
+                />
+                <CopyableInfoItem
+                  label="Tenant Number"
+                  value={tenant.tenantNumber}
+                  icon={Key}
+                  onCopy={() => copy(tenant.tenantNumber, "Tenant Number")}
+                />
+                <InfoItem
+                  label="Created At"
+                  value={formatDateTime(tenant.createdAt)}
+                  icon={Settings}
+                />
+                <InfoItem
+                  label="Updated At"
+                  value={formatDateTime(tenant.updatedAt)}
+                  icon={Settings}
+                />
+              </div>
+            </InfoCard>
           </div>
 
-          <div>
-            <h1 className="text-2xl font-semibold leading-tight">
-              {tenant.tenantName}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Tenant ID: {tenant.tenantNumber}
-            </p>
+          {/* RIGHT */}
+          <div className="space-y-6">
+            <QuickActionsCard
+              title="Quick Actions"
+              actions={[
+                {
+                  label: "Send Email",
+                  icon: Mail,
+                  onClick: () => window.open(`mailto:${tenant.tenantEmail}`),
+                },
+                {
+                  label:
+                    tenant.tenantStatus === "ACTIVE"
+                      ? "Suspend Tenant"
+                      : "Activate Tenant",
+                  icon: tenant.tenantStatus === "ACTIVE" ? Ban : CheckCircle,
+                  onClick: handleToggleStatus,
+                  loading: isUpdating,
+                },
+              ]}
+            />
           </div>
         </div>
+      )}
 
-        <Button
-          variant="outline"
-          icon={ArrowLeft}
-          onClick={() => router.push("/dashboard/tenants")}
-        >
-          Back
-        </Button>
-      </div>
-
-      {/* ================= INFO GRID ================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* LEFT – MAIN DETAILS */}
-        <div className="lg:col-span-2 space-y-6">
-          <InfoCard
-            title="Tenant Information"
-            items={[
-              { label: "Legal Name", value: tenant.tenantLegalName },
-              { label: "Tenant Type", value: tenant.tenantType },
-              { label: "User Type", value: tenant.userType },
-              {
-                label: "Status",
-                value: tenant.tenantStatus,
-              },
-            ]}
-          />
-
-          <InfoCard
-            title="Contact Details"
-            items={[
-              {
-                label: "Email",
-                value: tenant.tenantEmail,
-                icon: Mail,
-              },
-              {
-                label: "Mobile",
-                value: tenant.tenantMobileNumber,
-                icon: Phone,
-              },
-              {
-                label: "WhatsApp",
-                value: tenant.tenantWhatsapp,
-                icon: Phone,
-              },
-            ]}
-          />
+      {/* ================= ACTIVITY ================= */}
+      {activeTab === "activity" && (
+        <div className="bg-card border rounded-xl p-6">
+          <p className="text-muted-foreground">
+            Activity logs will appear here.
+          </p>
         </div>
+      )}
 
-        {/* RIGHT – META */}
-        <div className="space-y-6">
-          <InfoCard
-            title="System Metadata"
-            items={[
-              {
-                label: "Created At",
-                value: formatDateTime(tenant.createdAt),
-                icon: Calendar,
-              },
-              {
-                label: "Updated At",
-                value: formatDateTime(tenant.updatedAt),
-                icon: Calendar,
-              },
-              {
-                label: "Access Level",
-                value: tenant.userType,
-                icon: Shield,
-              },
-            ]}
-          />
+      {/* ================= SETTINGS ================= */}
+      {activeTab === "settings" && (
+        <div className="bg-card border rounded-xl p-6">
+          <p className="text-muted-foreground">
+            Tenant-specific settings go here.
+          </p>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function InfoCard({ title, items }) {
-  return (
-    <div className="rounded-xl border bg-card p-6 shadow-border">
-      <h3 className="font-semibold mb-4 text-sm">{title}</h3>
-
-      <div className="space-y-3">
-        {items.map((item, i) => (
-          <div key={i} className="flex items-center justify-between text-sm">
-            <span className="flex items-center gap-2 text-muted-foreground">
-              {item.icon && <item.icon className="h-4 w-4" />}
-              {item.label}
-            </span>
-
-            {item.badge ? (
-              <span className="px-2 py-0.5 rounded-md text-xs bg-success/10 text-success">
-                {item.value}
-              </span>
-            ) : (
-              <span className="font-medium">{item.value || "-"}</span>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-function TenantSkeleton() {
-  return (
-    <div className="space-y-8 animate-pulse">
-      <div className="flex justify-between">
-        <div className="h-8 w-60 bg-muted rounded" />
-        <div className="h-9 w-24 bg-muted rounded" />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 h-52 bg-muted rounded-xl" />
-        <div className="h-52 bg-muted rounded-xl" />
-      </div>
+      )}
     </div>
   );
 }
