@@ -2,17 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { useMemo, useState } from "react";
-import {
-  User,
-  Mail,
-  Phone,
-  Shield,
-  Key,
-  Eye,
-  EyeOff,
-  AlertCircle,
-  Lock,
-} from "lucide-react";
+import { Eye, EyeOff, AlertCircle, Lock } from "lucide-react";
 
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
@@ -117,30 +107,9 @@ export default function MemberForm({
   };
 
   return (
-    <div className="bg-card border border-border rounded-lg-border shadow-xl w-full max-w-2xl overflow-hidden">
-      {/* HEADER */}
-      <div className="bg-gradient-theme px-6 py-8">
-        <div className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-primary-foreground/20 rounded-full">
-              <User className="h-8 w-8 text-primary-foreground" />
-            </div>
-          </div>
-
-          <h2 className="text-2xl font-bold text-primary-foreground mb-2">
-            {isEditing ? "Update Member" : "Create Member"}
-          </h2>
-
-          <p className="text-primary-foreground/90 text-sm">
-            {isEditing
-              ? "Manage member account and permissions"
-              : "Add a new member to your organization"}
-          </p>
-        </div>
-      </div>
-
+    <div className="w-full max-w-2xl">
       {/* BODY */}
-      <div className="p-6">
+      <div>
         {(error || Object.keys(errors).length > 0) && (
           <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-border mb-4">
             <div className="flex items-center gap-2 text-destructive-foreground">
