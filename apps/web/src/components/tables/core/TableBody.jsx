@@ -1,7 +1,7 @@
 import DataTableSearchEmpty from "./DataTableSearchEmpty";
 import TableRow from "./TableRow";
 
-export default function TableBody({ columns, data }) {
+export default function TableBody({ columns, data, onView, onEdit, onDelete }) {
   return (
     <div className="relative overflow-x-auto overflow-y-visible">
       <table className="w-full">
@@ -31,7 +31,14 @@ export default function TableBody({ columns, data }) {
             </tr>
           ) : (
             data.map((row, i) => (
-              <TableRow key={i} row={row} columns={columns} />
+              <TableRow
+                key={i}
+                row={row}
+                columns={columns}
+                onView={onView}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
             ))
           )}
         </tbody>
