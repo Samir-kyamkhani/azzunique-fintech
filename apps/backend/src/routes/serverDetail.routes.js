@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import {
+  getAll,
   getServerDetailById,
   upsertServerDetail,
 } from '../controllers/serverDetail.controller.js';
@@ -20,5 +21,7 @@ router.post(
 
 // GET BY actor 's tenantId
 router.get('/', asyncHandler(getServerDetailById));
+
+router.get('/list', asyncHandler(getAll));
 
 export default router;

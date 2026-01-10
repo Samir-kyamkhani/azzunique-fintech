@@ -18,3 +18,10 @@ export const useServerDetail = () =>
     queryFn: () => apiClient("/server-detail"),
     staleTime: 5 * 60 * 1000,
   });
+
+export const useServerDetails = () =>
+  useQuery({
+    queryKey: ["server-detail"],
+    queryFn: () => apiClient("/server-detail/list"),
+    staleTime: 5 * 60 * 1000,
+  });

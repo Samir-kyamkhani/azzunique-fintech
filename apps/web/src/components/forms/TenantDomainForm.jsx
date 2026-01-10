@@ -2,17 +2,18 @@
 
 import { useEffect } from "react";
 import { useForm, Controller, useWatch } from "react-hook-form";
+import { useSelector } from "react-redux";
 import { AlertCircle, Lock } from "lucide-react";
 
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import SelectField from "@/components/ui/SelectField";
+import { useServerDetails } from "@/hooks/useServerDetail";
+import { useParams } from "next/navigation";
 
 /* ================= CONSTANTS ================= */
 
 const CRITICAL_STATUSES = ["INACTIVE", "SUSPENDED", "DELETED"];
-
-/* ================= COMPONENT ================= */
 
 export default function TenantDomainForm({
   initialData = null,
@@ -20,6 +21,16 @@ export default function TenantDomainForm({
   onSubmit,
   isPending = false,
 }) {
+  const tenantId = useParams().id;
+
+  const { data } = useServerDetails();
+  const serverData = data?.data;
+  const serverOptions =
+    serverData?.map((s) => ({
+      value: s.id,
+      label: `${s.hostname} → ${s.value}`,
+    })) || [];
+
   const {
     register,
     handleSubmit,
@@ -31,7 +42,6 @@ export default function TenantDomainForm({
   } = useForm({
     defaultValues: {
       domainName: "",
-      tenantId: "",
       serverDetailId: "",
       status: "ACTIVE",
       actionReason: "",
@@ -39,16 +49,8 @@ export default function TenantDomainForm({
     },
   });
 
-  /* ================= WATCHERS ================= */
-
-  const status = useWatch({
-    control,
-    name: "status",
-  });
-
+  const status = useWatch({ control, name: "status" });
   const actionReasonRequired = CRITICAL_STATUSES.includes(status);
-
-  /* ================= EFFECTS ================= */
 
   useEffect(() => {
     if (status === "ACTIVE") {
@@ -56,10 +58,13 @@ export default function TenantDomainForm({
     }
   }, [status, setValue]);
 
-  /* ================= SUBMIT ================= */
-
   const onFormSubmit = (data) => {
     clearErrors();
+
+    if (!tenantId) {
+      setError("root", { message: "Tenant context missing" });
+      return;
+    }
 
     if (actionReasonRequired && !data.actionReason?.trim()) {
       setError("actionReason", {
@@ -68,14 +73,18 @@ export default function TenantDomainForm({
       return;
     }
 
-    onSubmit(data, setError);
+    onSubmit(
+      {
+        ...data,
+        tenantId,
+      },
+      setError
+    );
   };
 
-  /* ================= RENDER ================= */
-
+  /* ================= UI ================= */
   return (
     <>
-      {/* GLOBAL ERROR */}
       {errors?.root && (
         <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-4 mb-6">
           <div className="flex items-start gap-3">
@@ -93,9 +102,8 @@ export default function TenantDomainForm({
       )}
 
       <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
-        {/* ================= FIELDS ================= */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* DOMAIN NAME */}
+          {/* DOMAIN */}
           <InputField
             label="Domain Name"
             name="domainName"
@@ -105,49 +113,50 @@ export default function TenantDomainForm({
             error={errors.domainName}
           />
 
-          {/* STATUS */}
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-foreground">
-              Status <span className="text-red-500">*</span>
+              status Type <span className="text-red-500">*</span>
             </label>
-
+            {/* STATUS */}
             <Controller
               name="status"
               control={control}
               render={({ field }) => (
                 <SelectField
                   {...field}
+                  label="Status"
                   options={[
                     { value: "ACTIVE", label: "Active" },
                     { value: "INACTIVE", label: "Inactive" },
                     { value: "SUSPENDED", label: "Suspended" },
                     { value: "DELETED", label: "Deleted" },
                   ]}
-                  placeholder="Select status"
                   error={errors.status}
                 />
               )}
             />
           </div>
 
-          {/* TENANT ID */}
-          <InputField
-            label="Tenant ID"
-            name="tenantId"
-            register={register}
-            required={!isEditing}
-            disabled={isEditing}
-            error={errors.tenantId}
-          />
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-foreground">
+              Server Detail Type <span className="text-red-500">*</span>
+            </label>
 
-          {/* SERVER DETAIL ID */}
-          <InputField
-            label="Server Detail ID"
-            name="serverDetailId"
-            register={register}
-            required={!isEditing}
-            error={errors.serverDetailId}
-          />
+            {/* SERVER DETAIL */}
+            <Controller
+              name="serverDetailId"
+              control={control}
+              render={({ field }) => (
+                <SelectField
+                  {...field}
+                  label="Server Configuration"
+                  options={serverOptions}
+                  placeholder="Select server configuration"
+                  error={errors.serverDetailId}
+                />
+              )}
+            />
+          </div>
         </div>
 
         {/* ACTION REASON */}
@@ -161,17 +170,10 @@ export default function TenantDomainForm({
           />
         )}
 
-        {/* ================= SUBMIT ================= */}
-        <Button
-          type="submit"
-          loading={isPending}
-          disabled={isPending}
-          className="w-full"
-        >
+        <Button type="submit" loading={isPending} className="w-full">
           {isEditing ? "Update Domain" : "Create Domain"}
         </Button>
 
-        {/* ================= FOOTER ================= */}
         <div className="pt-4 border-t border-border text-center">
           <div className="flex items-center justify-center text-muted-foreground gap-1">
             <Lock className="h-3 w-3" />

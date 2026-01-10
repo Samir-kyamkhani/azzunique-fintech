@@ -1,16 +1,12 @@
 import { Router } from 'express';
 import {
   createTenantDomain,
-  updateTenantDomain,
-  getTenantDomains,
-  getTenantDomainById,
+  getTenantId,
 } from '../controllers/tenantDomain.controller.js';
 import { validate } from '../middleware/zod-validate.js';
 import {
   createTenantDomainSchema,
-  updateTenantDomainSchema,
   idParamSchema,
-  getAllTenantDomain,
 } from '../validators/tenantDomain.schema.js';
 import asyncHandler from '../lib/AsyncHandler.js';
 import { AuthMiddleware } from '../middleware/auth.middleware.js';
@@ -26,21 +22,11 @@ router.post(
   asyncHandler(createTenantDomain),
 );
 
-// GET ALL
-router.get('/', asyncHandler(getTenantDomains));
-
-// GET BY ID
+// Get by tenant id
 router.get(
-  '/:id',
+  '/:tenantId',
   validate({ params: idParamSchema }),
-  asyncHandler(getTenantDomainById),
-);
-
-// UPDATE
-router.put(    
-  '/:id',
-  validate({ params: idParamSchema, body: updateTenantDomainSchema }),
-  asyncHandler(updateTenantDomain),
+  asyncHandler(getTenantId),
 );
 
 export default router;

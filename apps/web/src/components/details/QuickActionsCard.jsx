@@ -8,8 +8,8 @@ export default function QuickActionsCard({ title, actions }) {
         {actions.map((a) => (
           <Button
             key={a.label}
-            variant="outline"
-            className="w-full justify-start"
+            variant="outline "
+            className="w-full justify-start cursor-pointer"
             icon={a.icon}
             onClick={a.onClick}
           >

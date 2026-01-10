@@ -94,9 +94,13 @@ export default function ServerDetailClient() {
   };
 
   const handleRefresh = async () => {
-    setRefreshing(true);
-    await refetch();
-    setTimeout(() => setRefreshing(false), 800);
+    try {
+      setRefreshing(true);
+      await refetch();
+      toast.success("Domain refreshed");
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const handleCopy = (text, label) => {

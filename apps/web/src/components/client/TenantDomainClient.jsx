@@ -10,18 +10,10 @@ import TenantDomainModal from "@/components/modals/TenantDomainModal";
 import DataTableSearchEmpty from "@/components/tables/core/DataTableSearchEmpty";
 import PageSkeleton from "@/components/details/PageSkeleton";
 
-import {
-  Globe,
-  Shield,
-  Lock,
-  Calendar,
-  Edit,
-  RefreshCw,
-  Copy,
-} from "lucide-react";
+import { Globe, Shield, Lock, Calendar, Edit, RefreshCw } from "lucide-react";
 
 import {
-  useTenantDomain,
+  useTenantDomainByTenantId,
   useUpsertTenantDomain,
 } from "@/hooks/useTenantDomain";
 
@@ -29,8 +21,6 @@ import { setTenantDomain, clearTenantDomain } from "@/store/tenantDomainSlice";
 
 import { formatDateTime, statusColor } from "@/lib/utils";
 import { toast } from "@/lib/toast";
-
-/* ================= HELPERS ================= */
 
 const FIELDS = [
   "domainName",
@@ -55,20 +45,19 @@ const buildUpsertPayload = (formData) => {
 export default function TenantDomainClient() {
   const dispatch = useDispatch();
 
+  const tenant = useSelector((state) => state.tenant?.currentTenant ?? null);
   const tenantDomain = useSelector(
-    (state) => state.tenantDomain?.currentTenantDomain ?? null
+    (state) => state.tenantDomain?.currentDomain ?? null
   );
 
   const [openModal, setOpenModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  /* ================= API ================= */
+  const { data, refetch, isLoading } = useTenantDomainByTenantId(tenant?.id);
 
-  const { data, refetch, isLoading } = useTenantDomain();
   const { mutate: upsertTenantDomain, isPending } = useUpsertTenantDomain();
 
   /* ================= SYNC API → REDUX ================= */
-
   useEffect(() => {
     if (data?.data) {
       dispatch(setTenantDomain(data.data));
@@ -96,9 +85,13 @@ export default function TenantDomainClient() {
   };
 
   const handleRefresh = async () => {
-    setRefreshing(true);
-    await refetch();
-    setTimeout(() => setRefreshing(false), 800);
+    try {
+      setRefreshing(true);
+      await refetch();
+      toast.success("Domain refreshed");
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const handleCopy = (text, label) => {
@@ -152,11 +145,13 @@ export default function TenantDomainClient() {
             {/* DOMAIN INFO */}
             <InfoCard icon={Globe} title="Domain Configuration">
               <div className="flex items-center gap-2 mb-4">
-                <span
-                  className={`px-3 py-1 text-xs font-medium rounded-full ${statusMeta.className}`}
-                >
-                  {statusMeta.label}
-                </span>
+                {statusMeta && (
+                  <span
+                    className={`px-3 py-1 text-xs font-medium rounded-full ${statusMeta.className}`}
+                  >
+                    {statusMeta.label}
+                  </span>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -189,7 +184,7 @@ export default function TenantDomainClient() {
               <div className="space-y-2">
                 <InfoItem
                   label="Tenant ID"
-                  value={tenantDomain.tenantId}
+                  value={tenantDomain.tenantNumber}
                   icon={Shield}
                 />
 
@@ -233,8 +228,28 @@ export default function TenantDomainClient() {
                     {formatDateTime(tenantDomain.updatedAt)}
                   </span>
                 </div>
+
+                {tenantDomain.actionedAt && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Actioned At</span>
+                    <span className="font-medium">
+                      {formatDateTime(tenantDomain.actionedAt)}
+                    </span>
+                  </div>
+                )}
               </div>
             </InfoCard>
+            {tenantDomain.actionReason && (
+              <InfoCard icon={Lock} title="Action Details">
+                <div className="space-y-2 text-sm">
+                  <InfoItem
+                    label="Action Reason"
+                    value={tenantDomain.actionReason}
+                    icon={Lock}
+                  />
+                </div>
+              </InfoCard>
+            )}
           </div>
         </div>
       ) : (

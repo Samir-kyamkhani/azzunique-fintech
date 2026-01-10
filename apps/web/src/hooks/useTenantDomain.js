@@ -14,9 +14,16 @@ export const useUpsertTenantDomain = () =>
   useMutation({
     mutationFn: async (payload) =>
       apiClient("/tenant-domain", {
-        method: "POST", // upsert
+        method: "POST",
         body: JSON.stringify(payload),
       }),
+  });
+
+export const useTenantDomainByTenantId = (tenantId) =>
+  useQuery({
+    queryKey: ["tenant-domain", tenantId],
+    queryFn: () => apiClient(`/tenant-domain/${tenantId}`, { method: "GET" }),
+    enabled: !!tenantId,
   });
 
 /* ================= DELETE ================= */

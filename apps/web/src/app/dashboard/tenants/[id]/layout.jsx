@@ -57,7 +57,7 @@ export default function TenantLayout({ children }) {
       />
 
       <TabsNav
-        tabs={["overview", "activity", "settings"]}
+        tabs={["overview", "domain", "activity", "settings"]}
         basePath={`/dashboard/tenants/${id}`}
       />
 

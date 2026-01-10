@@ -127,6 +127,55 @@ class ServerDetailService {
 
     return data;
   }
+
+  // ================ GET ALL ===============
+  static async getAll(actor) {
+    if (!actor?.tenantId) {
+      throw ApiError.unauthorized('Invalid actor');
+    }
+
+    const rows = await db
+      .select({
+        server: serverDetailTable,
+
+        userNumber: usersTable.userNumber,
+        employeeNumber: employeesTable.employeeNumber,
+        tenantNumber: tenantsTable.tenantNumber,
+      })
+      .from(serverDetailTable)
+      .leftJoin(tenantsTable, eq(tenantsTable.id, serverDetailTable.tenantId))
+      .leftJoin(
+        usersTable,
+        eq(usersTable.id, serverDetailTable.createdByUserId),
+      )
+      .leftJoin(
+        employeesTable,
+        eq(employeesTable.id, serverDetailTable.createdByEmployeeId),
+      )
+      .where(eq(serverDetailTable.tenantId, actor.tenantId));
+
+    if (!rows.length) {
+      return [];
+    }
+
+    return rows.map((row) => ({
+      ...row.server,
+
+      createdBy: row.userNumber
+        ? {
+            type: 'USER',
+            userNumber: row.userNumber,
+          }
+        : row.employeeNumber
+          ? {
+              type: 'EMPLOYEE',
+              employeeNumber: row.employeeNumber,
+            }
+          : null,
+
+      tenantNumber: row.tenantNumber,
+    }));
+  }
 }
 
 export { ServerDetailService };
