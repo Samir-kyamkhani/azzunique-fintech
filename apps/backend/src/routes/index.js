@@ -26,7 +26,7 @@ router.use('/roles', roleRoutes);
 router.use('/roles-hierarchy', roleHierarchyRoutes);
 router.use('/departments', departmentRoutes);
 router.use('/employees', employeeRoutes);
-router.use('/tenants-website', tenantWebsiteRoutes);
+router.use('/website', tenantWebsiteRoutes);
 router.use('/social-media', tenantSocialMediaRoutes);
 
 export default router;

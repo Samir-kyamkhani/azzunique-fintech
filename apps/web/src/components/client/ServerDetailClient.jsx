@@ -1,0 +1,322 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+
+import Button from "@/components/ui/Button";
+import InfoCard from "@/components/details/InfoCard";
+import InfoItem from "@/components/details/InfoItem";
+import ServerDetailModal from "@/components/modals/ServerDetailModal";
+import DataTableSearchEmpty from "@/components/tables/core/DataTableSearchEmpty";
+
+import {
+  Server,
+  Globe,
+  Shield,
+  Lock,
+  Calendar,
+  CheckCircle,
+  AlertCircle,
+  Edit,
+  RefreshCw,
+  ExternalLink,
+  Copy,
+} from "lucide-react";
+
+import {
+  useServerDetail,
+  useUpsertServerDetail,
+} from "@/hooks/useServerDetail";
+
+import { setServerDetail, clearServerDetail } from "@/store/serverDetailSlice";
+
+import { formatDateTime, statusColor } from "@/lib/utils";
+import { toast } from "@/lib/toast";
+import PageSkeleton from "../details/PageSkeleton";
+
+/* ================= HELPERS ================= */
+
+const FIELDS = ["recordType", "hostname", "value", "status"];
+
+const buildUpsertPayload = (formData) => {
+  const payload = {};
+  FIELDS.forEach((key) => {
+    if (formData[key] !== undefined && formData[key] !== "") {
+      payload[key] = formData[key];
+    }
+  });
+  return payload;
+};
+
+/* ================= COMPONENT ================= */
+
+export default function ServerDetailClient() {
+  const dispatch = useDispatch();
+
+  const serverDetail = useSelector(
+    (state) => state.serverDetail?.currentServerDetail ?? null
+  );
+
+  const [openModal, setOpenModal] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  /* ================= API ================= */
+
+  const { data, refetch } = useServerDetail();
+  const { mutate: upsertServerDetail, isPending } = useUpsertServerDetail();
+
+  /* ================= SYNC API → REDUX ================= */
+
+  useEffect(() => {
+    if (data?.data) {
+      dispatch(setServerDetail(data.data));
+    } else {
+      dispatch(clearServerDetail());
+    }
+  }, [data, dispatch]);
+
+  /* ================= HANDLERS ================= */
+
+  const handleSubmit = (formData, setError) => {
+    const payload = buildUpsertPayload(formData);
+
+    upsertServerDetail(payload, {
+      onSuccess: (res) => {
+        dispatch(setServerDetail(res.data));
+        setOpenModal(false);
+        toast.success("Server configuration saved");
+      },
+      onError: (err) =>
+        setError("root", {
+          message: err.message || "Failed to save configuration",
+        }),
+    });
+  };
+
+  const handleRefresh = async () => {
+    try {
+      setRefreshing(true);
+      await refetch();
+      toast.success("Domain refreshed");
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const handleCopy = (text, label) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copied`);
+  };
+
+  const isInitialLoading = !data && !serverDetail;
+
+  if (isInitialLoading) {
+    return <PageSkeleton />;
+  }
+  const statusMeta = serverDetail ? statusColor[serverDetail.status] : null;
+
+  /* ================= RENDER ================= */
+
+  return (
+    <>
+      {/* HEADER */}
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Server Configuration</h1>
+          <p className="text-muted-foreground max-w-2xl">
+            Configure DNS and server records to route traffic, connect domains,
+            and manage infrastructure settings.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            icon={RefreshCw}
+            loading={refreshing}
+            onClick={handleRefresh}
+            className={"cursor-pointer"}
+          >
+            Refresh
+          </Button>
+
+          <Button
+            icon={serverDetail ? Edit : Server}
+            onClick={() => setOpenModal(true)}
+            className={"cursor-pointer"}
+          >
+            {serverDetail ? "Edit Configuration" : "Create Configuration"}
+          </Button>
+        </div>
+      </div>
+
+      {/* CONTENT */}
+      {serverDetail ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* LEFT */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* MAIN INFO */}
+            <InfoCard icon={Server} title="Server Configuration">
+              <div className="flex items-center gap-2 mb-4">
+                {statusMeta && (
+                  <span
+                    className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ${statusMeta.className}`}
+                  >
+                    {statusMeta.label}
+                  </span>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <InfoItem
+                  label="Record Type"
+                  value={serverDetail.recordType}
+                  icon={Globe}
+                />
+
+                <InfoItem
+                  label="Hostname"
+                  value={serverDetail.hostname}
+                  icon={Server}
+                  onClick={() => handleCopy(serverDetail.hostname, "Hostname")}
+                />
+
+                <InfoItem
+                  label="Value"
+                  value={serverDetail.value}
+                  icon={ExternalLink}
+                  onClick={() =>
+                    window.open(`https://${serverDetail.value}`, "_blank")
+                  }
+                />
+
+                <InfoItem
+                  label="Status"
+                  value={statusMeta?.label}
+                  icon={Shield}
+                />
+              </div>
+            </InfoCard>
+
+            {/* TECH DETAILS */}
+            <InfoCard icon={Shield} title="Technical Details">
+              <div className="space-y-2">
+                <InfoItem
+                  label="Tenant ID"
+                  value={serverDetail.tenantNumber}
+                  icon={Shield}
+                  onClick={() =>
+                    handleCopy(serverDetail.tenantNumber, "Tenant ID")
+                  }
+                />
+
+                <InfoItem
+                  label={`Created By ${serverDetail.createdBy?.type}`}
+                  value={
+                    serverDetail.createdBy?.type === "USER"
+                      ? ` ${serverDetail.createdBy.userNumber}`
+                      : serverDetail.createdBy?.type === "EMPLOYEE"
+                        ? `${serverDetail.createdBy.employeeNumber}`
+                        : "System"
+                  }
+                  icon={Lock}
+                />
+
+                <InfoItem
+                  label="Configuration ID"
+                  value={serverDetail.id}
+                  icon={Shield}
+                  onClick={() =>
+                    handleCopy(serverDetail.id, "Configuration ID")
+                  }
+                />
+              </div>
+            </InfoCard>
+          </div>
+
+          {/* RIGHT */}
+          <div className="space-y-6">
+            {/* TIMELINE */}
+            <InfoCard icon={Calendar} title="Timeline">
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Created</span>
+                  <span className="font-medium">
+                    {formatDateTime(serverDetail.createdAt)}
+                  </span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Last Updated</span>
+                  <span className="font-medium">
+                    {formatDateTime(serverDetail.updatedAt)}
+                  </span>
+                </div>
+              </div>
+            </InfoCard>
+
+            {/* QUICK ACTIONS */}
+            <InfoCard icon={ExternalLink} title="Quick Actions">
+              <div className="space-y-3">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start cursor-pointer"
+                  icon={ExternalLink}
+                  onClick={() =>
+                    window.open(
+                      `https://dnschecker.org/#${serverDetail.recordType}/${serverDetail.value}`,
+                      "_blank"
+                    )
+                  }
+                >
+                  Verify DNS
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="w-full justify-start cursor-pointer"
+                  icon={Copy}
+                  onClick={() => handleCopy(serverDetail.value, "Domain")}
+                >
+                  Copy Domain
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="w-full justify-start cursor-pointer"
+                  icon={Edit}
+                  onClick={() => setOpenModal(true)}
+                >
+                  Edit Configuration
+                </Button>
+              </div>
+            </InfoCard>
+          </div>
+        </div>
+      ) : (
+        <DataTableSearchEmpty
+          isEmpty
+          emptyTitle="No server configuration found"
+          emptyDescription="Create DNS and server records to route traffic and make your application accessible."
+          emptyAction={
+            <Button icon={Server} onClick={() => setOpenModal(true)}>
+              Create Server Configuration
+            </Button>
+          }
+        />
+      )}
+
+      {/* MODAL */}
+      {openModal && (
+        <ServerDetailModal
+          open={openModal}
+          onClose={() => setOpenModal(false)}
+          onSubmit={handleSubmit}
+          isEditing={Boolean(serverDetail)}
+          isPending={isPending}
+          initialData={serverDetail}
+        />
+      )}
+    </>
+  );
+}

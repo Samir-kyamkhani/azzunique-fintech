@@ -16,6 +16,7 @@ const options = [
 
 /* ---------------- TABLE COLUMNS ---------------- */
 export const columns = [
+  // { key: "id", label: "ID" },
   { key: "tenantNumber", label: "Tenant No" },
   { key: "tenantName", label: "Tenant Name" },
   { key: "tenantLegalName", label: "Legal Name" },

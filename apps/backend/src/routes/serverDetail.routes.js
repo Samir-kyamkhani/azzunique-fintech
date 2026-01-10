@@ -1,13 +1,11 @@
 import { Router } from 'express';
 import {
+  getAll,
   getServerDetailById,
   upsertServerDetail,
 } from '../controllers/serverDetail.controller.js';
 import { validate } from '../middleware/zod-validate.js';
-import {
-  idParamSchema,
-  serverDetailSchema,
-} from '../validators/serverDetail.schema.js';
+import { serverDetailSchema } from '../validators/serverDetail.schema.js';
 import asyncHandler from '../lib/AsyncHandler.js';
 import { AuthMiddleware } from '../middleware/auth.middleware.js';
 
@@ -23,5 +21,7 @@ router.post(
 
 // GET BY actor 's tenantId
 router.get('/', asyncHandler(getServerDetailById));
+
+router.get('/list', asyncHandler(getAll));
 
 export default router;

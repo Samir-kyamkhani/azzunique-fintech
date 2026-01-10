@@ -3,6 +3,7 @@ import { tenantsTable } from '../models/core/tenant.schema.js';
 import { ApiError } from '../lib/ApiError.js';
 import { db } from '../database/core/core-db.js';
 import { generateNumber } from '../lib/lib.js';
+import { employeesTable } from '../models/core/employee.schema.js';
 
 class TenantService {
   // ================= CREATE =================
@@ -11,6 +12,7 @@ class TenantService {
     const [currentTenant] = await db
       .select({
         id: tenantsTable.id,
+        userType: tenantsTable.userType,
         parentTenantId: tenantsTable.parentTenantId,
         userType: tenantsTable.userType,
       })
@@ -18,7 +20,7 @@ class TenantService {
       .where(eq(tenantsTable.id, actor.tenantId))
       .limit(1);
 
-    if (!currentTenant) {
+    if (!actorTenant) {
       throw ApiError.notFound('Actor tenant not found');
     }
 
@@ -77,6 +79,7 @@ class TenantService {
 
     // 6️⃣ INSERT TENANT
     await db.insert(tenantsTable).values({
+      id,
       ...payload,
       tenantNumber: generateNumber('TNT'),
       userType: payload.userType,
@@ -97,15 +100,10 @@ class TenantService {
     const [insertedTenant] = await db
       .select()
       .from(tenantsTable)
-      .where(
-        and(
-          eq(tenantsTable.tenantEmail, payload.tenantEmail),
-          eq(tenantsTable.parentTenantId, scopeTenantId),
-        ),
-      )
+      .where(eq(tenantsTable.id, id))
       .limit(1);
 
-    return insertedTenant;
+    return createdTenant;
   }
 
   // ================= GET OWN CHILDREN =================
@@ -212,36 +210,62 @@ class TenantService {
 
   // ================= GET BY ID =================
   static async getById(id) {
-    const [tenant] = await db
-      .select()
+    const [result] = await db
+      .select({
+        tenant: tenantsTable,
+        employeeNumber: employeesTable.employeeNumber,
+      })
       .from(tenantsTable)
+      .leftJoin(
+        employeesTable,
+        eq(employeesTable.id, tenantsTable.createdByEmployeeId),
+      )
       .where(eq(tenantsTable.id, id))
       .limit(1);
 
-    if (!tenant) {
+    if (!result) {
       throw ApiError.notFound('Tenant not found');
     }
 
-    return tenant;
+    return {
+      ...result.tenant,
+      employee: {
+        employeeNumber: result.employeeNumber,
+      },
+    };
   }
 
   // ================= UPDATE =================
   static async update(id, payload) {
     const tenant = await this.getById(id);
 
+    const updatedFields = {};
+
+    Object.keys(payload).forEach((key) => {
+      if (payload[key] !== tenant[key]) {
+        updatedFields[key] = payload[key];
+      }
+    });
+
+    if (payload.tenantStatus) {
+      updatedFields.tenantStatus = payload.tenantStatus;
+      updatedFields.actionReason =
+        payload.tenantStatus === 'ACTIVE' ? null : payload.actionReason;
+      updatedFields.actionedAt =
+        payload.tenantStatus === 'ACTIVE' ? null : new Date();
+    }
+
+    updatedFields.updatedAt = new Date();
+
     await db
       .update(tenantsTable)
-      .set({
-        ...payload,
-        tenantStatus: payload.tenantStatus,
-        actionReason:
-          payload.tenantStatus === 'ACTIVE' ? null : payload.actionReason,
-        actionedAt: payload.tenantStatus === 'ACTIVE' ? null : new Date(),
-        updatedAt: new Date(),
-      })
+      .set(updatedFields)
       .where(eq(tenantsTable.id, id));
 
-    return this.getById(id);
+    return {
+      id,
+      ...updatedFields,
+    };
   }
 }
 

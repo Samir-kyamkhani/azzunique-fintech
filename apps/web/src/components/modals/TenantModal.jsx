@@ -3,6 +3,7 @@
 import { Building2 } from "lucide-react";
 import TenantForm from "../forms/TenantForm";
 import Button from "../ui/Button";
+import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
 
 export default function TenantModal({
   open,
@@ -11,9 +12,9 @@ export default function TenantModal({
   isEditing = false,
   isPending = false,
   initialData,
-  error,
-  formErrors,
+  currentUser,
 }) {
+  useLockBodyScroll(open);
   if (!open) return null;
 
   return (
@@ -51,8 +52,9 @@ export default function TenantModal({
           <TenantForm
             onSubmit={onSubmit}
             isPending={isPending}
-            error={error}
-            formErrors={formErrors}
+            initialData={initialData}
+            isEditing={isEditing}
+            currentUser={currentUser}
           />
         </div>
       </div>

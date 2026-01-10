@@ -9,3 +9,7 @@ export const getServerDetailById = async (req, res) => {
   const server = await ServerDetailService.getByTenantId(req.user);
   res.json(server);
 };
+export const getAll = async (req, res) => {
+  const server = await ServerDetailService.getAll(req.user);
+  res.json(server);
+};
