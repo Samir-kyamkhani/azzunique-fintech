@@ -8,20 +8,12 @@ import { decrypt, encrypt } from '../lib/lib.js';
 class SmtpConfigService {
   // GET BY ID (many times)
   static async getById(id, actor) {
-    if (!id) {
-      throw ApiError.badRequest('ID is required');
-    }
-
-    if (!actor.tenantId) {
-      throw ApiError.forbidden('Tenant context is required');
-    }
-
     const [config] = await db
       .select()
       .from(smtpConfigTable)
       .where(
         and(
-          eq(smtpConfigTable.id, id),
+          // eq(smtpConfigTable.id, id),
           eq(smtpConfigTable.tenantId, actor.tenantId),
         ),
       )

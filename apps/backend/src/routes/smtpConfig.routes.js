@@ -15,7 +15,7 @@ import { AuthMiddleware } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
-router.use(AuthMiddleware)
+router.use(AuthMiddleware);
 
 // ONE-TIME CREATE
 router.post(
@@ -32,10 +32,6 @@ router.put(
 );
 
 // GET BY ID (many times)
-router.get(
-  '/:id',
-  validate({ params: idParamSchema }),
-  asyncHandler(getSmtpConfigById),
-);
+router.get('/', asyncHandler(getSmtpConfigById));
 
 export default router;

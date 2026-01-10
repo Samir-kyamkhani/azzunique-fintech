@@ -19,7 +19,7 @@ export default function SettingsLayout({ children }) {
 
       {/* TABS NAV (REUSED) */}
       <TabsNav
-        tabs={["general", "server", "domain"]}
+        tabs={["general", "server", "domain", "smtp"]}
         basePath="/dashboard/settings"
       />
 
