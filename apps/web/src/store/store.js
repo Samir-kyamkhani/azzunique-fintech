@@ -3,6 +3,7 @@ import authReducer from "./authSlice";
 import tenantReducer from "./tenantSlice";
 import memberReducer from "./memberSlice";
 import serverDetailReducer from "./serverDetailSlice";
+import tenantDomainReducer from "./tenantDomainSlice";
 
 export const store = configureStore({
   reducer: {
@@ -10,5 +11,6 @@ export const store = configureStore({
     tenant: tenantReducer,
     member: memberReducer,
     serverDetail: serverDetailReducer,
+    tenantDomain: tenantDomainReducer,
   },
 });
