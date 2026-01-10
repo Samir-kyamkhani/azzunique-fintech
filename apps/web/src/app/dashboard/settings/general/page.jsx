@@ -1,3 +1,4 @@
+import TenantSocialMediaClient from "@/components/client/TenantSocialMediaClient";
 import TenantWebsiteClient from "@/components/client/TenantWebsiteClient";
 
 export const metadata = {
@@ -6,5 +7,10 @@ export const metadata = {
 };
 
 export default async function Page() {
-  return <TenantWebsiteClient />;
+  return (
+    <div className="space-y-12">
+      <TenantWebsiteClient />
+      <TenantSocialMediaClient />
+    </div>
+  );
 }

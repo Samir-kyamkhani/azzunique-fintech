@@ -6,9 +6,9 @@ export const upsertTenantSocialMedia = async (req, res) => {
 };
 
 export const getTenantSocialMedia = async (req, res) => {
-  console.log(req.tenant);
-
   const tenantId = req.tenant.id;
+  console.log('tenantId', tenantId);
+
   const data = await TenantSocialMediaService.getById(tenantId);
   res.json(data);
 };
