@@ -1,5 +1,4 @@
-import TenantSocialMediaClient from "@/components/client/TenantSocialMediaClient";
-import TenantWebsiteClient from "@/components/client/TenantWebsiteClient";
+import SettingsAccordion from "@/components/SettingsAccordion";
 
 export const metadata = {
   title: "Setting General",
@@ -7,10 +6,5 @@ export const metadata = {
 };
 
 export default async function Page() {
-  return (
-    <div className="space-y-12">
-      <TenantWebsiteClient />
-      <TenantSocialMediaClient />
-    </div>
-  );
+  return <SettingsAccordion />
 }

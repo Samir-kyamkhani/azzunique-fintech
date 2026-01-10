@@ -66,14 +66,19 @@ export class TenantSocialMediaService {
     }
 
     // ---------- UPDATE ----------
+    const updatedAt = new Date();
+
     await db
       .update(tenantSocialMediaTable)
       .set({
         ...payload,
-        updatedAt: new Date(),
+        updatedAt,
       })
       .where(eq(tenantSocialMediaTable.tenantWebsiteId, website.id));
 
-    return this.getById(website.id);
+    return {
+      ...payload,
+      updatedAt,
+    };
   }
 }
