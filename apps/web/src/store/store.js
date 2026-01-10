@@ -5,6 +5,7 @@ import memberReducer from "./memberSlice";
 import serverDetailReducer from "./serverDetailSlice";
 import tenantDomainReducer from "./tenantDomainSlice";
 import smtpConfigReducer from "./smtpConfigSlice";
+import tenantWebsiteReducer from "./tenantWebsiteSlice";
 
 export const store = configureStore({
   reducer: {
@@ -14,5 +15,6 @@ export const store = configureStore({
     serverDetail: serverDetailReducer,
     tenantDomain: tenantDomainReducer,
     smtpConfig: smtpConfigReducer,
+    tenantWebsite: tenantWebsiteReducer,
   },
 });

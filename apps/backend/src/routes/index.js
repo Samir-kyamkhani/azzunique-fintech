@@ -22,7 +22,7 @@ router.use('/auth', authRoutes);
 router.use('/members', userRoutes);
 router.use('/departments', departmentRoutes);
 router.use('/employees', employeeRoutes);
-router.use('/tenants-website', tenantWebsiteRoutes);
+router.use('/website', tenantWebsiteRoutes);
 router.use('/social-media', tenantSocialMediaRoutes);
 
 export default router;
