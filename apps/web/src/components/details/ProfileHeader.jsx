@@ -21,7 +21,10 @@ export default function ProfileHeader({
 
           <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
             {meta.map((m) => (
-              <div key={m.label} className="flex items-center gap-1">
+              <div
+                key={`${m.value}`}   // ✅ FIX HERE
+                className="flex items-center gap-1"
+              >
                 <m.icon className="h-3.5 w-3.5" />
                 <span>{m.value}</span>
               </div>
