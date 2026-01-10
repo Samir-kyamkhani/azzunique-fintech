@@ -1,8 +1,6 @@
-"use client";
-
 import ServerDetailClient from "@/components/client/ServerDetailClient";
 
-export default function GeneralSettingsPage() {
+export default function Page() {
   return (
     <div>
       <ServerDetailClient />
