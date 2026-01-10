@@ -1,54 +1,39 @@
-import { DepartmentService } from '../services/department.service.js';
+import departmentService from '../services/department.service.js';
 
-const createDepartment = async (req, res, next) => {
-  try {
-    const department = await DepartmentService.create(req.body, req.user);
-    res.status(201).json(department);
-  } catch (err) {
-    next(err);
-  }
+export const createDepartment = async (req, res) => {
+  const data = await departmentService.create(req.body, req.user);
+  res.status(201).json(data);
 };
 
-const updateDepartment = async (req, res, next) => {
-  try {
-    const department = await DepartmentService.update(req.params.id, req.body);
-    res.json(department);
-  } catch (err) {
-    next(err);
-  }
+export const findAllDepartments = async (req, res) => {
+  const data = await departmentService.findAll(req.user);
+  res.json(data);
 };
 
-const getDepartmentById = async (req, res, next) => {
-  try {
-    const department = await DepartmentService.getById(req.params.id);
-    res.json(department);
-  } catch (err) {
-    next(err);
-  }
+export const findDepartment = async (req, res) => {
+  const data = await departmentService.findOne(req.params.id, req.user);
+  res.json(data);
 };
 
-const getAllDepartments = async (req, res, next) => {
-  try {
-    const departments = await DepartmentService.getAll(req.user);
-    res.json(departments);
-  } catch (err) {
-    next(err);
-  }
+export const updateDepartment = async (req, res) => {
+  const data = await departmentService.update(
+    req.params.id,
+    req.body,
+    req.user,
+  );
+  res.json(data);
 };
 
-const delelteDepartment = async (req, res, next) => {
-  try {
-    const departments = await DepartmentService.delete(req.params.id);
-    res.json(departments);
-  } catch (err) {
-    next(err);
-  }
+export const deleteDepartment = async (req, res) => {
+  await departmentService.delete(req.params.id, req.user);
+  res.status(204).end();
 };
 
-export {
-  createDepartment,
-  updateDepartment,
-  getDepartmentById,
-  getAllDepartments,
-  delelteDepartment,
+export const assignDepartmentPermissions = async (req, res) => {
+  await departmentService.assignPermissions(
+    req.params.id,
+    req.body.permissionIds,
+    req.user,
+  );
+  res.json({ success: true });
 };

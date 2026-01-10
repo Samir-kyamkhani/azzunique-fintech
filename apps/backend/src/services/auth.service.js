@@ -1,27 +1,24 @@
 import { db } from '../database/core/core-db.js';
 import { usersTable, employeesTable, roleTable } from '../models/core/index.js';
-import { eq, and, or } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { generateTokens, hashToken, verifyPassword } from '../lib/lib.js';
 import { ApiError } from '../lib/ApiError.js';
-import { skipTenantCheckRoles } from '../config/constant.js';
 
 class AuthService {
   async loginUser(data) {
     const [user] = await db
       .select({
         id: usersTable.id,
-        email: usersTable.email,
-        mobileNumber: usersTable.mobileNumber,
         passwordHash: usersTable.passwordHash,
         tenantId: usersTable.tenantId,
-        parentId: usersTable.parentId,
         userStatus: usersTable.userStatus,
         roleId: usersTable.roleId,
-        roleCode: roleTable.roleCode,
+        isSystem: roleTable.isSystem,
+        ownerUserId: usersTable.ownerUserId,
       })
       .from(usersTable)
       .leftJoin(roleTable, eq(usersTable.roleId, roleTable.id))
-      .where(or(eq(usersTable.userNumber, data.identifier)))
+      .where(eq(usersTable.userNumber, data.identifier))
       .limit(1);
 
     if (!user) {
@@ -32,18 +29,13 @@ class AuthService {
       throw ApiError.forbidden('User is inactive');
     }
 
-    if (user.roleCode !== 'AZZUNIQUE') {
-      await this.validateHierarchy(
-        user.id,
-        user.parentId,
-        user.tenantId,
-        user.roleCode,
-      );
+    const valid = verifyPassword(data.password, user.passwordHash);
+    if (!valid) {
+      throw ApiError.unauthorized('Invalid credentials');
     }
 
-    const isValid = verifyPassword(data.password, user.passwordHash);
-    if (!isValid) {
-      throw ApiError.unauthorized('Invalid credentials');
+    if (!user.isSystem) {
+      await this.validateOwnerChain(user.id, user.ownerUserId);
     }
 
     const tokens = generateTokens({
@@ -72,7 +64,7 @@ class AuthService {
     const [employee] = await db
       .select()
       .from(employeesTable)
-      .where(or(eq(employeesTable.employeeNumber, data.identifier)))
+      .where(eq(employeesTable.employeeNumber, data.identifier))
 
       .limit(1);
 
@@ -120,40 +112,87 @@ class AuthService {
       .where(eq(table.id, userId));
   }
 
-  async validateHierarchy(userId, parentId, tenantId, roleCode) {
-    let currentParent = parentId;
+  async getCurrentUser(actor) {
+    const { id: userId, type, tenantId } = actor;
 
-    while (currentParent) {
-      let parent;
+    if (type === 'EMPLOYEE') {
+      const [employee] = await db
+        .select({
+          id: employeesTable.id,
+          tenantId: employeesTable.tenantId,
+          departmentId: employeesTable.departmentId,
+          employeeStatus: employeesTable.employeeStatus,
+        })
+        .from(employeesTable)
+        .where(eq(employeesTable.id, userId))
+        .limit(1);
 
-      if (skipTenantCheckRoles.includes(roleCode)) {
-        [parent] = await db
-          .select()
-          .from(usersTable)
-          .where(eq(usersTable.id, currentParent))
-          .limit(1);
-      } else {
-        [parent] = await db
-          .select()
-          .from(usersTable)
-          .where(
-            and(
-              eq(usersTable.id, currentParent),
-              eq(usersTable.tenantId, tenantId),
-            ),
-          )
-          .limit(1);
+      if (!employee || employee.employeeStatus !== 'ACTIVE') {
+        throw ApiError.unauthorized('Session expired');
       }
 
-      if (!parent) {
-        throw ApiError.forbidden('Invalid hierarchy');
+      return {
+        id: employee.id,
+        tenantId: employee.tenantId,
+        type: 'EMPLOYEE',
+        departmentId: employee.departmentId,
+      };
+    }
+
+    // USER
+    const [user] = await db
+      .select({
+        id: usersTable.id,
+        tenantId: usersTable.tenantId,
+        roleId: usersTable.roleId,
+        isSystem: roleTable.isSystem,
+        userStatus: usersTable.userStatus,
+      })
+      .from(usersTable)
+      .leftJoin(roleTable, eq(usersTable.roleId, roleTable.id))
+      .where(eq(usersTable.id, userId))
+      .limit(1);
+
+    if (!user || user.userStatus !== 'ACTIVE') {
+      throw ApiError.unauthorized('Session expired');
+    }
+
+    return {
+      id: user.id,
+      tenantId: user.tenantId,
+      type: 'USER',
+      roleId: user.roleId,
+      isSystem: user.isSystem,
+    };
+  }
+
+  async validateOwnerChain(userId, ownerUserId) {
+    let currentOwner = ownerUserId;
+
+    while (currentOwner) {
+      const [owner] = await db
+        .select({
+          id: usersTable.id,
+          ownerUserId: usersTable.ownerUserId,
+          userStatus: usersTable.userStatus,
+        })
+        .from(usersTable)
+        .where(eq(usersTable.id, currentOwner))
+        .limit(1);
+
+      if (!owner) {
+        throw ApiError.forbidden('Invalid ownership chain');
       }
 
-      if (parent.userStatus !== 'ACTIVE') {
-        throw ApiError.forbidden('Parent inactive');
+      if (owner.userStatus !== 'ACTIVE') {
+        throw ApiError.forbidden('Owner inactive');
       }
 
-      currentParent = parent.parentId;
+      if (owner.id === owner.ownerUserId) {
+        break;
+      }
+
+      currentOwner = owner.ownerUserId;
     }
   }
 }

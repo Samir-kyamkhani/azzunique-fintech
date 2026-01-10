@@ -1,52 +1,71 @@
 import { Router } from 'express';
-import {
-  createDepartment,
-  updateDepartment,
-  getDepartmentById,
-  getAllDepartments,
-  delelteDepartment,
-} from '../controllers/department.controller.js';
-import {
-  createDepartmentSchema,
-  updateDepartmentSchema,
-  idParamSchema,
-} from '../validators/department.schema.js';
+import asyncHandler from '../lib/AsyncHandler.js';
 import { AuthMiddleware } from '../middleware/auth.middleware.js';
 import { validate } from '../middleware/zod-validate.js';
-import asyncHandler from '../lib/AsyncHandler.js';
+import { PermissionMiddleware } from '../middleware/permission.middleware.js';
+import { PermissionsRegistry } from '../lib/permissionsRegistory.js';
+
+import {
+  createDepartment,
+  findAllDepartments,
+  findDepartment,
+  updateDepartment,
+  deleteDepartment,
+  assignDepartmentPermissions,
+} from '../controllers/department.controller.js';
+
+import {
+  departmentIdParamSchema,
+  createDepartmentSchema,
+  updateDepartmentSchema,
+  assignDepartmentPermissionsSchema,
+} from '../validators/department.schema.js';
 
 const router = Router();
-
 router.use(AuthMiddleware);
 
-// CREATE DEPARTMENT
 router.post(
   '/',
+  PermissionMiddleware(PermissionsRegistry.DEPARTMENT.CREATE),
   validate({ body: createDepartmentSchema }),
   asyncHandler(createDepartment),
 );
 
-// GET ALL DEPARTMENTS (by tenant ID)
-router.get('/', asyncHandler(getAllDepartments));
-
-// GET DEPARTMENT BY ID
 router.get(
-  '/:id',
-  validate({ params: idParamSchema }),
-  asyncHandler(getDepartmentById),
+  '/',
+  PermissionMiddleware(PermissionsRegistry.DEPARTMENT.READ),
+  asyncHandler(findAllDepartments),
 );
 
-// UPDATE DEPARTMENT
+router.get(
+  '/:id',
+  PermissionMiddleware(PermissionsRegistry.DEPARTMENT.READ),
+  validate({ params: departmentIdParamSchema }),
+  asyncHandler(findDepartment),
+);
+
 router.put(
   '/:id',
-  validate({ params: idParamSchema, body: updateDepartmentSchema }),
+  PermissionMiddleware(PermissionsRegistry.DEPARTMENT.UPDATE),
+  validate({ params: departmentIdParamSchema, body: updateDepartmentSchema }),
   asyncHandler(updateDepartment),
 );
 
 router.delete(
   '/:id',
-  validate({ params: idParamSchema }),
-  asyncHandler(delelteDepartment),
+  PermissionMiddleware(PermissionsRegistry.DEPARTMENT.DELETE),
+  validate({ params: departmentIdParamSchema }),
+  asyncHandler(deleteDepartment),
+);
+
+router.post(
+  '/:id/permissions',
+  PermissionMiddleware(PermissionsRegistry.DEPARTMENT.ASSIGN_PERMISSIONS),
+  validate({
+    params: departmentIdParamSchema,
+    body: assignDepartmentPermissionsSchema,
+  }),
+  asyncHandler(assignDepartmentPermissions),
 );
 
 export default router;

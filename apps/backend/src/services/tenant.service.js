@@ -8,51 +8,46 @@ import { employeesTable } from '../models/core/employee.schema.js';
 class TenantService {
   // ================= CREATE =================
   static async create(payload, actor) {
-    const [actorTenant] = await db
+    // 1️⃣ Actor tenant fetch
+    const [currentTenant] = await db
       .select({
         id: tenantsTable.id,
-        userType: tenantsTable.userType,
         parentTenantId: tenantsTable.parentTenantId,
+        userType: tenantsTable.userType,
       })
       .from(tenantsTable)
       .where(eq(tenantsTable.id, actor.tenantId))
       .limit(1);
 
-    if (!actorTenant) {
+    if (!currentTenant) {
       throw ApiError.notFound('Actor tenant not found');
     }
 
-    const actorTenantType = actorTenant.userType;
-    const targetUserType = payload.userType?.toUpperCase();
-
-    const allowedMap = {
+    // 2️⃣ USER TYPE HIERARCHY CHECK
+    const allowedChildMap = {
       AZZUNIQUE: ['RESELLER'],
       RESELLER: ['WHITELABEL'],
       WHITELABEL: [],
     };
 
-    if (!allowedMap[actorTenantType]?.includes(targetUserType)) {
+    const allowedChildren = allowedChildMap[currentTenant.userType] || [];
+
+    if (!allowedChildren.includes(payload.userType)) {
       throw ApiError.forbidden(
-        `${actorTenantType} cannot create ${targetUserType} tenant`,
+        `You cannot create ${payload.userType} under ${currentTenant.userType}`,
       );
     }
 
-    let parentTenantId;
+    // 3️⃣ Scope tenant (AZZUNIQUE ke niche sab grouped)
+    const scopeTenantId = currentTenant.parentTenantId ?? currentTenant.id;
 
-    if (actorTenantType === 'AZZUNIQUE') {
-      parentTenantId = actorTenant.id;
-    } else if (actorTenantType === 'RESELLER') {
-      parentTenantId = actorTenant.id;
-    } else {
-      throw ApiError.forbidden('WHITELABEL cannot create tenants');
-    }
-
+    // 4️⃣ Duplicate tenant check
     const [existingTenant] = await db
-      .select()
+      .select({ id: tenantsTable.id })
       .from(tenantsTable)
       .where(
         and(
-          eq(tenantsTable.parentTenantId, parentTenantId),
+          eq(tenantsTable.parentTenantId, scopeTenantId),
           or(
             eq(tenantsTable.tenantEmail, payload.tenantEmail),
             eq(tenantsTable.tenantMobileNumber, payload.tenantMobileNumber),
@@ -64,37 +59,54 @@ class TenantService {
 
     if (existingTenant) {
       throw ApiError.conflict(
-        'Tenant with this email, mobile number or WhatsApp already exists in this group',
+        'Tenant with this email, mobile number or whatsapp already exists',
       );
     }
 
-    const id = crypto.randomUUID();
+    // 5️⃣ AZZUNIQUE singleton check
+    if (payload.userType === 'AZZUNIQUE') {
+      const [azz] = await db
+        .select({ id: tenantsTable.id })
+        .from(tenantsTable)
+        .where(eq(tenantsTable.userType, 'AZZUNIQUE'))
+        .limit(1);
 
+      if (azz) {
+        throw ApiError.conflict('There can be only one AZZUNIQUE tenant');
+      }
+    }
+
+    // 6️⃣ INSERT TENANT
     await db.insert(tenantsTable).values({
-      id,
       ...payload,
-      userType: targetUserType,
-      tenantType: payload.tenantType.toUpperCase(),
-      parentTenantId,
       tenantNumber: generateNumber('TNT'),
+      userType: payload.userType,
+      tenantType: payload.tenantType,
+      parentTenantId: scopeTenantId,
+      createdByUserId: actor.type === 'USER' ? actor.id : null,
+      createdByEmployeeId: actor.type === 'EMPLOYEE' ? actor.id : null,
       actionedAt: ['INACTIVE', 'SUSPENDED', 'DELETED'].includes(
         payload.tenantStatus,
       )
         ? new Date()
         : null,
-      createdByUserId: actor.type === 'USER' ? actor.id : null,
-      createdByEmployeeId: actor.type === 'EMPLOYEE' ? actor.id : null,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
 
-    const [createdTenant] = await db
+    // 7️⃣ RETURN CREATED TENANT
+    const [insertedTenant] = await db
       .select()
       .from(tenantsTable)
-      .where(eq(tenantsTable.id, id))
+      .where(
+        and(
+          eq(tenantsTable.tenantEmail, payload.tenantEmail),
+          eq(tenantsTable.parentTenantId, scopeTenantId),
+        ),
+      )
       .limit(1);
 
-    return createdTenant;
+    return insertedTenant;
   }
 
   // ================= GET OWN CHILDREN =================

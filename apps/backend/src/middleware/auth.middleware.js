@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken';
 import { ApiError } from '../lib/ApiError.js';
+import { deriveTenantOwnership } from '../lib/actor.utils.js';
 
-export const AuthMiddleware = (req, res, next) => {
+export const AuthMiddleware = async (req, res, next) => {
   try {
     let token;
 
@@ -31,6 +32,10 @@ export const AuthMiddleware = (req, res, next) => {
       roleId: decoded.type === 'USER' ? decoded.roleId : null,
       departmentId: decoded.type === 'EMPLOYEE' ? decoded.departmentId : null,
     };
+
+    const ownership = await deriveTenantOwnership(req.user);
+    req.user.isTenantOwner = ownership.isTenantOwner;
+    req.user.ownedTenantId = ownership.ownedTenantId;
 
     next();
   } catch (err) {

@@ -12,7 +12,6 @@ export const createUserSchema = z.object({
   mobileNumber: z.string().regex(/^[0-9]{10,15}$/),
 
   roleId: z.string().uuid(),
-  tenantId: z.string().uuid(),
 });
 
 export const updateUserSchema = z
@@ -55,4 +54,15 @@ export const listUsersQuerySchema = z.object({
 
 export const hierarchyParamSchema = z.object({
   id: z.string().uuid(),
+});
+
+export const assignUserPermissionsSchema = z.object({
+  permissions: z
+    .array(
+      z.object({
+        permissionId: z.string().uuid('Invalid permission id'),
+        effect: z.enum(['ALLOW', 'DENY']),
+      }),
+    )
+    .min(1, 'At least one permission is required'),
 });

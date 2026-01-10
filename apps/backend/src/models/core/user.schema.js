@@ -10,7 +10,7 @@ import {
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 
-import { roleTable, tenantsTable } from './index.js';
+import { roleTable, tenantsTable, usersTable as self } from './index.js';
 
 export const usersTable = mysqlTable(
   'users',
@@ -44,19 +44,18 @@ export const usersTable = mysqlTable(
 
     refreshTokenHash: text('refresh_token_hash'),
     passwordResetTokenHash: text('password_reset_token_hash'),
-    passwordResetTokenExpiry: timestamp('password_reset_token_expiry').default(
-      null,
-    ),
+    passwordResetTokenExpiry: timestamp('password_reset_token_expiry'),
 
     actionReason: varchar('action_reason', { length: 500 }),
     actionedAt: timestamp('actioned_at'),
     deletedAt: timestamp('deleted_at'),
 
-    parentId: varchar('parent_id', { length: 36 }),
+    /** 🔑 HIERARCHY */
+    ownerUserId: varchar('owner_user_id', { length: 36 }),
 
-    createdByEmployeeId: varchar('created_by_employee_id', {
-      length: 36,
-    }),
+    /** 🧾 AUDIT */
+    createdByUserId: varchar('created_by_user_id', { length: 36 }),
+    createdByEmployeeId: varchar('created_by_employee_id', { length: 36 }),
 
     tenantId: varchar('tenant_id', { length: 36 }).notNull(),
 
@@ -71,18 +70,27 @@ export const usersTable = mysqlTable(
       foreignColumns: [roleTable.id],
     }),
 
-    userParentFk: foreignKey({
-      name: 'user_parent_fk',
-      columns: [table.parentId],
-      foreignColumns: [table.id],
-    }),
-
     userTenantFk: foreignKey({
       name: 'user_tenant_fk',
       columns: [table.tenantId],
       foreignColumns: [tenantsTable.id],
     }),
 
+    /** OWNER (Hierarchy) */
+    userOwnerFk: foreignKey({
+      name: 'user_owner_fk',
+      columns: [table.ownerUserId],
+      foreignColumns: [self.id],
+    }),
+
+    /** CREATED BY USER (Audit) */
+    userCreatedByUserFk: foreignKey({
+      name: 'user_created_by_user_fk',
+      columns: [table.createdByUserId],
+      foreignColumns: [self.id],
+    }),
+
+    /** UNIQUE CONSTRAINTS */
     uniqUserNumber: uniqueIndex('uniq_user_number').on(table.userNumber),
 
     uniqUserEmail: uniqueIndex('uniq_user_email').on(
@@ -95,11 +103,12 @@ export const usersTable = mysqlTable(
       table.mobileNumber,
     ),
 
+    /** INDEXES */
     idxUserTenantStatus: index('idx_user_tenant_status').on(
       table.tenantId,
       table.userStatus,
     ),
 
-    idxUserParent: index('idx_user_parent').on(table.parentId),
+    idxUserOwner: index('idx_user_owner').on(table.ownerUserId),
   }),
 );
