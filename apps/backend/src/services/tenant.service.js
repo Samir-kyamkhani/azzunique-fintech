@@ -230,19 +230,33 @@ class TenantService {
   static async update(id, payload) {
     const tenant = await this.getById(id);
 
+    const updatedFields = {};
+
+    Object.keys(payload).forEach((key) => {
+      if (payload[key] !== tenant[key]) {
+        updatedFields[key] = payload[key];
+      }
+    });
+
+    if (payload.tenantStatus) {
+      updatedFields.tenantStatus = payload.tenantStatus;
+      updatedFields.actionReason =
+        payload.tenantStatus === 'ACTIVE' ? null : payload.actionReason;
+      updatedFields.actionedAt =
+        payload.tenantStatus === 'ACTIVE' ? null : new Date();
+    }
+
+    updatedFields.updatedAt = new Date();
+
     await db
       .update(tenantsTable)
-      .set({
-        ...payload,
-        tenantStatus: payload.tenantStatus,
-        actionReason:
-          payload.tenantStatus === 'ACTIVE' ? null : payload.actionReason,
-        actionedAt: payload.tenantStatus === 'ACTIVE' ? null : new Date(),
-        updatedAt: new Date(),
-      })
+      .set(updatedFields)
       .where(eq(tenantsTable.id, id));
 
-    return this.getById(id);
+    return {
+      id,
+      ...updatedFields,
+    };
   }
 }
 

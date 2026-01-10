@@ -12,10 +12,10 @@ export const useCreateTenant = () =>
   });
 
 /* ================= UPDATE ================= */
-export const useUpdateTenant = (tenantId) =>
+export const useUpdateTenant = () =>
   useMutation({
-    mutationFn: async (payload) =>
-      apiClient(`/tenants/${tenantId}`, {
+    mutationFn: async ({ id, payload }) =>
+      apiClient(`/tenants/${id}`, {
         method: "PUT",
         body: JSON.stringify(payload),
       }),

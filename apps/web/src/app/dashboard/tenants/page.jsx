@@ -1,4 +1,4 @@
-import TenantsClient from "@/components/client/tenants/TenantsClient";
+import TenantsClient from "@/components/client/TenantsClient";
 
 export default function Page() {
   return <TenantsClient />;
