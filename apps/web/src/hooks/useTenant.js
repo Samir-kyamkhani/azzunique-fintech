@@ -21,15 +21,6 @@ export const useUpdateTenant = () =>
       }),
   });
 
-/* ================= DELETE ================= */
-export const useDeleteTenant = () =>
-  useMutation({
-    mutationFn: async (tenantId) =>
-      apiClient(`/tenants/${tenantId}`, {
-        method: "DELETE",
-      }),
-  });
-
 /* ================= GET BY ID ================= */
 export const useTenantById = (tenantId) =>
   useQuery({
