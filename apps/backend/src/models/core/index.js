@@ -34,3 +34,4 @@ export * from './refund.schema.js';
 export * from './commissionEarning.schema.js';
 export * from './roleCommissionSetting.schema.js';
 export * from './userCommissionSetting.schema.js';
+export * from './roleHierarchy.schema.js';

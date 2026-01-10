@@ -43,50 +43,38 @@ export const createTenantSchema = z
 
 export const updateTenantSchema = z
   .object({
-    tenantName: z
-      .string()
-      .min(3, 'Tenant name must be at least 3 characters')
-      .optional(),
-
-    tenantLegalName: z
-      .string()
-      .min(3, 'Tenant legal name must be at least 3 characters')
-      .optional(),
+    tenantName: z.string().min(3).optional(),
+    tenantLegalName: z.string().min(3).optional(),
 
     tenantType: z
       .enum(['PROPRIETORSHIP', 'PARTNERSHIP', 'PRIVATE_LIMITED'])
       .optional(),
 
-    userType: z.enum(['AZZUNIQUE', 'RESELLER', 'WHITELABEL']).optional(),
-
     tenantStatus: z
       .enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'DELETED'])
       .optional(),
+
     actionReason: z.string().max(255).optional(),
 
-    tenantEmail: z.string().email('Invalid tenant email').optional(),
-
+    tenantEmail: z.string().email().optional(),
     tenantWhatsapp: z
       .string()
-      .regex(/^[0-9]{10,15}$/, 'Invalid WhatsApp number')
+      .regex(/^[0-9]{10,15}$/)
       .optional(),
-
     tenantMobileNumber: z
       .string()
-      .regex(/^[0-9]{10,15}$/, 'Invalid mobile number')
+      .regex(/^[0-9]{10,15}$/)
       .optional(),
   })
   .superRefine((data, ctx) => {
     if (
-      (data.tenantStatus === 'INACTIVE' ||
-        data.tenantStatus === 'SUSPENDED' ||
-        data.tenantStatus === 'DELETED') &&
+      ['INACTIVE', 'SUSPENDED', 'DELETED'].includes(data.tenantStatus) &&
       !data.actionReason
     ) {
       ctx.addIssue({
         path: ['actionReason'],
         message:
-          'Action reason is required when status is INACTIVE or SUSPENDED or DELETED',
+          'Action reason is required when status is INACTIVE, SUSPENDED or DELETED',
         code: z.ZodIssueCode.custom,
       });
     }

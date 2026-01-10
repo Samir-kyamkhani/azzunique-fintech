@@ -1,5 +1,13 @@
-import { roleTable, tenantsTable, usersTable } from '../models/core/index.js';
-import { randomUUID } from 'crypto';
+import {
+  permissionTable,
+  rolePermissionTable,
+  roleHierarchyTable,
+  roleTable,
+  tenantsTable,
+  userPermissionTable,
+  usersTable,
+} from '../models/core/index.js';
+import { randomUUID } from 'node:crypto';
 import {
   encrypt,
   generateNumber,
@@ -12,6 +20,7 @@ import { eq, and, or, desc, isNull, like, inArray, ne, sql } from 'drizzle-orm';
 import { eventBus } from '../events/events.js';
 import { EVENTS } from '../events/events.constants.js';
 import s3Service from '../lib/S3Service.js';
+import { resolvePermissions } from './permission.resolver.js';
 
 class UserService {
   async create(data, actor) {
@@ -21,100 +30,116 @@ class UserService {
       .where(eq(roleTable.id, data.roleId))
       .limit(1);
 
-    if (!role) {
-      throw ApiError.badRequest('Invalid role ID');
+    if (!role) throw ApiError.badRequest('Invalid role ID');
+
+    const [actorRole] = await db
+      .select({ isSystem: roleTable.isSystem })
+      .from(roleTable)
+      .where(eq(roleTable.id, actor.roleId))
+      .limit(1);
+
+    if (!actorRole) throw ApiError.forbidden('Invalid actor role');
+
+    if (role.isSystem && !actorRole.isSystem) {
+      throw ApiError.forbidden(
+        'Only system users can create system-level users',
+      );
     }
 
-    if (role.roleCode === 'AZZUNIQUE') {
-      const [existingAzzUnique] = await db
-        .select()
-        .from(usersTable)
-        .where(eq(usersTable.roleId, role.id))
-        .limit(1);
-
-      if (existingAzzUnique) {
-        throw ApiError.badRequest(
-          'AZZUNIQUE user already exists in the system',
+    if (!actorRole.isSystem) {
+      const allowedRoles = await db
+        .select({ childRoleId: roleHierarchyTable.childRoleId })
+        .from(roleHierarchyTable)
+        .where(
+          and(
+            eq(roleHierarchyTable.parentRoleId, actor.roleId),
+            eq(roleHierarchyTable.tenantId, actor.tenantId),
+          ),
         );
+
+      if (!allowedRoles.some((r) => r.childRoleId === data.roleId)) {
+        throw ApiError.forbidden('You cannot create a user with this role');
       }
     }
 
-    const [existingUser] = await db
-      .select()
+    const isTenantOwner = actor.isTenantOwner === true;
+    const tenantId = isTenantOwner ? actor.ownedTenantId : actor.tenantId;
+
+    if (!tenantId) {
+      throw ApiError.forbidden('Tenant context missing');
+    }
+
+    const [tenant] = await db
+      .select({ id: tenantsTable.id })
+      .from(tenantsTable)
+      .where(eq(tenantsTable.id, tenantId))
+      .limit(1);
+
+    if (!tenant) {
+      throw ApiError.badRequest('Invalid tenant');
+    }
+
+    // 5️⃣ Duplicate check
+    const [exists] = await db
+      .select({ id: usersTable.id })
       .from(usersTable)
       .where(
         and(
+          eq(usersTable.tenantId, tenantId),
           or(
             eq(usersTable.email, data.email),
             eq(usersTable.mobileNumber, data.mobileNumber),
           ),
-          eq(usersTable.tenantId, data.tenantId),
         ),
       )
       .limit(1);
 
-    if (existingUser) {
-      throw ApiError.badRequest(
-        'User with this email or mobile number already exists',
-      );
+    if (exists) {
+      throw ApiError.conflict('User already exists in this tenant');
     }
 
-    const [tenant] = await db
-      .select()
-      .from(tenantsTable)
-      .where(eq(tenantsTable.id, data.tenantId))
-      .limit(1);
+    const password = generatePassword();
+    const pin = generateTransactionPin();
 
-    if (!tenant) {
-      throw ApiError.badRequest('Invalid tenant ID');
-    }
+    const userId = randomUUID();
 
-    const generatedPassword = generatePassword();
-
-    const generatedTransactionPin = generateTransactionPin();
-    const passwordHash = encrypt(generatedPassword);
-    const transactionPinHash = encrypt(generatedTransactionPin);
-
-    const userPayload = {
-      id: randomUUID(),
+    const payload = {
+      id: userId,
       userNumber: generateNumber('USR'),
       ...data,
-      passwordHash,
-      transactionPinHash,
-      parentId: actor.type === 'USER' ? actor.id : null,
+      tenantId,
+      roleId: data.roleId,
+      passwordHash: encrypt(password),
+      transactionPinHash: encrypt(pin),
+      ownerUserId: actor.isTenantOwner ? actor.id : actor.ownerUserId,
+
+      createdByUserId: actor.type === 'USER' ? actor.id : null,
       createdByEmployeeId: actor.type === 'EMPLOYEE' ? actor.id : null,
+
       userStatus: 'INACTIVE',
-      actionReason:
-        'Kindly contact the administrator to have your account activated.',
       isKycVerified: false,
+      actionReason: 'Kindly contact the administrator to activate your account',
+
       createdAt: new Date(),
       updatedAt: new Date(),
     };
 
     // Create wallet for state_head, master_distributer, distributer, reatiler user
 
-    // Send credentials email
-    const sentMail = eventBus.emit(EVENTS.USER_CREATED, {
-      userId: userPayload.id,
-      userNumber: userPayload.userNumber,
-      transactionPin: generatedTransactionPin,
-      password: generatedPassword,
-      tenantId: actor.tenantId,
+    // 7️⃣ Send credentials
+    const sent = eventBus.emit(EVENTS.USER_CREATED, {
+      userId,
+      userNumber: payload.userNumber,
+      password,
+      transactionPin: pin,
+      tenantId,
     });
 
-    if (sentMail) {
-      await db.insert(usersTable).values(userPayload);
-    } else {
-      throw ApiError.internal('Failed to send user credentials.');
-    }
+    if (!sent) throw ApiError.internal('Failed to send credentials');
 
-    const [newUser] = await db
-      .select()
-      .from(usersTable)
-      .where(eq(usersTable.id, userPayload.id))
-      .limit(1);
+    await db.insert(usersTable).values(payload);
 
-    return newUser;
+    return this.findOne(userId, actor);
   }
 
   async findAll(query = {}, actor) {
@@ -123,8 +148,8 @@ class UserService {
     const offset = (page - 1) * limit;
 
     const conditions = [
-      eq(tenantsTable.parentTenantId, actor.tenantId),
-      eq(usersTable.parentId, actor.id),
+      eq(usersTable.tenantId, actor.tenantId),
+      eq(usersTable.ownerUserId, actor.id),
     ];
 
     if (query.status) {
@@ -171,7 +196,10 @@ class UserService {
     });
 
     const rows = await db
-      .select()
+      .select({
+        users: usersTable,
+        tenants: tenantsTable,
+      })
       .from(usersTable)
       .leftJoin(tenantsTable, eq(usersTable.tenantId, tenantsTable.id))
       .where(and(...conditions))
@@ -179,24 +207,82 @@ class UserService {
       .limit(limit)
       .offset(offset);
 
+    const userIds = rows.map((r) => r.users.id);
+    const roleIds = [...new Set(rows.map((r) => r.users.roleId))];
+
+    const rolePermissions = await db
+      .select({
+        roleId: rolePermissionTable.roleId,
+        permissionId: permissionTable.id,
+        resource: permissionTable.resource,
+        action: permissionTable.action,
+      })
+      .from(rolePermissionTable)
+      .leftJoin(
+        permissionTable,
+        eq(permissionTable.id, rolePermissionTable.permissionId),
+      )
+      .where(inArray(rolePermissionTable.roleId, roleIds));
+
+    const userPermissions = await db
+      .select({
+        userId: userPermissionTable.userId,
+        permissionId: permissionTable.id,
+        resource: permissionTable.resource,
+        action: permissionTable.action,
+        effect: userPermissionTable.effect,
+      })
+      .from(userPermissionTable)
+      .leftJoin(
+        permissionTable,
+        eq(permissionTable.id, userPermissionTable.permissionId),
+      )
+      .where(inArray(userPermissionTable.userId, userIds));
+
+    const rolePermMap = new Map();
+    rolePermissions.forEach((p) => {
+      if (!rolePermMap.has(p.roleId)) rolePermMap.set(p.roleId, []);
+      rolePermMap.get(p.roleId).push({
+        id: p.permissionId,
+        resource: p.resource,
+        action: p.action,
+        source: 'ROLE',
+      });
+    });
+
+    const userPermMap = new Map();
+    userPermissions.forEach((p) => {
+      if (!userPermMap.has(p.userId)) userPermMap.set(p.userId, []);
+      userPermMap.get(p.userId).push({
+        id: p.permissionId,
+        resource: p.resource,
+        action: p.action,
+        effect: p.effect,
+        source: 'USER',
+      });
+    });
+
     const tenantMap = {};
 
-    rows.forEach((row) => {
-      const tenantId = row.tenants.id;
-      const user = row.users;
+    rows.forEach(({ users, tenants }) => {
+      const tenantId = tenants.id;
 
       if (!tenantMap[tenantId]) {
         tenantMap[tenantId] = {
-          tenant: row.tenants,
+          tenant: tenants,
           users: [],
         };
       }
 
       tenantMap[tenantId].users.push({
-        ...user,
-        profilePictureUrl: user.profilePicture
-          ? s3Service.buildS3Url(user.profilePicture)
+        ...users,
+        profilePictureUrl: users.profilePicture
+          ? s3Service.buildS3Url(users.profilePicture)
           : null,
+        permissions: [
+          ...(rolePermMap.get(users.roleId) || []),
+          ...(userPermMap.get(users.id) || []),
+        ],
       });
     });
 
@@ -212,21 +298,73 @@ class UserService {
   }
 
   async findOne(id, actor) {
-    const [user] = await db
-      .select()
+    const [row] = await db
+      .select({
+        users: usersTable,
+        tenants: tenantsTable,
+      })
       .from(usersTable)
-      .where(and(eq(usersTable.id, id)))
+      .leftJoin(tenantsTable, eq(usersTable.tenantId, tenantsTable.id))
+      .where(
+        and(eq(usersTable.id, id), eq(usersTable.tenantId, actor.tenantId)),
+      )
       .limit(1);
 
-    if (!user) {
+    if (!row) {
       throw ApiError.notFound('User not found');
     }
+
+    const user = row.users;
+
+    const rolePermissions = await db
+      .select({
+        permissionId: permissionTable.id,
+        resource: permissionTable.resource,
+        action: permissionTable.action,
+      })
+      .from(rolePermissionTable)
+      .leftJoin(
+        permissionTable,
+        eq(permissionTable.id, rolePermissionTable.permissionId),
+      )
+      .where(eq(rolePermissionTable.roleId, user.roleId));
+
+    const userPermissions = await db
+      .select({
+        permissionId: permissionTable.id,
+        resource: permissionTable.resource,
+        action: permissionTable.action,
+        effect: userPermissionTable.effect,
+      })
+      .from(userPermissionTable)
+      .leftJoin(
+        permissionTable,
+        eq(permissionTable.id, userPermissionTable.permissionId),
+      )
+      .where(eq(userPermissionTable.userId, user.id));
+
+    const permissions = [
+      ...rolePermissions.map((p) => ({
+        id: p.permissionId,
+        resource: p.resource,
+        action: p.action,
+        source: 'ROLE',
+      })),
+      ...userPermissions.map((p) => ({
+        id: p.permissionId,
+        resource: p.resource,
+        action: p.action,
+        effect: p.effect,
+        source: 'USER',
+      })),
+    ];
 
     return {
       ...user,
       profilePictureUrl: user.profilePicture
         ? s3Service.buildS3Url(user.profilePicture)
         : null,
+      permissions,
     };
   }
 
@@ -283,17 +421,15 @@ class UserService {
         throw ApiError.badRequest('Invalid role ID');
       }
 
-      if (role.roleCode === 'AZZUNIQUE') {
-        const [existingAzzUnique] = await db
-          .select()
+      if (role.isSystem) {
+        const [existingSystemUser] = await db
+          .select({ id: usersTable.id })
           .from(usersTable)
           .where(eq(usersTable.roleId, role.id))
           .limit(1);
 
-        if (existingAzzUnique) {
-          throw ApiError.badRequest(
-            'AZZUNIQUE user already exists in the system',
-          );
+        if (existingSystemUser) {
+          throw ApiError.badRequest('System role user already exists');
         }
       }
     }
@@ -347,28 +483,26 @@ class UserService {
     const limit = query.limit ? parseInt(query.limit, 10) : 20;
     const offset = (page - 1) * limit;
 
-    const fetchChildrenTree = async (parentId) => {
-      const conditions = [
-        inArray(usersTable.parentId, [parentId]),
-        isNull(usersTable.deletedAt),
-      ];
-
+    const fetchChildrenTree = async (ownerId) => {
       const children = await db
         .select()
         .from(usersTable)
-        .where(and(...conditions))
+        .where(
+          and(
+            eq(usersTable.ownerUserId, ownerId),
+            isNull(usersTable.deletedAt),
+          ),
+        )
         .orderBy(desc(usersTable.createdAt));
 
       if (!children.length) return [];
 
-      const childrenWithSub = await Promise.all(
+      return Promise.all(
         children.map(async (child) => ({
           ...child,
           children: await fetchChildrenTree(child.id),
         })),
       );
-
-      return childrenWithSub;
     };
 
     const descendantsTree = await fetchChildrenTree(userId);
@@ -389,6 +523,78 @@ class UserService {
         children: paginatedChildren,
       },
     };
+  }
+
+  async assignPermissions(userId, permissions, actor) {
+    //  Ensure target user exists & tenant-safe
+    const [targetUser] = await db
+      .select({
+        id: usersTable.id,
+        tenantId: usersTable.tenantId,
+      })
+      .from(usersTable)
+      .where(
+        and(eq(usersTable.id, userId), eq(usersTable.tenantId, actor.tenantId)),
+      )
+      .limit(1);
+
+    if (!targetUser) {
+      throw ApiError.notFound('User not found');
+    }
+
+    //  Prevent self privilege escalation
+    if (actor.id === userId) {
+      throw ApiError.forbidden('You cannot modify your own permissions');
+    }
+
+    const permissionIds = permissions.map((p) => p.permissionId);
+
+    // 2️⃣ Validate permission existence
+    const existing = await db
+      .select({ id: permissionTable.id })
+      .from(permissionTable)
+      .where(inArray(permissionTable.id, permissionIds));
+
+    const existingIds = existing.map((p) => p.id);
+
+    const invalidIds = permissionIds.filter(
+      (pid) => !existingIds.includes(pid),
+    );
+
+    if (invalidIds.length > 0) {
+      throw ApiError.badRequest(
+        `Invalid permission id(s): ${invalidIds.join(', ')}`,
+      );
+    }
+
+    // 3️⃣ Actor permission check
+    const actorPermissions = await resolvePermissions(actor);
+
+    if (!actorPermissions.includes('*')) {
+      const unauthorized = existingIds.filter(
+        (pid) => !actorPermissions.includes(pid),
+      );
+
+      if (unauthorized.length > 0) {
+        throw ApiError.forbidden(
+          'You cannot assign permissions that you do not have',
+        );
+      }
+    }
+
+    // 4️⃣ Replace user overrides atomically
+    await db
+      .delete(userPermissionTable)
+      .where(eq(userPermissionTable.userId, userId));
+
+    await db.insert(userPermissionTable).values(
+      permissions.map((p) => ({
+        id: randomUUID(),
+        userId,
+        permissionId: p.permissionId,
+        effect: p.effect,
+      })),
+    );
   }
 }
 

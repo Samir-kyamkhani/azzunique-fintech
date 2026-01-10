@@ -7,10 +7,12 @@ import { generateNumber } from '../lib/lib.js';
 class TenantService {
   // ================= CREATE =================
   static async create(payload, actor) {
+    // 1️⃣ Actor tenant fetch
     const [currentTenant] = await db
       .select({
         id: tenantsTable.id,
         parentTenantId: tenantsTable.parentTenantId,
+        userType: tenantsTable.userType,
       })
       .from(tenantsTable)
       .where(eq(tenantsTable.id, actor.tenantId))
@@ -20,57 +22,78 @@ class TenantService {
       throw ApiError.notFound('Actor tenant not found');
     }
 
+    // 2️⃣ USER TYPE HIERARCHY CHECK
+    const allowedChildMap = {
+      AZZUNIQUE: ['RESELLER'],
+      RESELLER: ['WHITELABEL'],
+      WHITELABEL: [],
+    };
+
+    const allowedChildren = allowedChildMap[currentTenant.userType] || [];
+
+    if (!allowedChildren.includes(payload.userType)) {
+      throw ApiError.forbidden(
+        `You cannot create ${payload.userType} under ${currentTenant.userType}`,
+      );
+    }
+
+    // 3️⃣ Scope tenant (AZZUNIQUE ke niche sab grouped)
     const scopeTenantId = currentTenant.parentTenantId ?? currentTenant.id;
 
+    // 4️⃣ Duplicate tenant check
     const [existingTenant] = await db
-      .select()
+      .select({ id: tenantsTable.id })
       .from(tenantsTable)
       .where(
         and(
+          eq(tenantsTable.parentTenantId, scopeTenantId),
           or(
             eq(tenantsTable.tenantEmail, payload.tenantEmail),
             eq(tenantsTable.tenantMobileNumber, payload.tenantMobileNumber),
             eq(tenantsTable.tenantWhatsapp, payload.tenantWhatsapp),
           ),
-          eq(tenantsTable.parentTenantId, scopeTenantId),
         ),
       )
       .limit(1);
 
     if (existingTenant) {
       throw ApiError.conflict(
-        'Tenant with this email, mobile number or whatsapp already exists in this tenant group',
+        'Tenant with this email, mobile number or whatsapp already exists',
       );
     }
 
-    if (payload.userType.toUpperCase() === 'AZZUNIQUE') {
-      const existingAzzunique = await db
-        .select()
+    // 5️⃣ AZZUNIQUE singleton check
+    if (payload.userType === 'AZZUNIQUE') {
+      const [azz] = await db
+        .select({ id: tenantsTable.id })
         .from(tenantsTable)
         .where(eq(tenantsTable.userType, 'AZZUNIQUE'))
         .limit(1);
 
-      if (existingAzzunique.length) {
+      if (azz) {
         throw ApiError.conflict('There can be only one AZZUNIQUE tenant');
       }
     }
 
+    // 6️⃣ INSERT TENANT
     await db.insert(tenantsTable).values({
       ...payload,
-      userType: payload.userType.toUpperCase(),
-      tenantType: payload.tenantType.toUpperCase(),
+      tenantNumber: generateNumber('TNT'),
+      userType: payload.userType,
+      tenantType: payload.tenantType,
+      parentTenantId: scopeTenantId,
+      createdByUserId: actor.type === 'USER' ? actor.id : null,
+      createdByEmployeeId: actor.type === 'EMPLOYEE' ? actor.id : null,
       actionedAt: ['INACTIVE', 'SUSPENDED', 'DELETED'].includes(
         payload.tenantStatus,
       )
         ? new Date()
         : null,
-      tenantNumber: generateNumber('TNT'),
-      parentTenantId: scopeTenantId,
-      createdByEmployeeId: actor.type === 'EMPLOYEE' ? actor.id : null,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
 
+    // 7️⃣ RETURN CREATED TENANT
     const [insertedTenant] = await db
       .select()
       .from(tenantsTable)

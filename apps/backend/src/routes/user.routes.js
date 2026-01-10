@@ -9,6 +9,7 @@ import {
   findUser,
   updateUser,
   getAllDescendants,
+  assignUserPermissions,
 } from '../controllers/user.controller.js';
 
 import {
@@ -16,8 +17,11 @@ import {
   updateUserSchema,
   listUsersQuerySchema,
   userIdParamSchema,
+  assignUserPermissionsSchema,
 } from '../validators/user.schema.js';
 import upload from '../middleware/multer.middleware.js';
+import { PermissionMiddleware } from '../middleware/permission.middleware.js';
+import { PermissionsRegistry } from '../lib/permissionsRegistory.js';
 
 const router = Router();
 
@@ -48,6 +52,16 @@ router.get(
   '/:id/descendants',
   validate({ params: userIdParamSchema }),
   asyncHandler(getAllDescendants),
+);
+
+router.post(
+  '/:id/permissions',
+  PermissionMiddleware(PermissionsRegistry.USER.ASSIGN_PERMISSIONS),
+  validate({
+    params: userIdParamSchema,
+    body: assignUserPermissionsSchema,
+  }),
+  asyncHandler(assignUserPermissions),
 );
 
 export default router;

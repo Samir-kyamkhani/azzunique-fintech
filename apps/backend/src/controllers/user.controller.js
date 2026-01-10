@@ -29,3 +29,12 @@ export const getAllDescendants = async (req, res) => {
   const data = await userService.getAllDescendants(req.params.id, req.user);
   res.json(data);
 };
+
+export const assignUserPermissions = async (req, res) => {
+  await userService.assignPermissions(
+    req.params.id,
+    req.body.permissions,
+    req.user,
+  );
+  res.json({ success: true });
+};

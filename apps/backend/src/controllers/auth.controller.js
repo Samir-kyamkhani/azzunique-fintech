@@ -28,3 +28,12 @@ export const logout = async (req, res) => {
     .clearCookie('refreshToken', refreshCookieOptions)
     .json({ data: null, message: 'logout success' });
 };
+
+export const getCurrentUser = async (req, res) => {
+  const user = await authService.getCurrentUser(req.user);
+
+  res.json({
+    data: user,
+    message: 'current user',
+  });
+};
