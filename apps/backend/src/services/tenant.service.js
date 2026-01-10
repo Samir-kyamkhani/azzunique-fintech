@@ -12,7 +12,6 @@ class TenantService {
     const [currentTenant] = await db
       .select({
         id: tenantsTable.id,
-        userType: tenantsTable.userType,
         parentTenantId: tenantsTable.parentTenantId,
         userType: tenantsTable.userType,
       })
@@ -20,7 +19,7 @@ class TenantService {
       .where(eq(tenantsTable.id, actor.tenantId))
       .limit(1);
 
-    if (!actorTenant) {
+    if (!currentTenant) {
       throw ApiError.notFound('Actor tenant not found');
     }
 
@@ -79,7 +78,6 @@ class TenantService {
 
     // 6️⃣ INSERT TENANT
     await db.insert(tenantsTable).values({
-      id,
       ...payload,
       tenantNumber: generateNumber('TNT'),
       userType: payload.userType,
@@ -100,10 +98,15 @@ class TenantService {
     const [insertedTenant] = await db
       .select()
       .from(tenantsTable)
-      .where(eq(tenantsTable.id, id))
+      .where(
+        and(
+          eq(tenantsTable.tenantEmail, payload.tenantEmail),
+          eq(tenantsTable.parentTenantId, scopeTenantId),
+        ),
+      )
       .limit(1);
 
-    return createdTenant;
+    return insertedTenant;
   }
 
   // ================= GET OWN CHILDREN =================
