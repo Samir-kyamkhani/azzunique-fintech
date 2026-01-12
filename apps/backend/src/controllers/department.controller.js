@@ -26,7 +26,7 @@ export const updateDepartment = async (req, res) => {
 
 export const deleteDepartment = async (req, res) => {
   await departmentService.delete(req.params.id, req.user);
-  res.status(204).end();
+  res.json({ success: true });
 };
 
 export const assignDepartmentPermissions = async (req, res) => {

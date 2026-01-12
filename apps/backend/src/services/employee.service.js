@@ -1,4 +1,4 @@
-import { and, desc, eq, or } from 'drizzle-orm';
+import { and, count, desc, eq, like, or, sql } from 'drizzle-orm';
 import { employeesTable } from '../models/core/employee.schema.js';
 import { db } from '../database/core/core-db.js';
 import { ApiError } from '../lib/ApiError.js';
@@ -9,6 +9,7 @@ import { encrypt, generateNumber, generatePassword } from '../lib/lib.js';
 import { eventBus } from '../events/events.js';
 import { EVENTS } from '../events/events.constants.js';
 import s3Service from '../lib/S3Service.js';
+import { smtpConfigTable } from '../models/core/smtpConfig.schema.js';
 
 class EmployeeService {
   // CREATE EMPLOYEE
@@ -31,6 +32,18 @@ class EmployeeService {
 
     if (!department) {
       throw ApiError.badRequest('Invalid department ID');
+    }
+
+    const [smtp] = await db
+      .select()
+      .from(smtpConfigTable)
+      .where(eq(smtpConfigTable.tenantId, actor.tenantId))
+      .limit(1);
+
+    if (!smtp) {
+      throw ApiError.badRequest(
+        'Before creating an employee, please ensure that SMTP is configured.',
+      );
     }
 
     const [existing] = await db
@@ -123,52 +136,70 @@ class EmployeeService {
     };
   }
 
-  // GET ALL EMPLOYEES
+  // GET ALL EMPLOYEES (Aligned with getAllChildren)
   static async findAll(query = {}, actor) {
-    const page = query.page ? parseInt(query.page, 10) : 1;
-    const limit = query.limit ? parseInt(query.limit, 10) : 20;
+    if (!actor?.tenantId) {
+      throw ApiError.badRequest('Tenant context missing');
+    }
+
+    let { search = '', status = 'all', limit = 20, page = 1 } = query;
+
+    limit = Number(limit);
+    page = Number(page);
+    search = search.trim();
+
     const offset = (page - 1) * limit;
 
-    const [tenant] = await db
-      .select({ id: tenantsTable.id })
-      .from(tenantsTable)
-      .where(eq(tenantsTable.id, actor.tenantId))
-      .limit(1);
-
-    if (!tenant) {
-      throw ApiError.badRequest('Invalid tenant ID');
-    }
-
+    /* ================= CONDITIONS ================= */
     const conditions = [eq(employeesTable.tenantId, actor.tenantId)];
 
-    if (query.status) {
-      conditions.push(eq(employeesTable.employeeStatus, query.status));
-    }
-
-    if (query.search) {
-      const searchTerm = `%${query.search}%`;
+    if (search.length > 0) {
       conditions.push(
         or(
-          like(employeesTable.email, searchTerm),
-          like(employeesTable.mobileNumber, searchTerm),
-          like(employeesTable.employeeNumber, searchTerm),
+          like(employeesTable.firstName, `%${search}%`),
+          like(employeesTable.lastName, `%${search}%`),
+          like(employeesTable.email, `%${search}%`),
+          like(employeesTable.mobileNumber, `%${search}%`),
+          like(employeesTable.employeeNumber, `%${search}%`),
         ),
       );
     }
 
-    const rows = await db
+    if (status && status !== 'all' && status !== 'undefined') {
+      conditions.push(eq(employeesTable.employeeStatus, status));
+    }
+
+    /* ================= DATA ================= */
+    const data = await db
       .select()
       .from(employeesTable)
       .where(and(...conditions))
-      .orderBy(desc(employeesTable.createdAt))
       .limit(limit)
-      .offset(offset);
+      .offset(offset)
+      .orderBy(desc(employeesTable.createdAt));
+
+    /* ================= COUNT ================= */
+    const [{ total }] = await db
+      .select({ total: count() })
+      .from(employeesTable)
+      .where(and(...conditions));
+
+    /* ================= NORMALIZE ================= */
+    const rows = data.map((emp) => ({
+      ...emp,
+      profilePictureUrl: emp.profilePicture
+        ? s3Service.buildS3Url(emp.profilePicture)
+        : null,
+    }));
 
     return {
-      ...rows,
-      profilePictureUrl: employee.profilePicture
-        ? s3Service.buildS3Url(employee.profilePicture)
-        : null,
+      data: rows,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
     };
   }
 
@@ -177,13 +208,13 @@ class EmployeeService {
     const existing = await this.getById(id, actor);
 
     // ================= PROFILE PICTURE =================
-    let profilePicture = existing.profilePicture;
+    let profilePicture = existing.profilePictureUrl;
 
     if (file) {
       const uploaded = await s3Service.upload(file.path, 'employee-profile');
 
-      if (existing.profilePicture) {
-        await s3Service.deleteByKey(existing.profilePicture);
+      if (existing.profilePictureUrl) {
+        await s3Service.deleteByKey(existing.profilePictureUrl);
       }
 
       profilePicture = uploaded.key;
