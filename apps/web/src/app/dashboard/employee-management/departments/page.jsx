@@ -1,9 +1,7 @@
-import React from 'react'
+import DepartmentClient from "@/components/client/DepartmentClient";
 
 function page() {
-  return (
-    <div>page</div>
-  )
+  return <DepartmentClient />;
 }
 
-export default page
+export default page;

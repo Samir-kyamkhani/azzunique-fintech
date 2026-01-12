@@ -72,7 +72,7 @@ export default function RowActions({
 
           {onDelete && (
             <>
-              <div className="my-1 h-px bg-border" />
+              <div className="my-1 h-px bg-border border-t " />
               <MenuItem
                 icon={Trash2}
                 label="Delete"

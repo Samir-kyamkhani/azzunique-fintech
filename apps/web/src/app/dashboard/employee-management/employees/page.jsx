@@ -1,3 +1,5 @@
+import EmployeeClient from "@/components/client/EmployeeClient";
+
 export default function page() {
-  return <div>Employees List</div>;
+  return <EmployeeClient />;
 }
