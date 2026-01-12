@@ -22,7 +22,7 @@ export async function seedTenants() {
 
   await db.insert(tenantsTable).values({
     id: tenantId,
-    tenantNumber: generateNumber('TEN-'),
+    tenantNumber: generateNumber('TEN'),
     tenantName: 'Azzunique',
     tenantLegalName: 'Azzunique Private Limited',
     tenantType: 'PRIVATE_LIMITED',

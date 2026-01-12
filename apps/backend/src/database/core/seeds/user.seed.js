@@ -36,7 +36,7 @@ export async function seedUsers(tenantId) {
 
   await db.insert(usersTable).values({
     id: userId,
-    userNumber: generateNumber('USR-'),
+    userNumber: generateNumber('USR'),
     firstName: 'Azzunique',
     lastName: 'User',
     email,
