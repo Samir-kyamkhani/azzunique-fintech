@@ -6,6 +6,9 @@ import serverDetailReducer from "./serverDetailSlice";
 import tenantDomainReducer from "./tenantDomainSlice";
 import smtpConfigReducer from "./smtpConfigSlice";
 import tenantWebsiteReducer from "./tenantWebsiteSlice";
+import tenantSocialMediaReducer from "./tenantSocialMediaSlice";
+import departmentReducer from "./departmentSlice";
+import employeeReducer from "./employeeSlice";
 
 export const store = configureStore({
   reducer: {
@@ -16,5 +19,8 @@ export const store = configureStore({
     tenantDomain: tenantDomainReducer,
     smtpConfig: smtpConfigReducer,
     tenantWebsite: tenantWebsiteReducer,
+    tenantSocialMedia: tenantSocialMediaReducer,
+    department: departmentReducer,
+    employee: employeeReducer,
   },
 });

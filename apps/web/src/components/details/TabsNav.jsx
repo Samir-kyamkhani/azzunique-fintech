@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 export default function TabsNav({ tabs, basePath }) {
   const router = useRouter();
@@ -10,20 +11,25 @@ export default function TabsNav({ tabs, basePath }) {
     <div className="border-b border-border">
       <nav className="flex gap-6">
         {tabs.map((tab) => {
-          const href = `${basePath}/${tab}`;
+          const href = `${basePath}/${tab.value}`;
           const active = pathname === href;
+          const Icon = tab.icon;
 
           return (
             <button
-              key={tab}
+              key={tab.value}
               onClick={() => router.push(href)}
-              className={`pb-2 text-sm font-medium border-b-2 cursor-pointer ${
+              className={cn(
+                "pb-2 text-sm font-medium border-b-2 flex items-center gap-2 transition cursor-pointer",
                 active
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
+              )}
             >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {/* Icon optional */}
+              {Icon && <Icon size={16} />}
+
+              {tab.label}
             </button>
           );
         })}

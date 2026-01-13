@@ -15,7 +15,7 @@ export class TenantSocialMediaService {
       .limit(1);
 
     if (!tenantsWebsites) {
-      throw ApiError('Not Found Tenant website');
+      throw ApiError.notFound('Not Found Tenant website');
     }
 
     const [row] = await db
@@ -30,7 +30,7 @@ export class TenantSocialMediaService {
   // ================= UPSERT =================
   static async upsert(payload, actor) {
     if (!actor.tenantId) {
-      throw ApiError.badRequest('Tenant context missing');
+      throw new ApiError.badRequest('Tenant context missing');
     }
 
     // ensure website belongs to tenant
@@ -66,14 +66,19 @@ export class TenantSocialMediaService {
     }
 
     // ---------- UPDATE ----------
+    const updatedAt = new Date();
+
     await db
       .update(tenantSocialMediaTable)
       .set({
         ...payload,
-        updatedAt: new Date(),
+        updatedAt,
       })
       .where(eq(tenantSocialMediaTable.tenantWebsiteId, website.id));
 
-    return this.getById(website.id);
+    return {
+      ...payload,
+      updatedAt,
+    };
   }
 }

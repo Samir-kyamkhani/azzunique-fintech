@@ -21,7 +21,11 @@ const router = Router();
 router.use(AuthMiddleware);
 
 // CREATE EMPLOYEE
-router.post('/', validate(createEmployeeSchema), asyncHandler(createEmployee));
+router.post(
+  '/',
+  validate({ body: createEmployeeSchema }),
+  asyncHandler(createEmployee),
+);
 
 // GET ALL EMPLOYEES (by tenant ID)
 router.get('/', asyncHandler(getAllEmployees));

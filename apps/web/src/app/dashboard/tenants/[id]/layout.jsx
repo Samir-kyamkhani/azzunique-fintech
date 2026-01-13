@@ -1,7 +1,16 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Building2, Users, Key } from "lucide-react";
+import {
+  ArrowLeft,
+  Building2,
+  Users,
+  Key,
+  LayoutDashboard,
+  Globe,
+  Activity,
+  Settings,
+} from "lucide-react";
 
 import { useTenantById } from "@/hooks/useTenant";
 import Button from "@/components/ui/Button";
@@ -57,10 +66,30 @@ export default function TenantLayout({ children }) {
       />
 
       <TabsNav
-        tabs={["overview", "domain", "activity", "settings"]}
+        tabs={[
+          {
+            label: "Overview",
+            value: "overview",
+            icon: LayoutDashboard,
+          },
+          {
+            label: "Domain",
+            value: "domain",
+            icon: Globe,
+          },
+          {
+            label: "Activity",
+            value: "activity",
+            icon: Activity,
+          },
+          {
+            label: "Settings",
+            value: "settings",
+            icon: Settings,
+          },
+        ]}
         basePath={`/dashboard/tenants/${id}`}
       />
-
       {children}
     </div>
   );

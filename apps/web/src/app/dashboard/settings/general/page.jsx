@@ -1,4 +1,4 @@
-import TenantWebsiteClient from "@/components/client/TenantWebsiteClient";
+import SettingsAccordion from "@/components/SettingsAccordion";
 
 export const metadata = {
   title: "Setting General",
@@ -6,5 +6,5 @@ export const metadata = {
 };
 
 export default async function Page() {
-  return <TenantWebsiteClient />;
+  return <SettingsAccordion />
 }
