@@ -26,6 +26,7 @@ class RoleService {
       throw ApiError.forbidden('Invalid actor role');
     }
 
+    // Role code uniqueness
     const [existingCode] = await db
       .select({ id: roleTable.id })
       .from(roleTable)
@@ -41,18 +42,22 @@ class RoleService {
       throw ApiError.conflict('Role code already exists');
     }
 
-    const [{ maxLevel }] = await db
-      .select({
-        maxLevel: sql`MAX(${roleTable.roleLevel})`.mapWith(Number),
-      })
+    const newRoleLevel = actorRole.roleLevel + 1;
+
+    const [levelExists] = await db
+      .select({ id: roleTable.id })
       .from(roleTable)
-      .where(eq(roleTable.tenantId, actor.tenantId));
+      .where(
+        and(
+          eq(roleTable.tenantId, actor.tenantId),
+          eq(roleTable.roleLevel, newRoleLevel),
+        ),
+      )
+      .limit(1);
 
-    const nextRoleLevel = maxLevel === null ? 0 : maxLevel + 1;
-
-    if (actorRole.roleLevel >= nextRoleLevel) {
-      throw ApiError.forbidden(
-        'You cannot create a role with equal or higher power',
+    if (levelExists) {
+      throw ApiError.conflict(
+        `Role level ${newRoleLevel} already exists in this tenant`,
       );
     }
 
@@ -64,7 +69,7 @@ class RoleService {
       roleName: payload.roleName,
       roleDescription: payload.roleDescription,
 
-      roleLevel: nextRoleLevel,
+      roleLevel: newRoleLevel,
 
       tenantId: actor.tenantId,
       isSystem: false,

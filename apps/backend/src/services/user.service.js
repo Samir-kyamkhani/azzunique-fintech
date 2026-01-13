@@ -55,10 +55,23 @@ class UserService {
       );
     }
 
+    const canOverrideTenant =
+      actorRole.roleLevel === 0 || actorRole.roleLevel === 1;
+
+    const resolvedTenantId = canOverrideTenant
+      ? (data.tenantId ?? actor.tenantId)
+      : actor.tenantId;
+
+    if (canOverrideTenant && !resolvedTenantId) {
+      throw ApiError.badRequest(
+        'tenantId is required for AZZUNIQUE and RESELLER',
+      );
+    }
+
     const [tenant] = await db
       .select({ id: tenantsTable.id })
       .from(tenantsTable)
-      .where(eq(tenantsTable.id, data.tenantId))
+      .where(eq(tenantsTable.id, resolvedTenantId))
       .limit(1);
 
     if (!tenant) {
@@ -70,19 +83,21 @@ class UserService {
       .from(usersTable)
       .where(
         and(
-          eq(usersTable.tenantId, data.tenantId),
-          isNull(usersTable.ownerUserId), // owner user
+          eq(usersTable.tenantId, resolvedTenantId),
+          isNull(usersTable.ownerUserId),
         ),
       )
       .limit(1);
 
     const isCreatingFirstOwner = !existingOwner;
 
-    const isSameTenant = actor.ownedTenantId === data.tenantId;
+    const isSameTenant = actor.ownedTenantId === resolvedTenantId;
 
-    // Parent tenant creating first owner of child tenant
     const isParentCreatingFirstOwner =
-      actor.isTenantOwner && !isSameTenant && isCreatingFirstOwner;
+      actor.isTenantOwner === true &&
+      !isSameTenant &&
+      isCreatingFirstOwner &&
+      actorRole.roleLevel <= 1; // AZZUNIQUE / RESELLER only
 
     if (!isSameTenant && !isParentCreatingFirstOwner) {
       throw ApiError.forbidden('You can create users only for your own tenant');
@@ -93,7 +108,7 @@ class UserService {
       .from(usersTable)
       .where(
         and(
-          eq(usersTable.tenantId, data.tenantId),
+          eq(usersTable.tenantId, resolvedTenantId),
           or(
             eq(usersTable.email, data.email),
             eq(usersTable.mobileNumber, data.mobileNumber),
@@ -101,6 +116,8 @@ class UserService {
         ),
       )
       .limit(1);
+
+    console.log(exists);
 
     if (exists) {
       throw ApiError.conflict('User already exists in this tenant');
@@ -121,7 +138,7 @@ class UserService {
       email: data.email,
       mobileNumber: data.mobileNumber,
 
-      tenantId: data.tenantId,
+      tenantId: resolvedTenantId,
       roleId: data.roleId,
 
       passwordHash: encrypt(password),
@@ -140,15 +157,12 @@ class UserService {
       updatedAt: new Date(),
     };
 
-    // Create wallet for state_head, master_distributer, distributer, reatiler user
-
-    // 7️⃣ Send credentials
     const sent = eventBus.emit(EVENTS.USER_CREATED, {
       userId,
       userNumber: payload.userNumber,
       password,
       transactionPin: pin,
-      tenantId: data.tenantId,
+      tenantId: resolvedTenantId,
     });
 
     if (!sent) {
