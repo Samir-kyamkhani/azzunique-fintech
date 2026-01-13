@@ -8,6 +8,10 @@ import { employeesTable } from '../models/core/employee.schema.js';
 class TenantService {
   // ================= CREATE =================
   static async create(payload, actor) {
+    if (!actor.isTenantOwner) {
+      throw ApiError.forbidden('Only tenant owner can create tenants');
+    }
+
     // 1️⃣ Actor tenant fetch
     const [currentTenant] = await db
       .select({
@@ -23,23 +27,29 @@ class TenantService {
       throw ApiError.notFound('Actor tenant not found');
     }
 
-    // 2️⃣ USER TYPE HIERARCHY CHECK
+    // 2️⃣ Hierarchy check
     const allowedChildMap = {
       AZZUNIQUE: ['RESELLER'],
       RESELLER: ['WHITELABEL'],
       WHITELABEL: [],
     };
 
-    const allowedChildren = allowedChildMap[currentTenant.userType] || [];
-
-    if (!allowedChildren.includes(payload.userType)) {
+    if (!allowedChildMap[currentTenant.userType]?.includes(payload.userType)) {
       throw ApiError.forbidden(
         `You cannot create ${payload.userType} under ${currentTenant.userType}`,
       );
     }
 
-    // 3️⃣ Scope tenant (AZZUNIQUE ke niche sab grouped)
-    const scopeTenantId = currentTenant.parentTenantId ?? currentTenant.id;
+    if (
+      currentTenant.userType === 'AZZUNIQUE' &&
+      payload.userType === 'WHITELABEL'
+    ) {
+      throw ApiError.forbidden(
+        'AZZUNIQUE cannot directly create WHITELABEL. Create RESELLER first.',
+      );
+    }
+
+    const scopeTenantId = currentTenant.id;
 
     // 4️⃣ Duplicate tenant check
     const [existingTenant] = await db
@@ -63,7 +73,7 @@ class TenantService {
       );
     }
 
-    // 5️⃣ AZZUNIQUE singleton check
+    // 5️⃣ AZZUNIQUE singleton
     if (payload.userType === 'AZZUNIQUE') {
       const [azz] = await db
         .select({ id: tenantsTable.id })
@@ -76,12 +86,10 @@ class TenantService {
       }
     }
 
-    // 6️⃣ INSERT TENANT
+    // 6️⃣ INSERT
     await db.insert(tenantsTable).values({
       ...payload,
       tenantNumber: generateNumber('TNT'),
-      userType: payload.userType,
-      tenantType: payload.tenantType,
       parentTenantId: scopeTenantId,
       createdByUserId: actor.type === 'USER' ? actor.id : null,
       createdByEmployeeId: actor.type === 'EMPLOYEE' ? actor.id : null,
@@ -94,7 +102,7 @@ class TenantService {
       updatedAt: new Date(),
     });
 
-    // 7️⃣ RETURN CREATED TENANT
+    // 7️⃣ RETURN
     const [insertedTenant] = await db
       .select()
       .from(tenantsTable)
@@ -111,6 +119,10 @@ class TenantService {
 
   // ================= GET OWN CHILDREN =================
   static async getAllChildren(actor, query = {}) {
+    if (!actor.isTenantOwner) {
+      throw ApiError.forbidden('Only tenant owner can view child tenants');
+    }
+
     let { search = '', status = 'all', limit = 20, page = 1 } = query;
     limit = Number(limit);
     page = Number(page);
@@ -162,7 +174,7 @@ class TenantService {
   // ================= GET CHILDREN + GRANDCHILDREN =================
   static async getTenantDescendants(params, actor, query = {}) {
     const { tenantId } = params;
-    const { search = '', status = 'all', limit = 20, page = 1 } = query;
+    let { search = '', status = 'all', limit = 20, page = 1 } = query;
     limit = Number(limit);
     page = Number(page);
     search = search.trim();
@@ -173,10 +185,18 @@ class TenantService {
     const [tenant] = await db
       .select()
       .from(tenantsTable)
-      .where(eq(tenantsTable.id, tenantId));
+      .where(eq(tenantsTable.id, tenantId))
+      .limit(1);
 
     if (!tenant) {
       throw ApiError.notFound('Tenant not found');
+    }
+
+    if (
+      tenant.id !== actor.tenantId &&
+      tenant.parentTenantId !== actor.tenantId
+    ) {
+      throw ApiError.forbidden('You are not allowed to view this tenant');
     }
 
     // ----------------- STEP 1: Fetch direct children -----------------
@@ -212,7 +232,7 @@ class TenantService {
   }
 
   // ================= GET BY ID =================
-  static async getById(id) {
+  static async getById(id, actor) {
     const [result] = await db
       .select({
         tenant: tenantsTable,
@@ -230,6 +250,13 @@ class TenantService {
       throw ApiError.notFound('Tenant not found');
     }
 
+    if (
+      result.tenant.id !== actor.tenantId &&
+      result.tenant.parentTenantId !== actor.tenantId
+    ) {
+      throw ApiError.forbidden('Access denied');
+    }
+
     return {
       ...result.tenant,
       employee: {
@@ -240,6 +267,10 @@ class TenantService {
 
   // ================= UPDATE =================
   static async update(id, payload) {
+    if (!actor.isTenantOwner || actor.tenantId !== id) {
+      throw ApiError.forbidden('Only tenant owner can update tenant');
+    }
+
     const tenant = await this.getById(id);
 
     const updatedFields = {};

@@ -19,7 +19,7 @@ export const AuthMiddleware = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
-
+ 
     if (!decoded?.sub || !decoded?.tenantId || !decoded?.type) {
       throw ApiError.unauthorized('Invalid token payload');
     }

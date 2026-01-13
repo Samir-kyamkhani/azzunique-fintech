@@ -4,7 +4,6 @@ import {
   rolePermissionTable,
   permissionTable,
   usersTable,
-  roleHierarchyTable,
 } from '../models/core/index.js';
 import { eq, and, ne, sql, inArray } from 'drizzle-orm';
 import { ApiError } from '../lib/ApiError.js';
@@ -17,12 +16,8 @@ class RoleService {
       throw ApiError.badRequest('Tenant missing');
     }
 
-    delete payload.isSystem;
-    delete payload.tenantId;
-
-    // ROOT USER (AZZUNIQUE) → FULL ACCESS
     const [actorRole] = await db
-      .select({ isSystem: roleTable.isSystem })
+      .select({ roleLevel: roleTable.roleLevel })
       .from(roleTable)
       .where(eq(roleTable.id, actor.roleId))
       .limit(1);
@@ -31,25 +26,7 @@ class RoleService {
       throw ApiError.forbidden('Invalid actor role');
     }
 
-    if (!actorRole.isSystem) {
-      // 🔐 Hierarchy enforcement
-      const allowed = await db
-        .select()
-        .from(roleHierarchyTable)
-        .where(
-          and(
-            eq(roleHierarchyTable.parentRoleId, actor.roleId),
-            eq(roleHierarchyTable.tenantId, actor.tenantId),
-          ),
-        );
-
-      if (!allowed.length) {
-        throw ApiError.forbidden('You cannot create roles');
-      }
-    }
-
-    // Role code uniqueness
-    const [existing] = await db
+    const [existingCode] = await db
       .select({ id: roleTable.id })
       .from(roleTable)
       .where(
@@ -60,18 +37,41 @@ class RoleService {
       )
       .limit(1);
 
-    if (existing) {
-      throw ApiError.conflict('Role code already exists in this tenant');
+    if (existingCode) {
+      throw ApiError.conflict('Role code already exists');
+    }
+
+    const [{ maxLevel }] = await db
+      .select({
+        maxLevel: sql`MAX(${roleTable.roleLevel})`.mapWith(Number),
+      })
+      .from(roleTable)
+      .where(eq(roleTable.tenantId, actor.tenantId));
+
+    const nextRoleLevel = maxLevel === null ? 0 : maxLevel + 1;
+
+    if (actorRole.roleLevel >= nextRoleLevel) {
+      throw ApiError.forbidden(
+        'You cannot create a role with equal or higher power',
+      );
     }
 
     const id = crypto.randomUUID();
 
     await db.insert(roleTable).values({
       id,
-      ...payload,
+      roleCode: payload.roleCode,
+      roleName: payload.roleName,
+      roleDescription: payload.roleDescription,
+
+      roleLevel: nextRoleLevel,
+
       tenantId: actor.tenantId,
+      isSystem: false,
+
       createdByUserId: actor.type === 'USER' ? actor.id : null,
       createdByEmployeeId: actor.type === 'EMPLOYEE' ? actor.id : null,
+
       createdAt: new Date(),
       updatedAt: new Date(),
     });

@@ -1,6 +1,11 @@
 import { db } from '../database/core/core-db.js';
-import { usersTable, employeesTable, roleTable } from '../models/core/index.js';
-import { eq } from 'drizzle-orm';
+import {
+  usersTable,
+  employeesTable,
+  roleTable,
+  tenantsTable,
+} from '../models/core/index.js';
+import { and, eq } from 'drizzle-orm';
 import { generateTokens, hashToken, verifyPassword } from '../lib/lib.js';
 import { ApiError } from '../lib/ApiError.js';
 
@@ -35,12 +40,26 @@ class AuthService {
     }
 
     if (!user.isSystem) {
-      await this.validateOwnerChain(user.id, user.ownerUserId);
+      await this.validateOwnerChain(user.id, user.ownerUserId, user.tenantId);
+    }
+
+    const [tenant] = await db
+      .select({
+        id: tenantsTable.id,
+        userType: tenantsTable.userType,
+      })
+      .from(tenantsTable)
+      .where(eq(tenantsTable.id, user.tenantId))
+      .limit(1);
+
+    if (!tenant) {
+      throw ApiError.unauthorized('Tenant not found');
     }
 
     const tokens = generateTokens({
       sub: user.id,
-      tenantId: user.tenantId,
+      tenantId: tenant.id,
+      tenantType: tenant.userType,
       type: 'USER',
       roleId: user.roleId,
     });
@@ -166,18 +185,30 @@ class AuthService {
     };
   }
 
-  async validateOwnerChain(userId, ownerUserId) {
+  async validateOwnerChain(userId, ownerUserId, tenantId) {
     let currentOwner = ownerUserId;
+    let depth = 0;
 
     while (currentOwner) {
+      if (++depth > 10) {
+        throw ApiError.forbidden('Ownership chain too deep');
+      }
+
       const [owner] = await db
         .select({
           id: usersTable.id,
           ownerUserId: usersTable.ownerUserId,
           userStatus: usersTable.userStatus,
+          isSystem: roleTable.isSystem,
         })
         .from(usersTable)
-        .where(eq(usersTable.id, currentOwner))
+        .leftJoin(roleTable, eq(usersTable.roleId, roleTable.id))
+        .where(
+          and(
+            eq(usersTable.id, currentOwner),
+            eq(usersTable.tenantId, tenantId),
+          ),
+        )
         .limit(1);
 
       if (!owner) {
@@ -188,7 +219,11 @@ class AuthService {
         throw ApiError.forbidden('Owner inactive');
       }
 
-      if (owner.id === owner.ownerUserId) {
+      if (owner.isSystem) {
+        break;
+      }
+
+      if (!owner.ownerUserId) {
         break;
       }
 

@@ -26,7 +26,6 @@ router.use(AuthMiddleware);
 
 router.post(
   '/',
-  PermissionMiddleware(PermissionsRegistry.ROLE.CREATE),
   validate({ body: createRoleSchema }),
   asyncHandler(createRole),
 );

@@ -6,6 +6,7 @@ import {
   foreignKey,
   uniqueIndex,
   index,
+  int,
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 
@@ -18,9 +19,10 @@ export const roleTable = mysqlTable(
       .primaryKey()
       .default(sql`(UUID())`),
 
+    roleLevel: int('role_level').notNull(),
+
     roleCode: varchar('role_code', { length: 50 }).notNull(),
     roleName: varchar('role_name', { length: 100 }).notNull(),
-
     roleDescription: varchar('role_description', { length: 255 }),
 
     tenantId: varchar('tenant_id', { length: 36 }).notNull(),
@@ -58,7 +60,16 @@ export const roleTable = mysqlTable(
       table.roleCode,
     ),
 
-    // Role listing, dropdowns, auth hydration
+    uniqRoleLevelTenant: uniqueIndex('uniq_role_level_tenant').on(
+      table.tenantId,
+      table.roleLevel,
+    ),
+
+    idxRoleTenantLevel: index('idx_role_tenant_level').on(
+      table.tenantId,
+      table.roleLevel,
+    ),
+
     idxRoleTenant: index('idx_role_tenant').on(table.tenantId),
   }),
 );

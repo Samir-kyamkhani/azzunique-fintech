@@ -12,6 +12,7 @@ export const createUserSchema = z.object({
   mobileNumber: z.string().regex(/^[0-9]{10,15}$/),
 
   roleId: z.string().uuid(),
+  tenantId: z.string().uuid(),
 });
 
 export const updateUserSchema = z
