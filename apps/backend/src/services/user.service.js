@@ -342,11 +342,19 @@ class UserService {
 
     const user = row.users;
 
-    // 🔐 OWNERSHIP CHECK
-    if (user.tenantId !== actor.tenantId) {
+    const isSameTenant = user.tenantId === actor.tenantId;
+
+    // Parent tenant owner accessing FIRST OWNER of child tenant
+    const isParentAccessingChildOwner =
+      actor.isTenantOwner === true &&
+      user.ownerUserId === null && // first owner
+      user.tenantId !== actor.tenantId;
+
+    if (!isSameTenant && !isParentAccessingChildOwner) {
       throw ApiError.forbidden('Cross-tenant access denied');
     }
 
+    // If actor is NOT tenant owner, they can access only their own users
     if (!actor.isTenantOwner && user.ownerUserId !== actor.id) {
       throw ApiError.forbidden('You can access only your own users');
     }
