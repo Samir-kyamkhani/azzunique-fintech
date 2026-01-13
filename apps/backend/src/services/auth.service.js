@@ -187,8 +187,13 @@ class AuthService {
 
   async validateOwnerChain(userId, ownerUserId, tenantId) {
     let currentOwner = ownerUserId;
+    let depth = 0;
 
     while (currentOwner) {
+      if (++depth > 10) {
+        throw ApiError.forbidden('Ownership chain too deep');
+      }
+
       const [owner] = await db
         .select({
           id: usersTable.id,

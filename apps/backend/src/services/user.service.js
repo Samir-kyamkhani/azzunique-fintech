@@ -1,7 +1,6 @@
 import {
   permissionTable,
   rolePermissionTable,
-  roleHierarchyTable,
   roleTable,
   tenantsTable,
   userPermissionTable,
@@ -24,18 +23,24 @@ import { resolvePermissions } from './permission.resolver.js';
 
 class UserService {
   async create(data, actor) {
-    const [role] = await db
-      .select()
+    const [targetRole] = await db
+      .select({
+        id: roleTable.id,
+        roleLevel: roleTable.roleLevel,
+      })
       .from(roleTable)
       .where(eq(roleTable.id, data.roleId))
       .limit(1);
 
-    if (!role) {
+    if (!targetRole) {
       throw ApiError.badRequest('Invalid role ID');
     }
 
     const [actorRole] = await db
-      .select({ isSystem: roleTable.isSystem })
+      .select({
+        id: roleTable.id,
+        roleLevel: roleTable.roleLevel,
+      })
       .from(roleTable)
       .where(eq(roleTable.id, actor.roleId))
       .limit(1);
@@ -44,26 +49,10 @@ class UserService {
       throw ApiError.forbidden('Invalid actor role');
     }
 
-    if (role.isSystem && !actorRole.isSystem) {
+    if (actorRole.roleLevel >= targetRole.roleLevel) {
       throw ApiError.forbidden(
-        'Only system users can create system-level users',
+        'You cannot create a user with equal or higher role',
       );
-    }
-
-    if (!actorRole.isSystem) {
-      const allowedRoles = await db
-        .select({ childRoleId: roleHierarchyTable.childRoleId })
-        .from(roleHierarchyTable)
-        .where(
-          and(
-            eq(roleHierarchyTable.parentRoleId, actor.roleId),
-            eq(roleHierarchyTable.tenantId, actor.tenantId),
-          ),
-        );
-
-      if (!allowedRoles.some((r) => r.childRoleId === data.roleId)) {
-        throw ApiError.forbidden('You cannot create a user with this role');
-      }
     }
 
     const [tenant] = await db

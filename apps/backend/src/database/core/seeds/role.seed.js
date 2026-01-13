@@ -9,12 +9,13 @@ export async function seedRoles(tenantId) {
       roleCode: 'AZZUNIQUE',
       roleName: 'Azzunique System Admin',
       roleDescription: 'System administrator with full access',
+      roleLevel: 0, // 🔑 ROOT POWER
       isSystem: true,
     },
   ];
 
   for (const role of roles) {
-    const [existing] = await db
+    const [existingByCode] = await db
       .select({ id: roleTable.id })
       .from(roleTable)
       .where(
@@ -25,9 +26,26 @@ export async function seedRoles(tenantId) {
       )
       .limit(1);
 
-    if (existing) {
+    if (existingByCode) {
       console.log(`⚠️ Role ${role.roleCode} already exists`);
       continue;
+    }
+
+    const [existingByLevel] = await db
+      .select({ id: roleTable.id })
+      .from(roleTable)
+      .where(
+        and(
+          eq(roleTable.roleLevel, role.roleLevel),
+          eq(roleTable.tenantId, tenantId),
+        ),
+      )
+      .limit(1);
+
+    if (existingByLevel) {
+      throw new Error(
+        `❌ roleLevel ${role.roleLevel} already exists for tenant ${tenantId}`,
+      );
     }
 
     await db.insert(roleTable).values({
@@ -35,14 +53,19 @@ export async function seedRoles(tenantId) {
       roleCode: role.roleCode,
       roleName: role.roleName,
       roleDescription: role.roleDescription,
+
+      roleLevel: role.roleLevel,
       tenantId,
-      isSystem: true,
+
+      isSystem: role.isSystem,
+
       createdByUserId: null,
       createdByEmployeeId: null,
+
       createdAt: new Date(),
       updatedAt: new Date(),
     });
 
-    console.log(`✅ Role ${role.roleCode} seeded`);
+    console.log(`✅ Role ${role.roleCode} seeded with level ${role.roleLevel}`);
   }
 }

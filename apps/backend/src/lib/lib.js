@@ -100,7 +100,8 @@ export const verifyPassword = (plainText, encryptedText) => {
 
   try {
     const decrypted = decrypt(encryptedText);
-
+    console.log(decrypted);
+    
     return safeEqual(plainText, decrypted);
   } catch {
     return false;
