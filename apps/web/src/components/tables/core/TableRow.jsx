@@ -1,6 +1,18 @@
 import RowActions from "./RowActions";
 
-export default function TableRow({ columns, row, onView, onEdit, onDelete }) {
+export default function TableRow({
+  columns,
+  row,
+  onView,
+  onEdit,
+  onDelete,
+  onExtraActions = [],
+}) {
+  const resolvedExtraActions = onExtraActions.map((action) => ({
+    ...action,
+    onClick: () => action.onClick(row),
+  }));
+
   return (
     <tr className="border-b border-border hover:bg-accent/50 transition-colors">
       {columns.map((col) => (
@@ -10,6 +22,7 @@ export default function TableRow({ columns, row, onView, onEdit, onDelete }) {
               onView={onView ? () => onView(row) : undefined}
               onEdit={onEdit ? () => onEdit(row) : undefined}
               onDelete={onDelete ? () => onDelete(row) : undefined}
+              extraActions={resolvedExtraActions}
             />
           ) : col.render ? (
             col.render(row)

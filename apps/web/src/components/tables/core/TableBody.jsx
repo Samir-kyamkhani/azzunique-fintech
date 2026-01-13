@@ -4,6 +4,7 @@ import TableRow from "./TableRow";
 export default function TableBody({
   columns = [],
   data = [],
+  onExtraActions,
   onView,
   onEdit,
   onDelete,
@@ -44,6 +45,7 @@ export default function TableBody({
                 onView={onView}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                onExtraActions={onExtraActions}
               />
             ))
           )}

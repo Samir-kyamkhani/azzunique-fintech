@@ -3,8 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 const employeeSlice = createSlice({
   name: "employee",
   initialState: {
-    list: [],
-    current: null,
+    currentEmployee: null,
   },
   reducers: {
     setEmployees(state, action) {

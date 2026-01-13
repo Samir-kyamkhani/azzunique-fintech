@@ -5,11 +5,17 @@ import { ApiError } from '../lib/ApiError.js';
 import { randomUUID } from 'node:crypto';
 import { departmentTable } from '../models/core/department.schema.js';
 import { tenantsTable } from '../models/core/tenant.schema.js';
-import { encrypt, generateNumber, generatePassword } from '../lib/lib.js';
+import {
+  decrypt,
+  encrypt,
+  generateNumber,
+  generatePassword,
+} from '../lib/lib.js';
 import { eventBus } from '../events/events.js';
 import { EVENTS } from '../events/events.constants.js';
 import s3Service from '../lib/S3Service.js';
 import { smtpConfigTable } from '../models/core/smtpConfig.schema.js';
+import { log } from 'node:console';
 
 class EmployeeService {
   // CREATE EMPLOYEE
@@ -109,13 +115,37 @@ class EmployeeService {
       throw ApiError.badRequest('Employee id missing');
     }
 
-    if (!actor.tenantId) {
+    if (!actor?.tenantId) {
       throw ApiError.badRequest('Tenant id missing');
     }
 
-    const [employee] = await db
-      .select()
+    const [row] = await db
+      .select({
+        id: employeesTable.id,
+        employeeNumber: employeesTable.employeeNumber,
+        firstName: employeesTable.firstName,
+        lastName: employeesTable.lastName,
+        email: employeesTable.email,
+        emailVerifiedAt: employeesTable.emailVerifiedAt,
+        mobileNumber: employeesTable.mobileNumber,
+        employeeStatus: employeesTable.employeeStatus,
+        departmentId: employeesTable.departmentId,
+        actionReason: employeesTable.actionReason,
+        actionedAt: employeesTable.actionedAt,
+        tenantId: employeesTable.tenantId,
+        createdAt: employeesTable.createdAt,
+        updatedAt: employeesTable.updatedAt,
+        profilePicture: employeesTable.profilePicture,
+        password: employeesTable.passwordHash,
+
+        // department
+        departmentCode: departmentTable.departmentCode,
+      })
       .from(employeesTable)
+      .leftJoin(
+        departmentTable,
+        eq(departmentTable.id, employeesTable.departmentId),
+      )
       .where(
         and(
           eq(employeesTable.id, id),
@@ -124,16 +154,16 @@ class EmployeeService {
       )
       .limit(1);
 
-    if (!employee) {
+    if (!row) {
       throw ApiError.notFound('Employee not found');
     }
+    const builderImg = s3Service.buildS3Url(row.profilePicture);
+    row.profilePicture = builderImg ?? null;
 
-    return {
-      ...employee,
-      profilePictureUrl: employee.profilePicture
-        ? s3Service.buildS3Url(employee.profilePicture)
-        : null,
-    };
+    const decryptPass = decrypt(row.password);
+    row.password = decryptPass;
+
+    return row;
   }
 
   // GET ALL EMPLOYEES (Aligned with getAllChildren)
@@ -203,9 +233,35 @@ class EmployeeService {
     };
   }
 
-  // UPDATE EMPLOYEE
   static async update(id, payload, actor, file) {
     const existing = await this.getById(id, actor);
+
+    // ================= ALLOWED FIELDS =================
+    const UPDATABLE_FIELDS = [
+      'firstName',
+      'lastName',
+      'email',
+      'mobileNumber',
+      'departmentId',
+      'employeeStatus',
+      'actionReason',
+    ];
+
+    // ================= CLEAN PAYLOAD =================
+    const cleanPayload = {};
+    for (const key of UPDATABLE_FIELDS) {
+      if (payload[key] !== undefined) {
+        cleanPayload[key] = payload[key];
+      }
+    }
+
+    // ================= NOTHING TO UPDATE =================
+    if (Object.keys(cleanPayload).length === 0 && !file) {
+      return {
+        id: existing.id,
+        updatedAt: existing.updatedAt,
+      };
+    }
 
     // ================= PROFILE PICTURE =================
     let profilePicture = existing.profilePictureUrl;
@@ -213,23 +269,21 @@ class EmployeeService {
     if (file) {
       const uploaded = await s3Service.upload(file.path, 'employee-profile');
 
-      if (existing.profilePictureUrl) {
-        await s3Service.deleteByKey(existing.profilePictureUrl);
+      if (existing.profilePicture) {
+        await s3Service.deleteByKey(existing.profilePicture);
       }
 
       profilePicture = uploaded.key;
     }
 
     // ================= DEPARTMENT VALIDATION =================
-    let departmentId = existing.departmentId;
-
-    if (payload.departmentId) {
+    if (cleanPayload.departmentId) {
       const [department] = await db
         .select()
         .from(departmentTable)
         .where(
           and(
-            eq(departmentTable.id, payload.departmentId),
+            eq(departmentTable.id, cleanPayload.departmentId),
             eq(departmentTable.tenantId, actor.tenantId),
           ),
         )
@@ -238,22 +292,20 @@ class EmployeeService {
       if (!department) {
         throw ApiError.badRequest('Invalid department ID');
       }
-
-      departmentId = payload.departmentId;
     }
 
-    // ================= UPDATE DB =================
+    // ================= UPDATE =================
+    const updatedAt = new Date();
+
     await db
       .update(employeesTable)
       .set({
-        ...payload,
+        ...cleanPayload,
         profilePicture,
-        departmentId,
-        employeeStatus: payload.employeeStatus ?? existing.employeeStatus,
-        tenantId: actor.tenantId,
-        actionReason: payload.actionReason,
-        actionedAt: payload.employeeStatus ? new Date() : existing.actionedAt,
-        updatedAt: new Date(),
+        updatedAt,
+        actionedAt: cleanPayload.employeeStatus
+          ? updatedAt
+          : existing.actionedAt,
       })
       .where(
         and(
@@ -264,20 +316,29 @@ class EmployeeService {
 
     // ================= STATUS CHANGE EVENT =================
     if (
-      payload.employeeStatus &&
-      payload.employeeStatus !== existing.employeeStatus
+      cleanPayload.employeeStatus &&
+      cleanPayload.employeeStatus !== existing.employeeStatus
     ) {
       eventBus.emit(EVENTS.EMPLOYEE_STATUS_CHANGED, {
         tenantId: actor.tenantId,
         employeeId: id,
-        email: existing.email,
         oldStatus: existing.employeeStatus,
-        newStatus: payload.employeeStatus,
-        actionReason: payload.actionReason,
+        newStatus: cleanPayload.employeeStatus,
+        actionReason: cleanPayload.actionReason,
       });
     }
 
-    return this.getById(id, actor);
+    // ================= RESPONSE = ONLY CHANGED FIELDS =================
+    const response = {
+      id,
+      updatedAt,
+    };
+
+    for (const key of Object.keys(cleanPayload)) {
+      response[key] = cleanPayload[key];
+    }
+
+    return response;
   }
 
   // DELETE
