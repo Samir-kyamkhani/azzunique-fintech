@@ -244,6 +244,7 @@ class EmployeeService {
       'mobileNumber',
       'departmentId',
       'employeeStatus',
+      'profilePicture',
       'actionReason',
     ];
 
@@ -264,7 +265,7 @@ class EmployeeService {
     }
 
     // ================= PROFILE PICTURE =================
-    let profilePicture = existing.profilePictureUrl;
+    let profilePicture = existing.profilePicture;
 
     if (file) {
       const uploaded = await s3Service.upload(file.path, 'employee-profile');

@@ -5,8 +5,6 @@ import TableShell from "./core/TableShell";
 import TableHeader from "./core/TableHeader";
 import TableBody from "./core/TableBody";
 import TablePagination from "./core/TablePagination";
-import Image from "next/image";
-import { User } from "lucide-react";
 
 /* ---------------- FILTER OPTIONS ---------------- */
 const options = [
@@ -29,7 +27,7 @@ const extraActions = [
 ];
 
 /* ===================== COLUMNS ===================== */
-const getColumns = (onImagePreview) => [
+const getColumns = () => [
   { key: "employeeNumber", label: "Emp No" },
   { key: "fullName", label: "Name" },
   { key: "email", label: "Email" },
