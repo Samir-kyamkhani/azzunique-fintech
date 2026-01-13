@@ -1,6 +1,6 @@
 "use client";
 
-import { Users, Download } from "lucide-react";
+import { Users, Download, Shield } from "lucide-react";
 import TableShell from "./core/TableShell";
 import TableHeader from "./core/TableHeader";
 import TableBody from "./core/TableBody";
@@ -14,8 +14,20 @@ const options = [
   { label: "Suspended", value: "SUSPENDED" },
 ];
 
-/* ---------------- TABLE COLUMNS ---------------- */
-export const columns = [
+/* ---------------- EXTRA ACTIONS ---------------- */
+const extraActions = [
+  {
+    icon: Shield,
+    label: "Permissions",
+    onClick: (employee) => {
+      console.log("Employee ID:", employee.id);
+      console.log("Department ID:", employee.departmentId);
+    },
+  },
+];
+
+/* ===================== COLUMNS ===================== */
+const getColumns = () => [
   { key: "employeeNumber", label: "Emp No" },
   { key: "fullName", label: "Name" },
   { key: "email", label: "Email" },
@@ -25,6 +37,7 @@ export const columns = [
   { key: "actions", label: "Actions" },
 ];
 
+/* ===================== COMPONENT ===================== */
 export default function EmployeesTable({
   employees,
   total,
@@ -37,8 +50,12 @@ export default function EmployeesTable({
   onStatusFilterChange,
   onAddEmployee,
   onEdit,
+  onView,
   onDelete,
+  onImagePreview,
 }) {
+  const columns = getColumns(onImagePreview);
+
   return (
     <TableShell>
       <TableHeader
@@ -62,7 +79,9 @@ export default function EmployeesTable({
         columns={columns}
         data={employees}
         onEdit={onEdit}
+        onView={onView}
         onDelete={onDelete}
+        onExtraActions={extraActions}
       />
 
       <TablePagination

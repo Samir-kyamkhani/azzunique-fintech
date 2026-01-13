@@ -4,7 +4,7 @@ import { apiClient } from "@/lib/apiClient";
 /* ================= GET ALL ================= */
 export const useEmployees = ({ page, limit, search, status }) =>
   useQuery({
-    queryKey: ["employees", page= 1, limit, search, status],
+    queryKey: ["employees", page, limit, search, status],
     queryFn: () =>
       apiClient(
         `/employees?page=${page}&limit=${limit}&search=${search}&status=${status}`
@@ -36,7 +36,7 @@ export const useUpdateEmployee = () =>
     mutationFn: ({ id, payload }) =>
       apiClient(`/employees/${id}`, {
         method: "PUT",
-        body: payload instanceof FormData ? payload : JSON.stringify(payload),
+        body: JSON.stringify(payload),
       }),
   });
 

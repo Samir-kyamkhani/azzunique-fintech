@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { AlertCircle } from "lucide-react";
 
 import Button from "@/components/ui/Button";
@@ -20,8 +20,7 @@ export default function EmployeeForm({
     clearErrors,
     setError,
     control,
-    watch,
-    formState: { errors },
+    formState: { errors, dirtyFields },
   } = useForm({
     defaultValues: {
       firstName: "",
@@ -35,22 +34,34 @@ export default function EmployeeForm({
     },
   });
 
-  const status = watch("employeeStatus");
+  // ✅ React Compiler SAFE (replacement of watch)
+  const status = useWatch({
+    control,
+    name: "employeeStatus",
+  });
 
   const onFormSubmit = (data) => {
     clearErrors();
 
-    if (!data.firstName?.trim()) {
-      setError("firstName", { message: "First name is required" });
+    // 🔥 only changed fields
+    const payload = {};
+    Object.keys(dirtyFields).forEach((key) => {
+      payload[key] = data[key];
+    });
+
+    // 👇 status change hua hai to actionReason ensure karo
+    if (
+      payload.employeeStatus &&
+      payload.employeeStatus !== initialData?.employeeStatus &&
+      !payload.actionReason
+    ) {
+      setError("actionReason", {
+        message: "Action reason is required",
+      });
       return;
     }
 
-    if (!data.lastName?.trim()) {
-      setError("lastName", { message: "Last name is required" });
-      return;
-    }
-
-    onSubmit(data, setError);
+    onSubmit(payload, setError);
   };
 
   return (
@@ -66,7 +77,6 @@ export default function EmployeeForm({
       )}
 
       <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
-        {/* BASIC INFO */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <InputField
             label="First Name"
@@ -88,8 +98,8 @@ export default function EmployeeForm({
             label="Email"
             name="email"
             register={register}
-            error={errors.email}
             required
+            error={errors.email}
           />
 
           <InputField
@@ -147,7 +157,7 @@ export default function EmployeeForm({
             />
           </div>
 
-          {/* ACTION REASON (CONDITIONAL) */}
+          {/* ACTION REASON */}
           {status !== "ACTIVE" && (
             <InputField
               label="Action Reason"

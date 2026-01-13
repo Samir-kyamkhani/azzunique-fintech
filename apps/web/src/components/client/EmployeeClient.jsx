@@ -19,12 +19,18 @@ import Button from "@/components/ui/Button";
 
 import { formatDateTime } from "@/lib/utils";
 import { toast } from "@/lib/toast";
+import { useDispatch } from "react-redux";
+import { useRouter } from "next/navigation";
+import { setEmployee } from "@/store/employeeSlice";
 
 export default function EmployeeClient() {
   /* ================= UI STATE ================= */
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
 
   const [openModal, setOpenModal] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
@@ -34,6 +40,9 @@ export default function EmployeeClient() {
 
   const perPage = 10;
   const isEditing = Boolean(editingEmployee);
+
+  const dispatch = useDispatch();
+  const router = useRouter();
 
   /* ================= API ================= */
   const { data, isLoading, refetch } = useEmployees({
@@ -107,6 +116,12 @@ export default function EmployeeClient() {
   const handleEdit = (emp) => {
     setEditingEmployee(emp);
     setOpenModal(true);
+  };
+
+  const handleView = (employee) => {
+    if (!employee?.id) return;
+    dispatch(setEmployee(employee));
+    router.push(`/dashboard/employee-management/employees/${employee.id}`);
   };
 
   const handleSubmit = (formData, setError) => {
@@ -186,6 +201,7 @@ export default function EmployeeClient() {
         }}
         onAddEmployee={handleAdd}
         onEdit={handleEdit}
+        onView={handleView}
         onDelete={askDelete}
         loading={isLoading}
       />
