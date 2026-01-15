@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { useForm, Controller, useWatch } from "react-hook-form";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ImageIcon } from "lucide-react";
+import Image from "next/image";
 
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
@@ -14,6 +16,14 @@ export default function EmployeeForm({
   onSubmit,
   departments = [],
 }) {
+  /* ================= STATE ================= */
+  const isEditMode = Boolean(initialData?.id);
+
+  const [preview, setPreview] = useState(
+    initialData?.profilePictureUrl || null
+  );
+
+  /* ================= FORM ================= */
   const {
     register,
     handleSubmit,
@@ -28,32 +38,47 @@ export default function EmployeeForm({
       email: "",
       mobileNumber: "",
       departmentId: "",
-      employeeStatus: "ACTIVE",
+      employeeStatus: "INACTIVE",
       actionReason: "",
       ...initialData,
     },
   });
 
-  // ✅ React Compiler SAFE (replacement of watch)
   const status = useWatch({
     control,
     name: "employeeStatus",
   });
 
+  /* ================= SUBMIT ================= */
   const onFormSubmit = (data) => {
     clearErrors();
 
-    // 🔥 only changed fields
-    const payload = {};
+    /* ---------- CREATE ---------- */
+    if (!isEditMode) {
+      onSubmit(data, setError);
+      return;
+    }
+
+    /* ---------- UPDATE (FormData) ---------- */
+    const formData = new FormData();
+
+    // 🔹 append normal dirty fields
     Object.keys(dirtyFields).forEach((key) => {
-      payload[key] = data[key];
+      if (key !== "profilePicture") {
+        formData.append(key, data[key]);
+      }
     });
 
-    // 👇 status change hua hai to actionReason ensure karo
+    // 🔥 ALWAYS handle file separately
+    if (data.profilePicture?.[0]) {
+      formData.append("profilePicture", data.profilePicture[0]);
+    }
+
+    // status validation
     if (
-      payload.employeeStatus &&
-      payload.employeeStatus !== initialData?.employeeStatus &&
-      !payload.actionReason
+      formData.has("employeeStatus") &&
+      data.employeeStatus !== initialData.employeeStatus &&
+      !data.actionReason
     ) {
       setError("actionReason", {
         message: "Action reason is required",
@@ -61,9 +86,10 @@ export default function EmployeeForm({
       return;
     }
 
-    onSubmit(payload, setError);
+    onSubmit(formData, setError);
   };
 
+  /* ================= RENDER ================= */
   return (
     <>
       {/* ROOT ERROR */}
@@ -78,6 +104,46 @@ export default function EmployeeForm({
 
       <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* ================= PROFILE PICTURE (EDIT ONLY) ================= */}
+          {isEditMode && (
+            <div className="space-y-2 md:col-span-2">
+              <label className="block text-sm font-medium">
+                Profile Picture
+              </label>
+
+              <div className="flex items-center gap-4">
+                {preview ? (
+                  <Image
+                    src={preview}
+                    alt="Profile Preview"
+                    width={64}
+                    height={64}
+                    className="h-16 w-16 rounded-full object-cover border"
+                  />
+                ) : (
+                  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
+                    <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                )}
+
+                <InputField
+                  type="file"
+                  name="profilePicture"
+                  accept="image/*"
+                  register={register}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setPreview(URL.createObjectURL(file));
+                    }
+                  }}
+                  error={errors.profilePicture}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* ================= BASIC FIELDS ================= */}
           <InputField
             label="First Name"
             name="firstName"
@@ -112,7 +178,7 @@ export default function EmployeeForm({
             error={errors.mobileNumber}
           />
 
-          {/* DEPARTMENT */}
+          {/* ================= DEPARTMENT ================= */}
           <div className="space-y-1.5">
             <label className="block text-sm font-medium">
               Department <span className="text-destructive">*</span>
@@ -133,7 +199,7 @@ export default function EmployeeForm({
             />
           </div>
 
-          {/* STATUS */}
+          {/* ================= STATUS ================= */}
           <div className="space-y-1.5">
             <label className="block text-sm font-medium">
               Status <span className="text-destructive">*</span>
@@ -157,7 +223,7 @@ export default function EmployeeForm({
             />
           </div>
 
-          {/* ACTION REASON */}
+          {/* ================= ACTION REASON ================= */}
           {status !== "ACTIVE" && (
             <InputField
               label="Action Reason"

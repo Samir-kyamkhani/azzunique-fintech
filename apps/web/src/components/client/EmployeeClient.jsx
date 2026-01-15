@@ -22,6 +22,7 @@ import { toast } from "@/lib/toast";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { setEmployee } from "@/store/employeeSlice";
+import ImagePreviewModal from "../ImagePreviewModal";
 
 export default function EmployeeClient() {
   /* ================= UI STATE ================= */
@@ -107,6 +108,11 @@ export default function EmployeeClient() {
   ];
 
   /* ================= ACTIONS ================= */
+
+  const handleImagePreview = (imageUrl) => {
+    setPreviewImage(imageUrl);
+    setPreviewOpen(true);
+  };
 
   const handleAdd = () => {
     setEditingEmployee(null);
@@ -204,6 +210,7 @@ export default function EmployeeClient() {
         onView={handleView}
         onDelete={askDelete}
         loading={isLoading}
+        onImagePreview={handleImagePreview}
       />
 
       {openModal && (
@@ -229,6 +236,12 @@ export default function EmployeeClient() {
         confirmText="Delete"
         variant="danger"
         loading={deleting}
+      />
+
+      <ImagePreviewModal
+        open={previewOpen}
+        image={previewImage}
+        onClose={() => setPreviewOpen(false)}
       />
     </>
   );

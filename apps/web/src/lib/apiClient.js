@@ -1,13 +1,15 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const apiClient = async (url, options = {}) => {
+  const isFormData = options.body instanceof FormData;
+
   const res = await fetch(`${API_URL}${url}`, {
     credentials: "include",
+    ...options,
     headers: {
-      "Content-Type": "application/json",
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
       ...options.headers,
     },
-    ...options,
   });
 
   const data = await res.json();
@@ -17,7 +19,7 @@ export const apiClient = async (url, options = {}) => {
 
     const errors = Array.isArray(data?.errors) ? data.errors : [];
 
-    error.type = (errors.length > 0) && "FIELD";
+    error.type = errors.length > 0 && "FIELD";
     error.errors = errors;
 
     throw error;

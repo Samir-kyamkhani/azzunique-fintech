@@ -15,7 +15,6 @@ import { eventBus } from '../events/events.js';
 import { EVENTS } from '../events/events.constants.js';
 import s3Service from '../lib/S3Service.js';
 import { smtpConfigTable } from '../models/core/smtpConfig.schema.js';
-import { log } from 'node:console';
 
 class EmployeeService {
   // CREATE EMPLOYEE
@@ -157,16 +156,17 @@ class EmployeeService {
     if (!row) {
       throw ApiError.notFound('Employee not found');
     }
-    const builderImg = s3Service.buildS3Url(row.profilePicture);
-    row.profilePicture = builderImg ?? null;
 
     const decryptPass = decrypt(row.password);
     row.password = decryptPass;
 
-    return row;
+    return {
+      ...row,
+      profilePictureUrl: s3Service.buildS3Url(row.profilePicture),
+    };
   }
 
-  // GET ALL EMPLOYEES (Aligned with getAllChildren)
+  // GET ALL EMPLOYEES
   static async findAll(query = {}, actor) {
     if (!actor?.tenantId) {
       throw ApiError.badRequest('Tenant context missing');
@@ -214,13 +214,31 @@ class EmployeeService {
       .from(employeesTable)
       .where(and(...conditions));
 
-    /* ================= NORMALIZE ================= */
-    const rows = data.map((emp) => ({
-      ...emp,
-      profilePictureUrl: emp.profilePicture
-        ? s3Service.buildS3Url(emp.profilePicture)
-        : null,
-    }));
+    /* ================= NORMALIZE (INLINE, NO HELPER) ================= */
+    const rows = data.map((emp) => {
+      let profilePicture = emp.profilePicture;
+      let profilePictureUrl = null;
+
+      if (profilePicture) {
+        // CASE 1: DB already has FULL URL (legacy)
+        if (profilePicture.startsWith('http')) {
+          profilePictureUrl = profilePicture;
+
+          // extract key back for consistency
+          profilePicture = profilePicture.replace(/^https?:\/\/[^/]+\//, '');
+        }
+        // CASE 2: DB has only KEY (correct)
+        else {
+          profilePictureUrl = s3Service.buildS3Url(profilePicture);
+        }
+      }
+
+      return {
+        ...emp,
+        profilePicture, // ✅ RAW DB VALUE (key only)
+        profilePictureUrl, // ✅ SAFE PUBLIC URL
+      };
+    });
 
     return {
       data: rows,
@@ -236,7 +254,6 @@ class EmployeeService {
   static async update(id, payload, actor, file) {
     const existing = await this.getById(id, actor);
 
-    // ================= ALLOWED FIELDS =================
     const UPDATABLE_FIELDS = [
       'firstName',
       'lastName',
@@ -244,11 +261,9 @@ class EmployeeService {
       'mobileNumber',
       'departmentId',
       'employeeStatus',
-      'profilePicture',
       'actionReason',
     ];
 
-    // ================= CLEAN PAYLOAD =================
     const cleanPayload = {};
     for (const key of UPDATABLE_FIELDS) {
       if (payload[key] !== undefined) {
@@ -256,7 +271,6 @@ class EmployeeService {
       }
     }
 
-    // ================= NOTHING TO UPDATE =================
     if (Object.keys(cleanPayload).length === 0 && !file) {
       return {
         id: existing.id,
@@ -264,20 +278,15 @@ class EmployeeService {
       };
     }
 
-    // ================= PROFILE PICTURE =================
     let profilePicture = existing.profilePicture;
+    let uploadedKey = null;
 
     if (file) {
       const uploaded = await s3Service.upload(file.path, 'employee-profile');
-
-      if (existing.profilePicture) {
-        await s3Service.deleteByKey(existing.profilePicture);
-      }
-
-      profilePicture = uploaded.key;
+      uploadedKey = uploaded.key;
+      profilePicture = uploadedKey;
     }
 
-    // ================= DEPARTMENT VALIDATION =================
     if (cleanPayload.departmentId) {
       const [department] = await db
         .select()
@@ -291,11 +300,13 @@ class EmployeeService {
         .limit(1);
 
       if (!department) {
+        if (uploadedKey) {
+          await s3Service.deleteByKey(uploadedKey);
+        }
         throw ApiError.badRequest('Invalid department ID');
       }
     }
 
-    // ================= UPDATE =================
     const updatedAt = new Date();
 
     await db
@@ -315,7 +326,10 @@ class EmployeeService {
         ),
       );
 
-    // ================= STATUS CHANGE EVENT =================
+    if (uploadedKey && existing.profilePicture) {
+      await s3Service.deleteByKey(existing.profilePicture);
+    }
+
     if (
       cleanPayload.employeeStatus &&
       cleanPayload.employeeStatus !== existing.employeeStatus
@@ -329,17 +343,12 @@ class EmployeeService {
       });
     }
 
-    // ================= RESPONSE = ONLY CHANGED FIELDS =================
-    const response = {
+    return {
       id,
       updatedAt,
+      ...cleanPayload,
+      ...(uploadedKey ? { profilePicture: uploadedKey } : {}),
     };
-
-    for (const key of Object.keys(cleanPayload)) {
-      response[key] = cleanPayload[key];
-    }
-
-    return response;
   }
 
   // DELETE

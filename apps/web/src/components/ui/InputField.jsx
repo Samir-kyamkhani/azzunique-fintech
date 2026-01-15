@@ -35,7 +35,7 @@ export default function InputField({
       {/* INPUT */}
       <div className="relative">
         {isFile ? (
-          /* FILE INPUT (CUSTOM DESIGN) */
+          /* FILE INPUT (RHForm compatible) */
           <label
             className={cn(
               `
@@ -48,15 +48,21 @@ export default function InputField({
             )}
           >
             <span className="text-muted-foreground">Choose image</span>
-
             <span className="text-xs text-primary font-medium">Browse</span>
 
             <input
               type="file"
               accept={accept}
               disabled={disabled}
-              onChange={onChange}
               className="hidden"
+              {...(register ? register(name) : {})}
+              onChange={(e) => {
+                // ✅ 1. RHF ko file do
+                register?.(name)?.onChange(e);
+
+                // ✅ 2. Custom preview logic
+                onChange?.(e);
+              }}
             />
           </label>
         ) : (
