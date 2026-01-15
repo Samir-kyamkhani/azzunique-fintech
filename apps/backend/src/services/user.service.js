@@ -484,14 +484,14 @@ class UserService {
     const isDirectOwner = existingUser.ownerUserId === actor.id;
 
     // Bootstrap ownership (first owner created by parent)
-    const isCreatorOfFirstOwner =
+    const isBootstrapOwnerCreator =
       existingUser.ownerUserId === null &&
       existingUser.createdByUserId === actor.id;
 
     // Tenant owner inside own tenant
     const isTenantOwner = actor.isTenantOwner === true && isSameTenant;
 
-    const canUpdate = isDirectOwner || isCreatorOfFirstOwner || isTenantOwner;
+    const canUpdate = isDirectOwner || isBootstrapOwnerCreator || isTenantOwner;
 
     if (!canUpdate) {
       throw ApiError.forbidden('You are not allowed to update this user');
@@ -706,11 +706,11 @@ class UserService {
     const isDirectOwner = targetUser.ownerUserId === actor.id;
 
     // Bootstrap ownership (first owner created by actor)
-    const isCreatorOfFirstOwner =
+    const isBootstrapOwnerCreator =
       targetUser.ownerUserId === null &&
       targetUser.createdByUserId === actor.id;
 
-    if (!isTenantOwner && !isDirectOwner && !isCreatorOfFirstOwner) {
+    if (!isTenantOwner && !isDirectOwner && !isBootstrapOwnerCreator) {
       throw ApiError.forbidden(
         'You can assign permissions only to your own users',
       );
