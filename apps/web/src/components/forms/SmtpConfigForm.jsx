@@ -23,7 +23,7 @@ export default function SmtpConfigForm({
   } = useForm({
     defaultValues: {
       smtpHost: "",
-      smtpPort: 587,
+      smtpPort: "587",
       smtpUsername: "",
       smtpPassword: "",
       encryptionType: "TLS",
