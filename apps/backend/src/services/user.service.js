@@ -434,12 +434,40 @@ class UserService {
   }
 
   async update(id, data, actor, file) {
-    // 1️⃣ Fetch target user (READ access already enforced)
-    const existingUser = await this.findOne(id, actor);
+    // 1️⃣ Fetch target user (RAW DB ROW — WRITE SAFE)
+    const [existingUser] = await db
+      .select({
+        id: usersTable.id,
+        tenantId: usersTable.tenantId,
+        ownerUserId: usersTable.ownerUserId,
+        createdByUserId: usersTable.createdByUserId,
+        roleId: usersTable.roleId,
+        email: usersTable.email,
+        mobileNumber: usersTable.mobileNumber,
+        profilePicture: usersTable.profilePicture,
+        userStatus: usersTable.userStatus,
+      })
+      .from(usersTable)
+      .where(eq(usersTable.id, id))
+      .limit(1);
+
+    if (!existingUser) {
+      throw ApiError.notFound('User not found');
+    }
+
+    // Protect ROOT SYSTEM USER (AZZUNIQUE ROOT)
+    if (
+      existingUser.ownerUserId === null &&
+      existingUser.createdByUserId === null
+    ) {
+      throw ApiError.forbidden('Root system user cannot be modified');
+    }
 
     // 2️⃣ Fetch actor role
     const [actorRole] = await db
-      .select({ roleLevel: roleTable.roleLevel })
+      .select({
+        roleLevel: roleTable.roleLevel,
+      })
       .from(roleTable)
       .where(eq(roleTable.id, actor.roleId))
       .limit(1);
@@ -448,21 +476,28 @@ class UserService {
       throw ApiError.forbidden('Invalid actor role');
     }
 
-    // 3️⃣ WRITE ACCESS RULES (EXPLICIT)
+    // 3️⃣ WRITE ACCESS RULES (OWNERSHIP BASED)
+
     const isSameTenant = existingUser.tenantId === actor.tenantId;
-    const isOwner = existingUser.ownerUserId === actor.id;
+
+    // Direct ownership (AZZUNIQUE → Reseller, Reseller → White-label)
+    const isDirectOwner = existingUser.ownerUserId === actor.id;
+
+    // Bootstrap ownership (first owner created by parent)
+    const isCreatorOfFirstOwner =
+      existingUser.ownerUserId === null &&
+      existingUser.createdByUserId === actor.id;
+
+    // Tenant owner inside own tenant
     const isTenantOwner = actor.isTenantOwner === true && isSameTenant;
 
-    const canUpdate =
-      // AZZUNIQUE / RESELLER → only users they created
-      (actorRole.roleLevel <= 1 && isOwner) ||
-      // Tenant owner → anyone in own tenant
-      isTenantOwner;
+    const canUpdate = isDirectOwner || isCreatorOfFirstOwner || isTenantOwner;
 
     if (!canUpdate) {
       throw ApiError.forbidden('You are not allowed to update this user');
     }
 
+    // 4️⃣ EMAIL DUPLICATE CHECK
     if (data.email && data.email !== existingUser.email) {
       const [emailExists] = await db
         .select({ id: usersTable.id })
@@ -481,6 +516,7 @@ class UserService {
       }
     }
 
+    // 5️⃣ MOBILE DUPLICATE CHECK
     if (data.mobileNumber && data.mobileNumber !== existingUser.mobileNumber) {
       const [mobileExists] = await db
         .select({ id: usersTable.id })
@@ -499,22 +535,35 @@ class UserService {
       }
     }
 
+    // 6️⃣ FIX-1 — ROLE ESCALATION PROTECTION
     if (data.roleId && data.roleId !== existingUser.roleId) {
-      const [role] = await db
-        .select()
+      const [newRole] = await db
+        .select({
+          roleLevel: roleTable.roleLevel,
+          isSystem: roleTable.isSystem,
+        })
         .from(roleTable)
         .where(eq(roleTable.id, data.roleId))
         .limit(1);
 
-      if (!role) {
+      if (!newRole) {
         throw ApiError.badRequest('Invalid role ID');
       }
 
-      if (role.isSystem && !actor.isTenantOwner) {
+      // ❌ Cannot assign equal or higher role
+      if (newRole.roleLevel <= actorRole.roleLevel) {
+        throw ApiError.forbidden(
+          'You cannot assign a role equal to or higher than your own',
+        );
+      }
+
+      // ❌ System role only by tenant owner
+      if (newRole.isSystem && !actor.isTenantOwner) {
         throw ApiError.forbidden('System role assignment not allowed');
       }
     }
 
+    // 7️⃣ BUILD UPDATE PAYLOAD
     const payload = { updatedAt: new Date() };
 
     if (data.firstName !== undefined) payload.firstName = data.firstName;
@@ -525,6 +574,7 @@ class UserService {
     if (data.roleId !== undefined) payload.roleId = data.roleId;
     if (data.userStatus !== undefined) payload.userStatus = data.userStatus;
 
+    // 8️⃣ PROFILE IMAGE
     if (file) {
       const uploaded = await s3Service.upload(file.path, 'user-profile');
 
@@ -535,6 +585,7 @@ class UserService {
       payload.profilePicture = uploaded.key;
     }
 
+    // 9️⃣ STATUS CHANGE EVENT
     if (data.userStatus && data.userStatus !== existingUser.userStatus) {
       eventBus.emit(EVENTS.USER_STATUS_CHANGED, {
         tenantId: existingUser.tenantId,
@@ -545,8 +596,10 @@ class UserService {
       });
     }
 
+    // 🔟 UPDATE DB
     await db.update(usersTable).set(payload).where(eq(usersTable.id, id));
 
+    // 11️⃣ RETURN READ VIEW
     return this.findOne(id, actor);
   }
 
