@@ -2,8 +2,8 @@ import { Router } from 'express';
 import {
   createEmployee,
   updateEmployee,
-  getEmployeeById,
-  getAllEmployees,
+  findEmployee,
+  findAllEmployees,
   deleteEmployee,
 } from '../controllers/employee.controller.js';
 import { validate } from '../middleware/zod-validate.js';
@@ -20,24 +20,20 @@ const router = Router();
 
 router.use(AuthMiddleware);
 
-// CREATE EMPLOYEE
 router.post(
   '/',
   validate({ body: createEmployeeSchema }),
   asyncHandler(createEmployee),
 );
 
-// GET ALL EMPLOYEES (by tenant ID)
-router.get('/', asyncHandler(getAllEmployees));
+router.get('/', asyncHandler(findAllEmployees));
 
-// GET EMPLOYEE BY ID
 router.get(
   '/:id',
   validate({ params: idParamSchema }),
-  asyncHandler(getEmployeeById),
+  asyncHandler(findEmployee),
 );
 
-// UPDATE EMPLOYEE
 router.put(
   '/:id',
   upload.single('profilePicture'),
@@ -45,7 +41,6 @@ router.put(
   asyncHandler(updateEmployee),
 );
 
-// HARD DELETE
 router.delete(
   '/:id',
   validate({ params: idParamSchema }),

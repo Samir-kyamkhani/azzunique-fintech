@@ -7,7 +7,7 @@ import {
   employeePermissionTable,
   permissionTable,
 } from '../models/core/index.js';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, and } from 'drizzle-orm';
 import { ApiError } from '../lib/ApiError.js';
 
 export async function resolvePermissions(actor) {
@@ -17,6 +17,7 @@ export async function resolvePermissions(actor) {
 
   const permissions = new Set();
 
+  // USER PERMISSIONS
   if (actor.type === 'USER') {
     const [role] = await db
       .select({
@@ -32,11 +33,9 @@ export async function resolvePermissions(actor) {
       )
       .limit(1);
 
-    if (!role) {
-      return [];
-    }
+    if (!role) return [];
 
-    // 🔑 SYSTEM ROLE
+    //  SYSTEM ROLE
     if (role.isSystem) {
       if (!actor.isTenantOwner) {
         throw ApiError.forbidden('System role restricted to tenant owners');
@@ -44,6 +43,7 @@ export async function resolvePermissions(actor) {
       return ['*'];
     }
 
+    // Role permissions
     const rolePerms = await db
       .select({
         key: sql`CONCAT(${permissionTable.resource}, '.', ${permissionTable.action})`,
@@ -55,10 +55,9 @@ export async function resolvePermissions(actor) {
       )
       .where(eq(rolePermissionTable.roleId, actor.roleId));
 
-    rolePerms.forEach((p) => {
-      if (p.key) permissions.add(p.key);
-    });
+    rolePerms.forEach((p) => p.key && permissions.add(p.key));
 
+    // User overrides
     const userPerms = await db
       .select({
         key: sql`CONCAT(${permissionTable.resource}, '.', ${permissionTable.action})`,
@@ -73,12 +72,13 @@ export async function resolvePermissions(actor) {
 
     userPerms.forEach((p) => {
       if (!p.key) return;
-
       p.effect === 'ALLOW' ? permissions.add(p.key) : permissions.delete(p.key);
     });
   }
 
+  // EMPLOYEE PERMISSIONS
   if (actor.type === 'EMPLOYEE') {
+    // Department permissions (tenant-safe)
     const deptPerms = await db
       .select({
         key: sql`CONCAT(${permissionTable.resource}, '.', ${permissionTable.action})`,
@@ -90,10 +90,9 @@ export async function resolvePermissions(actor) {
       )
       .where(eq(departmentPermissionTable.departmentId, actor.departmentId));
 
-    deptPerms.forEach((p) => {
-      if (p.key) permissions.add(p.key);
-    });
+    deptPerms.forEach((p) => p.key && permissions.add(p.key));
 
+    // Employee overrides
     const empPerms = await db
       .select({
         key: sql`CONCAT(${permissionTable.resource}, '.', ${permissionTable.action})`,
@@ -108,7 +107,6 @@ export async function resolvePermissions(actor) {
 
     empPerms.forEach((p) => {
       if (!p.key) return;
-
       p.effect === 'ALLOW' ? permissions.add(p.key) : permissions.delete(p.key);
     });
   }

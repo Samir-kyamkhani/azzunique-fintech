@@ -1,11 +1,11 @@
 import { EmployeeService } from '../services/employee.service.js';
 
-const createEmployee = async (req, res, next) => {
+export const createEmployee = async (req, res, next) => {
   const employee = await EmployeeService.create(req.body, req.user);
   res.status(201).json(employee);
 };
 
-const updateEmployee = async (req, res, next) => {
+export const updateEmployee = async (req, res, next) => {
   const employee = await EmployeeService.update(
     req.params.id,
     req.body,
@@ -15,25 +15,17 @@ const updateEmployee = async (req, res, next) => {
   res.json(employee);
 };
 
-const getEmployeeById = async (req, res, next) => {
-  const employee = await EmployeeService.getById(req.params.id, req.user);
+export const findEmployee = async (req, res, next) => {
+  const employee = await EmployeeService.findOne(req.params.id, req.user);
   res.json(employee);
 };
 
-const getAllEmployees = async (req, res, next) => {
+export const findAllEmployees = async (req, res, next) => {
   const employees = await EmployeeService.findAll(req.query, req.user);
   res.json(employees);
 };
 
-const deleteEmployee = async (req, res, next) => {
+export const deleteEmployee = async (req, res, next) => {
   const employee = await EmployeeService.delete(req.params.id, req.user);
   res.json(employee);
-};
-
-export {
-  createEmployee,
-  updateEmployee,
-  getEmployeeById,
-  getAllEmployees,
-  deleteEmployee,
 };

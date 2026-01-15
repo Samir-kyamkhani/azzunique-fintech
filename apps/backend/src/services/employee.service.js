@@ -1,150 +1,123 @@
-import { and, count, desc, eq, like, or, sql } from 'drizzle-orm';
-import { employeesTable } from '../models/core/employee.schema.js';
+import { and, count, desc, eq, like, or, inArray } from 'drizzle-orm';
 import { db } from '../database/core/core-db.js';
 import { ApiError } from '../lib/ApiError.js';
 import { randomUUID } from 'node:crypto';
-import { departmentTable } from '../models/core/department.schema.js';
-import { tenantsTable } from '../models/core/tenant.schema.js';
-import {
-  decrypt,
-  encrypt,
-  generateNumber,
-  generatePassword,
-} from '../lib/lib.js';
+import { encrypt, generateNumber, generatePassword } from '../lib/lib.js';
 import { eventBus } from '../events/events.js';
 import { EVENTS } from '../events/events.constants.js';
 import s3Service from '../lib/S3Service.js';
-import { smtpConfigTable } from '../models/core/smtpConfig.schema.js';
+import {
+  employeesTable,
+  permissionTable,
+  departmentTable,
+  tenantsTable,
+  smtpConfigTable,
+} from '../models/core/index.js';
+import { resolvePermissions } from './permission.resolver.js';
 
 class EmployeeService {
-  // CREATE EMPLOYEE
   static async create(payload, actor) {
+    if (!actor?.tenantId) {
+      throw ApiError.badRequest('Tenant context missing');
+    }
+
     const [tenant] = await db
-      .select()
+      .select({ id: tenantsTable.id })
       .from(tenantsTable)
       .where(eq(tenantsTable.id, actor.tenantId))
       .limit(1);
 
     if (!tenant) {
-      throw ApiError.badRequest('Invalid tenant ID');
+      throw ApiError.badRequest('Invalid tenant');
     }
 
     const [department] = await db
-      .select()
+      .select({ id: departmentTable.id })
       .from(departmentTable)
-      .where(eq(departmentTable.id, payload.departmentId))
+      .where(
+        and(
+          eq(departmentTable.id, payload.departmentId),
+          eq(departmentTable.tenantId, actor.tenantId),
+        ),
+      )
       .limit(1);
 
     if (!department) {
-      throw ApiError.badRequest('Invalid department ID');
+      throw ApiError.badRequest('Invalid department');
     }
 
     const [smtp] = await db
-      .select()
+      .select({ id: smtpConfigTable.id })
       .from(smtpConfigTable)
       .where(eq(smtpConfigTable.tenantId, actor.tenantId))
       .limit(1);
 
     if (!smtp) {
-      throw ApiError.badRequest(
-        'Before creating an employee, please ensure that SMTP is configured.',
-      );
+      throw ApiError.badRequest('SMTP must be configured first');
     }
 
     const [existing] = await db
-      .select()
+      .select({ id: employeesTable.id })
       .from(employeesTable)
       .where(
         and(
+          eq(employeesTable.tenantId, actor.tenantId),
           or(
             eq(employeesTable.email, payload.email),
             eq(employeesTable.mobileNumber, payload.mobileNumber),
           ),
-          eq(employeesTable.tenantId, actor.tenantId),
         ),
       )
       .limit(1);
 
     if (existing) {
-      throw ApiError.conflict(
-        'User with this email or mobile number already exists',
-      );
+      throw ApiError.conflict('Employee already exists');
     }
 
-    const generatedPassword = generatePassword();
-    const passwordHash = encrypt(generatedPassword);
+    const password = generatePassword();
+    const passwordHash = encrypt(password);
 
-    console.log(generatedPassword);
+    const employeeId = randomUUID();
 
     const employeePayload = {
-      id: randomUUID(),
+      id: employeeId,
       employeeNumber: generateNumber('EMP'),
       ...payload,
       passwordHash,
       employeeStatus: 'INACTIVE',
       tenantId: actor.tenantId,
       emailVerifiedAt: new Date(),
-      actionReason:
-        'Kindly contact the administrator to have your account activated.',
+      actionReason: 'Kindly contact the administrator to activate your account',
       actionedAt: new Date(),
       createdAt: new Date(),
       updatedAt: new Date(),
     };
 
-    const sentMail = eventBus.emit(EVENTS.EMPLOYEE_CREATED, {
-      employeeId: employeePayload.id,
+    const sent = eventBus.emit(EVENTS.EMPLOYEE_CREATED, {
+      employeeId,
       employeeNumber: employeePayload.employeeNumber,
-      email: employeePayload.email,
-      password: generatedPassword,
+      email: payload.email,
+      password,
       tenantId: actor.tenantId,
     });
 
-    if (sentMail) {
-      await db.insert(employeesTable).values(employeePayload);
-    } else {
-      throw ApiError.internal('Failed to send employee credentials.');
+    if (!sent) {
+      throw ApiError.internal('Failed to send employee credentials');
     }
 
-    return this.getById(employeePayload.id, actor);
+    await db.insert(employeesTable).values(employeePayload);
+
+    return this.findOne(employeeId, actor);
   }
 
-  // GET EMPLOYEE BY ID
-  static async getById(id, actor) {
-    if (!id) {
-      throw ApiError.badRequest('Employee id missing');
-    }
-
-    if (!actor?.tenantId) {
-      throw ApiError.badRequest('Tenant id missing');
+  static async findOne(id, actor) {
+    if (!id || !actor?.tenantId) {
+      throw ApiError.badRequest('Invalid request');
     }
 
     const [row] = await db
-      .select({
-        id: employeesTable.id,
-        employeeNumber: employeesTable.employeeNumber,
-        firstName: employeesTable.firstName,
-        lastName: employeesTable.lastName,
-        email: employeesTable.email,
-        emailVerifiedAt: employeesTable.emailVerifiedAt,
-        mobileNumber: employeesTable.mobileNumber,
-        employeeStatus: employeesTable.employeeStatus,
-        departmentId: employeesTable.departmentId,
-        actionReason: employeesTable.actionReason,
-        actionedAt: employeesTable.actionedAt,
-        tenantId: employeesTable.tenantId,
-        createdAt: employeesTable.createdAt,
-        updatedAt: employeesTable.updatedAt,
-        profilePicture: employeesTable.profilePicture,
-        password: employeesTable.passwordHash,
-
-        // department
-        departmentCode: departmentTable.departmentCode,
-      })
+      .select()
       .from(employeesTable)
-      .leftJoin(
-        departmentTable,
-        eq(departmentTable.id, employeesTable.departmentId),
-      )
       .where(
         and(
           eq(employeesTable.id, id),
@@ -157,91 +130,62 @@ class EmployeeService {
       throw ApiError.notFound('Employee not found');
     }
 
-    const decryptPass = decrypt(row.password);
-    row.password = decryptPass;
-
     return {
       ...row,
-      profilePictureUrl: s3Service.buildS3Url(row.profilePicture),
+      profilePictureUrl: row.profilePicture
+        ? s3Service.buildS3Url(row.profilePicture)
+        : null,
     };
   }
 
-  // GET ALL EMPLOYEES
   static async findAll(query = {}, actor) {
     if (!actor?.tenantId) {
       throw ApiError.badRequest('Tenant context missing');
     }
 
     let { search = '', status = 'all', limit = 20, page = 1 } = query;
-
     limit = Number(limit);
     page = Number(page);
-    search = search.trim();
 
     const offset = (page - 1) * limit;
-
-    /* ================= CONDITIONS ================= */
     const conditions = [eq(employeesTable.tenantId, actor.tenantId)];
 
-    if (search.length > 0) {
+    if (search) {
+      const term = `%${search}%`;
       conditions.push(
         or(
-          like(employeesTable.firstName, `%${search}%`),
-          like(employeesTable.lastName, `%${search}%`),
-          like(employeesTable.email, `%${search}%`),
-          like(employeesTable.mobileNumber, `%${search}%`),
-          like(employeesTable.employeeNumber, `%${search}%`),
+          like(employeesTable.firstName, term),
+          like(employeesTable.lastName, term),
+          like(employeesTable.email, term),
+          like(employeesTable.employeeNumber, term),
         ),
       );
     }
 
-    if (status && status !== 'all' && status !== 'undefined') {
+    if (status !== 'all') {
       conditions.push(eq(employeesTable.employeeStatus, status));
     }
 
-    /* ================= DATA ================= */
     const data = await db
       .select()
       .from(employeesTable)
       .where(and(...conditions))
+      .orderBy(desc(employeesTable.createdAt))
       .limit(limit)
-      .offset(offset)
-      .orderBy(desc(employeesTable.createdAt));
+      .offset(offset);
 
-    /* ================= COUNT ================= */
     const [{ total }] = await db
       .select({ total: count() })
       .from(employeesTable)
       .where(and(...conditions));
 
-    /* ================= NORMALIZE (INLINE, NO HELPER) ================= */
-    const rows = data.map((emp) => {
-      let profilePicture = emp.profilePicture;
-      let profilePictureUrl = null;
-
-      if (profilePicture) {
-        // CASE 1: DB already has FULL URL (legacy)
-        if (profilePicture.startsWith('http')) {
-          profilePictureUrl = profilePicture;
-
-          // extract key back for consistency
-          profilePicture = profilePicture.replace(/^https?:\/\/[^/]+\//, '');
-        }
-        // CASE 2: DB has only KEY (correct)
-        else {
-          profilePictureUrl = s3Service.buildS3Url(profilePicture);
-        }
-      }
-
-      return {
-        ...emp,
-        profilePicture, // ✅ RAW DB VALUE (key only)
-        profilePictureUrl, // ✅ SAFE PUBLIC URL
-      };
-    });
-
     return {
-      data: rows,
+      data: data.map((e) => ({
+        ...e,
+        profilePictureUrl: e.profilePicture
+          ? s3Service.buildS3Url(e.profilePicture)
+          : null,
+      })),
       meta: {
         page,
         limit,
@@ -252,9 +196,9 @@ class EmployeeService {
   }
 
   static async update(id, payload, actor, file) {
-    const existing = await this.getById(id, actor);
+    const existing = await this.findOne(id, actor);
 
-    const UPDATABLE_FIELDS = [
+    const UPDATABLE = [
       'firstName',
       'lastName',
       'email',
@@ -264,109 +208,55 @@ class EmployeeService {
       'actionReason',
     ];
 
-    const cleanPayload = {};
-    for (const key of UPDATABLE_FIELDS) {
-      if (payload[key] !== undefined) {
-        cleanPayload[key] = payload[key];
-      }
-    }
-
-    if (Object.keys(cleanPayload).length === 0 && !file) {
-      return {
-        id: existing.id,
-        updatedAt: existing.updatedAt,
-      };
+    const updates = {};
+    for (const key of UPDATABLE) {
+      if (payload[key] !== undefined) updates[key] = payload[key];
     }
 
     let profilePicture = existing.profilePicture;
-    let uploadedKey = null;
 
     if (file) {
       const uploaded = await s3Service.upload(file.path, 'employee-profile');
-      uploadedKey = uploaded.key;
-      profilePicture = uploadedKey;
-    }
+      profilePicture = uploaded.key;
 
-    if (cleanPayload.departmentId) {
-      const [department] = await db
-        .select()
-        .from(departmentTable)
-        .where(
-          and(
-            eq(departmentTable.id, cleanPayload.departmentId),
-            eq(departmentTable.tenantId, actor.tenantId),
-          ),
-        )
-        .limit(1);
-
-      if (!department) {
-        if (uploadedKey) {
-          await s3Service.deleteByKey(uploadedKey);
-        }
-        throw ApiError.badRequest('Invalid department ID');
+      if (existing.profilePicture) {
+        await s3Service.deleteByKey(existing.profilePicture);
       }
     }
-
-    const updatedAt = new Date();
 
     await db
       .update(employeesTable)
       .set({
-        ...cleanPayload,
+        ...updates,
         profilePicture,
-        updatedAt,
-        actionedAt: cleanPayload.employeeStatus
-          ? updatedAt
-          : existing.actionedAt,
+        updatedAt: new Date(),
+        actionedAt: updates.employeeStatus ? new Date() : existing.actionedAt,
       })
-      .where(
-        and(
-          eq(employeesTable.id, id),
-          eq(employeesTable.tenantId, actor.tenantId),
-        ),
-      );
-
-    if (uploadedKey && existing.profilePicture) {
-      await s3Service.deleteByKey(existing.profilePicture);
-    }
+      .where(eq(employeesTable.id, id));
 
     if (
-      cleanPayload.employeeStatus &&
-      cleanPayload.employeeStatus !== existing.employeeStatus
+      updates.employeeStatus &&
+      updates.employeeStatus !== existing.employeeStatus
     ) {
       eventBus.emit(EVENTS.EMPLOYEE_STATUS_CHANGED, {
         tenantId: actor.tenantId,
         employeeId: id,
         oldStatus: existing.employeeStatus,
-        newStatus: cleanPayload.employeeStatus,
-        actionReason: cleanPayload.actionReason,
+        newStatus: updates.employeeStatus,
+        actionReason: updates.actionReason,
       });
     }
 
-    return {
-      id,
-      updatedAt,
-      ...cleanPayload,
-      ...(uploadedKey ? { profilePicture: uploadedKey } : {}),
-    };
+    return this.findOne(id, actor);
   }
 
-  // DELETE
   static async delete(id, actor) {
-    const employee = await this.getById(id, actor);
+    const employee = await this.findOne(id, actor);
 
     if (employee.profilePicture) {
-      try {
-        await s3Service.deleteByKey(employee.profilePicture);
-      } catch (err) {
-        console.error(
-          'Failed to delete employee profile picture from S3:',
-          err.message,
-        );
-      }
+      await s3Service.deleteByKey(employee.profilePicture).catch(() => {});
     }
 
-    // 3️⃣ Delete employee record
     await db
       .delete(employeesTable)
       .where(
@@ -375,6 +265,84 @@ class EmployeeService {
           eq(employeesTable.tenantId, actor.tenantId),
         ),
       );
+
+    return true;
+  }
+
+  static async assignPermissions(employeeId, permissions, actor) {
+    if (!actor?.tenantId || !actor?.id || !actor?.type) {
+      throw ApiError.unauthorized('Invalid actor context');
+    }
+
+    if (!Array.isArray(permissions) || permissions.length === 0) {
+      throw ApiError.badRequest('Permissions array is required');
+    }
+
+    // 1️⃣ Target employee (TENANT SAFE)
+    const [employee] = await db
+      .select({
+        id: employeesTable.id,
+        tenantId: employeesTable.tenantId,
+      })
+      .from(employeesTable)
+      .where(
+        and(
+          eq(employeesTable.id, employeeId),
+          eq(employeesTable.tenantId, actor.tenantId),
+        ),
+      )
+      .limit(1);
+
+    if (!employee) {
+      throw ApiError.notFound('Employee not found');
+    }
+
+    // 2️⃣ Optional: self-permission modification block
+    if (actor.type === 'EMPLOYEE' && actor.id === employeeId) {
+      throw ApiError.forbidden('You cannot modify your own permissions');
+    }
+
+    // 3️⃣ Collect permission IDs
+    const permissionIds = permissions.map((p) => p.permissionId);
+
+    // 4️⃣ Validate permission IDs
+    const existing = await db
+      .select({ id: permissionTable.id })
+      .from(permissionTable)
+      .where(inArray(permissionTable.id, permissionIds));
+
+    if (existing.length !== permissionIds.length) {
+      throw ApiError.badRequest('Invalid permission IDs');
+    }
+
+    // 5️⃣ Actor permission enforcement (CRITICAL)
+    const actorPermissions = await resolvePermissions(actor);
+
+    if (!actorPermissions.includes('*')) {
+      const forbidden = permissionIds.filter(
+        (pid) => !actorPermissions.includes(pid),
+      );
+
+      if (forbidden.length) {
+        throw ApiError.forbidden(
+          'You cannot assign permissions you do not have',
+        );
+      }
+    }
+
+    // 6️⃣ Replace permissions (CLEAR → INSERT)
+    await db
+      .delete(employeePermissionTable)
+      .where(eq(employeePermissionTable.employeeId, employeeId));
+
+    await db.insert(employeePermissionTable).values(
+      permissions.map((p) => ({
+        id: randomUUID(),
+        employeeId,
+        permissionId: p.permissionId,
+        effect: p.effect ?? 'ALLOW', // ALLOW | DENY
+      })),
+    );
 
     return true;
   }

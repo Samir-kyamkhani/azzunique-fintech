@@ -12,7 +12,7 @@ import { resolvePermissions } from './permission.resolver.js';
 
 class DepartmentService {
   async create(payload, actor) {
-    if (!actor.tenantId) {
+    if (!actor?.tenantId) {
       throw ApiError.badRequest('Tenant missing');
     }
 
@@ -28,7 +28,7 @@ class DepartmentService {
       .limit(1);
 
     if (existing) {
-      throw ApiError.conflict('Department code already exists in this tenant');
+      throw ApiError.conflict('Department already exists');
     }
 
     const id = crypto.randomUUID();
@@ -60,7 +60,6 @@ class DepartmentService {
         departmentCode: departmentTable.departmentCode,
         departmentName: departmentTable.departmentName,
         departmentDescription: departmentTable.departmentDescription,
-
         permissionId: permissionTable.id,
         resource: permissionTable.resource,
         action: permissionTable.action,
@@ -85,25 +84,19 @@ class DepartmentService {
       throw ApiError.notFound('Department not found');
     }
 
-    const department = {
+    return {
       id: rows[0].departmentId,
       departmentCode: rows[0].departmentCode,
       departmentName: rows[0].departmentName,
       departmentDescription: rows[0].departmentDescription,
-      permissions: [],
+      permissions: rows
+        .filter((r) => r.permissionId)
+        .map((r) => ({
+          id: r.permissionId,
+          resource: r.resource,
+          action: r.action,
+        })),
     };
-
-    for (const row of rows) {
-      if (row.permissionId) {
-        department.permissions.push({
-          id: row.permissionId,
-          resource: row.resource,
-          action: row.action,
-        });
-      }
-    }
-
-    return department;
   }
 
   async update(id, payload, actor) {
@@ -123,11 +116,16 @@ class DepartmentService {
     const [{ count }] = await db
       .select({ count: sql`COUNT(*)`.mapWith(Number) })
       .from(employeesTable)
-      .where(eq(employeesTable.departmentId, id));
+      .where(
+        and(
+          eq(employeesTable.departmentId, id),
+          eq(employeesTable.tenantId, actor.tenantId),
+        ),
+      );
 
     if (count > 0) {
       throw ApiError.conflict(
-        `Department is assigned to ${count} employee(s). Please delete employees first.`,
+        `Department has ${count} employee(s). Delete them first.`,
       );
     }
 
@@ -139,9 +137,31 @@ class DepartmentService {
   }
 
   async assignPermissions(departmentId, permissionIds, actor) {
-    await this.findOne(departmentId, actor);
+    if (!actor?.tenantId || !actor?.id) {
+      throw ApiError.unauthorized('Invalid actor context');
+    }
 
-    // Validate permission existence
+    if (!Array.isArray(permissionIds)) {
+      throw ApiError.badRequest('permissionIds must be an array');
+    }
+
+    // 1️⃣ Department existence + tenant safety
+    const [department] = await db
+      .select({ id: departmentTable.id })
+      .from(departmentTable)
+      .where(
+        and(
+          eq(departmentTable.id, departmentId),
+          eq(departmentTable.tenantId, actor.tenantId),
+        ),
+      )
+      .limit(1);
+
+    if (!department) {
+      throw ApiError.notFound('Department not found');
+    }
+
+    // 2️⃣ Validate permission IDs
     const existing = await db
       .select({ id: permissionTable.id })
       .from(permissionTable)
@@ -149,34 +169,31 @@ class DepartmentService {
 
     const existingIds = existing.map((p) => p.id);
 
-    const invalidIds = permissionIds.filter(
-      (pid) => !existingIds.includes(pid),
-    );
-
-    if (invalidIds.length > 0) {
-      throw ApiError.badRequest(
-        `Invalid permission id(s): ${invalidIds.join(', ')}`,
-      );
+    if (existingIds.length !== permissionIds.length) {
+      throw ApiError.badRequest('One or more permission IDs are invalid');
     }
 
-    // Actor permission check
+    // 3️⃣ Actor permission enforcement (CRITICAL)
     const actorPermissions = await resolvePermissions(actor);
 
     if (!actorPermissions.includes('*')) {
-      const unauthorized = existingIds.filter(
+      const forbidden = existingIds.filter(
         (pid) => !actorPermissions.includes(pid),
       );
 
-      if (unauthorized.length > 0) {
+      if (forbidden.length) {
         throw ApiError.forbidden(
-          'You cannot assign permissions that you do not have',
+          'You cannot assign permissions you do not have',
         );
       }
     }
 
+    // 4️⃣ Replace department permissions (CLEAR → INSERT)
     await db
       .delete(departmentPermissionTable)
       .where(eq(departmentPermissionTable.departmentId, departmentId));
+
+    if (!existingIds.length) return true;
 
     await db.insert(departmentPermissionTable).values(
       existingIds.map((pid) => ({
@@ -185,6 +202,8 @@ class DepartmentService {
         permissionId: pid,
       })),
     );
+
+    return true;
   }
 }
 

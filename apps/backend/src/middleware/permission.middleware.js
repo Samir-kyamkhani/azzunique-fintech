@@ -7,6 +7,10 @@ export const PermissionMiddleware = (required) => {
   }
 
   return async (req, res, next) => {
+    if (!req.user) {
+      throw ApiError.unauthorized('Authentication required');
+    }
+
     req._resolvedPermissions ??= await resolvePermissions(req.user);
 
     const permissions = req._resolvedPermissions;
