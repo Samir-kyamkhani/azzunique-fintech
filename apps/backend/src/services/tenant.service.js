@@ -1,18 +1,20 @@
 import { and, count, desc, eq, like, or } from 'drizzle-orm';
 import { tenantsTable } from '../models/core/tenant.schema.js';
+import { employeesTable } from '../models/core/employee.schema.js';
 import { ApiError } from '../lib/ApiError.js';
 import { db } from '../database/core/core-db.js';
 import { generateNumber } from '../lib/lib.js';
-import { employeesTable } from '../models/core/employee.schema.js';
 
 class TenantService {
-  // ================= CREATE =================
   static async create(payload, actor) {
-    if (!actor.isTenantOwner) {
-      throw ApiError.forbidden('Only tenant owner can create tenants');
+    // ✅ Allow tenant owner OR allowed employee
+    if (!actor.isTenantOwner && actor.type !== 'EMPLOYEE') {
+      throw ApiError.forbidden(
+        'Only tenant owner or authorized employee can create tenants',
+      );
     }
 
-    // 1️⃣ Actor tenant fetch
+    // 1️⃣ Actor tenant
     const [currentTenant] = await db
       .select({
         id: tenantsTable.id,
@@ -27,7 +29,7 @@ class TenantService {
       throw ApiError.notFound('Actor tenant not found');
     }
 
-    // 2️⃣ Hierarchy check
+    // 2️⃣ Hierarchy enforcement
     const allowedChildMap = {
       AZZUNIQUE: ['RESELLER'],
       RESELLER: ['WHITELABEL'],
@@ -40,40 +42,7 @@ class TenantService {
       );
     }
 
-    if (
-      currentTenant.userType === 'AZZUNIQUE' &&
-      payload.userType === 'WHITELABEL'
-    ) {
-      throw ApiError.forbidden(
-        'AZZUNIQUE cannot directly create WHITELABEL. Create RESELLER first.',
-      );
-    }
-
-    const scopeTenantId = currentTenant.id;
-
-    // 4️⃣ Duplicate tenant check
-    const [existingTenant] = await db
-      .select({ id: tenantsTable.id })
-      .from(tenantsTable)
-      .where(
-        and(
-          eq(tenantsTable.parentTenantId, scopeTenantId),
-          or(
-            eq(tenantsTable.tenantEmail, payload.tenantEmail),
-            eq(tenantsTable.tenantMobileNumber, payload.tenantMobileNumber),
-            eq(tenantsTable.tenantWhatsapp, payload.tenantWhatsapp),
-          ),
-        ),
-      )
-      .limit(1);
-
-    if (existingTenant) {
-      throw ApiError.conflict(
-        'Tenant with this email, mobile number or whatsapp already exists',
-      );
-    }
-
-    // 5️⃣ AZZUNIQUE singleton
+    // 3️⃣ AZZUNIQUE singleton
     if (payload.userType === 'AZZUNIQUE') {
       const [azz] = await db
         .select({ id: tenantsTable.id })
@@ -86,11 +55,33 @@ class TenantService {
       }
     }
 
-    // 6️⃣ INSERT
+    const parentTenantId = currentTenant.id;
+
+    // 4️⃣ Duplicate tenant check
+    const [existing] = await db
+      .select({ id: tenantsTable.id })
+      .from(tenantsTable)
+      .where(
+        and(
+          eq(tenantsTable.parentTenantId, parentTenantId),
+          or(
+            eq(tenantsTable.tenantEmail, payload.tenantEmail),
+            eq(tenantsTable.tenantMobileNumber, payload.tenantMobileNumber),
+            eq(tenantsTable.tenantWhatsapp, payload.tenantWhatsapp),
+          ),
+        ),
+      )
+      .limit(1);
+
+    if (existing) {
+      throw ApiError.conflict('Tenant already exists under this parent');
+    }
+
+    // 5️⃣ Insert tenant
     await db.insert(tenantsTable).values({
       ...payload,
       tenantNumber: generateNumber('TNT'),
-      parentTenantId: scopeTenantId,
+      parentTenantId,
       createdByUserId: actor.type === 'USER' ? actor.id : null,
       createdByEmployeeId: actor.type === 'EMPLOYEE' ? actor.id : null,
       actionedAt: ['INACTIVE', 'SUSPENDED', 'DELETED'].includes(
@@ -102,47 +93,42 @@ class TenantService {
       updatedAt: new Date(),
     });
 
-    // 7️⃣ RETURN
-    const [insertedTenant] = await db
+    const [created] = await db
       .select()
       .from(tenantsTable)
       .where(
         and(
           eq(tenantsTable.tenantEmail, payload.tenantEmail),
-          eq(tenantsTable.parentTenantId, scopeTenantId),
+          eq(tenantsTable.parentTenantId, parentTenantId),
         ),
       )
       .limit(1);
 
-    return insertedTenant;
+    return created;
   }
 
-  // ================= GET OWN CHILDREN =================
-  static async getAllChildren(actor, query = {}) {
-    if (!actor.isTenantOwner) {
-      throw ApiError.forbidden('Only tenant owner can view child tenants');
+  static async findAll(actor, query = {}) {
+    if (!actor.isTenantOwner && actor.type !== 'EMPLOYEE') {
+      throw ApiError.forbidden('Access denied');
     }
 
     let { search = '', status = 'all', limit = 20, page = 1 } = query;
     limit = Number(limit);
     page = Number(page);
-    search = search.trim();
     const offset = (page - 1) * limit;
 
     const conditions = [eq(tenantsTable.parentTenantId, actor.tenantId)];
 
-    if (search.length > 0) {
+    if (search) {
       conditions.push(
         or(
           like(tenantsTable.tenantNumber, `%${search}%`),
           like(tenantsTable.tenantName, `%${search}%`),
-          like(tenantsTable.tenantMobileNumber, `%${search}%`),
-          like(tenantsTable.tenantWhatsapp, `%${search}%`),
         ),
       );
     }
 
-    if (status && status !== 'all') {
+    if (status !== 'all') {
       conditions.push(eq(tenantsTable.tenantStatus, status));
     }
 
@@ -154,7 +140,6 @@ class TenantService {
       .offset(offset)
       .orderBy(desc(tenantsTable.createdAt));
 
-    /* ---------------- COUNT ---------------- */
     const [{ total }] = await db
       .select({ total: count() })
       .from(tenantsTable)
@@ -171,69 +156,8 @@ class TenantService {
     };
   }
 
-  // ================= GET CHILDREN + GRANDCHILDREN =================
-  static async getTenantDescendants(params, actor, query = {}) {
-    const { tenantId } = params;
-    let { search = '', status = 'all', limit = 20, page = 1 } = query;
-    limit = Number(limit);
-    page = Number(page);
-    search = search.trim();
-
-    const offset = (page - 1) * limit;
-
-    // ----------------- STEP 0: Fetch tenant itself -----------------
-    const [tenant] = await db
-      .select()
-      .from(tenantsTable)
-      .where(eq(tenantsTable.id, tenantId))
-      .limit(1);
-
-    if (!tenant) {
-      throw ApiError.notFound('Tenant not found');
-    }
-
-    if (
-      tenant.id !== actor.tenantId &&
-      tenant.parentTenantId !== actor.tenantId
-    ) {
-      throw ApiError.forbidden('You are not allowed to view this tenant');
-    }
-
-    // ----------------- STEP 1: Fetch direct children -----------------
-    const childConditions = [eq(tenantsTable.parentTenantId, tenantId)];
-
-    if (search.length > 0) {
-      childConditions.push(
-        or(
-          like(tenantsTable.tenantNumber, `%${search}%`),
-          like(tenantsTable.tenantName, `%${search}%`),
-          like(tenantsTable.tenantMobileNumber, `%${search}%`),
-          like(tenantsTable.tenantWhatsapp, `%${search}%`),
-        ),
-      );
-    }
-
-    if (status && status !== 'all') {
-      childConditions.push(eq(tenantsTable.tenantStatus, status));
-    }
-
-    const children = await db
-      .select()
-      .from(tenantsTable)
-      .where(and(...childConditions))
-      .limit(limit)
-      .offset(offset)
-      .orderBy(tenantsTable.createdAt);
-
-    return {
-      tenant,
-      children,
-    };
-  }
-
-  // ================= GET BY ID =================
-  static async getById(id, actor) {
-    const [result] = await db
+  static async findOne(id, actor) {
+    const [row] = await db
       .select({
         tenant: tenantsTable,
         employeeNumber: employeesTable.employeeNumber,
@@ -246,60 +170,87 @@ class TenantService {
       .where(eq(tenantsTable.id, id))
       .limit(1);
 
-    if (!result) {
+    if (!row) {
       throw ApiError.notFound('Tenant not found');
     }
 
-    if (
-      result.tenant.id !== actor.tenantId &&
-      result.tenant.parentTenantId !== actor.tenantId
-    ) {
+    const isSameTenant = row.tenant.id === actor.tenantId;
+    const isDirectChild = row.tenant.parentTenantId === actor.tenantId;
+    const isAncestor = actor.isTenantOwner === true;
+
+    if (!isSameTenant && !isDirectChild && !isAncestor) {
       throw ApiError.forbidden('Access denied');
     }
 
     return {
-      ...result.tenant,
-      employee: {
-        employeeNumber: result.employeeNumber,
-      },
+      ...row.tenant,
+      employee: row.employeeNumber
+        ? { employeeNumber: row.employeeNumber }
+        : null,
     };
   }
 
-  // ================= UPDATE =================
-  static async update(id, payload) {
-    if (!actor.isTenantOwner || actor.tenantId !== id) {
-      throw ApiError.forbidden('Only tenant owner can update tenant');
+  static async update(id, payload, actor) {
+    if (!actor.isTenantOwner && actor.type !== 'EMPLOYEE') {
+      throw ApiError.forbidden('Access denied');
     }
 
-    const tenant = await this.getById(id);
+    const tenant = await this.findOne(id, actor);
 
-    const updatedFields = {};
+    // ❌ Prevent removing last owner
+    if (tenant.parentTenantId === null && payload.tenantStatus === 'DELETED') {
+      throw ApiError.forbidden('Root tenant cannot be deleted');
+    }
 
-    Object.keys(payload).forEach((key) => {
+    const updates = {};
+
+    for (const key of Object.keys(payload)) {
       if (payload[key] !== tenant[key]) {
-        updatedFields[key] = payload[key];
+        updates[key] = payload[key];
       }
-    });
+    }
 
     if (payload.tenantStatus) {
-      updatedFields.tenantStatus = payload.tenantStatus;
-      updatedFields.actionReason =
+      updates.actionReason =
         payload.tenantStatus === 'ACTIVE' ? null : payload.actionReason;
-      updatedFields.actionedAt =
+      updates.actionedAt =
         payload.tenantStatus === 'ACTIVE' ? null : new Date();
     }
 
-    updatedFields.updatedAt = new Date();
+    updates.updatedAt = new Date();
 
-    await db
-      .update(tenantsTable)
-      .set(updatedFields)
-      .where(eq(tenantsTable.id, id));
+    await db.update(tenantsTable).set(updates).where(eq(tenantsTable.id, id));
 
-    return {
-      id,
-      ...updatedFields,
-    };
+    return { id, ...updates };
+  }
+
+  static async getAllDescendants({ tenantId }, actor, query = {}) {
+    const [tenant] = await db
+      .select()
+      .from(tenantsTable)
+      .where(eq(tenantsTable.id, tenantId))
+      .limit(1);
+
+    if (!tenant) {
+      throw ApiError.notFound('Tenant not found');
+    }
+
+    // ✅ Allow self OR ancestor owner OR employee under same tenant tree
+    if (
+      tenant.id !== actor.tenantId &&
+      actor.isTenantOwner !== true &&
+      actor.type !== 'EMPLOYEE'
+    ) {
+      throw ApiError.forbidden('Access denied');
+    }
+
+    const children = await db
+      .select()
+      .from(tenantsTable)
+      .where(eq(tenantsTable.parentTenantId, tenantId))
+      .orderBy(desc(tenantsTable.createdAt));
+
+    return { tenant, children };
   }
 }
 

@@ -1,40 +1,43 @@
 import { TenantService } from '../services/tenant.service.js';
 
-// ================= CREATE =================
-const createTenant = async (req, res) => {
+export const createTenant = async (req, res) => {
   const tenant = await TenantService.create(req.body, req.user);
-
-  res
-    .status(201)
-    .json({ data: tenant, message: 'Tenant created successfully' });
+  res.status(201).json({
+    data: tenant,
+    message: 'Tenant created successfully',
+  });
 };
 
-// ================= GET BY ID =================
-const getTenantById = async (req, res) => {
-  const tenant = await TenantService.getById(req.params.id);
-  res.json({ data: tenant, message: 'Tenant fetched successfully' });
-};
-
-// ================= UPDATE =================
-const updateTenant = async (req, res) => {
-  const tenant = await TenantService.update(req.params.id, req.body);
-  res.json({ data: tenant, message: 'Tenant updated successfully' });
-};
-
-// ================= GET OWN CHILDREN =================
-const getAllTenants = async (req, res) => {
-  const result = await TenantService.getAllChildren(req.user, req.query);
+export const findAllTenants = async (req, res) => {
+  const result = await TenantService.findAll(req.user, req.query);
 
   res.json({
     data: result.data,
     meta: result.meta,
-    message: 'fetched successfully',
+    message: 'Fetched successfully',
   });
 };
 
-// ================= GET CHILDREN + GRANDCHILDREN =================
-const getTenantDescendants = async (req, res) => {
-  const data = await TenantService.getTenantDescendants(
+export const findTenant = async (req, res) => {
+  const tenant = await TenantService.findOne(req.params.id, req.user);
+
+  res.json({
+    data: tenant,
+    message: 'Tenant fetched successfully',
+  });
+};
+
+export const updateTenant = async (req, res) => {
+  const tenant = await TenantService.update(req.params.id, req.body, req.user);
+
+  res.json({
+    data: tenant,
+    message: 'Tenant updated successfully',
+  });
+};
+
+export const getAllDescendants = async (req, res) => {
+  const data = await TenantService.getAllDescendants(
     req.params,
     req.user,
     req.query,
@@ -44,12 +47,4 @@ const getTenantDescendants = async (req, res) => {
     data,
     message: 'Descendants fetched successfully',
   });
-};
-
-export {
-  createTenant,
-  getTenantById,
-  updateTenant,
-  getAllTenants,
-  getTenantDescendants,
 };

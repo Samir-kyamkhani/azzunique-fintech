@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import {
   createTenant,
-  getTenantById,
+  findTenant,
   updateTenant,
-  getAllTenants,
-  getTenantDescendants,
+  findAllTenants,
+  getAllDescendants,
 } from '../controllers/tenant.controller.js';
 import { validate } from '../middleware/zod-validate.js';
 import {
@@ -17,20 +17,20 @@ import { AuthMiddleware } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
-// Auth applied to all routes
 router.use(AuthMiddleware);
 
-// ================= CRUD =================
 router.post(
   '/',
   validate({ body: createTenantSchema }),
   asyncHandler(createTenant),
 );
 
+router.get('/', asyncHandler(findAllTenants));
+
 router.get(
   '/:id',
   validate({ params: idParamSchema }),
-  asyncHandler(getTenantById),
+  asyncHandler(findTenant),
 );
 
 router.put(
@@ -39,11 +39,6 @@ router.put(
   asyncHandler(updateTenant),
 );
 
-// ================= CHILDREN / GRANDCHILDREN =================
-// Own children of logged-in actor
-router.get('/', asyncHandler(getAllTenants));
-
-// Children
-router.get('/:tenantId/descendants', asyncHandler(getTenantDescendants));
+router.get('/:tenantId/descendants', asyncHandler(getAllDescendants));
 
 export default router;
