@@ -3,7 +3,7 @@ import { tenantsTable } from '../models/core/tenant.schema.js';
 import { employeesTable } from '../models/core/employee.schema.js';
 import { ApiError } from '../lib/ApiError.js';
 import { db } from '../database/core/core-db.js';
-import { generateNumber } from '../lib/lib.js';
+import { generateNumber, generatePrefix } from '../lib/lib.js';
 
 class TenantService {
   static async create(payload, actor) {
@@ -77,10 +77,12 @@ class TenantService {
       throw ApiError.conflict('Tenant already exists under this parent');
     }
 
+    const tenantPrefix = generatePrefix(payload.userType);
+
     // 5️⃣ Insert tenant
     await db.insert(tenantsTable).values({
       ...payload,
-      tenantNumber: generateNumber('TNT'),
+      tenantNumber: generateNumber(tenantPrefix),
       parentTenantId,
       createdByUserId: actor.type === 'USER' ? actor.id : null,
       createdByEmployeeId: actor.type === 'EMPLOYEE' ? actor.id : null,

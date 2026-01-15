@@ -28,6 +28,7 @@ class UserService {
       .select({
         id: roleTable.id,
         roleLevel: roleTable.roleLevel,
+        roleCode: roleTable.roleCode,
       })
       .from(roleTable)
       .where(eq(roleTable.id, data.roleId))
@@ -128,10 +129,11 @@ class UserService {
     const pin = generateTransactionPin();
     const userId = randomUUID();
 
+    const rolePrefix = generatePrefix(targetRole.roleCode);
+
     const payload = {
       id: userId,
-      userNumber: generateNumber('USR'),
-
+      userNumber: generateNumber(rolePrefix),
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email,

@@ -101,7 +101,7 @@ export const verifyPassword = (plainText, encryptedText) => {
   try {
     const decrypted = decrypt(encryptedText);
     console.log(decrypted);
-    
+
     return safeEqual(plainText, decrypted);
   } catch {
     return false;
@@ -197,3 +197,19 @@ export const generateTransactionPin = (length = 4) => {
 
   return pin;
 };
+
+export function generatePrefix(source, length = 3, padChar = 'X') {
+  if (!source || typeof source !== 'string') {
+    throw new Error('generatePrefix requires a non-empty string');
+  }
+
+  const cleaned = source.replace(/[^A-Za-z]/g, '').toUpperCase();
+
+  if (!cleaned.length) {
+    throw new Error('generatePrefix: invalid source after sanitization');
+  }
+
+  return cleaned.length >= length
+    ? cleaned.substring(0, length)
+    : cleaned.padEnd(length, padChar);
+}

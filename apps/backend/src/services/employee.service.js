@@ -2,7 +2,12 @@ import { and, count, desc, eq, like, or, inArray } from 'drizzle-orm';
 import { db } from '../database/core/core-db.js';
 import { ApiError } from '../lib/ApiError.js';
 import { randomUUID } from 'node:crypto';
-import { encrypt, generateNumber, generatePassword } from '../lib/lib.js';
+import {
+  encrypt,
+  generateNumber,
+  generatePassword,
+  generatePrefix,
+} from '../lib/lib.js';
 import { eventBus } from '../events/events.js';
 import { EVENTS } from '../events/events.constants.js';
 import s3Service from '../lib/S3Service.js';
@@ -32,7 +37,10 @@ class EmployeeService {
     }
 
     const [department] = await db
-      .select({ id: departmentTable.id })
+      .select({
+        id: departmentTable.id,
+        departmentCode: departmentTable.departmentCode,
+      })
       .from(departmentTable)
       .where(
         and(
@@ -79,9 +87,11 @@ class EmployeeService {
 
     const employeeId = randomUUID();
 
+    const deptPrefix = generatePrefix(department.departmentCode);
+
     const employeePayload = {
       id: employeeId,
-      employeeNumber: generateNumber('EMP'),
+      employeeNumber: generateNumber(deptPrefix),
       ...payload,
       passwordHash,
       employeeStatus: 'INACTIVE',
