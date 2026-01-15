@@ -20,6 +20,7 @@ import { eventBus } from '../events/events.js';
 import { EVENTS } from '../events/events.constants.js';
 import s3Service from '../lib/S3Service.js';
 import { resolvePermissions } from './permission.resolver.js';
+import { buildVisibilityCondition } from '../lib/visibility.utils.js';
 
 class UserService {
   async create(data, actor) {
@@ -117,8 +118,6 @@ class UserService {
       )
       .limit(1);
 
-    console.log(exists);
-
     if (exists) {
       throw ApiError.conflict('User already exists in this tenant');
     }
@@ -179,11 +178,20 @@ class UserService {
     const limit = query.limit ? parseInt(query.limit, 10) : 20;
     const offset = (page - 1) * limit;
 
-    const conditions = [eq(usersTable.tenantId, actor.tenantId)];
+    const [actorRole] = await db
+      .select({ roleLevel: roleTable.roleLevel })
+      .from(roleTable)
+      .where(eq(roleTable.id, actor.roleId))
+      .limit(1);
 
-    if (!actor.isTenantOwner) {
-      conditions.push(eq(usersTable.ownerUserId, actor.id));
+    if (!actorRole) {
+      throw ApiError.forbidden('Invalid actor role');
     }
+
+    const conditions = [
+      buildVisibilityCondition(actor, actorRole),
+      ne(usersTable.id, actor.id),
+    ];
 
     if (query.status) {
       conditions.push(eq(usersTable.userStatus, query.status));
@@ -329,6 +337,18 @@ class UserService {
   }
 
   async findOne(id, actor) {
+    // 1️⃣ Actor role
+    const [actorRole] = await db
+      .select({ roleLevel: roleTable.roleLevel })
+      .from(roleTable)
+      .where(eq(roleTable.id, actor.roleId))
+      .limit(1);
+
+    if (!actorRole) {
+      throw ApiError.forbidden('Invalid actor role');
+    }
+
+    // 2️⃣ Target user
     const [row] = await db
       .select({
         users: usersTable,
@@ -345,21 +365,20 @@ class UserService {
 
     const user = row.users;
 
-    const isSameTenant = user.tenantId === actor.tenantId;
+    // 3️⃣ READ ACCESS RULES (EXPLICIT)
 
-    // Parent tenant owner accessing FIRST OWNER of child tenant
-    const isParentAccessingChildOwner =
-      actor.isTenantOwner === true &&
-      user.ownerUserId === null && // first owner
-      user.tenantId !== actor.tenantId;
+    if (actorRole.roleLevel !== 0) {
+      const isSameTenant = user.tenantId === actor.tenantId;
+      const isOwner = user.ownerUserId === actor.id;
 
-    if (!isSameTenant && !isParentAccessingChildOwner) {
-      throw ApiError.forbidden('Cross-tenant access denied');
-    }
+      const isParentAccessingFirstOwner =
+        actor.isTenantOwner === true &&
+        user.ownerUserId === null &&
+        user.tenantId !== actor.tenantId;
 
-    // If actor is NOT tenant owner, they can access only their own users
-    if (!actor.isTenantOwner && user.ownerUserId !== actor.id) {
-      throw ApiError.forbidden('You can access only your own users');
+      if (!isSameTenant && !isOwner && !isParentAccessingFirstOwner) {
+        throw ApiError.forbidden('Cross-tenant access denied');
+      }
     }
 
     // 🔑 Role permissions
@@ -376,7 +395,7 @@ class UserService {
       )
       .where(eq(rolePermissionTable.roleId, user.roleId));
 
-    // 🔑 User overrides
+    // 🔑 User permission overrides
     const userPermissions = await db
       .select({
         permissionId: permissionTable.id,
@@ -415,11 +434,35 @@ class UserService {
   }
 
   async update(id, data, actor, file) {
+    // 1️⃣ Fetch target user (READ access already enforced)
     const existingUser = await this.findOne(id, actor);
 
-    // 🔐 Ownership already validated by findOne
+    // 2️⃣ Fetch actor role
+    const [actorRole] = await db
+      .select({ roleLevel: roleTable.roleLevel })
+      .from(roleTable)
+      .where(eq(roleTable.id, actor.roleId))
+      .limit(1);
 
-    // EMAIL DUPLICATE
+    if (!actorRole) {
+      throw ApiError.forbidden('Invalid actor role');
+    }
+
+    // 3️⃣ WRITE ACCESS RULES (EXPLICIT)
+    const isSameTenant = existingUser.tenantId === actor.tenantId;
+    const isOwner = existingUser.ownerUserId === actor.id;
+    const isTenantOwner = actor.isTenantOwner === true && isSameTenant;
+
+    const canUpdate =
+      // AZZUNIQUE / RESELLER → only users they created
+      (actorRole.roleLevel <= 1 && isOwner) ||
+      // Tenant owner → anyone in own tenant
+      isTenantOwner;
+
+    if (!canUpdate) {
+      throw ApiError.forbidden('You are not allowed to update this user');
+    }
+
     if (data.email && data.email !== existingUser.email) {
       const [emailExists] = await db
         .select({ id: usersTable.id })
@@ -438,7 +481,6 @@ class UserService {
       }
     }
 
-    // MOBILE DUPLICATE
     if (data.mobileNumber && data.mobileNumber !== existingUser.mobileNumber) {
       const [mobileExists] = await db
         .select({ id: usersTable.id })
@@ -457,7 +499,6 @@ class UserService {
       }
     }
 
-    // ROLE CHANGE VALIDATION
     if (data.roleId && data.roleId !== existingUser.roleId) {
       const [role] = await db
         .select()
@@ -465,7 +506,10 @@ class UserService {
         .where(eq(roleTable.id, data.roleId))
         .limit(1);
 
-      if (!role) throw ApiError.badRequest('Invalid role ID');
+      if (!role) {
+        throw ApiError.badRequest('Invalid role ID');
+      }
+
       if (role.isSystem && !actor.isTenantOwner) {
         throw ApiError.forbidden('System role assignment not allowed');
       }
@@ -481,7 +525,6 @@ class UserService {
     if (data.roleId !== undefined) payload.roleId = data.roleId;
     if (data.userStatus !== undefined) payload.userStatus = data.userStatus;
 
-    // 📸 Profile image
     if (file) {
       const uploaded = await s3Service.upload(file.path, 'user-profile');
 
@@ -492,10 +535,9 @@ class UserService {
       payload.profilePicture = uploaded.key;
     }
 
-    // 🔔 Status change event
     if (data.userStatus && data.userStatus !== existingUser.userStatus) {
       eventBus.emit(EVENTS.USER_STATUS_CHANGED, {
-        tenantId: actor.tenantId,
+        tenantId: existingUser.tenantId,
         userId: id,
         oldStatus: existingUser.userStatus,
         newStatus: data.userStatus,
@@ -509,26 +551,31 @@ class UserService {
   }
 
   async getAllDescendants(userId, actor, query = {}) {
-    // 1️⃣ Fetch root user (with ownership enforcement)
+    // 1️⃣ Root access check
     const rootUser = await this.findOne(userId, actor);
-    // findOne already ensures:
-    // - same tenant
-    // - tenant owner OR direct ownership
 
     // 2️⃣ Pagination
     const page = query.page ? parseInt(query.page, 10) : 1;
     const limit = query.limit ? parseInt(query.limit, 10) : 20;
     const offset = (page - 1) * limit;
 
-    // 3️⃣ Recursive fetch (STRICT tenant + ownership)
-    const fetchChildrenTree = async (ownerId) => {
+    // 3️⃣ Recursive fetch — OWNER + CREATOR BASED TREE
+    const fetchChildrenTree = async (parentId) => {
       const children = await db
         .select()
         .from(usersTable)
         .where(
           and(
-            eq(usersTable.ownerUserId, ownerId),
-            eq(usersTable.tenantId, actor.tenantId),
+            or(
+              // Normal ownership
+              eq(usersTable.ownerUserId, parentId),
+
+              // First owner created by parent (CRITICAL FIX)
+              and(
+                isNull(usersTable.ownerUserId),
+                eq(usersTable.createdByUserId, parentId),
+              ),
+            ),
             isNull(usersTable.deletedAt),
           ),
         )
@@ -547,10 +594,10 @@ class UserService {
       );
     };
 
-    // 4️⃣ Build tree
+    // 4️⃣ Build full tree
     const descendantsTree = await fetchChildrenTree(rootUser.id);
 
-    // 5️⃣ Pagination only on first level children
+    // 5️⃣ Pagination only on first-level children
     const paginatedChildren = descendantsTree.slice(offset, offset + limit);
 
     return {
@@ -565,11 +612,28 @@ class UserService {
   }
 
   async assignPermissions(userId, permissions, actor) {
+    if (
+      !actor ||
+      !actor.id ||
+      !actor.roleId ||
+      !actor.tenantId ||
+      !actor.type
+    ) {
+      throw ApiError.unauthorized('Invalid actor context');
+    }
+
+    // 🔒 INPUT GUARD
+    if (!Array.isArray(permissions) || permissions.length === 0) {
+      throw ApiError.badRequest('Permissions array is required');
+    }
+
+    // 1️⃣ Fetch target user
     const [targetUser] = await db
       .select({
         id: usersTable.id,
         tenantId: usersTable.tenantId,
         ownerUserId: usersTable.ownerUserId,
+        createdByUserId: usersTable.createdByUserId,
       })
       .from(usersTable)
       .where(eq(usersTable.id, userId))
@@ -579,37 +643,54 @@ class UserService {
       throw ApiError.notFound('User not found');
     }
 
-    if (targetUser.tenantId !== actor.tenantId) {
-      throw ApiError.forbidden('Cross-tenant permission assignment denied');
-    }
+    // 2️⃣ OWNERSHIP RULES (CROSS-TENANT SAFE)
+    const isSameTenant = targetUser.tenantId === actor.tenantId;
 
-    if (!actor.isTenantOwner && targetUser.ownerUserId !== actor.id) {
+    // Tenant owner → anyone in own tenant
+    const isTenantOwner = actor.isTenantOwner === true && isSameTenant;
+
+    // Direct ownership
+    const isDirectOwner = targetUser.ownerUserId === actor.id;
+
+    // Bootstrap ownership (first owner created by actor)
+    const isCreatorOfFirstOwner =
+      targetUser.ownerUserId === null &&
+      targetUser.createdByUserId === actor.id;
+
+    if (!isTenantOwner && !isDirectOwner && !isCreatorOfFirstOwner) {
       throw ApiError.forbidden(
         'You can assign permissions only to your own users',
       );
     }
 
+    // 3️⃣ Self-permission modification blocked
     if (actor.id === userId) {
       throw ApiError.forbidden('You cannot modify your own permissions');
     }
 
+    // 4️⃣ Collect permission IDs
     const permissionIds = permissions.map((p) => p.permissionId);
 
-    const existing = await db
-      .select({ id: permissionTable.id })
+    // 5️⃣ Validate permissions (⚠️ NO isSystem — matches your schema)
+    const existingPermissions = await db
+      .select({
+        id: permissionTable.id,
+      })
       .from(permissionTable)
       .where(inArray(permissionTable.id, permissionIds));
 
-    if (existing.length !== permissionIds.length) {
+    if (existingPermissions.length !== permissionIds.length) {
       throw ApiError.badRequest('Invalid permission IDs');
     }
 
+    // 6️⃣ Actor must already have the permissions
     const actorPermissions = await resolvePermissions(actor);
 
     if (!actorPermissions.includes('*')) {
       const forbidden = permissionIds.filter(
         (pid) => !actorPermissions.includes(pid),
       );
+
       if (forbidden.length) {
         throw ApiError.forbidden(
           'You cannot assign permissions you do not have',
@@ -617,6 +698,7 @@ class UserService {
       }
     }
 
+    // 7️⃣ Replace permissions (clear → insert)
     await db
       .delete(userPermissionTable)
       .where(eq(userPermissionTable.userId, userId));
@@ -626,7 +708,7 @@ class UserService {
         id: randomUUID(),
         userId,
         permissionId: p.permissionId,
-        effect: p.effect,
+        effect: p.effect, // ALLOW | DENY
       })),
     );
   }

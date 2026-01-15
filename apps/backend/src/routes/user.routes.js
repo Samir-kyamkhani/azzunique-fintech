@@ -27,7 +27,12 @@ const router = Router();
 
 router.use(AuthMiddleware);
 
-router.post('/', validate(createUserSchema), asyncHandler(createUser));
+router.post(
+  '/',
+  PermissionMiddleware(PermissionsRegistry.USER.CREATE),
+  validate(createUserSchema),
+  asyncHandler(createUser),
+);
 
 router.get(
   '/',
@@ -37,6 +42,7 @@ router.get(
 
 router.get(
   '/:id',
+  PermissionMiddleware(PermissionsRegistry.USER.READ),
   validate({ params: userIdParamSchema }),
   asyncHandler(findUser),
 );
