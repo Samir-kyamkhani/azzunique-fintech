@@ -11,7 +11,7 @@ import { eq, sql } from 'drizzle-orm';
 import { ApiError } from '../lib/ApiError.js';
 
 export async function resolvePermissions(actor) {
-  if (!actor || !actor.tenantId) {
+  if (actor.type !== 'USER' && actor.type !== 'EMPLOYEE') {
     return [];
   }
 
@@ -24,7 +24,12 @@ export async function resolvePermissions(actor) {
         isSystem: roleTable.isSystem,
       })
       .from(roleTable)
-      .where(eq(roleTable.id, actor.roleId))
+      .where(
+        and(
+          eq(roleTable.id, actor.roleId),
+          eq(roleTable.tenantId, actor.tenantId),
+        ),
+      )
       .limit(1);
 
     if (!role) {

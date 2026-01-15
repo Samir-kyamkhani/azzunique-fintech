@@ -7,9 +7,9 @@ export const PermissionMiddleware = (required) => {
   }
 
   return async (req, res, next) => {
-    const permissions = await resolvePermissions(req.user);
-    console.log('Resolved Permissions:', permissions);
-    console.log('required Permissions:', required);
+    req._resolvedPermissions ??= await resolvePermissions(req.user);
+
+    const permissions = req._resolvedPermissions;
 
     if (permissions.includes('*')) {
       return next();
