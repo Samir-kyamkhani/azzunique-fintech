@@ -1,6 +1,8 @@
 "use client";
 
-import { Users, Download, Shield } from "lucide-react";
+import { Users, Download, Shield, User } from "lucide-react";
+import Image from "next/image";
+
 import TableShell from "./core/TableShell";
 import TableHeader from "./core/TableHeader";
 import TableBody from "./core/TableBody";
@@ -27,7 +29,26 @@ const extraActions = [
 ];
 
 /* ===================== COLUMNS ===================== */
-const getColumns = () => [
+const getColumns = (onImagePreview) => [
+  {
+    key: "profilePicture",
+    label: "Photo",
+    render: (row) =>
+      row.profilePictureUrl ? (
+        <Image
+          src={row.profilePictureUrl}
+          alt={row.fullName}
+          width={40}
+          height={40}
+          className="rounded-full object-cover cursor-pointer border"
+          onClick={() => onImagePreview(row.profilePictureUrl)}
+        />
+      ) : (
+        <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+          <User size={16} />
+        </div>
+      ),
+  },
   { key: "employeeNumber", label: "Emp No" },
   { key: "fullName", label: "Name" },
   { key: "email", label: "Email" },

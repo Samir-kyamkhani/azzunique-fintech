@@ -36,7 +36,7 @@ export const useUpdateEmployee = () =>
     mutationFn: ({ id, payload }) =>
       apiClient(`/employees/${id}`, {
         method: "PUT",
-        body: JSON.stringify(payload),
+        body: payload, // FormData
       }),
   });
 

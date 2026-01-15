@@ -33,6 +33,7 @@ import { clearEmployee, setEmployee } from "@/store/employeeSlice";
 import { useEmployeeById } from "@/hooks/useEmployee";
 import PageSkeleton from "@/components/details/PageSkeleton";
 import { KeySquare } from "lucide-react";
+import ImagePreviewModal from "@/components/ImagePreviewModal";
 
 export default function Page() {
   const router = useRouter();
@@ -40,6 +41,7 @@ export default function Page() {
   const dispatch = useDispatch();
 
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState();
 
   const employee = useSelector((state) => state.employee.current);
 
@@ -77,13 +79,13 @@ export default function Page() {
       <div className="flex justify-between items-center">
         {/* PROFILE HEADER */}
         <div className="flex items-center gap-4 mb-6">
-          {employee.profilePicture ? (
+          {employee.profilePictureUrl ? (
             <button
               onClick={() => setPreviewOpen(true)}
               className="relative group"
             >
               <Image
-                src={employee.profilePicture}
+                src={employee.profilePictureUrl}
                 alt="Profile"
                 width={64}
                 height={64}
@@ -274,28 +276,12 @@ export default function Page() {
       </div>
 
       {/* IMAGE PREVIEW MODAL (INSTAGRAM STYLE) */}
-      {previewOpen && employee.profilePicture && (
-        <div
-          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center"
-          onClick={() => setPreviewOpen(false)}
-        >
-          <button
-            className="absolute top-6 right-6 text-white text-2xl"
-            onClick={() => setPreviewOpen(false)}
-          >
-            ✕
-          </button>
 
-          <Image
-            src={employee.profilePicture}
-            alt="Profile Preview"
-            width={600}
-            height={600}
-            className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
-      )}
+      <ImagePreviewModal
+        open={previewOpen}
+        image={employee.profilePictureUrl}
+        onClose={() => setPreviewOpen(false)}
+      />
     </>
   );
 }
