@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { db } from '../core-db.js';
 import { usersTable } from '../../../models/core/user.schema.js';
+import { walletTable } from '../../../models/core/wallet.schema.js';
 import { encrypt, generateNumber } from '../../../lib/lib.js';
 import { eq, and } from 'drizzle-orm';
 import { roleTable } from '../../../models/core/role.schema.js';
@@ -53,7 +54,7 @@ export async function seedUsers(tenantId) {
     roleId: role.id,
     tenantId,
 
-    ownerUserId: null, // 🔥 THIS makes him tenant owner
+    ownerUserId: null, // 🔥 tenant owner
     createdByUserId: null,
     createdByEmployeeId: null,
 
@@ -61,6 +62,24 @@ export async function seedUsers(tenantId) {
     updatedAt: new Date(),
   });
 
-  console.log('✅ AZZUNIQUE user seeded');
+  // 🔐 CREATE DEFAULT WALLETS FOR AZZUNIQUE
+  const wallets = ['MAIN', 'COMMISSION', 'SETTLEMENT', 'SECURITY'];
+
+  for (const walletType of wallets) {
+    await db.insert(walletTable).values({
+      id: randomUUID(),
+      tenantId,
+      ownerType: 'USER',
+      ownerId: userId,
+      walletType,
+      balance: 0,
+      blockedAmount: 0,
+      status: 'ACTIVE',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+  }
+
+  console.log('✅ AZZUNIQUE user + wallets seeded');
   return userId;
 }
