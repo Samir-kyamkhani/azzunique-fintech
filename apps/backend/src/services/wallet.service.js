@@ -88,19 +88,21 @@ class WalletService {
       throw ApiError.badRequest('Invalid credit amount');
     }
 
-    const [wallet] = await db
-      .select()
-      .from(walletTable)
-      .where(eq(walletTable.id, walletId))
-      .limit(1);
-
-    if (!wallet) {
-      throw ApiError.notFound('Wallet not found');
-    }
-
-    const newBalance = wallet.balance + amount;
-
     await db.transaction(async (tx) => {
+      //  ROW LOCK
+      const [wallet] = await tx
+        .select()
+        .from(walletTable)
+        .where(eq(walletTable.id, walletId))
+        .forUpdate()
+        .limit(1);
+
+      if (!wallet) {
+        throw ApiError.notFound('Wallet not found');
+      }
+
+      const newBalance = wallet.balance + amount;
+
       await tx
         .update(walletTable)
         .set({
@@ -135,28 +137,29 @@ class WalletService {
       throw ApiError.badRequest('Invalid debit amount');
     }
 
-    const [wallet] = await db
-      .select()
-      .from(walletTable)
-      .where(eq(walletTable.id, walletId))
-      .limit(1);
-
-    if (!wallet) {
-      throw ApiError.notFound('Wallet not found');
-    }
-
-    if (wallet.balance < amount) {
-      throw ApiError.badRequest('Insufficient balance');
-    }
-
-    // 🔒 SECURITY WALLET RULE
-    if (wallet.walletType === 'SECURITY') {
-      throw ApiError.forbidden('Security wallet cannot be debited');
-    }
-
-    const newBalance = wallet.balance - amount;
-
     await db.transaction(async (tx) => {
+      // 🔐 ROW LOCK
+      const [wallet] = await tx
+        .select()
+        .from(walletTable)
+        .where(eq(walletTable.id, walletId))
+        .forUpdate()
+        .limit(1);
+
+      if (!wallet) {
+        throw ApiError.notFound('Wallet not found');
+      }
+
+      if (wallet.walletType === 'SECURITY') {
+        throw ApiError.forbidden('Security wallet cannot be debited');
+      }
+
+      if (wallet.balance < amount) {
+        throw ApiError.badRequest('Insufficient balance');
+      }
+
+      const newBalance = wallet.balance - amount;
+
       await tx
         .update(walletTable)
         .set({
@@ -212,23 +215,30 @@ class WalletService {
 
   // 7️⃣ BLOCK AMOUNT
   static async blockAmount({ walletId, amount }) {
-    const [wallet] = await db
-      .select()
-      .from(walletTable)
-      .where(eq(walletTable.id, walletId))
-      .limit(1);
+    await db.transaction(async (tx) => {
+      const [wallet] = await tx
+        .select()
+        .from(walletTable)
+        .where(eq(walletTable.id, walletId))
+        .forUpdate()
+        .limit(1);
 
-    if (wallet.balance - wallet.blockedAmount < amount) {
-      throw ApiError.badRequest('Insufficient available balance');
-    }
+      if (!wallet) {
+        throw ApiError.notFound('Wallet not found');
+      }
 
-    await db
-      .update(walletTable)
-      .set({
-        blockedAmount: wallet.blockedAmount + amount,
-        updatedAt: new Date(),
-      })
-      .where(eq(walletTable.id, walletId));
+      if (wallet.balance - wallet.blockedAmount < amount) {
+        throw ApiError.badRequest('Insufficient available balance');
+      }
+
+      await tx
+        .update(walletTable)
+        .set({
+          blockedAmount: wallet.blockedAmount + amount,
+          updatedAt: new Date(),
+        })
+        .where(eq(walletTable.id, walletId));
+    });
   }
 
   // 8️⃣ RELEASE BLOCKED AMOUNT
