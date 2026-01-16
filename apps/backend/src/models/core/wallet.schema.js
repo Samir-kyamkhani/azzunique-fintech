@@ -26,6 +26,7 @@ export const walletTable = mysqlTable(
     walletType: varchar('wallet_type', { length: 20 }).notNull(), // PRIMARY | COMMISSION | ...
 
     balance: int('balance').notNull().default(0),
+    blockedAmount: int('blocked_amount').default(0).notNull(),
 
     status: varchar('status', { length: 20 }).notNull().default('ACTIVE'),
 

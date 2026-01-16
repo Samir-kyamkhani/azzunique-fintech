@@ -1,5 +1,5 @@
 import { db } from '../core-db.js';
-import { PermissionsRegistry } from '../../../lib/permissionsRegistory.js';
+import { PermissionsRegistry } from '../../../lib/PermissionsRegistry.js';
 import { permissionTable } from '../../../models/core/permission.schema.js';
 
 export async function seedPermissions() {

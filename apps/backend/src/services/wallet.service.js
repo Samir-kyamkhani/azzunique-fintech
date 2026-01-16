@@ -251,6 +251,28 @@ class WalletService {
       })
       .where(eq(walletTable.id, walletId));
   }
+
+  // 9️⃣ FETCH COMMISSION WALLET
+  static async getCommissionWallet(userId, tenantId) {
+    const [wallet] = await db
+      .select()
+      .from(walletTable)
+      .where(
+        and(
+          eq(walletTable.ownerId, userId),
+          eq(walletTable.ownerType, 'USER'),
+          eq(walletTable.walletType, 'COMMISSION'),
+          eq(walletTable.tenantId, tenantId),
+        ),
+      )
+      .limit(1);
+
+    if (!wallet) {
+      throw ApiError.notFound('Commission wallet not found');
+    }
+
+    return wallet;
+  }
 }
 
 export default WalletService;
