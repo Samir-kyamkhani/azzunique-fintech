@@ -21,6 +21,7 @@ import { EVENTS } from '../events/events.constants.js';
 import s3Service from '../lib/S3Service.js';
 import { resolvePermissions } from './permission.resolver.js';
 import { buildVisibilityCondition } from '../lib/visibility.utils.js';
+import WalletService from './wallet.service.js';
 
 class UserService {
   async create(data, actor) {
@@ -171,6 +172,11 @@ class UserService {
     }
 
     await db.insert(usersTable).values(payload);
+
+    await WalletService.createDefaultUserWallets({
+      id: userId,
+      tenantId: resolvedTenantId,
+    });
 
     return this.findOne(userId, actor);
   }
