@@ -19,7 +19,7 @@ import {
   assignRolePermissionsSchema,
 } from '../validators/role.schema.js';
 import { PermissionMiddleware } from '../middleware/permission.middleware.js';
-import { PermissionsRegistry } from '../lib/permissionsRegistory.js';
+import { PermissionsRegistry } from '../lib/PermissionsRegistry.js';
 
 const router = Router();
 router.use(AuthMiddleware);

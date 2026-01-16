@@ -44,4 +44,10 @@ export const PermissionsRegistry = {
     DELETE: 'TENANT.DELETE',
     VIEW_DESCENDANTS: 'TENANT.VIEW_DESCENDANTS',
   },
+
+  COMMISSION: {
+    READ: 'commission.read',
+    SET_USER_RULE: 'commission.user.set',
+    SET_ROLE_RULE: 'commission.role.set',
+  },
 };

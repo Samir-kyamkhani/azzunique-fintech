@@ -21,7 +21,7 @@ import {
 } from '../validators/user.schema.js';
 import upload from '../middleware/multer.middleware.js';
 import { PermissionMiddleware } from '../middleware/permission.middleware.js';
-import { PermissionsRegistry } from '../lib/permissionsRegistory.js';
+import { PermissionsRegistry } from '../lib/permissionsRegistry.js';
 
 const router = Router();
 

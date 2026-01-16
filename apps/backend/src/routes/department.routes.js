@@ -3,7 +3,6 @@ import asyncHandler from '../lib/AsyncHandler.js';
 import { AuthMiddleware } from '../middleware/auth.middleware.js';
 import { validate } from '../middleware/zod-validate.js';
 import { PermissionMiddleware } from '../middleware/permission.middleware.js';
-import { PermissionsRegistry } from '../lib/permissionsRegistory.js';
 
 import {
   createDepartment,
@@ -20,6 +19,7 @@ import {
   updateDepartmentSchema,
   assignDepartmentPermissionsSchema,
 } from '../validators/department.schema.js';
+import { PermissionsRegistry } from '../lib/permissionsRegistry.js';
 
 const router = Router();
 router.use(AuthMiddleware);
