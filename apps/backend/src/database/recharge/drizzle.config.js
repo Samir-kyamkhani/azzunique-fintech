@@ -4,8 +4,8 @@ import { defineConfig } from 'drizzle-kit';
 dotenv.config({ path: './.env' });
 
 export default defineConfig({
-  schema: './src/models/core/index.js',
-  out: './drizzle/core',
+  schema: './src/models/recharge/index.js',
+  out: './drizzle/recharge',
   dialect: 'mysql',
   dbCredentials: {
     url: process.env.DATABASE_URL,

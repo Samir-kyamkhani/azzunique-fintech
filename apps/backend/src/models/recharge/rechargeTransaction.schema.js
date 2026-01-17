@@ -1,0 +1,32 @@
+import { mysqlTable, timestamp, varchar, int } from 'drizzle-orm/mysql-core';
+
+export const rechargeTransactionTable = mysqlTable('recharge_transactions', {
+  id: varchar('id', { length: 36 }).primaryKey(),
+
+  tenantId: varchar('tenant_id', { length: 36 }).notNull(),
+  userId: varchar('user_id', { length: 36 }).notNull(),
+
+  mobileNumber: varchar('mobile_number', { length: 15 }).notNull(),
+  operatorCode: varchar('operator_code', { length: 10 }).notNull(),
+  circleCode: varchar('circle_code', { length: 10 }),
+
+  amount: int('amount').notNull(), // paise
+
+  platformServiceId: varchar('platform_service_id', { length: 36 }).notNull(),
+  platformServiceFeatureId: varchar('platform_service_feature_id', {
+    length: 36,
+  }).notNull(),
+
+  providerCode: varchar('provider_code', { length: 40 }).notNull(),
+
+  status: varchar('status', { length: 20 }).notNull(),
+  // INITIATED | SUCCESS | FAILED | PENDING | REFUNDED
+
+  providerTxnId: varchar('provider_txn_id', { length: 100 }),
+  referenceId: varchar('reference_id', { length: 100 }),
+
+  failureReason: varchar('failure_reason', { length: 255 }),
+
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});

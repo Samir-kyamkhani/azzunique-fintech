@@ -4,6 +4,6 @@ import dotenv from 'dotenv';
 dotenv.config({ path: './.env' });
 
 export const corePool = mysql.createPool({
-  uri: process.env.CORE_DATABASE_URL,
+  uri: process.env.DATABASE_URL,
   connectionLimit: 10,
 });
