@@ -198,8 +198,8 @@ export default function ServerDetailClient() {
               </div>
             </InfoCard>
 
-            {/* TECH DETAILS */}
-            <InfoCard icon={Shield} title="Technical Details">
+            {/* TECH details */}
+            <InfoCard icon={Shield} title="Technical details">
               <div className="space-y-2">
                 <InfoItem
                   label="Tenant ID"

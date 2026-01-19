@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import TabsNav from "@/components/Details/TabsNav";
+import TabsNav from "@/components/details/TabsNav";
 import { Settings } from "lucide-react";
 import { Server } from "lucide-react";
 import { Globe } from "lucide-react";

@@ -24,10 +24,10 @@ import { formatDateTime } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 
 /* reusable view components */
-import InfoCard from "@/components/Details/InfoCard";
-import InfoItem from "@/components/Details/InfoItem";
-import CopyableInfoItem from "@/components/Details/CopyableInfoItem";
-import QuickActionsCard from "@/components/Details/QuickActionsCard";
+import InfoCard from "@/components/details/InfoCard";
+import InfoItem from "@/components/details/InfoItem";
+import CopyableInfoItem from "@/components/details/CopyableInfoItem";
+import QuickActionsCard from "@/components/details/QuickActionsCard";
 
 import { clearEmployee, setEmployee } from "@/store/employeeSlice";
 import { useEmployeeById } from "@/hooks/useEmployee";

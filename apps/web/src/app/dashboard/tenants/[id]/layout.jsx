@@ -14,9 +14,9 @@ import {
 
 import { useTenantById } from "@/hooks/useTenant";
 import Button from "@/components/ui/Button";
-import ProfileHeader from "@/components/Details/ProfileHeader";
-import TabsNav from "@/components/Details/TabsNav";
-import PageSkeleton from "@/components/Details/PageSkeleton";
+import ProfileHeader from "@/components/details/ProfileHeader";
+import TabsNav from "@/components/details/TabsNav";
+import PageSkeleton from "@/components/details/PageSkeleton";
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { clearTenant, setTenant } from "@/store/tenantSlice";

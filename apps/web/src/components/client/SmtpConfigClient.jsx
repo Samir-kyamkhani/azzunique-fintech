@@ -135,7 +135,7 @@ export default function SmtpConfigClient({ smtpConfigId }) {
           {/* LEFT */}
           <div className="lg:col-span-2 space-y-6">
             {/* MAIN INFO */}
-            <InfoCard icon={Mail} title="SMTP Details">
+            <InfoCard icon={Mail} title="SMTP details">
               <div className="space-y-2">
                 <InfoItem
                   label="SMTP Host"
@@ -179,8 +179,8 @@ export default function SmtpConfigClient({ smtpConfigId }) {
               </div>
             </InfoCard>
 
-            {/* TECH DETAILS */}
-            <InfoCard icon={Shield} title="Technical Details">
+            {/* TECH details */}
+            <InfoCard icon={Shield} title="Technical details">
               <div className="space-y-2">
                 <InfoItem
                   label="Tenant ID"

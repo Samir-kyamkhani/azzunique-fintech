@@ -179,8 +179,8 @@ export default function TenantDomainClient() {
               </div>
             </InfoCard>
 
-            {/* TECH DETAILS */}
-            <InfoCard icon={Shield} title="Technical Details">
+            {/* TECH details */}
+            <InfoCard icon={Shield} title="Technical details">
               <div className="space-y-2">
                 <InfoItem
                   label="Tenant ID"
@@ -240,7 +240,7 @@ export default function TenantDomainClient() {
               </div>
             </InfoCard>
             {tenantDomain.actionReason && (
-              <InfoCard icon={Lock} title="Action Details">
+              <InfoCard icon={Lock} title="Action details">
                 <div className="space-y-2 text-sm">
                   <InfoItem
                     label="Action Reason"
