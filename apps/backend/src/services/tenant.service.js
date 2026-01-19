@@ -1,6 +1,5 @@
 import { and, count, desc, eq, like, or } from 'drizzle-orm';
-import { tenantsTable } from '../models/core/tenant.schema.js';
-import { employeesTable } from '../models/core/employee.schema.js';
+import { employeesTable, tenantsTable } from '../models/core/index.js';
 import { ApiError } from '../lib/ApiError.js';
 import { db } from '../database/core/core-db.js';
 import { generateNumber, generatePrefix } from '../lib/lib.js';

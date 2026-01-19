@@ -1,4 +1,4 @@
-import tenantService from '../../services/platform/tenantService.service.js';
+import tenantService from '../services/tenantService.service.js';
 
 export const enableTenantService = async (req, res) => {
   const result = await tenantService.enable(

@@ -1,10 +1,12 @@
-import { and, eq } from 'drizzle-orm';
-import { tenantsDomainsTable } from '../models/core/tenantDomain.schema.js';
+import { eq } from 'drizzle-orm';
+import {
+  tenantsDomainsTable,
+  tenantsTable,
+  usersTable,
+  employeesTable,
+} from '../models/core/index.js';
 import { db } from '../database/core/core-db.js';
 import { ApiError } from '../lib/ApiError.js';
-import { tenantsTable } from '../models/core/tenant.schema.js';
-import { usersTable } from '../models/core/user.schema.js';
-import { employeesTable } from '../models/core/employee.schema.js';
 
 class TenantDomainService {
   // GET BY ID

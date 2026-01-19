@@ -25,6 +25,9 @@ router.post(
   validate(createPlatformServiceSchema),
   PSC.createPlatformService,
 );
+
+router.get('/services', PSC.listPlatformServices);
+
 router.post(
   '/services/features',
   validate(createPlatformServiceFeatureSchema),

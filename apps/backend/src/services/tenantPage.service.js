@@ -1,9 +1,8 @@
 import { db } from '../database/core/core-db.js';
-import { tenantPagesTable } from '../models/core/tenantPage.schema.js';
 import { and, eq, ne } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { ApiError } from '../lib/ApiError.js';
-import { tenantsTable } from '../models/core/tenant.schema.js';
+import { tenantsTable, tenantPagesTable } from '../models/core/index.js';
 
 export class TenantPageService {
   // ================= CREATE =================

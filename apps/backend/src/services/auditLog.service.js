@@ -1,7 +1,7 @@
 import { eq, and } from 'drizzle-orm';
 import { ApiError } from '../lib/ApiError.js';
 import { db } from '../database/core/core-db.js';
-import { auditLogTable } from '../models/core/auditLog.schema.js';
+import { auditLogTable } from '../models/core/index.js';
 
 export class AuditLogService {
   // ================= CREATE =================

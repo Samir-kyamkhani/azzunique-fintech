@@ -1,11 +1,13 @@
 import { and, eq } from 'drizzle-orm';
-import { serverDetailTable } from '../models/core/serverDetails.schema.js';
+import {
+  serverDetailTable,
+  employeesTable,
+  usersTable,
+  tenantsTable,
+} from '../models/core/index.js';
 import { db } from '../database/core/core-db.js';
 import { ApiError } from '../lib/ApiError.js';
 import crypto from 'node:crypto';
-import { employeesTable } from '../models/core/employee.schema.js';
-import { usersTable } from '../models/core/user.schema.js';
-import { tenantsTable } from '../models/core/tenant.schema.js';
 
 class ServerDetailService {
   // GET BY ID
