@@ -27,12 +27,11 @@ class RechargeRuntimeService {
         .from(tenantServiceTable)
         .where(
           and(
-            eq(tenantServiceTable.tenantId, tenantId),
-            eq(tenantServiceTable.platformServiceId, service.id),
-            eq(tenantServiceTable.isEnabled, true),
+            eq(tenantServiceProviderTable.tenantId, tenantId),
+            eq(tenantServiceProviderTable.platformServiceId, service.id),
+            eq(tenantServiceProviderTable.isActive, true),
           ),
         )
-
         .limit(1);
 
       if (!enabled) {
@@ -49,9 +48,9 @@ class RechargeRuntimeService {
         .from(tenantServiceProviderTable)
         .where(
           and(
-            eq(tenantServiceTable.tenantId, tenantId),
-            eq(tenantServiceTable.platformServiceId, service.id),
-            eq(tenantServiceTable.isEnabled, true),
+            eq(tenantServiceProviderTable.tenantId, tenantId),
+            eq(tenantServiceProviderTable.platformServiceId, service.id),
+            eq(tenantServiceProviderTable.isActive, true),
           ),
         )
         .limit(1);

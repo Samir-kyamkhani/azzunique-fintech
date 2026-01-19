@@ -213,8 +213,12 @@ class WalletService {
     return true;
   }
 
-  // 7️⃣ BLOCK AMOUNT
-  static async blockAmount({ walletId, amount }) {
+  // 7️⃣ BLOCK AMOUNT (NO BALANCE CHANGE)
+  static async blockAmount({ walletId, amount, transactionId }) {
+    if (amount <= 0) {
+      throw ApiError.badRequest('Invalid block amount');
+    }
+
     await db.transaction(async (tx) => {
       const [wallet] = await tx
         .select()
@@ -227,29 +231,130 @@ class WalletService {
         throw ApiError.notFound('Wallet not found');
       }
 
-      if (wallet.balance - wallet.blockedAmount < amount) {
+      const available = wallet.balance - wallet.blockedAmount;
+
+      if (available < amount) {
         throw ApiError.badRequest('Insufficient available balance');
       }
+
+      const newBlocked = wallet.blockedAmount + amount;
 
       await tx
         .update(walletTable)
         .set({
-          blockedAmount: wallet.blockedAmount + amount,
+          blockedAmount: newBlocked,
           updatedAt: new Date(),
         })
         .where(eq(walletTable.id, walletId));
+
+      // 🔐 LEDGER ENTRY (BLOCK)
+      await tx.insert(ledgerTable).values({
+        id: crypto.randomUUID(),
+        walletId,
+        transactionId,
+        entryType: 'BLOCK',
+        amount,
+        balanceAfter: wallet.balance, // balance unchanged
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
     });
   }
 
-  // 8️⃣ RELEASE BLOCKED AMOUNT
-  static async releaseBlockedAmount({ walletId, amount }) {
-    await db
-      .update(walletTable)
-      .set({
-        blockedAmount: sql`${walletTable.blockedAmount} - ${amount}`,
+  // 9️⃣ RELEASE BLOCKED AMOUNT (FAIL / TIMEOUT)
+  static async releaseBlockedAmount({ walletId, amount, transactionId }) {
+    if (amount <= 0) return;
+
+    await db.transaction(async (tx) => {
+      const [wallet] = await tx
+        .select()
+        .from(walletTable)
+        .where(eq(walletTable.id, walletId))
+        .forUpdate()
+        .limit(1);
+
+      if (!wallet) {
+        throw ApiError.notFound('Wallet not found');
+      }
+
+      if (wallet.blockedAmount < amount) return;
+
+      const newBlocked = wallet.blockedAmount - amount;
+
+      await tx
+        .update(walletTable)
+        .set({
+          blockedAmount: newBlocked,
+          updatedAt: new Date(),
+        })
+        .where(eq(walletTable.id, walletId));
+
+      // 🔐 LEDGER ENTRY (UNBLOCK)
+      await tx.insert(ledgerTable).values({
+        id: crypto.randomUUID(),
+        walletId,
+        transactionId,
+        entryType: 'UNBLOCK',
+        amount,
+        balanceAfter: wallet.balance,
+        createdAt: new Date(),
         updatedAt: new Date(),
-      })
-      .where(eq(walletTable.id, walletId));
+      });
+    });
+  }
+
+  // 8️⃣ DEBIT BLOCKED AMOUNT (SUCCESS CASE ONLY)
+  static async debitBlockedAmount({ walletId, amount, transactionId }) {
+    if (amount <= 0) {
+      throw ApiError.badRequest('Invalid debit amount');
+    }
+
+    await db.transaction(async (tx) => {
+      // 🔐 ROW LOCK
+      const [wallet] = await tx
+        .select()
+        .from(walletTable)
+        .where(eq(walletTable.id, walletId))
+        .forUpdate()
+        .limit(1);
+
+      if (!wallet) {
+        throw ApiError.notFound('Wallet not found');
+      }
+
+      if (wallet.blockedAmount < amount) {
+        throw ApiError.badRequest('Blocked amount insufficient');
+      }
+
+      if (wallet.balance < amount) {
+        throw ApiError.badRequest('Wallet balance insufficient');
+      }
+
+      const newBalance = wallet.balance - amount;
+      const newBlocked = wallet.blockedAmount - amount;
+
+      // 🔄 UPDATE WALLET
+      await tx
+        .update(walletTable)
+        .set({
+          balance: newBalance,
+          blockedAmount: newBlocked,
+          updatedAt: new Date(),
+        })
+        .where(eq(walletTable.id, walletId));
+
+      // 📒 LEDGER ENTRY (FINAL DEBIT)
+      await tx.insert(ledgerTable).values({
+        id: crypto.randomUUID(),
+        walletId,
+        transactionId,
+        entryType: 'DEBIT',
+        amount,
+        balanceAfter: newBalance,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    });
   }
 
   // 9️⃣ FETCH COMMISSION WALLET

@@ -5,4 +5,6 @@ export const rechargeTransactionSchema = z.object({
   operatorCode: z.string().min(1),
   circleCode: z.string().optional(),
   amount: z.number().positive(),
+
+  idempotencyKey: z.string().min(8),
 });

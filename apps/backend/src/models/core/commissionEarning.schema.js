@@ -55,6 +55,7 @@ export const commissionEarningTable = mysqlTable(
     grossAmount: int('gross_amount').notNull(),
     gstAmount: int('gst_amount').notNull(),
     netAmount: int('net_amount').notNull(),
+    finalAmount: int('final_amount').notNull(),
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),

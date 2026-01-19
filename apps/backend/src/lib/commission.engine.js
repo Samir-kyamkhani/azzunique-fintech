@@ -1,13 +1,9 @@
 import { db } from '../database/core/core-db.js';
-import {
-  userCommissionSettingTable,
-  roleCommissionSettingTable,
-  commissionEarningTable,
-  walletTable,
-} from '../models/core/index.js';
+import { commissionEarningTable, walletTable } from '../models/core/index.js';
 import { eq, and } from 'drizzle-orm';
 import WalletService from '../services/wallet.service.js';
 import crypto from 'crypto';
+import CommissionSettingService from '../services/commission-setting.service.js';
 
 class CommissionEngine {
   static async calculateAndCredit({ transaction, user }) {
@@ -20,42 +16,13 @@ class CommissionEngine {
     } = transaction;
 
     await db.transaction(async () => {
-      // 1️⃣ Resolve commission rule
-      const [userRule] = await db
-        .select()
-        .from(userCommissionSettingTable)
-        .where(
-          and(
-            eq(userCommissionSettingTable.userId, user.id),
-            eq(
-              userCommissionSettingTable.platformServiceFeatureId,
-              platformServiceFeatureId,
-            ),
-            eq(userCommissionSettingTable.isActive, true),
-          ),
-        )
-        .limit(1);
-
-      let rule = userRule;
-
-      if (!rule) {
-        const [roleRule] = await db
-          .select()
-          .from(roleCommissionSettingTable)
-          .where(
-            and(
-              eq(roleCommissionSettingTable.roleId, user.roleId),
-              eq(
-                roleCommissionSettingTable.platformServiceFeatureId,
-                platformServiceFeatureId,
-              ),
-              eq(roleCommissionSettingTable.isActive, true),
-            ),
-          )
-          .limit(1);
-
-        rule = roleRule;
-      }
+      // ✅ RULE RESOLUTION (SINGLE SOURCE OF TRUTH)
+      const rule = await CommissionSettingService.resolveForUser({
+        tenantId,
+        userId: user.id,
+        roleId: user.roleId,
+        platformServiceFeatureId,
+      });
 
       if (!rule) return;
 
@@ -89,6 +56,17 @@ class CommissionEngine {
       const netAmount = grossAmount - gstAmount;
       if (netAmount <= 0) return;
 
+      // ✅ APPLY MAX COMMISSION CAP (CRITICAL FIX)
+      let finalAmount = netAmount;
+
+      if (
+        rule.maxCommissionValue &&
+        rule.maxCommissionValue > 0 &&
+        finalAmount > rule.maxCommissionValue
+      ) {
+        finalAmount = rule.maxCommissionValue;
+      }
+
       // 4️⃣ Commission wallet (tenant-safe)
       const [commissionWallet] = await db
         .select()
@@ -108,7 +86,7 @@ class CommissionEngine {
       // 5️⃣ Credit wallet
       await WalletService.creditWallet({
         walletId: commissionWallet.id,
-        amount: netAmount,
+        amount: finalAmount,
         transactionId,
       });
 
@@ -132,7 +110,8 @@ class CommissionEngine {
 
         grossAmount,
         gstAmount,
-        netAmount,
+        netAmount, // calculated net
+        finalAmount, // actually credited (after cap)
 
         createdAt: new Date(),
         updatedAt: new Date(),

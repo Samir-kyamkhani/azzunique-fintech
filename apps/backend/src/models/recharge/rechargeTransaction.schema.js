@@ -1,37 +1,48 @@
-import { mysqlTable, timestamp, varchar, int } from 'drizzle-orm/mysql-core';
+import { mysqlTable, timestamp, varchar, int, uniqueIndex } from 'drizzle-orm/mysql-core';
 
-export const rechargeTransactionTable = mysqlTable('recharge_transactions', {
-  id: varchar('id', { length: 36 }).primaryKey(),
+export const rechargeTransactionTable = mysqlTable(
+  'recharge_transactions',
+  {
+    id: varchar('id', { length: 36 }).primaryKey(),
 
-  tenantId: varchar('tenant_id', { length: 36 }).notNull(),
-  userId: varchar('user_id', { length: 36 }).notNull(),
+    tenantId: varchar('tenant_id', { length: 36 }).notNull(),
+    userId: varchar('user_id', { length: 36 }).notNull(),
 
-  mobileNumber: varchar('mobile_number', { length: 15 }).notNull(),
-  operatorCode: varchar('operator_code', { length: 10 }).notNull(),
-  circleCode: varchar('circle_code', { length: 10 }),
+    mobileNumber: varchar('mobile_number', { length: 15 }).notNull(),
+    operatorCode: varchar('operator_code', { length: 10 }).notNull(),
+    circleCode: varchar('circle_code', { length: 10 }),
 
-  amount: int('amount').notNull(), // paise
+    idempotencyKey: varchar('idempotency_key', { length: 64 }).notNull(),
 
-  walletId: varchar('wallet_id', { length: 36 }).notNull(),
+    amount: int('amount').notNull(), // paise
 
-  platformServiceId: varchar('platform_service_id', { length: 36 }).notNull(),
-  platformServiceFeatureId: varchar('platform_service_feature_id', {
-    length: 36,
-  }).notNull(),
+    walletId: varchar('wallet_id', { length: 36 }).notNull(),
 
-  providerCode: varchar('provider_code', { length: 40 }).notNull(),
+    platformServiceId: varchar('platform_service_id', { length: 36 }).notNull(),
+    platformServiceFeatureId: varchar('platform_service_feature_id', {
+      length: 36,
+    }).notNull(),
 
-  status: varchar('status', { length: 20 }).notNull(),
-  // INITIATED | SUCCESS | FAILED | PENDING | REFUNDED
+    providerCode: varchar('provider_code', { length: 40 }).notNull(),
 
-  providerTxnId: varchar('provider_txn_id', { length: 100 }),
-  referenceId: varchar('reference_id', { length: 100 }),
+    status: varchar('status', { length: 20 }).notNull(),
+    // INITIATED | SUCCESS | FAILED | PENDING | REFUNDED
 
-  failureReason: varchar('failure_reason', { length: 255 }),
+    providerTxnId: varchar('provider_txn_id', { length: 100 }),
+    referenceId: varchar('reference_id', { length: 100 }),
 
-  retryCount: int('retry_count').default(0),
-  lastRetryAt: timestamp('last_retry_at'),
+    failureReason: varchar('failure_reason', { length: 255 }),
 
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
+    retryCount: int('retry_count').default(0),
+    lastRetryAt: timestamp('last_retry_at'),
+
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+  },
+  (table) => ({
+    uniqRechargeIdempotency: uniqueIndex('uniq_recharge_idempotency').on(
+      table.tenantId,
+      table.idempotencyKey,
+    ),
+  }),
+);

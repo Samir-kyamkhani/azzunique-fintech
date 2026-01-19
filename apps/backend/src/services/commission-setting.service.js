@@ -6,7 +6,7 @@ import {
 import { and, eq } from 'drizzle-orm';
 import crypto from 'crypto';
 import { ApiError } from '../lib/ApiError.js';
-import { canSetCommission } from '../lib/commission.guard.js';
+import { canSetCommission } from '../guard/commission.guard.js';
 
 class CommissionSettingService {
   // USER COMMISSION

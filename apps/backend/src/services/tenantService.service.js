@@ -8,11 +8,21 @@ class TenantService {
       throw ApiError.forbidden('Only tenant owner can enable services');
     }
 
-    await db.insert(tenantServiceTable).values({
-      tenantId,
-      platformServiceId: data.platformServiceId,
-      isEnabled: data.isEnabled ?? true,
-    });
+    await db
+      .insert(tenantServiceTable)
+      .values({
+        tenantId,
+        platformServiceId: data.platformServiceId,
+        isEnabled: data.isEnabled ?? true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .onDuplicateKeyUpdate({
+        set: {
+          isEnabled: data.isEnabled ?? true,
+          updatedAt: new Date(),
+        },
+      });
 
     return { success: true };
   }

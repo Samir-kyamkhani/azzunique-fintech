@@ -34,6 +34,26 @@ class RechargeTransactionService {
       platformServiceCode: 'RECHARGE',
     });
 
+    // ✅ IDEMPOTENCY CHECK (CRITICAL)
+    const existing = await db
+      .select()
+      .from(rechargeTransactionTable)
+      .where(
+        and(
+          eq(rechargeTransactionTable.tenantId, actor.tenantId),
+          eq(rechargeTransactionTable.idempotencyKey, payload.idempotencyKey),
+        ),
+      )
+      .limit(1);
+
+    if (existing.length) {
+      return {
+        status: existing[0].status,
+        transactionId: existing[0].id,
+        duplicate: true,
+      };
+    }
+
     // 3️⃣ Generate transactionId
     const transactionId = crypto.randomUUID();
 
@@ -48,7 +68,7 @@ class RechargeTransactionService {
     }
 
     // 5️⃣ Debit wallet (BLOCKED FLOW)
-    await WalletService.debitWallet({
+    await WalletService.blockAmount({
       walletId: mainWallet.id,
       amount,
       transactionId,
@@ -57,6 +77,7 @@ class RechargeTransactionService {
     // 6️⃣ Insert INITIATED transaction
     await db.insert(rechargeTransactionTable).values({
       id: transactionId,
+      idempotencyKey: payload.idempotencyKey,
       tenantId: actor.tenantId,
       userId: actor.id,
       walletId: mainWallet.id,
@@ -97,12 +118,29 @@ class RechargeTransactionService {
           })
         : null;
 
+      // ✅ PROVIDER BALANCE CHECK (MANDATORY)
+      if (typeof plugin.fetchBalance === 'function') {
+        const providerBalance = await plugin.fetchBalance();
+
+        if (providerBalance < amount) {
+          // unblock user money BEFORE failing
+          await WalletService.releaseBlockedAmount({
+            walletId: mainWallet.id,
+            amount,
+            transactionId,
+          });
+
+          throw ApiError.badRequest('Provider balance insufficient');
+        }
+      }
+
+      // 🔥 ACTUAL RECHARGE CALL
       providerResponse = await plugin.recharge({
         opcode: providerOperatorCode,
         number: mobileNumber,
         amount,
         transid: transactionId,
-        circle: providerCircleCode, // safe if null
+        circle: providerCircleCode,
       });
     } catch (err) {
       await this._failAndRefund({
@@ -139,37 +177,47 @@ class RechargeTransactionService {
 
     // SUCCESS
     if (status === 'SUCCESS') {
-      await db
-        .update(rechargeTransactionTable)
-        .set({
-          status: 'SUCCESS',
-          providerTxnId: providerResponse.optransid,
-          referenceId: providerResponse.referenceid,
-          updatedAt: new Date(),
-        })
-        .where(eq(rechargeTransactionTable.id, transactionId));
-
-      // 🔥 COMMISSION
-      await CommissionEngine.calculateAndCredit({
-        transaction: {
-          id: transactionId,
-          tenantId: actor.tenantId,
-          platformServiceId: service.id,
-          platformServiceFeatureId: null,
+      await db.transaction(async () => {
+        // 1️⃣ Final debit
+        await WalletService.debitBlockedAmount({
+          walletId,
           amount,
-        },
-        user: actor,
-      });
+          transactionId,
+        });
 
-      await MultiLevelCommission.process({
-        transaction: {
-          id: transactionId,
-          tenantId: actor.tenantId,
-          platformServiceId: service.id,
-          platformServiceFeatureId: null,
-          amount,
-        },
-        user: actor,
+        // 2️⃣ Update recharge txn
+        await db
+          .update(rechargeTransactionTable)
+          .set({
+            status: 'SUCCESS',
+            providerTxnId: providerResponse.optransid,
+            referenceId: providerResponse.referenceid,
+            updatedAt: new Date(),
+          })
+          .where(eq(rechargeTransactionTable.id, transactionId));
+
+        // 3️⃣ Commission (same TX)
+        await CommissionEngine.calculateAndCredit({
+          transaction: {
+            id: transactionId,
+            tenantId: actor.tenantId,
+            platformServiceId: service.id,
+            platformServiceFeatureId: null,
+            amount,
+          },
+          user: actor,
+        });
+
+        await MultiLevelCommission.process({
+          transaction: {
+            id: transactionId,
+            tenantId: actor.tenantId,
+            platformServiceId: service.id,
+            platformServiceFeatureId: null,
+            amount,
+          },
+          user: actor,
+        });
       });
 
       return { status: 'SUCCESS', transactionId };
@@ -215,7 +263,7 @@ class RechargeTransactionService {
         .where(eq(rechargeTransactionTable.id, transactionId));
 
       // Refund wallet
-      await WalletService.creditWallet({
+      await WalletService.releaseBlockedAmount({
         walletId,
         amount,
         transactionId,
