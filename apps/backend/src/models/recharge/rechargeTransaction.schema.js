@@ -12,6 +12,8 @@ export const rechargeTransactionTable = mysqlTable('recharge_transactions', {
 
   amount: int('amount').notNull(), // paise
 
+  walletId: varchar('wallet_id', { length: 36 }).notNull(),
+
   platformServiceId: varchar('platform_service_id', { length: 36 }).notNull(),
   platformServiceFeatureId: varchar('platform_service_feature_id', {
     length: 36,
@@ -26,6 +28,9 @@ export const rechargeTransactionTable = mysqlTable('recharge_transactions', {
   referenceId: varchar('reference_id', { length: 100 }),
 
   failureReason: varchar('failure_reason', { length: 255 }),
+
+  retryCount: int('retry_count').default(0),
+  lastRetryAt: timestamp('last_retry_at'),
 
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),

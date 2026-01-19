@@ -1,10 +1,6 @@
-import dotenv from 'dotenv';
-
-dotenv.config(); // always from project root
-
-export const env = {
+const envConfig = {
   nodeEnv: process.env.NODE_ENV || 'development',
-
+  port: process.env.PORT || 8000,
   db: {
     user: process.env.DB_USER,
     pass: process.env.DB_PASS,
@@ -18,4 +14,17 @@ export const env = {
     region: process.env.S3_REGION,
     bucket: process.env.S3_BUCKET,
   },
+
+  rechage: {
+    mplanpluginUrl: process.env.MPLAN_PLUGIN_URL,
+    rechargeExchangePluginUrl: process.env.RECHARGE_EXCHANGE_PLUGIN_URL,
+    rechargeExchangeStatusPluginUrl:
+      process.env.RECHARGE_EXCHANGE_STATUS_PLUGIN_URL,
+  },
+
+  callback: {
+    callbackSecret: process.env.RECHARGE_CALLBACK_SECRET,
+  },
 };
+
+export default envConfig;
