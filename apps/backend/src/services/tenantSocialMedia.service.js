@@ -31,11 +31,10 @@ export class TenantSocialMediaService {
 
   // ================= UPSERT =================
   static async upsert(payload, actor) {
-    if (!actor.tenantId) {
-      throw new ApiError.badRequest('Tenant context missing');
+    if (!actor?.tenantId) {
+      throw ApiError.badRequest('Tenant context missing');
     }
 
-    // ensure website belongs to tenant
     const [website] = await db
       .select()
       .from(tenantsWebsitesTable)
@@ -52,7 +51,6 @@ export class TenantSocialMediaService {
       .where(eq(tenantSocialMediaTable.tenantWebsiteId, website.id))
       .limit(1);
 
-    // ---------- CREATE ----------
     if (!existing) {
       const id = randomUUID();
 
@@ -64,23 +62,14 @@ export class TenantSocialMediaService {
         updatedAt: new Date(),
       });
 
-      return this.getById(website.id);
+      return this.getById(actor.tenantId);
     }
-
-    // ---------- UPDATE ----------
-    const updatedAt = new Date();
 
     await db
       .update(tenantSocialMediaTable)
-      .set({
-        ...payload,
-        updatedAt,
-      })
+      .set({ ...payload, updatedAt: new Date() })
       .where(eq(tenantSocialMediaTable.tenantWebsiteId, website.id));
 
-    return {
-      ...payload,
-      updatedAt,
-    };
+    return this.getById(actor.tenantId);
   }
 }

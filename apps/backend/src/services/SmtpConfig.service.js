@@ -1,20 +1,24 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { smtpConfigTable } from '../models/core/index.js';
 import { db } from '../database/core/core-db.js';
 import { ApiError } from '../lib/ApiError.js';
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 import { decrypt, encrypt } from '../lib/lib.js';
 
 class SmtpConfigService {
-  // GET BY ID (many times)
-  static async getById(id, actor) {
+  // ================= GET =================
+  static async getByTenant(actor) {
+    if (!actor?.tenantId) {
+      throw ApiError.unauthorized('Invalid actor');
+    }
+
     const [config] = await db
       .select()
       .from(smtpConfigTable)
       .where(
         and(
-          // eq(smtpConfigTable.id, id),
           eq(smtpConfigTable.tenantId, actor.tenantId),
+          sql`${smtpConfigTable.deletedAt} IS NULL`,
         ),
       )
       .limit(1);
@@ -23,54 +27,70 @@ class SmtpConfigService {
       throw ApiError.notFound('SMTP config not found');
     }
 
-    const decryptedPassword = decrypt(config.smtpPassword);
-    config.smtpPassword = decryptedPassword;
-
-    return config;
+    return {
+      ...config,
+      smtpPassword: decrypt(config.smtpPassword),
+    };
   }
 
-  // CREATE (only once per tenant)
+  // ================= CREATE =================
   static async create(payload, actor) {
+    if (!actor?.tenantId) {
+      throw ApiError.unauthorized('Invalid actor');
+    }
+
     const [existing] = await db
-      .select()
+      .select({ id: smtpConfigTable.id })
       .from(smtpConfigTable)
       .where(eq(smtpConfigTable.tenantId, actor.tenantId))
       .limit(1);
 
     if (existing) {
-      throw ApiError.conflict('SMTP config already exists for this tenant');
+      throw ApiError.conflict('SMTP config already exists');
     }
 
-    const passEncrypted = encrypt(payload.smtpPassword);
-
     const id = crypto.randomUUID();
+
     await db.insert(smtpConfigTable).values({
       id,
-      ...payload,
       tenantId: actor.tenantId,
-      smtpPassword: passEncrypted,
-      encryptionType: payload.encryptionType.toUpperCase(),
+      smtpHost: payload.smtpHost,
+      smtpPort: payload.smtpPort,
+      smtpUser: payload.smtpUser,
+      smtpPassword: encrypt(payload.smtpPassword),
+      encryptionType: payload.encryptionType?.toUpperCase(),
       createdByUserId: actor.type === 'USER' ? actor.id : null,
       createdByEmployeeId: actor.type === 'EMPLOYEE' ? actor.id : null,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
 
-    return this.getById(id, actor);
+    return this.getByTenant(actor);
   }
 
-  // UPDATE (many times)
-  static async update(id, payload, actor) {
-    const config = await this.getById(id, actor);
+  // ================= UPDATE =================
+  static async update(payload, actor) {
+    const existing = await this.getByTenant(actor);
 
-    const passEncrypted = encrypt(payload.smtpPassword);
+    const updates = {
+      smtpHost: payload.smtpHost ?? existing.smtpHost,
+      smtpPort: payload.smtpPort ?? existing.smtpPort,
+      smtpUser: payload.smtpUser ?? existing.smtpUser,
+      encryptionType:
+        payload.encryptionType?.toUpperCase() ?? existing.encryptionType,
+      updatedAt: new Date(),
+    };
+
+    if (payload.smtpPassword) {
+      updates.smtpPassword = encrypt(payload.smtpPassword);
+    }
 
     await db
       .update(smtpConfigTable)
-      .set({ ...payload, smtpPassword: passEncrypted, updatedAt: new Date() })
-      .where(eq(smtpConfigTable.id, id));
+      .set(updates)
+      .where(eq(smtpConfigTable.id, existing.id));
 
-    return this.getById(id, actor);
+    return this.getByTenant(actor);
   }
 }
 

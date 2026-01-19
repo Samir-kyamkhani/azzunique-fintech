@@ -18,8 +18,10 @@ export class TenantWebsiteService {
 
     return {
       ...website,
-      logoUrl: S3Service.buildS3Url(website.logoUrl),
-      favIconUrl: S3Service.buildS3Url(website.favIconUrl),
+      logoUrl: website.logoUrl ? S3Service.buildS3Url(website.logoUrl) : null,
+      favIconUrl: website.favIconUrl
+        ? S3Service.buildS3Url(website.favIconUrl)
+        : null,
     };
   }
 

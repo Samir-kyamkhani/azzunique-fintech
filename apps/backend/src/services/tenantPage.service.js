@@ -67,7 +67,11 @@ export class TenantPageService {
     await this.getById(id, actor);
 
     await db
-      .delete(tenantPagesTable)
+      .update(tenantPagesTable)
+      .set({
+        status: 'DELETED',
+        deletedAt: new Date(),
+      })
       .where(
         and(
           eq(tenantPagesTable.id, id),
