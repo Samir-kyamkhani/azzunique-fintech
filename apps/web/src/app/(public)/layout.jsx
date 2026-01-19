@@ -1,5 +1,5 @@
-import { Footer } from "@/components/Footer.jsx";
-import { Header } from "@/components/Header.jsx";
+import { Footer } from "@/components/Footer";
+import { Header } from "@/components/Header";
 
 export default function PublicLayout({ children }) {
   return (
