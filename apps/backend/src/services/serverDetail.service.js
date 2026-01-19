@@ -1,4 +1,6 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
+import crypto from 'node:crypto';
+
 import {
   serverDetailTable,
   employeesTable,
@@ -7,10 +9,9 @@ import {
 } from '../models/core/index.js';
 import { db } from '../database/core/core-db.js';
 import { ApiError } from '../lib/ApiError.js';
-import crypto from 'node:crypto';
 
 class ServerDetailService {
-  // GET BY ID
+  //  GET SERVER DETAIL BY TENANT
   static async getByTenantId(actor) {
     if (!actor?.tenantId) {
       throw ApiError.unauthorized('Invalid actor');
@@ -19,7 +20,6 @@ class ServerDetailService {
     const [result] = await db
       .select({
         server: serverDetailTable,
-
         userNumber: usersTable.userNumber,
         employeeNumber: employeesTable.employeeNumber,
         tenantNumber: tenantsTable.tenantNumber,
@@ -34,7 +34,13 @@ class ServerDetailService {
         employeesTable,
         eq(employeesTable.id, serverDetailTable.createdByEmployeeId),
       )
-      .where(eq(serverDetailTable.tenantId, actor.tenantId))
+      .where(
+        and(
+          eq(serverDetailTable.tenantId, actor.tenantId),
+          sql`${serverDetailTable.deletedAt} IS NULL`,
+        ),
+      )
+      .orderBy(serverDetailTable.createdAt)
       .limit(1);
 
     if (!result) {
@@ -58,10 +64,14 @@ class ServerDetailService {
     };
   }
 
-  // ================= UPSERT SERVER DETAIL =================
+  //  UPSERT SERVER DETAIL (TENANT SAFE)
   static async upsert(payload = {}, actor) {
-    if (!actor?.tenantId) {
+    if (!actor?.tenantId || !actor?.type) {
       throw ApiError.unauthorized('Invalid actor');
+    }
+
+    if (!payload.recordType || !payload.hostname || !payload.value) {
+      throw ApiError.badRequest('Missing required server detail fields');
     }
 
     const normalizedHostname = payload.hostname.trim().toLowerCase();
@@ -74,6 +84,7 @@ class ServerDetailService {
           eq(serverDetailTable.tenantId, actor.tenantId),
           eq(serverDetailTable.recordType, payload.recordType),
           eq(serverDetailTable.hostname, normalizedHostname),
+          sql`${serverDetailTable.deletedAt} IS NULL`,
         ),
       )
       .limit(1);
@@ -82,7 +93,10 @@ class ServerDetailService {
     if (existingRecord) {
       const updatedFields = {};
 
-      if (payload.value && payload.value !== existingRecord.value) {
+      if (
+        payload.value !== undefined &&
+        payload.value !== existingRecord.value
+      ) {
         updatedFields.value = payload.value;
       }
 
@@ -91,9 +105,7 @@ class ServerDetailService {
       }
 
       if (Object.keys(updatedFields).length === 0) {
-        return {
-          id: existingRecord.id,
-        };
+        return { id: existingRecord.id };
       }
 
       updatedFields.updatedAt = new Date();
@@ -101,7 +113,12 @@ class ServerDetailService {
       await db
         .update(serverDetailTable)
         .set(updatedFields)
-        .where(eq(serverDetailTable.id, existingRecord.id));
+        .where(
+          and(
+            eq(serverDetailTable.id, existingRecord.id),
+            eq(serverDetailTable.tenantId, actor.tenantId),
+          ),
+        );
 
       return {
         id: existingRecord.id,
@@ -119,8 +136,10 @@ class ServerDetailService {
       hostname: normalizedHostname,
       value: payload.value,
       status: payload.status ?? 'ACTIVE',
+
       createdByUserId: actor.type === 'USER' ? actor.id : null,
       createdByEmployeeId: actor.type === 'EMPLOYEE' ? actor.id : null,
+
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -130,7 +149,7 @@ class ServerDetailService {
     return data;
   }
 
-  // ================ GET ALL ===============
+  //  GET ALL SERVER DETAILS (TENANT SAFE)
   static async getAll(actor) {
     if (!actor?.tenantId) {
       throw ApiError.unauthorized('Invalid actor');
@@ -139,7 +158,6 @@ class ServerDetailService {
     const rows = await db
       .select({
         server: serverDetailTable,
-
         userNumber: usersTable.userNumber,
         employeeNumber: employeesTable.employeeNumber,
         tenantNumber: tenantsTable.tenantNumber,
@@ -154,7 +172,13 @@ class ServerDetailService {
         employeesTable,
         eq(employeesTable.id, serverDetailTable.createdByEmployeeId),
       )
-      .where(eq(serverDetailTable.tenantId, actor.tenantId));
+      .where(
+        and(
+          eq(serverDetailTable.tenantId, actor.tenantId),
+          sql`${serverDetailTable.deletedAt} IS NULL`,
+        ),
+      )
+      .orderBy(serverDetailTable.createdAt);
 
     if (!rows.length) {
       return [];
@@ -162,7 +186,6 @@ class ServerDetailService {
 
     return rows.map((row) => ({
       ...row.server,
-
       createdBy: row.userNumber
         ? {
             type: 'USER',
@@ -174,9 +197,40 @@ class ServerDetailService {
               employeeNumber: row.employeeNumber,
             }
           : null,
-
       tenantNumber: row.tenantNumber,
     }));
+  }
+
+  //  SOFT DELETE SERVER DETAIL (OPTIONAL BUT SAFE)
+  static async delete(id, actor) {
+    if (!actor?.tenantId || !actor?.isTenantOwner) {
+      throw ApiError.forbidden('Only tenant owner can delete server details');
+    }
+
+    const [existing] = await db
+      .select({ id: serverDetailTable.id })
+      .from(serverDetailTable)
+      .where(
+        and(
+          eq(serverDetailTable.id, id),
+          eq(serverDetailTable.tenantId, actor.tenantId),
+          sql`${serverDetailTable.deletedAt} IS NULL`,
+        ),
+      )
+      .limit(1);
+
+    if (!existing) {
+      throw ApiError.notFound('Server detail not found');
+    }
+
+    await db
+      .update(serverDetailTable)
+      .set({
+        deletedAt: new Date(),
+      })
+      .where(eq(serverDetailTable.id, id));
+
+    return true;
   }
 }
 

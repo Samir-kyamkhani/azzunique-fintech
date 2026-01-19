@@ -1,48 +1,118 @@
-import { eq, and } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import { ApiError } from '../lib/ApiError.js';
 import { db } from '../database/core/core-db.js';
 import { auditLogTable } from '../models/core/index.js';
 
 export class AuditLogService {
-  // ================= CREATE =================
+  //  CREATE AUDIT LOG (INTERNAL USE ONLY)
   static async create(payload) {
-    await db.insert(auditLogTable).values(payload);
+    if (!payload?.tenantId || !payload?.action || !payload?.entityType) {
+      throw ApiError.badRequest('Invalid audit log payload');
+    }
+
+    await db.insert(auditLogTable).values({
+      ...payload,
+      createdAt: payload.createdAt ?? new Date(),
+    });
+
     return true;
   }
 
-  // ================= GET ALL =================
-  static async getAll(filters) {
-    const conditions = [];
-
-    if (filters.tenantId) {
-      conditions.push(eq(auditLogTable.tenantId, filters.tenantId));
-    }
-    if (filters.entityType) {
-      conditions.push(eq(auditLogTable.entityType, filters.entityType));
-    }
-    if (filters.entityId) {
-      conditions.push(eq(auditLogTable.entityId, filters.entityId));
-    }
-    if (filters.action) {
-      conditions.push(eq(auditLogTable.action, filters.action));
+  //  GET ALL AUDIT LOGS (TENANT SAFE + PAGINATED)
+  static async getAll(filters = {}, actor) {
+    if (!actor?.tenantId) {
+      throw ApiError.forbidden('Tenant context missing');
     }
 
-    return db
+    const {
+      tenantId,
+      entityType,
+      entityId,
+      action,
+      limit = 20,
+      page = 1,
+    } = filters;
+
+    const safeLimit = Math.min(Number(limit) || 20, 100);
+    const safePage = Number(page) || 1;
+    const offset = (safePage - 1) * safeLimit;
+
+    const conditions = [
+      eq(auditLogTable.tenantId, actor.tenantId),
+      sql`${auditLogTable.deletedAt} IS NULL`,
+    ];
+
+    // ❗ Never allow cross-tenant read
+    if (tenantId && tenantId !== actor.tenantId) {
+      throw ApiError.forbidden('Cross-tenant audit access denied');
+    }
+
+    if (entityType) {
+      conditions.push(eq(auditLogTable.entityType, entityType));
+    }
+
+    if (entityId) {
+      conditions.push(eq(auditLogTable.entityId, entityId));
+    }
+
+    if (action) {
+      conditions.push(eq(auditLogTable.action, action));
+    }
+
+    const data = await db
       .select()
       .from(auditLogTable)
-      .where(conditions.length ? and(...conditions) : undefined)
-      .orderBy(auditLogTable.createdAt);
+      .where(and(...conditions))
+      .orderBy(desc(auditLogTable.createdAt))
+      .limit(safeLimit)
+      .offset(offset);
+
+    const [{ total }] = await db
+      .select({
+        total: sql`COUNT(*)`.mapWith(Number),
+      })
+      .from(auditLogTable)
+      .where(and(...conditions));
+
+    return {
+      data,
+      meta: {
+        page: safePage,
+        limit: safeLimit,
+        total,
+        totalPages: Math.ceil(total / safeLimit),
+      },
+    };
   }
 
-  // ================= DELETE =================
-  static async delete(id) {
-    const result = await db
-      .delete(auditLogTable)
-      .where(eq(auditLogTable.id, id));
+  //  SOFT DELETE AUDIT LOG (ADMIN ONLY)
+  static async delete(id, actor) {
+    if (!actor?.tenantId || !actor?.isTenantOwner) {
+      throw ApiError.forbidden('Only tenant owner can delete audit logs');
+    }
 
-    if (!result[0]?.affectedRows) {
+    const [existing] = await db
+      .select({ id: auditLogTable.id })
+      .from(auditLogTable)
+      .where(
+        and(
+          eq(auditLogTable.id, id),
+          eq(auditLogTable.tenantId, actor.tenantId),
+          sql`${auditLogTable.deletedAt} IS NULL`,
+        ),
+      )
+      .limit(1);
+
+    if (!existing) {
       throw ApiError.notFound('Audit log not found');
     }
+
+    await db
+      .update(auditLogTable)
+      .set({
+        deletedAt: new Date(),
+      })
+      .where(eq(auditLogTable.id, id));
 
     return true;
   }

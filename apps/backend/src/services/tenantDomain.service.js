@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import {
   tenantsDomainsTable,
   tenantsTable,
@@ -7,34 +7,17 @@ import {
 } from '../models/core/index.js';
 import { db } from '../database/core/core-db.js';
 import { ApiError } from '../lib/ApiError.js';
+import crypto from 'node:crypto';
 
 class TenantDomainService {
-  // GET BY ID
-  static async getById(id) {
-    const [domain] = await db
-      .select()
-      .from(tenantsDomainsTable)
-      .where(eq(tenantsDomainsTable.id, id))
-      .limit(1);
-
-    if (!domain) {
-      throw ApiError.notFound('Domain not found');
-    }
-
-    return domain;
-  }
-
-  // ================= GET TENANT ID DOMAIN =================
-
-  static async getByTenantId(tenantId) {
-    if (!tenantId) {
+  static async getByTenant(actor) {
+    if (!actor?.tenantId) {
       throw ApiError.unauthorized('Invalid actor');
     }
 
     const [result] = await db
       .select({
         domain: tenantsDomainsTable,
-
         userNumber: usersTable.userNumber,
         employeeNumber: employeesTable.employeeNumber,
         tenantNumber: tenantsTable.tenantNumber,
@@ -49,7 +32,12 @@ class TenantDomainService {
         employeesTable,
         eq(employeesTable.id, tenantsDomainsTable.createdByEmployeeId),
       )
-      .where(eq(tenantsDomainsTable.tenantId, tenantId))
+      .where(
+        and(
+          eq(tenantsDomainsTable.tenantId, actor.tenantId),
+          sql`${tenantsDomainsTable.deletedAt} IS NULL`,
+        ),
+      )
       .limit(1);
 
     if (!result) {
@@ -58,111 +46,70 @@ class TenantDomainService {
 
     return {
       ...result.domain,
-
       createdBy: result.userNumber
-        ? {
-            type: 'USER',
-            userNumber: result.userNumber,
-          }
+        ? { type: 'USER', userNumber: result.userNumber }
         : result.employeeNumber
-          ? {
-              type: 'EMPLOYEE',
-              employeeNumber: result.employeeNumber,
-            }
+          ? { type: 'EMPLOYEE', employeeNumber: result.employeeNumber }
           : null,
-
       tenantNumber: result.tenantNumber,
     };
   }
 
-  // ================= UPSERT TENANT DOMAIN =================
-  static async upsertByTenant(payload = {}, actor) {
-    const tenantId = payload.tenantId;
-    const now = new Date();
-
-    const normalizedDomain = payload.domainName
-      ? payload.domainName.trim().toLowerCase()
-      : null;
-
-    const [existingRecord] = await db
-      .select()
-      .from(tenantsDomainsTable)
-      .where(eq(tenantsDomainsTable.tenantId, tenantId))
-      .limit(1);
-
-    /* ================= UPDATE ================= */
-    if (existingRecord) {
-      const updatedFields = {};
-
-      if (normalizedDomain && normalizedDomain !== existingRecord.domainName) {
-        updatedFields.domainName = normalizedDomain;
-      }
-
-      if (
-        payload.serverDetailId &&
-        payload.serverDetailId !== existingRecord.serverDetailId
-      ) {
-        updatedFields.serverDetailId = payload.serverDetailId;
-      }
-
-      if (payload.status && payload.status !== existingRecord.status) {
-        updatedFields.status = payload.status;
-
-        if (payload.status !== 'ACTIVE') {
-          updatedFields.actionReason = payload.actionReason ?? null;
-          updatedFields.actionedAt = now;
-        } else {
-          updatedFields.actionReason = null;
-          updatedFields.actionedAt = null;
-        }
-      }
-
-      if (Object.keys(updatedFields).length === 0) {
-        return {
-          id: existingRecord.id,
-        };
-      }
-
-      updatedFields.updatedAt = now;
-
-      await db
-        .update(tenantsDomainsTable)
-        .set(updatedFields)
-        .where(eq(tenantsDomainsTable.id, existingRecord.id));
-
-      return {
-        id: existingRecord.id,
-        ...updatedFields,
-      };
+  static async upsert(payload, actor) {
+    if (!actor?.tenantId) {
+      throw ApiError.unauthorized('Invalid actor');
     }
 
-    /* ================= CREATE ================= */
+    const domainName = payload.domainName?.trim().toLowerCase();
+    if (!domainName) {
+      throw ApiError.badRequest('Domain name required');
+    }
+
+    const [existing] = await db
+      .select()
+      .from(tenantsDomainsTable)
+      .where(
+        and(
+          eq(tenantsDomainsTable.tenantId, actor.tenantId),
+          sql`${tenantsDomainsTable.deletedAt} IS NULL`,
+        ),
+      )
+      .limit(1);
+
+    const now = new Date();
+
+    if (existing) {
+      await db
+        .update(tenantsDomainsTable)
+        .set({
+          domainName,
+          serverDetailId: payload.serverDetailId,
+          status: payload.status ?? existing.status,
+          actionReason: payload.actionReason ?? null,
+          actionedAt:
+            payload.status && payload.status !== 'ACTIVE' ? now : null,
+          updatedAt: now,
+        })
+        .where(eq(tenantsDomainsTable.id, existing.id));
+
+      return { id: existing.id };
+    }
+
     const id = crypto.randomUUID();
 
-    const data = {
+    await db.insert(tenantsDomainsTable).values({
       id,
-      tenantId,
-      domainName: normalizedDomain,
+      tenantId: actor.tenantId,
+      domainName,
       serverDetailId: payload.serverDetailId,
       status: payload.status ?? 'ACTIVE',
-
-      actionReason:
-        payload.status && payload.status !== 'ACTIVE'
-          ? payload.actionReason
-          : null,
-
-      actionedAt: payload.status && payload.status !== 'ACTIVE' ? now : null,
-
       createdByUserId: actor.type === 'USER' ? actor.id : null,
       createdByEmployeeId: actor.type === 'EMPLOYEE' ? actor.id : null,
-
       createdAt: now,
       updatedAt: now,
-    };
+    });
 
-    await db.insert(tenantsDomainsTable).values(data);
-
-    return data;
+    return { id };
   }
 }
 

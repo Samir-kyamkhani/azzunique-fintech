@@ -1,7 +1,8 @@
-import { and, count, desc, eq, like, or, inArray } from 'drizzle-orm';
+import { and, desc, eq, like, or, inArray, ne, sql } from 'drizzle-orm';
+import { randomUUID } from 'node:crypto';
+
 import { db } from '../database/core/core-db.js';
 import { ApiError } from '../lib/ApiError.js';
-import { randomUUID } from 'node:crypto';
 import {
   encrypt,
   generateNumber,
@@ -11,21 +12,25 @@ import {
 import { eventBus } from '../events/events.js';
 import { EVENTS } from '../events/events.constants.js';
 import s3Service from '../lib/S3Service.js';
+import { resolvePermissions } from './permission.resolver.js';
+
 import {
   employeesTable,
+  employeePermissionTable,
   permissionTable,
   departmentTable,
   tenantsTable,
   smtpConfigTable,
 } from '../models/core/index.js';
-import { resolvePermissions } from './permission.resolver.js';
 
 class EmployeeService {
+  //  CREATE EMPLOYEE
   static async create(payload, actor) {
     if (!actor?.tenantId) {
       throw ApiError.badRequest('Tenant context missing');
     }
 
+    // Tenant check
     const [tenant] = await db
       .select({ id: tenantsTable.id })
       .from(tenantsTable)
@@ -36,6 +41,7 @@ class EmployeeService {
       throw ApiError.badRequest('Invalid tenant');
     }
 
+    // Department check
     const [department] = await db
       .select({
         id: departmentTable.id,
@@ -54,6 +60,7 @@ class EmployeeService {
       throw ApiError.badRequest('Invalid department');
     }
 
+    // SMTP must exist
     const [smtp] = await db
       .select({ id: smtpConfigTable.id })
       .from(smtpConfigTable)
@@ -64,6 +71,7 @@ class EmployeeService {
       throw ApiError.badRequest('SMTP must be configured first');
     }
 
+    // Duplicate check
     const [existing] = await db
       .select({ id: employeesTable.id })
       .from(employeesTable)
@@ -82,28 +90,42 @@ class EmployeeService {
       throw ApiError.conflict('Employee already exists');
     }
 
+    // Credentials
     const password = generatePassword();
     const passwordHash = encrypt(password);
 
     const employeeId = randomUUID();
-
-    const deptPrefix = generatePrefix(department.departmentCode);
+    const prefix = generatePrefix(department.departmentCode);
 
     const employeePayload = {
       id: employeeId,
-      employeeNumber: generateNumber(deptPrefix),
-      ...payload,
+      employeeNumber: generateNumber(prefix),
+
+      firstName: payload.firstName,
+      lastName: payload.lastName,
+      email: payload.email,
+      mobileNumber: payload.mobileNumber,
+      departmentId: payload.departmentId,
+
       passwordHash,
-      employeeStatus: 'INACTIVE',
       tenantId: actor.tenantId,
+
+      employeeStatus: 'INACTIVE',
       emailVerifiedAt: new Date(),
       actionReason: 'Kindly contact the administrator to activate your account',
-      actionedAt: new Date(),
+
+      createdByEmployeeId: actor.type === 'EMPLOYEE' ? actor.id : null,
+
       createdAt: new Date(),
       updatedAt: new Date(),
+      actionedAt: new Date(),
     };
 
-    const sent = eventBus.emit(EVENTS.EMPLOYEE_CREATED, {
+    // DB INSERT FIRST
+    await db.insert(employeesTable).values(employeePayload);
+
+    // EVENT AFTER DB SUCCESS
+    eventBus.emit(EVENTS.EMPLOYEE_CREATED, {
       employeeId,
       employeeNumber: employeePayload.employeeNumber,
       email: payload.email,
@@ -111,15 +133,10 @@ class EmployeeService {
       tenantId: actor.tenantId,
     });
 
-    if (!sent) {
-      throw ApiError.internal('Failed to send employee credentials');
-    }
-
-    await db.insert(employeesTable).values(employeePayload);
-
     return this.findOne(employeeId, actor);
   }
 
+  //  FIND ONE
   static async findOne(id, actor) {
     if (!id || !actor?.tenantId) {
       throw ApiError.badRequest('Invalid request');
@@ -132,6 +149,7 @@ class EmployeeService {
         and(
           eq(employeesTable.id, id),
           eq(employeesTable.tenantId, actor.tenantId),
+          sql`${employeesTable.deletedAt} IS NULL`,
         ),
       )
       .limit(1);
@@ -148,6 +166,7 @@ class EmployeeService {
     };
   }
 
+  //  FIND ALL
   static async findAll(query = {}, actor) {
     if (!actor?.tenantId) {
       throw ApiError.badRequest('Tenant context missing');
@@ -158,7 +177,11 @@ class EmployeeService {
     page = Number(page);
 
     const offset = (page - 1) * limit;
-    const conditions = [eq(employeesTable.tenantId, actor.tenantId)];
+
+    const conditions = [
+      eq(employeesTable.tenantId, actor.tenantId),
+      sql`${employeesTable.deletedAt} IS NULL`,
+    ];
 
     if (search) {
       const term = `%${search}%`;
@@ -185,7 +208,7 @@ class EmployeeService {
       .offset(offset);
 
     const [{ total }] = await db
-      .select({ total: count() })
+      .select({ total: sql`COUNT(*)`.mapWith(Number) })
       .from(employeesTable)
       .where(and(...conditions));
 
@@ -205,8 +228,78 @@ class EmployeeService {
     };
   }
 
+  //  UPDATE EMPLOYEE (USER-LEVEL SAFE)
   static async update(id, payload, actor, file) {
-    const existing = await this.findOne(id, actor);
+    const [existing] = await db
+      .select({
+        id: employeesTable.id,
+        tenantId: employeesTable.tenantId,
+        email: employeesTable.email,
+        mobileNumber: employeesTable.mobileNumber,
+        employeeStatus: employeesTable.employeeStatus,
+        profilePicture: employeesTable.profilePicture,
+      })
+      .from(employeesTable)
+      .where(eq(employeesTable.id, id))
+      .limit(1);
+
+    if (!existing) {
+      throw ApiError.notFound('Employee not found');
+    }
+
+    if (existing.tenantId !== actor.tenantId) {
+      throw ApiError.forbidden('Cross-tenant update denied');
+    }
+
+    // Self-status change block
+    if (
+      actor.type === 'EMPLOYEE' &&
+      actor.id === id &&
+      payload.employeeStatus
+    ) {
+      throw ApiError.forbidden('You cannot change your own status');
+    }
+
+    // Email duplicate
+    if (payload.email && payload.email !== existing.email) {
+      const [emailExists] = await db
+        .select({ id: employeesTable.id })
+        .from(employeesTable)
+        .where(
+          and(
+            eq(employeesTable.email, payload.email),
+            eq(employeesTable.tenantId, actor.tenantId),
+            ne(employeesTable.id, id),
+          ),
+        )
+        .limit(1);
+
+      if (emailExists) {
+        throw ApiError.badRequest('Email already exists');
+      }
+    }
+
+    // Mobile duplicate
+    if (
+      payload.mobileNumber &&
+      payload.mobileNumber !== existing.mobileNumber
+    ) {
+      const [mobileExists] = await db
+        .select({ id: employeesTable.id })
+        .from(employeesTable)
+        .where(
+          and(
+            eq(employeesTable.mobileNumber, payload.mobileNumber),
+            eq(employeesTable.tenantId, actor.tenantId),
+            ne(employeesTable.id, id),
+          ),
+        )
+        .limit(1);
+
+      if (mobileExists) {
+        throw ApiError.badRequest('Mobile number already exists');
+      }
+    }
 
     const UPDATABLE = [
       'firstName',
@@ -218,48 +311,50 @@ class EmployeeService {
       'actionReason',
     ];
 
-    const updates = {};
+    const updates = { updatedAt: new Date() };
+
     for (const key of UPDATABLE) {
-      if (payload[key] !== undefined) updates[key] = payload[key];
+      if (payload[key] !== undefined) {
+        updates[key] = payload[key];
+      }
     }
 
-    let profilePicture = existing.profilePicture;
-
+    // Profile image
     if (file) {
       const uploaded = await s3Service.upload(file.path, 'employee-profile');
-      profilePicture = uploaded.key;
 
       if (existing.profilePicture) {
         await s3Service.deleteByKey(existing.profilePicture);
       }
+
+      updates.profilePicture = uploaded.key;
     }
 
-    await db
-      .update(employeesTable)
-      .set({
-        ...updates,
-        profilePicture,
-        updatedAt: new Date(),
-        actionedAt: updates.employeeStatus ? new Date() : existing.actionedAt,
-      })
-      .where(eq(employeesTable.id, id));
-
+    // Status event
     if (
-      updates.employeeStatus &&
-      updates.employeeStatus !== existing.employeeStatus
+      payload.employeeStatus &&
+      payload.employeeStatus !== existing.employeeStatus
     ) {
       eventBus.emit(EVENTS.EMPLOYEE_STATUS_CHANGED, {
         tenantId: actor.tenantId,
         employeeId: id,
         oldStatus: existing.employeeStatus,
-        newStatus: updates.employeeStatus,
-        actionReason: updates.actionReason,
+        newStatus: payload.employeeStatus,
+        actionReason: payload.actionReason || null,
       });
+
+      updates.actionedAt = new Date();
     }
+
+    await db
+      .update(employeesTable)
+      .set(updates)
+      .where(eq(employeesTable.id, id));
 
     return this.findOne(id, actor);
   }
 
+  //  SOFT DELETE
   static async delete(id, actor) {
     const employee = await this.findOne(id, actor);
 
@@ -268,7 +363,11 @@ class EmployeeService {
     }
 
     await db
-      .delete(employeesTable)
+      .update(employeesTable)
+      .set({
+        deletedAt: new Date(),
+        employeeStatus: 'DELETED',
+      })
       .where(
         and(
           eq(employeesTable.id, id),
@@ -279,8 +378,9 @@ class EmployeeService {
     return true;
   }
 
+  //  ASSIGN PERMISSIONS (TRANSACTION SAFE)
   static async assignPermissions(employeeId, permissions, actor) {
-    if (!actor?.tenantId || !actor?.id || !actor?.type) {
+    if (!actor?.tenantId || !actor?.id) {
       throw ApiError.unauthorized('Invalid actor context');
     }
 
@@ -288,7 +388,6 @@ class EmployeeService {
       throw ApiError.badRequest('Permissions array is required');
     }
 
-    // 1️⃣ Target employee (TENANT SAFE)
     const [employee] = await db
       .select({
         id: employeesTable.id,
@@ -307,25 +406,21 @@ class EmployeeService {
       throw ApiError.notFound('Employee not found');
     }
 
-    // 2️⃣ Optional: self-permission modification block
     if (actor.type === 'EMPLOYEE' && actor.id === employeeId) {
       throw ApiError.forbidden('You cannot modify your own permissions');
     }
 
-    // 3️⃣ Collect permission IDs
     const permissionIds = permissions.map((p) => p.permissionId);
 
-    // 4️⃣ Validate permission IDs
-    const existing = await db
+    const existingPermissions = await db
       .select({ id: permissionTable.id })
       .from(permissionTable)
       .where(inArray(permissionTable.id, permissionIds));
 
-    if (existing.length !== permissionIds.length) {
+    if (existingPermissions.length !== permissionIds.length) {
       throw ApiError.badRequest('Invalid permission IDs');
     }
 
-    // 5️⃣ Actor permission enforcement (CRITICAL)
     const actorPermissions = await resolvePermissions(actor);
 
     if (!actorPermissions.includes('*')) {
@@ -340,19 +435,20 @@ class EmployeeService {
       }
     }
 
-    // 6️⃣ Replace permissions (CLEAR → INSERT)
-    await db
-      .delete(employeePermissionTable)
-      .where(eq(employeePermissionTable.employeeId, employeeId));
+    await db.transaction(async (tx) => {
+      await tx
+        .delete(employeePermissionTable)
+        .where(eq(employeePermissionTable.employeeId, employeeId));
 
-    await db.insert(employeePermissionTable).values(
-      permissions.map((p) => ({
-        id: randomUUID(),
-        employeeId,
-        permissionId: p.permissionId,
-        effect: p.effect ?? 'ALLOW', // ALLOW | DENY
-      })),
-    );
+      await tx.insert(employeePermissionTable).values(
+        permissions.map((p) => ({
+          id: randomUUID(),
+          employeeId,
+          permissionId: p.permissionId,
+          effect: p.effect ?? 'ALLOW',
+        })),
+      );
+    });
 
     return true;
   }
