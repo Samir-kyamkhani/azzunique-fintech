@@ -7,14 +7,14 @@ import fs from 'fs';
 import path from 'path';
 import mime from 'mime-types';
 import crypto from 'crypto';
-import { env } from '../config/config.js';
+import envConfig from '../config/config.js';
 
 // ================= S3 CLIENT =================
 const s3 = new S3Client({
-  region: env.s3.region,
+  region: envConfig.s3.region,
   credentials: {
-    accessKeyId: env.s3.accessKey,
-    secretAccessKey: env.s3.secretKey,
+    accessKeyId: envConfig.s3.accessKey,
+    secretAccessKey: envConfig.s3.secretKey,
   },
 });
 
@@ -34,10 +34,10 @@ const ALLOWED_CATEGORIES = [
 // ================= SERVICE =================
 class S3Service {
   constructor() {
-    if (!env.s3.bucket) {
+    if (!envConfig.s3.bucket) {
       throw new Error('S3 bucket not configured');
     }
-    this.bucket = env.s3.bucket;
+    this.bucket = envConfig.s3.bucket;
   }
 
   // ================= UPLOAD =================

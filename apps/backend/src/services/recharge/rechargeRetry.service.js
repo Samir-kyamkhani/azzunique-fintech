@@ -1,0 +1,54 @@
+import { rechargeDb as db } from '../../database/recharge/recharge-db.js';
+import { rechargeTransactionTable } from '../../models/core/index.js';
+import { eq } from 'drizzle-orm';
+import { ApiError } from '../../lib/ApiError.js';
+import { canRetryRecharge } from '../../guard/rechargeRetry.guard.js';
+import RechargeRuntimeService from './rechargeRuntime.service.js';
+
+class RechargeRetryService {
+  async retry(transactionId, actor) {
+    return db.transaction(async (tx) => {
+      // 1️⃣ Lock transaction
+      const [txn] = await tx
+        .select()
+        .from(rechargeTransactionTable)
+        .where(eq(rechargeTransactionTable.id, transactionId))
+        .forUpdate()
+        .limit(1);
+
+      if (!txn) {
+        throw ApiError.notFound('Recharge transaction not found');
+      }
+
+      // 2️⃣ Ownership check
+      if (txn.userId !== actor.id) {
+        throw ApiError.forbidden('Not your transaction');
+      }
+
+      // 3️⃣ Retry rules
+      if (!canRetryRecharge(txn)) {
+        throw ApiError.badRequest('Retry not allowed for this transaction');
+      }
+
+      // 4️⃣ Increment retry count
+      await tx
+        .update(rechargeTransactionTable)
+        .set({
+          retryCount: txn.retryCount + 1,
+          lastRetryAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(rechargeTransactionTable.id, txn.id));
+
+      // 5️⃣ Trigger recharge again (SAFE)
+      await RechargeRuntimeService.execute({
+        transactionId: txn.id,
+        isRetry: true,
+      });
+
+      return { success: true };
+    });
+  }
+}
+
+export default new RechargeRetryService();

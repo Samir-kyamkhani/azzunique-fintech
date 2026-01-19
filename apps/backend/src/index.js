@@ -3,6 +3,7 @@ dotenv.config({ path: './.env' });
 import app from './app.js';
 import { corePool } from './database/core/mysql.js';
 import './events/index.js';
+import { startRechargeStatusCron } from './crons/rechargeStatus.cron.js';
 
 (async function bootstrap() {
   try {
@@ -20,4 +21,7 @@ import './events/index.js';
     console.error('❌ Startup error:', error);
     process.exit(1);
   }
+
+  // Start the recharge status cron job
+  startRechargeStatusCron();
 })();

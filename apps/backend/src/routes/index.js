@@ -11,6 +11,7 @@ import roleRoutes from './role.routes.js';
 import employeeRoutes from './employee.routes.js';
 import tenantWebsiteRoutes from './tenantWebsite.routes.js';
 import tenantSocialMediaRoutes from './tenantSocialMedia.routes.js';
+import rechargeRoutes from './recharge/recharge.routes.js';
 import platformRoutes from './platform.routes.js';
 
 const router = Router();
@@ -27,6 +28,7 @@ router.use('/departments', departmentRoutes);
 router.use('/employees', employeeRoutes);
 router.use('/website', tenantWebsiteRoutes);
 router.use('/social-media', tenantSocialMediaRoutes);
+router.use('/recharge', rechargeRoutes);
 router.use('/platform', platformRoutes);
 
 export default router;
