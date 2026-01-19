@@ -1,6 +1,6 @@
-import { db } from '../../database/core/core-db.js';
-import { tenantServiceTable } from '../../models/core/index.js';
-import { ApiError } from '../../lib/ApiError.js';
+import { tenantServiceTable } from '../models/core/index.js';
+import { ApiError } from '../lib/ApiError.js';
+import { db } from '../database/core/core-db.js';
 
 class TenantService {
   async enable(tenantId, data, actor) {

@@ -1,4 +1,4 @@
-import platformService from '../../services/platform/platformService.service.js';
+import platformService from '../services/platformService.service.js';
 
 export const createPlatformService = async (req, res) => {
   const data = await platformService.create(req.body, req.user);

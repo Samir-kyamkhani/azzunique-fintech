@@ -1,6 +1,6 @@
-import { db } from '../../database/core/core-db.js';
-import { serviceProviderFeatureTable } from '../../models/core/index.js';
-import { ApiError } from '../../lib/ApiError.js';
+import { db } from '../database/core/core-db.js';
+import { serviceProviderFeatureTable } from '../models/core/index.js';
+import { ApiError } from '../lib/ApiError.js';
 
 class ServiceProviderFeatureService {
   async map(data, actor) {

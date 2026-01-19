@@ -1,5 +1,5 @@
 import { db } from '../database/core/core-db.js';
-import { tenantsWebsitesTable } from '../models/core/tenantWebsite.schema.js';
+import { tenantsWebsitesTable } from '../models/core/index.js';
 import { eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import { ApiError } from '../lib/ApiError.js';

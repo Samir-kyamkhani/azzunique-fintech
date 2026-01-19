@@ -1,5 +1,5 @@
 import { and, eq } from 'drizzle-orm';
-import { smtpConfigTable } from '../models/core/smtpConfig.schema.js';
+import { smtpConfigTable } from '../models/core/index.js';
 import { db } from '../database/core/core-db.js';
 import { ApiError } from '../lib/ApiError.js';
 import crypto from 'crypto';
