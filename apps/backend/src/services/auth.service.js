@@ -56,12 +56,19 @@ class AuthService {
       throw ApiError.unauthorized('Tenant not found');
     }
 
+    const [role] = await db
+      .select({ roleLevel: roleTable.roleLevel })
+      .from(roleTable)
+      .where(eq(roleTable.id, user.roleId))
+      .limit(1);
+
     const tokens = generateTokens({
       sub: user.id,
       tenantId: tenant.id,
       tenantType: tenant.userType,
       type: 'USER',
       roleId: user.roleId,
+      roleLevel: role.roleLevel,
     });
 
     await db
