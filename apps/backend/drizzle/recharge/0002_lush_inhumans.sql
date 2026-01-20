@@ -1,2 +1,0 @@
-ALTER TABLE `recharge_transactions` ADD `idempotency_key` varchar(64) NOT NULL;--> statement-breakpoint
-ALTER TABLE `recharge_transactions` ADD CONSTRAINT `uniq_recharge_idempotency` UNIQUE(`tenant_id`,`idempotency_key`);

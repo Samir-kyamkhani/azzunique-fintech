@@ -16,7 +16,9 @@ CREATE TABLE `recharge_transactions` (
 	`mobile_number` varchar(15) NOT NULL,
 	`operator_code` varchar(10) NOT NULL,
 	`circle_code` varchar(10),
+	`idempotency_key` varchar(64) NOT NULL,
 	`amount` int NOT NULL,
+	`wallet_id` varchar(36) NOT NULL,
 	`platform_service_id` varchar(36) NOT NULL,
 	`platform_service_feature_id` varchar(36) NOT NULL,
 	`provider_code` varchar(40) NOT NULL,
@@ -24,9 +26,12 @@ CREATE TABLE `recharge_transactions` (
 	`provider_txn_id` varchar(100),
 	`reference_id` varchar(100),
 	`failure_reason` varchar(255),
+	`retry_count` int DEFAULT 0,
+	`last_retry_at` timestamp,
 	`created_at` timestamp DEFAULT (now()),
 	`updated_at` timestamp DEFAULT (now()),
-	CONSTRAINT `recharge_transactions_id` PRIMARY KEY(`id`)
+	CONSTRAINT `recharge_transactions_id` PRIMARY KEY(`id`),
+	CONSTRAINT `uniq_recharge_idempotency` UNIQUE(`tenant_id`,`idempotency_key`)
 );
 --> statement-breakpoint
 CREATE TABLE `recharge_callbacks` (
