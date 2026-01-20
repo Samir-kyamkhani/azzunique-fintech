@@ -1,7 +1,8 @@
+import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import express from 'express';
 import helmet from 'helmet';
+
 import { rateLimiterMiddleware } from './middleware/rateLimiter.middleware.js';
 import indexRoutes from './routes/index.js';
 import { ApiError } from './lib/ApiError.js';
@@ -10,9 +11,17 @@ import { httpResponseFilter } from './middleware/httpResponseFilter.middleware.j
 
 const app = express();
 
+app.get('/api/v1/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
 app.use(
   cors({
-    origin: [process.env.CLIENT_URL, 'http://localhost:3000',  'http://localhost:3001'],
+    origin: [
+      process.env.CLIENT_URL,
+      'http://localhost:3000',
+      'http://localhost:3001',
+    ],
     credentials: true,
   }),
 );
@@ -28,18 +37,15 @@ app.use(rateLimiterMiddleware);
 
 app.use(httpResponseFilter);
 
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', requestId: req.requestId });
-});
-
-// ✅ Routes
+// Routes
 app.use('/api/v1', indexRoutes);
 
-// ❌ 404 handler (AFTER routes)
+// 404
 app.use((req, res, next) => {
   next(ApiError.notFound('Route not found'));
 });
 
-// ❌ GLOBAL ERROR HANDLER (ALWAYS LAST)
+// Global error handler
 app.use(httpExceptionFilter);
+
 export default app;
