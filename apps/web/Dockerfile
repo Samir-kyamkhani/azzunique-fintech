@@ -1,12 +1,11 @@
 FROM node:20-alpine
 
 WORKDIR /app
-
 RUN corepack enable
 
-# Install deps
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+# Install deps (NO lockfile)
+COPY package.json ./
+RUN pnpm install
 
 # Copy source
 COPY . .
@@ -18,5 +17,4 @@ ENV NODE_ENV=production
 ENV PORT=3000
 
 EXPOSE 3000
-
 CMD ["pnpm", "start"]
