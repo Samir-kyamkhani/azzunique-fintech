@@ -6,11 +6,18 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: 123456789
       MYSQL_DATABASE: azzunique
+      MYSQL_USER: azzuser
+      MYSQL_PASSWORD: azzpass
     ports:
       - '3306:3306'
     volumes:
       - mysql_data:/var/lib/mysql
     command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
@@ -19,12 +26,13 @@ services:
     environment:
       PMA_HOST: db
       PMA_PORT: 3306
-      PMA_USER: root
-      PMA_PASSWORD: 123456789
+      PMA_USER: azzuser
+      PMA_PASSWORD: azzpass
     ports:
       - '8080:80'
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
 volumes:
   mysql_data:
