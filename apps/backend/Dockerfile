@@ -3,11 +3,15 @@ FROM node:20-alpine
 WORKDIR /app
 RUN corepack enable
 
-COPY ../../package.json ../../pnpm-lock.yaml ../../pnpm-workspace.yaml ./
-COPY ../../packages ./packages
-COPY . .
+# Copy ONLY backend package files
+COPY package.json ./
+COPY pnpm-lock.yaml ./pnpm-lock.yaml
 
-RUN pnpm install --frozen-lockfile --filter backend...
+# Install deps (no workspace)
+RUN pnpm install --frozen-lockfile
+
+# Copy source
+COPY . .
 
 ENV NODE_ENV=production
 EXPOSE 3001
