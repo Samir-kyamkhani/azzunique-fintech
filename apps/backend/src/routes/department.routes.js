@@ -19,7 +19,7 @@ import {
   updateDepartmentSchema,
   assignDepartmentPermissionsSchema,
 } from '../validators/department.schema.js';
-import { PermissionsRegistry } from '../lib/permissionsRegistry.js';
+import { PermissionsRegistry } from '../lib/PermissionsRegistry.js';
 
 const router = Router();
 router.use(AuthMiddleware);
