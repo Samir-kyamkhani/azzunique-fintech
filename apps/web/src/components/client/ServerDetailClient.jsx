@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import Button from "@/components/ui/Button";
-import InfoCard from "@/components/details/InfoCard";
-import InfoItem from "@/components/details/InfoItem";
-import ServerDetailModal from "@/components/modals/ServerDetailModal";
-import DataTableSearchEmpty from "@/components/tables/core/DataTableSearchEmpty";
+import Button from "@/components/ui/Button.jsx";
+import InfoCard from "@/components/details/InfoCard.jsx";
+import InfoItem from "@/components/details/InfoItem.jsx";
+import ServerDetailModal from "@/components/modals/ServerDetailModal.jsx";
+import DataTableSearchEmpty from "@/components/tables/core/DataTableSearchEmpty.jsx";
 
 import {
   Server,
@@ -32,7 +32,7 @@ import { setServerDetail, clearServerDetail } from "@/store/serverDetailSlice";
 
 import { formatDateTime, statusColor } from "@/lib/utils";
 import { toast } from "@/lib/toast";
-import PageSkeleton from "../details/PageSkeleton";
+import PageSkeleton from "../details/PageSkeleton.jsx";
 
 /* ================= HELPERS ================= */
 

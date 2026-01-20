@@ -1,6 +1,6 @@
 "use client";
 
-import TabsNav from "@/components/details/TabsNav";
+import TabsNav from "@/components/details/TabsNav.jsx";
 import { Building2 } from "lucide-react";
 import { Users } from "lucide-react";
 

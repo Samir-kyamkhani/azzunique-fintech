@@ -1,6 +1,6 @@
 "use client";
 
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/Button.jsx";
 import { AlertTriangle, Home, ArrowLeft } from "lucide-react";
 
 export default function NotFound() {

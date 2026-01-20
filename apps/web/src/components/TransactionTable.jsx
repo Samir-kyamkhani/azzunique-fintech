@@ -12,7 +12,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useState } from "react";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/Button.jsx";
 import Link from "next/link";
 
 const transactions = [

@@ -1,8 +1,8 @@
 "use client";
 
 import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
-import MemberForm from "../forms/MemberForm";
-import Button from "../ui/Button";
+import MemberForm from "../forms/MemberForm.jsx";
+import Button from "../ui/Button.jsx";
 import { User, X } from "lucide-react";
 
 export default function MemberModal({

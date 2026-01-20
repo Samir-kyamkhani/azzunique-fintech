@@ -2,9 +2,9 @@
 
 import { useForm } from "react-hook-form";
 import { AlertCircle, Palette } from "lucide-react";
-import Button from "@/components/ui/Button";
-import InputField from "@/components/ui/InputField";
-import TextareaField from "@/components/ui/TextareaField";
+import Button from "@/components/ui/Button.jsx";
+import InputField from "@/components/ui/InputField.jsx";
+import TextareaField from "@/components/ui/TextareaField.jsx";
 import { onlyDigits } from "@/lib/utils";
 
 export default function TenantWebsiteForm({

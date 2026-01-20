@@ -4,9 +4,9 @@ import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Building2, CheckCircle, Ban, UserX } from "lucide-react";
 
-import QuickStats from "@/components/QuickStats";
-import UsersTable from "@/components/tables/UsersTable";
-import MemberModal from "@/components/modals/MemberModal";
+import QuickStats from "@/components/QuickStats.jsx";
+import UsersTable from "@/components/tables/UsersTable.jsx";
+import MemberModal from "@/components/modals/MemberModal.jsx";
 
 import {
   setMembers,

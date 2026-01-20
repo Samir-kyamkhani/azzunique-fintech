@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import Button from "@/components/ui/Button";
-import PageSkeleton from "@/components/details/PageSkeleton";
-import DataTableSearchEmpty from "@/components/tables/core/DataTableSearchEmpty";
-import DepartmentModal from "@/components/modals/DepartmentModal";
+import Button from "@/components/ui/Button.jsx";
+import PageSkeleton from "@/components/details/PageSkeleton.jsx";
+import DataTableSearchEmpty from "@/components/tables/core/DataTableSearchEmpty.jsx";
+import DepartmentModal from "@/components/modals/DepartmentModal.jsx";
 
 import { Building2, Hash, FileText, Plus } from "lucide-react";
 
@@ -15,7 +15,7 @@ import {
   useCreateDepartment,
   useUpdateDepartment,
   useDeleteDepartment,
-} from "@/hooks/useDepartment";
+} from "@/hooks/useDepartments";
 
 import {
   setDepartments,
@@ -25,9 +25,9 @@ import {
 
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
-import RowActions from "../tables/core/RowActions";
+import RowActions from "../tables/core/RowActions.jsx";
 import { Shield } from "lucide-react";
-import ConfirmDialog from "../ConfirmDialog";
+import ConfirmDialog from "../ConfirmDialog.jsx";
 
 export default function DepartmentClient() {
   const [confirmOpen, setConfirmOpen] = useState(false);

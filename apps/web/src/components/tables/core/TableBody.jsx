@@ -1,5 +1,5 @@
-import DataTableSearchEmpty from "./DataTableSearchEmpty";
-import TableRow from "./TableRow";
+import DataTableSearchEmpty from "./DataTableSearchEmpty.jsx";
+import TableRow from "./TableRow.jsx";
 
 export default function TableBody({
   columns = [],

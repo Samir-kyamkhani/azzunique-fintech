@@ -14,12 +14,12 @@ import {
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
-import { QuickActions } from "@/components/QuickActions";
-import { RevenueChart } from "@/components/RevenueChart";
-import { TransactionTable } from "@/components/TransactionTable";
-import QuickStats from "@/components/QuickStats";
+import { QuickActions } from "@/components/QuickActions.jsx";
+import { RevenueChart } from "@/components/RevenueChart.jsx";
+import { TransactionTable } from "@/components/TransactionTable.jsx";
+import QuickStats from "@/components/QuickStats.jsx";
 import { CreditCard } from "lucide-react";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/Button.jsx";
 
 export default function Dashboard() {
   const [timeRange, setTimeRange] = useState("monthly");

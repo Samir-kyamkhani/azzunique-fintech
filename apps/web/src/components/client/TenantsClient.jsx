@@ -11,10 +11,10 @@ import {
   useUpdateTenant,
 } from "@/hooks/useTenant";
 
-import TenantsTable from "@/components/tables/TenantsTable";
-import TenantModal from "@/components/modals/TenantModal";
-import QuickStats from "@/components/QuickStats";
-import Button from "@/components/ui/Button";
+import TenantsTable from "@/components/tables/TenantsTable.jsx";
+import TenantModal from "@/components/modals/TenantModal.jsx";
+import QuickStats from "@/components/QuickStats.jsx";
+import Button from "@/components/ui/Button.jsx";
 
 import { Building2, UserX, CheckCircle, Ban, RefreshCw } from "lucide-react";
 import { formatDateTime } from "@/lib/utils";

@@ -1,9 +1,9 @@
 "use client";
 
 import { Share2 } from "lucide-react";
-import Button from "../ui/Button";
+import Button from "../ui/Button.jsx";
 import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
-import TenantSocialMediaForm from "../forms/TenantSocialMediaForm";
+import TenantSocialMediaForm from "../forms/TenantSocialMediaForm.jsx";
 
 export default function TenantSocialMediaModal({
   open,

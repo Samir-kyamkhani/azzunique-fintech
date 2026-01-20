@@ -8,7 +8,7 @@ import {
   Globe,
   CheckCircle,
 } from "lucide-react";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/Button.jsx";
 
 export default function HomePage() {
   const features = [

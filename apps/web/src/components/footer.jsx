@@ -10,7 +10,7 @@ import {
   MapPin,
   Globe,
 } from "lucide-react";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/Button.jsx";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();

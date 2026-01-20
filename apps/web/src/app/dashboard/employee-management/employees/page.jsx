@@ -1,4 +1,4 @@
-import EmployeeClient from "@/components/client/EmployeeClient";
+import EmployeeClient from "@/components/client/EmployeeClient.jsx";
 
 export default function page() {
   return <EmployeeClient />;

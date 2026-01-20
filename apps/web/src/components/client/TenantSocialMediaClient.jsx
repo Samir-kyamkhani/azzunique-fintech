@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import Button from "@/components/ui/Button";
-import InfoCard from "@/components/details/InfoCard";
-import InfoItem from "@/components/details/InfoItem";
-import DataTableSearchEmpty from "@/components/tables/core/DataTableSearchEmpty";
-import PageSkeleton from "@/components/details/PageSkeleton";
-import TenantSocialMediaModal from "@/components/modals/TenantSocialMediaModal";
+import Button from "@/components/ui/Button.jsx";
+import InfoCard from "@/components/details/InfoCard.jsx";
+import InfoItem from "@/components/details/InfoItem.jsx";
+import DataTableSearchEmpty from "@/components/tables/core/DataTableSearchEmpty.jsx";
+import PageSkeleton from "@/components/details/PageSkeleton.jsx";
+import TenantSocialMediaModal from "@/components/modals/TenantSocialMediaModal.jsx";
 
 import {
   Facebook,

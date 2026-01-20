@@ -4,9 +4,9 @@ import { useForm } from "react-hook-form";
 import { useMemo, useState } from "react";
 import { Eye, EyeOff, AlertCircle, Lock } from "lucide-react";
 
-import Button from "@/components/ui/Button";
-import InputField from "@/components/ui/InputField";
-import SelectField from "@/components/ui/SelectField";
+import Button from "@/components/ui/Button.jsx";
+import InputField from "@/components/ui/InputField.jsx";
+import SelectField from "@/components/ui/SelectField.jsx";
 
 const CRITICAL_STATUSES = ["INACTIVE", "SUSPENDED", "DELETED"];
 

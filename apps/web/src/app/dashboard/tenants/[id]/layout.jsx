@@ -13,10 +13,10 @@ import {
 } from "lucide-react";
 
 import { useTenantById } from "@/hooks/useTenant";
-import Button from "@/components/ui/Button";
-import ProfileHeader from "@/components/details/ProfileHeader";
-import TabsNav from "@/components/details/TabsNav";
-import PageSkeleton from "@/components/details/PageSkeleton";
+import Button from "@/components/ui/Button.jsx";
+import ProfileHeader from "@/components/details/ProfileHeader.jsx";
+import TabsNav from "@/components/details/TabsNav.jsx";
+import PageSkeleton from "@/components/details/PageSkeleton.jsx";
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { clearTenant, setTenant } from "@/store/tenantSlice";

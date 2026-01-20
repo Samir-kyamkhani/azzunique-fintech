@@ -3,8 +3,8 @@
 import { useForm } from "react-hook-form";
 import { Eye, EyeOff, Shield, Building, Users, Lock } from "lucide-react";
 import { useState } from "react";
-import Button from "@/components/ui/Button";
-import InputField from "@/components/ui/InputField";
+import Button from "@/components/ui/Button.jsx";
+import InputField from "@/components/ui/InputField.jsx";
 
 export default function LoginForm({ login, isPending }) {
   const [showPassword, setShowPassword] = useState(false);

@@ -3,8 +3,8 @@
 
 import { useState } from "react";
 
-import TenantWebsiteClient from "@/components/client/TenantWebsiteClient";
-import TenantSocialMediaClient from "@/components/client/TenantSocialMediaClient";
+import TenantWebsiteClient from "@/components/client/TenantWebsiteClient.jsx";
+import TenantSocialMediaClient from "@/components/client/TenantSocialMediaClient.jsx";
 
 import { Palette, Share2 } from "lucide-react";
 import CollapsibleSection from "@/components/CollapsibleSection.jsx";

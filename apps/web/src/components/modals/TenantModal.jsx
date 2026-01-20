@@ -1,8 +1,8 @@
 "use client";
 
 import { Building2 } from "lucide-react";
-import TenantForm from "../forms/TenantForm";
-import Button from "../ui/Button";
+import TenantForm from "../forms/TenantForm.jsx";
+import Button from "../ui/Button.jsx";
 import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
 
 export default function TenantModal({

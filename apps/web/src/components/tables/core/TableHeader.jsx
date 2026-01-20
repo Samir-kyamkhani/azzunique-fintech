@@ -1,6 +1,6 @@
-import SearchField from "@/components/ui/SearchField";
-import FilterDropdown from "@/components/ui/Filter";
-import Button from "@/components/ui/Button";
+import SearchField from "@/components/ui/SearchField.jsx";
+import FilterDropdown from "@/components/ui/Filter.jsx";
+import Button from "@/components/ui/Button.jsx";
 
 export default function TableHeader({
   title,

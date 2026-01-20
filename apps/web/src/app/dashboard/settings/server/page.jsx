@@ -1,4 +1,4 @@
-import ServerDetailClient from "@/components/client/ServerDetailClient";
+import ServerDetailClient from "@/components/client/ServerDetailClient.jsx";
 
 export default function Page() {
   return (

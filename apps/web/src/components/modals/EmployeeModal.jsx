@@ -1,9 +1,9 @@
 "use client";
 
 import { User } from "lucide-react";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/Button.jsx";
 import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
-import EmployeeForm from "@/components/forms/EmployeeForm";
+import EmployeeForm from "@/components/forms/EmployeeForm.jsx";
 
 export default function EmployeeModal({
   open,

@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/Button.jsx";
 
 export default function TablePagination({ page, setPage, total, perPage }) {
   if (total === 0) return null;

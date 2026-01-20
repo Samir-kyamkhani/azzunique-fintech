@@ -1,9 +1,9 @@
 "use client";
 
 import { Server } from "lucide-react";
-import Button from "../ui/Button";
+import Button from "../ui/Button.jsx";
 import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
-import ServerDetailForm from "../forms/ServerDetailForm";
+import ServerDetailForm from "../forms/ServerDetailForm.jsx";
 
 export default function ServerDetailModal({
   open,

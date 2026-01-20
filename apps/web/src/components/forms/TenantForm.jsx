@@ -4,9 +4,9 @@ import { useForm, Controller, useWatch } from "react-hook-form";
 import { useMemo, useEffect } from "react";
 import { AlertCircle, Lock } from "lucide-react";
 
-import Button from "@/components/ui/Button";
-import InputField from "@/components/ui/InputField";
-import SelectField from "@/components/ui/SelectField";
+import Button from "@/components/ui/Button.jsx";
+import InputField from "@/components/ui/InputField.jsx";
+import SelectField from "@/components/ui/SelectField.jsx";
 import { onlyDigits } from "@/lib/utils";
 
 const CRITICAL_STATUSES = ["INACTIVE", "SUSPENDED", "DELETED"];

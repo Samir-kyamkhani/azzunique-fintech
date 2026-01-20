@@ -15,13 +15,13 @@ import {
 import { useSelector, useDispatch } from "react-redux";
 import { logout as logoutAction } from "@/store/authSlice";
 import { useRouter } from "next/navigation";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/Button.jsx";
 import Link from "next/link";
 import { useLogout } from "@/hooks/useAuth";
 import dynamic from "next/dynamic";
 
 export function Header() {
-  const ThemeToggle = dynamic(() => import("./theme/ThemeToggle").then((m) => m.ThemeToggle),{ ssr: false });
+  const ThemeToggle = dynamic(() => import("./theme/ThemeToggle.jsx").then((m) => m.ThemeToggle),{ ssr: false });
 
   const { mutate: logoutMutate, isPending } = useLogout();
   const [isProfileOpen, setIsProfileOpen] = useState(false);

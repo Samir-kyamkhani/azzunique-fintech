@@ -2,8 +2,8 @@
 
 import { Globe } from "lucide-react";
 
-import Button from "@/components/ui/Button";
-import TenantDomainForm from "@/components/forms/TenantDomainForm";
+import Button from "@/components/ui/Button.jsx";
+import TenantDomainForm from "@/components/forms/TenantDomainForm.jsx";
 import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
 
 export default function TenantDomainModal({

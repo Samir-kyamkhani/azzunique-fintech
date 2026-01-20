@@ -1,9 +1,9 @@
 "use client";
 
 import { Mail } from "lucide-react";
-import Button from "../ui/Button";
+import Button from "../ui/Button.jsx";
 import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
-import SmtpConfigForm from "../forms/SmtpConfigForm";
+import SmtpConfigForm from "../forms/SmtpConfigForm.jsx";
 
 export default function SmtpConfigModal({
   open,

@@ -3,9 +3,9 @@
 import { useForm, Controller } from "react-hook-form";
 import { AlertCircle, Mail, Lock, Server } from "lucide-react";
 
-import Button from "@/components/ui/Button";
-import InputField from "@/components/ui/InputField";
-import SelectField from "@/components/ui/SelectField";
+import Button from "@/components/ui/Button.jsx";
+import InputField from "@/components/ui/InputField.jsx";
+import SelectField from "@/components/ui/SelectField.jsx";
 
 export default function SmtpConfigForm({
   initialData = null,

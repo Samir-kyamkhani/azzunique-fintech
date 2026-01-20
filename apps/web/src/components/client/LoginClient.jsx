@@ -4,7 +4,7 @@ import { useLogin } from "@/hooks/useAuth";
 import { useDispatch } from "react-redux";
 import { loginSuccess } from "@/store/authSlice";
 import { useRouter } from "next/navigation";
-import LoginForm from "../forms/LoginForm";
+import LoginForm from "../forms/LoginForm.jsx";
 
 export default function LoginClient() {
   const dispatch = useDispatch();

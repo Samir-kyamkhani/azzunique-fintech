@@ -1,4 +1,4 @@
-import RowActions from "./RowActions";
+import RowActions from "./RowActions.jsx";
 
 export default function TableRow({
   columns,

@@ -1,5 +1,5 @@
 import { Edit } from "lucide-react";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/Button.jsx";
 
 export default function ProfileHeader({
   icon: Icon,

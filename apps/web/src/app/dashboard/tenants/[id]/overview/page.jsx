@@ -13,18 +13,18 @@ import {
   Settings,
 } from "lucide-react";
 
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/Button.jsx";
 import { formatDateTime } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 
 /* reusable view components */
-import InfoCard from "@/components/details/InfoCard";
-import InfoItem from "@/components/details/InfoItem";
-import CopyableInfoItem from "@/components/details/CopyableInfoItem";
-import QuickActionsCard from "@/components/details/QuickActionsCard";
+import InfoCard from "@/components/details/InfoCard.jsx";
+import InfoItem from "@/components/details/InfoItem.jsx";
+import CopyableInfoItem from "@/components/details/CopyableInfoItem.jsx";
+import QuickActionsCard from "@/components/details/QuickActionsCard.jsx";
 import { useSelector } from "react-redux";
 import { Edit } from "lucide-react";
-import TenantModal from "@/components/modals/TenantModal";
+import TenantModal from "@/components/modals/TenantModal.jsx";
 import { useDispatch } from "react-redux";
 import { setTenant } from "@/store/tenantSlice";
 

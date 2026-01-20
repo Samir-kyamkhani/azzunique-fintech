@@ -16,7 +16,7 @@ import dynamic from "next/dynamic";
 
 const DashboardNavbar = () => {
   const ThemeToggle = dynamic(
-    () => import("./theme/ThemeToggle").then((m) => m.ThemeToggle),
+    () => import("./theme/ThemeToggle.jsx").then((m) => m.ThemeToggle),
     { ssr: false }
   );
 

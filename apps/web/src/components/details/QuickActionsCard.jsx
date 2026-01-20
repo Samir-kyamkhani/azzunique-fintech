@@ -1,4 +1,4 @@
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/Button.jsx";
 
 export default function QuickActionsCard({ title, actions }) {
   return (

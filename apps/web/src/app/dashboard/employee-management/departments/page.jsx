@@ -1,4 +1,4 @@
-import DepartmentClient from "@/components/client/DepartmentClient";
+import DepartmentClient from "@/components/client/DepartmentClient.jsx";
 
 function page() {
   return <DepartmentClient />;

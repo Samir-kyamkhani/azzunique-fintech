@@ -1,4 +1,4 @@
-import LoginClient from "@/components/client/LoginClient";
+import LoginClient from "@/components/client/LoginClient.jsx";
 
 export const metadata = {
   title: "Login",

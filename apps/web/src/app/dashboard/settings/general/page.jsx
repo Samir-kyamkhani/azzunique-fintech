@@ -1,4 +1,4 @@
-import SettingsAccordion from "@/components/SettingsAccordion";
+import SettingsAccordion from "@/components/SettingsAccordion.jsx";
 
 export const metadata = {
   title: "Setting General",

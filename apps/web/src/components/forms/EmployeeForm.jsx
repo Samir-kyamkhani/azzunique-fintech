@@ -5,9 +5,9 @@ import { useForm, Controller, useWatch } from "react-hook-form";
 import { AlertCircle, ImageIcon } from "lucide-react";
 import Image from "next/image";
 
-import Button from "@/components/ui/Button";
-import InputField from "@/components/ui/InputField";
-import SelectField from "@/components/ui/SelectField";
+import Button from "@/components/ui/Button.jsx";
+import InputField from "@/components/ui/InputField.jsx";
+import SelectField from "@/components/ui/SelectField.jsx";
 import { onlyDigits } from "@/lib/utils";
 
 export default function EmployeeForm({

@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle, CheckCircle, Info } from "lucide-react";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/Button.jsx";
 import { cn } from "@/lib/utils";
 import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
 

@@ -2,8 +2,8 @@
 
 import { useForm } from "react-hook-form";
 import { AlertCircle, Share2 } from "lucide-react";
-import Button from "@/components/ui/Button";
-import InputField from "@/components/ui/InputField";
+import Button from "@/components/ui/Button.jsx";
+import InputField from "@/components/ui/InputField.jsx";
 
 export default function TenantSocialMediaForm({
   initialData = null,

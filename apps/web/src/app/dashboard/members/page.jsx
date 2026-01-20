@@ -1,4 +1,4 @@
-import MembersClient from "@/components/client/MembersClient";
+import MembersClient from "@/components/client/MembersClient.jsx";
 
 export const metadata = {
   title: "Members",

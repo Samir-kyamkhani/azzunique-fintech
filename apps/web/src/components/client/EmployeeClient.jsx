@@ -11,18 +11,18 @@ import {
 } from "@/hooks/useEmployee";
 import { useDepartments } from "@/hooks/useDepartment";
 
-import EmployeesTable from "@/components/tables/EmployeesTable";
-import EmployeeModal from "@/components/modals/EmployeeModal";
-import ConfirmDialog from "@/components/ConfirmDialog";
-import QuickStats from "@/components/QuickStats";
-import Button from "@/components/ui/Button";
+import EmployeesTable from "@/components/tables/EmployeesTable.jsx";
+import EmployeeModal from "@/components/modals/EmployeeModal.jsx";
+import ConfirmDialog from "@/components/ConfirmDialog.jsx";
+import QuickStats from "@/components/QuickStats.jsx";
+import Button from "@/components/ui/Button.jsx";
 
 import { formatDateTime } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { setEmployee } from "@/store/employeeSlice";
-import ImagePreviewModal from "../ImagePreviewModal";
+import ImagePreviewModal from "../ImagePreviewModal.jsx";
 
 export default function EmployeeClient() {
   /* ================= UI STATE ================= */

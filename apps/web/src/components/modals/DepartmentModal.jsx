@@ -1,9 +1,9 @@
 "use client";
 
 import { Building2 } from "lucide-react";
-import Button from "@/components/ui/Button";
+import Button from "@/components/ui/Button.jsx";
 import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
-import DepartmentForm from "@/components/forms/DepartmentForm";
+import DepartmentForm from "@/components/forms/DepartmentForm.jsx";
 
 export default function DepartmentModal({
   open,

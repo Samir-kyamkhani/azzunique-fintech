@@ -18,7 +18,7 @@ import {
   Building2,
 } from "lucide-react";
 import { useLogout } from "@/hooks/useAuth";
-import Button from "./ui/Button";
+import Button from "./ui/Button.jsx";
 import { useDispatch } from "react-redux";
 import { logout as logoutAction } from "@/store/authSlice";
 

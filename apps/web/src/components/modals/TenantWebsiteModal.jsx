@@ -1,9 +1,9 @@
 "use client";
 
 import { Palette } from "lucide-react";
-import Button from "../ui/Button";
+import Button from "../ui/Button.jsx";
 import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
-import TenantWebsiteForm from "../forms/TenantWebsiteForm";
+import TenantWebsiteForm from "../forms/TenantWebsiteForm.jsx";
 
 export default function TenantWebsiteModal({
   open,

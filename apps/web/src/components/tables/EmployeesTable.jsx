@@ -3,10 +3,10 @@
 import { Users, Download, Shield, User } from "lucide-react";
 import Image from "next/image";
 
-import TableShell from "./core/TableShell";
-import TableHeader from "./core/TableHeader";
-import TableBody from "./core/TableBody";
-import TablePagination from "./core/TablePagination";
+import TableShell from "./core/TableShell.jsx";
+import TableHeader from "./core/TableHeader.jsx";
+import TableBody from "./core/TableBody.jsx";
+import TablePagination from "./core/TablePagination.jsx";
 
 /* ---------------- FILTER OPTIONS ---------------- */
 const options = [
