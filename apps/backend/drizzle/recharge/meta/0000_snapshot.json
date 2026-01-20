@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "3276313e-850f-45ab-a200-affa6c24f785",
+  "id": "b6bb6761-d44f-47c7-a4cb-46e6bbf3e3d8",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "recharge_operator_map": {
@@ -117,9 +117,23 @@
           "notNull": false,
           "autoincrement": false
         },
+        "idempotency_key": {
+          "name": "idempotency_key",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "amount": {
           "name": "amount",
           "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "wallet_id": {
+          "name": "wallet_id",
+          "type": "varchar(36)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -173,6 +187,21 @@
           "notNull": false,
           "autoincrement": false
         },
+        "retry_count": {
+          "name": "retry_count",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "last_retry_at": {
+          "name": "last_retry_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -190,7 +219,16 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_recharge_idempotency": {
+          "name": "uniq_recharge_idempotency",
+          "columns": [
+            "tenant_id",
+            "idempotency_key"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {
         "recharge_transactions_id": {
