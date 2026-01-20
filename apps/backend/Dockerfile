@@ -1,6 +1,10 @@
 FROM node:20-alpine
 
 WORKDIR /app
+
+# ✅ REQUIRED for Coolify healthcheck
+RUN apk add --no-cache curl
+
 RUN corepack enable
 
 # Copy only backend files
