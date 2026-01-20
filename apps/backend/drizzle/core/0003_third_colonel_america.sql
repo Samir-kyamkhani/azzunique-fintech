@@ -1,1 +1,0 @@
-ALTER TABLE `tenants` DROP INDEX `uniq_tenant_whatsapp`;

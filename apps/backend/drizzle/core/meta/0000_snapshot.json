@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "4904abc4-04a6-4f84-a277-a1bd6239f0d4",
+  "id": "197fd8ca-0be2-455b-a4ee-c08896d5e569",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "audit_log": {
@@ -248,14 +248,14 @@
         },
         "refresh_token_hash": {
           "name": "refresh_token_hash",
-          "type": "varchar(255)",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
         "password_reset_token_hash": {
           "name": "password_reset_token_hash",
-          "type": "varchar(255)",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -265,8 +265,7 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false,
-          "default": null
+          "autoincrement": false
         },
         "action_reason": {
           "name": "action_reason",
@@ -289,8 +288,15 @@
           "notNull": false,
           "autoincrement": false
         },
-        "parent_id": {
-          "name": "parent_id",
+        "owner_user_id": {
+          "name": "owner_user_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_by_user_id": {
+          "name": "created_by_user_id",
           "type": "varchar(36)",
           "primaryKey": false,
           "notNull": false,
@@ -346,6 +352,7 @@
         "uniq_user_mobile": {
           "name": "uniq_user_mobile",
           "columns": [
+            "tenant_id",
             "mobile_number"
           ],
           "isUnique": true
@@ -358,10 +365,10 @@
           ],
           "isUnique": false
         },
-        "idx_user_parent": {
-          "name": "idx_user_parent",
+        "idx_user_owner": {
+          "name": "idx_user_owner",
           "columns": [
-            "parent_id"
+            "owner_user_id"
           ],
           "isUnique": false
         }
@@ -380,12 +387,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "user_parent_fk": {
-          "name": "user_parent_fk",
+        "user_tenant_fk": {
+          "name": "user_tenant_fk",
           "tableFrom": "users",
-          "tableTo": "users",
+          "tableTo": "tenants",
           "columnsFrom": [
-            "parent_id"
+            "tenant_id"
           ],
           "columnsTo": [
             "id"
@@ -393,12 +400,25 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "user_tenant_fk": {
-          "name": "user_tenant_fk",
+        "user_owner_fk": {
+          "name": "user_owner_fk",
           "tableFrom": "users",
-          "tableTo": "tenants",
+          "tableTo": "users",
           "columnsFrom": [
-            "tenant_id"
+            "owner_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "user_created_by_user_fk": {
+          "name": "user_created_by_user_fk",
+          "tableFrom": "users",
+          "tableTo": "users",
+          "columnsFrom": [
+            "created_by_user_id"
           ],
           "columnsTo": [
             "id"
@@ -485,6 +505,13 @@
           "notNull": false,
           "autoincrement": false
         },
+        "created_by_user_id": {
+          "name": "created_by_user_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "created_by_employee_id": {
           "name": "created_by_employee_id",
           "type": "varchar(36)",
@@ -545,17 +572,27 @@
           ],
           "isUnique": true
         },
-        "uniq_tenant_email": {
-          "name": "uniq_tenant_email",
-          "columns": [
-            "tenant_email"
-          ],
-          "isUnique": true
-        },
         "uniq_tenant_whatsapp": {
           "name": "uniq_tenant_whatsapp",
           "columns": [
+            "parent_tenant_id",
             "tenant_whatsapp"
+          ],
+          "isUnique": true
+        },
+        "uniq_tenant_mobile_number": {
+          "name": "uniq_tenant_mobile_number",
+          "columns": [
+            "parent_tenant_id",
+            "tenant_mobile_number"
+          ],
+          "isUnique": true
+        },
+        "uniq_tenant_email": {
+          "name": "uniq_tenant_email",
+          "columns": [
+            "parent_tenant_id",
+            "tenant_email"
           ],
           "isUnique": true
         },
@@ -587,6 +624,19 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
+        },
+        "tenant_created_by_user_fk": {
+          "name": "tenant_created_by_user_fk",
+          "tableFrom": "tenants",
+          "tableTo": "users",
+          "columnsFrom": [
+            "created_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -598,7 +648,12 @@
         }
       },
       "uniqueConstraints": {},
-      "checkConstraint": {}
+      "checkConstraint": {
+        "chk_tenants_user_type": {
+          "name": "chk_tenants_user_type",
+          "value": "`tenants`.`user_type` IN ('AZZUNIQUE','RESELLER','WHITELABEL')"
+        }
+      }
     },
     "roles": {
       "name": "roles",
@@ -610,6 +665,13 @@
           "notNull": true,
           "autoincrement": false,
           "default": "(UUID())"
+        },
+        "role_level": {
+          "name": "role_level",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         },
         "role_code": {
           "name": "role_code",
@@ -632,6 +694,35 @@
           "notNull": false,
           "autoincrement": false
         },
+        "tenant_id": {
+          "name": "tenant_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "is_system": {
+          "name": "is_system",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "created_by_user_id": {
+          "name": "created_by_user_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_by_employee_id": {
+          "name": "created_by_employee_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -650,15 +741,79 @@
         }
       },
       "indexes": {
-        "uniq_role_code": {
-          "name": "uniq_role_code",
+        "uniq_role_code_tenant": {
+          "name": "uniq_role_code_tenant",
           "columns": [
+            "tenant_id",
             "role_code"
           ],
           "isUnique": true
+        },
+        "uniq_role_level_tenant": {
+          "name": "uniq_role_level_tenant",
+          "columns": [
+            "tenant_id",
+            "role_level"
+          ],
+          "isUnique": true
+        },
+        "idx_role_tenant_level": {
+          "name": "idx_role_tenant_level",
+          "columns": [
+            "tenant_id",
+            "role_level"
+          ],
+          "isUnique": false
+        },
+        "idx_role_tenant": {
+          "name": "idx_role_tenant",
+          "columns": [
+            "tenant_id"
+          ],
+          "isUnique": false
         }
       },
-      "foreignKeys": {},
+      "foreignKeys": {
+        "role_tenant_fk": {
+          "name": "role_tenant_fk",
+          "tableFrom": "roles",
+          "tableTo": "tenants",
+          "columnsFrom": [
+            "tenant_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "role_created_by_user_fk": {
+          "name": "role_created_by_user_fk",
+          "tableFrom": "roles",
+          "tableTo": "users",
+          "columnsFrom": [
+            "created_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "role_created_by_employee_fk": {
+          "name": "role_created_by_employee_fk",
+          "tableFrom": "roles",
+          "tableTo": "employees",
+          "columnsFrom": [
+            "created_by_employee_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {
         "roles_id": {
           "name": "roles_id",
@@ -1481,6 +1636,13 @@
           "autoincrement": false,
           "default": "(UUID())"
         },
+        "tenant_id": {
+          "name": "tenant_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "record_type": {
           "name": "record_type",
           "type": "varchar(50)",
@@ -1558,6 +1720,19 @@
           "tableTo": "users",
           "columnsFrom": [
             "created_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "server_tenant_id_fk": {
+          "name": "server_tenant_id_fk",
+          "tableFrom": "server_details",
+          "tableTo": "tenants",
+          "columnsFrom": [
+            "tenant_id"
           ],
           "columnsTo": [
             "id"
@@ -3927,6 +4102,14 @@
           "autoincrement": false,
           "default": 0
         },
+        "blocked_amount": {
+          "name": "blocked_amount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
         "status": {
           "name": "status",
           "type": "varchar(20)",
@@ -4390,6 +4573,13 @@
         },
         "net_amount": {
           "name": "net_amount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "final_amount": {
+          "name": "final_amount",
           "type": "int",
           "primaryKey": false,
           "notNull": true,
@@ -4961,6 +5151,96 @@
       "compositePrimaryKeys": {
         "user_commission_settings_id": {
           "name": "user_commission_settings_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "wallet_snapshots": {
+      "name": "wallet_snapshots",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "wallet_id": {
+          "name": "wallet_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "balance": {
+          "name": "balance",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "blocked_amount": {
+          "name": "blocked_amount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "snapshot_date": {
+          "name": "snapshot_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "idx_wallet_snapshots_wallet": {
+          "name": "idx_wallet_snapshots_wallet",
+          "columns": [
+            "wallet_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "wallet_snapshots_wallet_id_wallets_id_fk": {
+          "name": "wallet_snapshots_wallet_id_wallets_id_fk",
+          "tableFrom": "wallet_snapshots",
+          "tableTo": "wallets",
+          "columnsFrom": [
+            "wallet_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "wallet_snapshots_id": {
+          "name": "wallet_snapshots_id",
           "columns": [
             "id"
           ]

@@ -1,1 +1,0 @@
-ALTER TABLE `commission_earnings` ADD `final_amount` int NOT NULL;

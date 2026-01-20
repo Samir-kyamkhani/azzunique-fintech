@@ -1,2 +1,0 @@
-ALTER TABLE `server_details` ADD `tenant_id` varchar(36) NOT NULL;--> statement-breakpoint
-ALTER TABLE `server_details` ADD CONSTRAINT `server_tenant_id_fk` FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON DELETE no action ON UPDATE no action;

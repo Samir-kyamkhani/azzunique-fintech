@@ -30,13 +30,14 @@ CREATE TABLE `users` (
 	`user_status` varchar(20) NOT NULL DEFAULT 'INACTIVE',
 	`is_kyc_verified` boolean NOT NULL DEFAULT false,
 	`role_id` varchar(36) NOT NULL,
-	`refresh_token_hash` varchar(255),
-	`password_reset_token_hash` varchar(255),
-	`password_reset_token_expiry` timestamp DEFAULT null,
+	`refresh_token_hash` text,
+	`password_reset_token_hash` text,
+	`password_reset_token_expiry` timestamp,
 	`action_reason` varchar(500),
 	`actioned_at` timestamp,
 	`deleted_at` timestamp,
-	`parent_id` varchar(36),
+	`owner_user_id` varchar(36),
+	`created_by_user_id` varchar(36),
 	`created_by_employee_id` varchar(36),
 	`tenant_id` varchar(36) NOT NULL,
 	`created_at` timestamp NOT NULL DEFAULT (now()),
@@ -44,7 +45,7 @@ CREATE TABLE `users` (
 	CONSTRAINT `users_id` PRIMARY KEY(`id`),
 	CONSTRAINT `uniq_user_number` UNIQUE(`user_number`),
 	CONSTRAINT `uniq_user_email` UNIQUE(`tenant_id`,`email`),
-	CONSTRAINT `uniq_user_mobile` UNIQUE(`mobile_number`)
+	CONSTRAINT `uniq_user_mobile` UNIQUE(`tenant_id`,`mobile_number`)
 );
 --> statement-breakpoint
 CREATE TABLE `tenants` (
@@ -57,6 +58,7 @@ CREATE TABLE `tenants` (
 	`tenant_email` varchar(255) NOT NULL,
 	`tenant_whatsapp` varchar(20) NOT NULL,
 	`parent_tenant_id` varchar(36),
+	`created_by_user_id` varchar(36),
 	`created_by_employee_id` varchar(36),
 	`tenant_status` varchar(20) NOT NULL,
 	`tenant_mobile_number` varchar(20) NOT NULL,
@@ -66,19 +68,27 @@ CREATE TABLE `tenants` (
 	`updated_at` timestamp NOT NULL DEFAULT (now()),
 	CONSTRAINT `tenants_id` PRIMARY KEY(`id`),
 	CONSTRAINT `uniq_tenant_number` UNIQUE(`tenant_number`),
-	CONSTRAINT `uniq_tenant_email` UNIQUE(`tenant_email`),
-	CONSTRAINT `uniq_tenant_whatsapp` UNIQUE(`tenant_whatsapp`)
+	CONSTRAINT `uniq_tenant_whatsapp` UNIQUE(`parent_tenant_id`,`tenant_whatsapp`),
+	CONSTRAINT `uniq_tenant_mobile_number` UNIQUE(`parent_tenant_id`,`tenant_mobile_number`),
+	CONSTRAINT `uniq_tenant_email` UNIQUE(`parent_tenant_id`,`tenant_email`),
+	CONSTRAINT `chk_tenants_user_type` CHECK(`tenants`.`user_type` IN ('AZZUNIQUE','RESELLER','WHITELABEL'))
 );
 --> statement-breakpoint
 CREATE TABLE `roles` (
 	`id` varchar(36) NOT NULL DEFAULT (UUID()),
+	`role_level` int NOT NULL,
 	`role_code` varchar(50) NOT NULL,
 	`role_name` varchar(100) NOT NULL,
 	`role_description` varchar(255),
+	`tenant_id` varchar(36) NOT NULL,
+	`is_system` boolean NOT NULL DEFAULT false,
+	`created_by_user_id` varchar(36),
+	`created_by_employee_id` varchar(36),
 	`created_at` timestamp NOT NULL DEFAULT (now()),
 	`updated_at` timestamp NOT NULL DEFAULT (now()),
 	CONSTRAINT `roles_id` PRIMARY KEY(`id`),
-	CONSTRAINT `uniq_role_code` UNIQUE(`role_code`)
+	CONSTRAINT `uniq_role_code_tenant` UNIQUE(`tenant_id`,`role_code`),
+	CONSTRAINT `uniq_role_level_tenant` UNIQUE(`tenant_id`,`role_level`)
 );
 --> statement-breakpoint
 CREATE TABLE `departments` (
@@ -176,6 +186,7 @@ CREATE TABLE `employee_permissions` (
 --> statement-breakpoint
 CREATE TABLE `server_details` (
 	`id` varchar(36) NOT NULL DEFAULT (UUID()),
+	`tenant_id` varchar(36) NOT NULL,
 	`record_type` varchar(50) NOT NULL,
 	`hostname` varchar(255) NOT NULL,
 	`value` varchar(45) NOT NULL,
@@ -458,6 +469,7 @@ CREATE TABLE `wallets` (
 	`owner_id` varchar(36) NOT NULL,
 	`wallet_type` varchar(20) NOT NULL,
 	`balance` int NOT NULL DEFAULT 0,
+	`blocked_amount` int NOT NULL DEFAULT 0,
 	`status` varchar(20) NOT NULL DEFAULT 'ACTIVE',
 	`created_at` timestamp NOT NULL DEFAULT (now()),
 	`updated_at` timestamp NOT NULL DEFAULT (now()),
@@ -508,6 +520,7 @@ CREATE TABLE `commission_earnings` (
 	`gross_amount` int NOT NULL,
 	`gst_amount` int NOT NULL,
 	`net_amount` int NOT NULL,
+	`final_amount` int NOT NULL,
 	`created_at` timestamp NOT NULL DEFAULT (now()),
 	`updated_at` timestamp NOT NULL DEFAULT (now()),
 	CONSTRAINT `commission_earnings_id` PRIMARY KEY(`id`),
@@ -558,12 +571,28 @@ CREATE TABLE `user_commission_settings` (
 	CONSTRAINT `uniq_user_commission_setting` UNIQUE(`tenant_id`,`user_id`,`platform_service_feature_id`)
 );
 --> statement-breakpoint
+CREATE TABLE `wallet_snapshots` (
+	`id` varchar(36) NOT NULL,
+	`wallet_id` varchar(36) NOT NULL,
+	`balance` int NOT NULL,
+	`blocked_amount` int NOT NULL,
+	`snapshot_date` timestamp NOT NULL,
+	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`updated_at` timestamp NOT NULL DEFAULT (now()),
+	CONSTRAINT `wallet_snapshots_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
 ALTER TABLE `audit_log` ADD CONSTRAINT `audit_user_fk` FOREIGN KEY (`perform_by_user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `audit_log` ADD CONSTRAINT `audit_tenant_fk` FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `users` ADD CONSTRAINT `user_role_fk` FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `users` ADD CONSTRAINT `user_parent_fk` FOREIGN KEY (`parent_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `users` ADD CONSTRAINT `user_tenant_fk` FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `users` ADD CONSTRAINT `user_owner_fk` FOREIGN KEY (`owner_user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `users` ADD CONSTRAINT `user_created_by_user_fk` FOREIGN KEY (`created_by_user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `tenants` ADD CONSTRAINT `tenant_parent_fk` FOREIGN KEY (`parent_tenant_id`) REFERENCES `tenants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `tenants` ADD CONSTRAINT `tenant_created_by_user_fk` FOREIGN KEY (`created_by_user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `roles` ADD CONSTRAINT `role_tenant_fk` FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `roles` ADD CONSTRAINT `role_created_by_user_fk` FOREIGN KEY (`created_by_user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `roles` ADD CONSTRAINT `role_created_by_employee_fk` FOREIGN KEY (`created_by_employee_id`) REFERENCES `employees`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `departments` ADD CONSTRAINT `dept_created_by_user_fk` FOREIGN KEY (`created_by_user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `departments` ADD CONSTRAINT `dept_created_by_employee_fk` FOREIGN KEY (`created_by_employee_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `departments` ADD CONSTRAINT `dept_tenant_fk` FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -578,6 +607,7 @@ ALTER TABLE `department_permissions` ADD CONSTRAINT `dp_permission_fk` FOREIGN K
 ALTER TABLE `employee_permissions` ADD CONSTRAINT `ep_employee_fk` FOREIGN KEY (`employee_id`) REFERENCES `employees`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `employee_permissions` ADD CONSTRAINT `ep_permission_fk` FOREIGN KEY (`permission_id`) REFERENCES `permissions`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `server_details` ADD CONSTRAINT `server_created_by_user_fk` FOREIGN KEY (`created_by_user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `server_details` ADD CONSTRAINT `server_tenant_id_fk` FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `tenants_domains` ADD CONSTRAINT `td_tenant_fk` FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `tenants_domains` ADD CONSTRAINT `td_created_by_user_fk` FOREIGN KEY (`created_by_user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `tenants_domains` ADD CONSTRAINT `td_server_detail_fk` FOREIGN KEY (`server_detail_id`) REFERENCES `server_details`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -632,10 +662,13 @@ ALTER TABLE `user_commission_settings` ADD CONSTRAINT `ucs_tenant_fk` FOREIGN KE
 ALTER TABLE `user_commission_settings` ADD CONSTRAINT `ucs_platform_service_fk` FOREIGN KEY (`platform_service_id`) REFERENCES `platform_services`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `user_commission_settings` ADD CONSTRAINT `ucs_platform_service_feature_fk` FOREIGN KEY (`platform_service_feature_id`) REFERENCES `platform_service_features`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `user_commission_settings` ADD CONSTRAINT `ucs_user_fk` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `wallet_snapshots` ADD CONSTRAINT `wallet_snapshots_wallet_id_wallets_id_fk` FOREIGN KEY (`wallet_id`) REFERENCES `wallets`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX `idx_user_tenant_status` ON `users` (`tenant_id`,`user_status`);--> statement-breakpoint
-CREATE INDEX `idx_user_parent` ON `users` (`parent_id`);--> statement-breakpoint
+CREATE INDEX `idx_user_owner` ON `users` (`owner_user_id`);--> statement-breakpoint
 CREATE INDEX `idx_tenant_parent` ON `tenants` (`parent_tenant_id`);--> statement-breakpoint
 CREATE INDEX `idx_tenant_status` ON `tenants` (`tenant_status`);--> statement-breakpoint
+CREATE INDEX `idx_role_tenant_level` ON `roles` (`tenant_id`,`role_level`);--> statement-breakpoint
+CREATE INDEX `idx_role_tenant` ON `roles` (`tenant_id`);--> statement-breakpoint
 CREATE INDEX `idx_emp_tenant_status` ON `employees` (`tenant_id`,`employee_status`);--> statement-breakpoint
 CREATE INDEX `idx_emp_department` ON `employees` (`department_id`);--> statement-breakpoint
 CREATE INDEX `idx_server_hostname_status` ON `server_details` (`hostname`,`status`);--> statement-breakpoint
@@ -665,4 +698,5 @@ CREATE INDEX `idx_commission_user` ON `commission_earnings` (`user_id`);--> stat
 CREATE INDEX `idx_commission_transaction` ON `commission_earnings` (`transaction_id`);--> statement-breakpoint
 CREATE INDEX `idx_rcs_tenant` ON `role_commission_settings` (`tenant_id`);--> statement-breakpoint
 CREATE INDEX `idx_rcs_role` ON `role_commission_settings` (`role_id`);--> statement-breakpoint
-CREATE INDEX `idx_rcs_feature` ON `role_commission_settings` (`platform_service_feature_id`);
+CREATE INDEX `idx_rcs_feature` ON `role_commission_settings` (`platform_service_feature_id`);--> statement-breakpoint
+CREATE INDEX `idx_wallet_snapshots_wallet` ON `wallet_snapshots` (`wallet_id`);
