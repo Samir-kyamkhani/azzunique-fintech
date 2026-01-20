@@ -1,4 +1,4 @@
-import { SmtpConfigService } from '../services/smtpConfig.service.js';
+import { SmtpConfigService } from '../services/SmtpConfig.service.js';
 
 export const createSmtpConfig = async (req, res, next) => {
   try {
