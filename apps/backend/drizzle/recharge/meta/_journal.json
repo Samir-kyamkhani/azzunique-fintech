@@ -15,6 +15,13 @@
       "when": 1768806930558,
       "tag": "0001_left_the_call",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1768883779204,
+      "tag": "0002_lush_inhumans",
+      "breakpoints": true
     }
   ]
 }
