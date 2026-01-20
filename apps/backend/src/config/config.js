@@ -1,5 +1,6 @@
 const envConfig = {
   nodeEnv: process.env.NODE_ENV || 'development',
+  enableRechargeCron: process.env.ENABLE_RECHARGE_CRON || 'false',
   port: process.env.PORT || 8000,
   db: {
     user: process.env.DB_USER,
