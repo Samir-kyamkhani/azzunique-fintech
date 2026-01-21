@@ -6,17 +6,22 @@
 // };
 export const cookieOptions = {
   httpOnly: true,
-  secure: false,
+  secure: false, // HTTP
   sameSite: 'lax',
-  maxAge: 24 * 60 * 60 * 1000, // 1 day
+  path: '/', 
+  domain: '.147.93.20.127.sslip.io',
+  maxAge: 24 * 60 * 60 * 1000,
 };
 
 export const refreshCookieOptions = {
   httpOnly: true,
   secure: false,
   sameSite: 'lax',
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  path: '/',
+  domain: '.147.93.20.127.sslip.io',
+  maxAge: 7 * 24 * 60 * 60 * 1000,
 };
+
 // export const refreshCookieOptions = {
 //   httpOnly: true,
 //   secure: process.env.NODE_ENV === 'production',
