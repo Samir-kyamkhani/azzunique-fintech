@@ -3,9 +3,9 @@ FROM node:20-alpine
 WORKDIR /app
 RUN corepack enable
 
-# Install deps (NO lockfile)
-COPY package.json ./
-RUN pnpm install
+# Copy deps + lockfile
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
 # Copy source
 COPY . .
