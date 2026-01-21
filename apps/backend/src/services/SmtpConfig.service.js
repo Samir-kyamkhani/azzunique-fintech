@@ -15,12 +15,7 @@ class SmtpConfigService {
     const [config] = await db
       .select()
       .from(smtpConfigTable)
-      .where(
-        and(
-          eq(smtpConfigTable.tenantId, actor.tenantId),
-          sql`${smtpConfigTable.deletedAt} IS NULL`,
-        ),
-      )
+      .where(eq(smtpConfigTable.tenantId, actor.tenantId))
       .limit(1);
 
     if (!config) {
