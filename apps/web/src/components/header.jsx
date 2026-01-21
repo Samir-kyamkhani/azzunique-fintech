@@ -20,8 +20,11 @@ import Link from "next/link";
 import { useLogout } from "@/hooks/useAuth";
 import dynamic from "next/dynamic";
 
-export function Header() {
-  const ThemeToggle = dynamic(() => import("./theme/ThemeToggle").then((m) => m.ThemeToggle),{ ssr: false });
+export default function Header() {
+  const ThemeToggle = dynamic(
+    () => import("./theme/ThemeToggle").then((m) => m.ThemeToggle),
+    { ssr: false },
+  );
 
   const { mutate: logoutMutate, isPending } = useLogout();
   const [isProfileOpen, setIsProfileOpen] = useState(false);

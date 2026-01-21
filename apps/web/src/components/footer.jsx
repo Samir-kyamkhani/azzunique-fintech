@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 
-export function Footer() {
+export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   const footerLinks = {
