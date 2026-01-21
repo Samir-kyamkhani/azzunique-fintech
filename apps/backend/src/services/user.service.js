@@ -11,6 +11,7 @@ import {
   encrypt,
   generateNumber,
   generatePassword,
+  generatePrefix,
   generateTransactionPin,
 } from '../lib/lib.js';
 import { db } from '../database/core/core-db.js';
