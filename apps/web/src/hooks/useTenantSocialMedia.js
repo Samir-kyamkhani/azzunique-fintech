@@ -5,8 +5,11 @@ import { apiClient } from "@/lib/apiClient";
 export const useTenantSocialMedia = () =>
   useQuery({
     queryKey: ["social-media"],
-    queryFn: () => apiClient("/social-media"),
+    queryFn: () => apiClient("/social-media", { method: "GET" }),
     staleTime: 5 * 60 * 1000,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
 /* ================= UPSERT ================= */

@@ -9,6 +9,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
+import { useSelector } from "react-redux";
 
 export default function HomePage() {
   const features = [
@@ -47,6 +48,10 @@ export default function HomePage() {
     "Automated Backups",
   ];
 
+  const { data: website } = useSelector(
+    (state) => state.tenantWebsite?.currentWebsite,
+  );
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Hero Section */}
@@ -61,7 +66,7 @@ export default function HomePage() {
               </span>
             </div>
             <h1 className="text-5xl md:text-6xl font-bold mb-6">
-              Secure Enterprise
+              {website.brandName}
               <span className="block">Platform</span>
             </h1>
             <p className="text-xl text-primary-foreground/90 mb-8 max-w-2xl mx-auto">

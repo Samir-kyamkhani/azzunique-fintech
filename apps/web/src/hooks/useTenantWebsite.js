@@ -4,8 +4,11 @@ import { apiClient } from "@/lib/apiClient";
 export const useTenantWebsite = () =>
   useQuery({
     queryKey: ["website"],
-    queryFn: () => apiClient("/website"),
+    queryFn: () => apiClient("/website", { method: "GET" }),
     staleTime: 5 * 60 * 1000,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
 export const useUpsertTenantWebsite = () =>

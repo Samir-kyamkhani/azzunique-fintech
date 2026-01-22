@@ -26,6 +26,16 @@ export const useTenantDomainByTenantId = (tenantId) =>
     enabled: !!tenantId,
   });
 
+export const useMyTenantDomain = () =>
+  useQuery({
+    queryKey: ["tenant-domain", "me"],
+    queryFn: () => apiClient("/tenant-domain/me"),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+
 /* ================= DELETE ================= */
 export const useDeleteTenantDomain = () =>
   useMutation({

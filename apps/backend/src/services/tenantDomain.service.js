@@ -32,12 +32,7 @@ class TenantDomainService {
         employeesTable,
         eq(employeesTable.id, tenantsDomainsTable.createdByEmployeeId),
       )
-      .where(
-        and(
-          eq(tenantsDomainsTable.tenantId, actor.tenantId),
-          sql`${tenantsDomainsTable.deletedAt} IS NULL`,
-        ),
-      )
+      .where(and(eq(tenantsDomainsTable.tenantId, actor.tenantId)))
       .limit(1);
 
     if (!result) {
@@ -68,12 +63,7 @@ class TenantDomainService {
     const [existing] = await db
       .select()
       .from(tenantsDomainsTable)
-      .where(
-        and(
-          eq(tenantsDomainsTable.tenantId, actor.tenantId),
-          sql`${tenantsDomainsTable.deletedAt} IS NULL`,
-        ),
-      )
+      .where(and(eq(tenantsDomainsTable.tenantId, actor.tenantId)))
       .limit(1);
 
     const now = new Date();
@@ -96,10 +86,11 @@ class TenantDomainService {
     }
 
     const id = crypto.randomUUID();
+    const tenantId = payload.tenantId ? payload.tenantId : actor.tenantId;
 
     await db.insert(tenantsDomainsTable).values({
       id,
-      tenantId: actor.tenantId,
+      tenantId: tenantId,
       domainName,
       serverDetailId: payload.serverDetailId,
       status: payload.status ?? 'ACTIVE',
@@ -110,6 +101,44 @@ class TenantDomainService {
     });
 
     return { id };
+  }
+
+  static async findByTenant(actor) {
+    const [result] = await db
+      .select({
+        domain: tenantsDomainsTable,
+        userNumber: usersTable.userNumber,
+        employeeNumber: employeesTable.employeeNumber,
+        tenantNumber: tenantsTable.tenantNumber,
+      })
+      .from(tenantsDomainsTable)
+      .leftJoin(tenantsTable, eq(tenantsTable.id, tenantsDomainsTable.tenantId))
+      .leftJoin(
+        usersTable,
+        eq(usersTable.id, tenantsDomainsTable.createdByUserId),
+      )
+      .leftJoin(
+        employeesTable,
+        eq(employeesTable.id, tenantsDomainsTable.createdByEmployeeId),
+      )
+      .where(
+        and(
+          eq(tenantsDomainsTable.tenantId, actor.tenantId),
+        ),
+      )
+      .limit(1);
+
+    return result
+      ? {
+          ...result.domain,
+          createdBy: result.userNumber
+            ? { type: 'USER', userNumber: result.userNumber }
+            : result.employeeNumber
+              ? { type: 'EMPLOYEE', employeeNumber: result.employeeNumber }
+              : null,
+          tenantNumber: result.tenantNumber,
+        }
+      : null;
   }
 }
 

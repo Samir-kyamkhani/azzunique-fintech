@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const createTenantDomainSchema = z
   .object({
     domainName: z.string().min(3, 'Domain name is too short').max(255),
-    tenantId: z.string().uuid(),
+    tenantId: z.string().uuid().optional(),
     serverDetailId: z.string().uuid(),
     status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'DELETED']),
     actionReason: z.string().max(255).optional(),

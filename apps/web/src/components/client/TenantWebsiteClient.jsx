@@ -17,12 +17,8 @@ import {
   useUpsertTenantWebsite,
 } from "@/hooks/useTenantWebsite";
 
-import {
-  setTenantWebsite,
-  clearTenantWebsite,
-} from "@/store/tenantWebsiteSlice";
 
-import { toast } from "@/lib/toast";
+import { clearTenantWebsite, setTenantWebsite } from "@/store/tenantWebsiteSlice";
 
 export default function TenantWebsiteClient() {
   const dispatch = useDispatch();
@@ -30,7 +26,7 @@ export default function TenantWebsiteClient() {
 
   const [openModal, setOpenModal] = useState(false);
 
-  const { data, isLoading, refetch } = useTenantWebsite();
+  const { data, isLoading } = useTenantWebsite();
   const { mutate, isPending } = useUpsertTenantWebsite();
 
   useEffect(() => {
@@ -43,8 +39,6 @@ export default function TenantWebsiteClient() {
       onSuccess: (res) => {
         dispatch(setTenantWebsite(res.data));
         setOpenModal(false);
-        toast.success("Branding updated");
-        refetch();
       },
       onError: (err) =>
         setError("root", {

@@ -6,6 +6,9 @@ import { generateNumber, generatePrefix } from '../lib/lib.js';
 
 class TenantService {
   static async create(payload, actor) {
+    console.log('actor', actor);
+    console.log(payload);
+
     // ✅ Allow tenant owner OR allowed employee
     if (!actor.isTenantOwner && actor.type !== 'EMPLOYEE') {
       throw ApiError.forbidden(

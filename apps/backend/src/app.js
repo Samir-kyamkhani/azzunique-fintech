@@ -8,6 +8,7 @@ import indexRoutes from './routes/index.js';
 import { ApiError } from './lib/ApiError.js';
 import { httpExceptionFilter } from './middleware/httpExceptionFilter.middleware.js';
 import { httpResponseFilter } from './middleware/httpResponseFilter.middleware.js';
+import { tenantContextMiddleware } from './middleware/tenantContext.middleware.js';
 
 const app = express();
 
@@ -38,7 +39,7 @@ app.use(rateLimiterMiddleware);
 app.use(httpResponseFilter);
 
 // Routes
-app.use('/api/v1', indexRoutes);
+app.use('/api/v1', tenantContextMiddleware, indexRoutes);
 
 // 404
 app.use((req, res, next) => {

@@ -1,0 +1,1 @@
+ALTER TABLE `server_details` MODIFY COLUMN `created_by_user_id` varchar(36);

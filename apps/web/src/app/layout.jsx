@@ -4,6 +4,7 @@ import ReduxProvider from "@/providers/ReduxProvider";
 import QueryProvider from "@/providers/QueryProvider";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import ToastProvider from "@/providers/ToastProvider";
+import TenantBootstrap from "@/components/TenantBootstrap";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,7 +26,9 @@ export default function RootLayout({ children }) {
         <ReduxProvider>
           <QueryProvider>
             <ThemeProvider>
-              <ToastProvider>{children}</ToastProvider>
+              <ToastProvider>
+                <TenantBootstrap>{children} </TenantBootstrap>
+              </ToastProvider>
             </ThemeProvider>
           </QueryProvider>
         </ReduxProvider>

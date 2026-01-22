@@ -4,7 +4,13 @@ import { tenantsDomainsTable } from '../models/core/tenantDomain.schema.js';
 import { tenantsTable } from '../models/core/tenant.schema.js';
 import { eq } from 'drizzle-orm';
 
+const TENANT_BYPASS_ROUTES = ['/api/v1/auth/login', '/api/v1/health'];
+
 export async function tenantContextMiddleware(req, res, next) {
+  if (TENANT_BYPASS_ROUTES.includes(req.path)) {
+    return next();
+  }
+
   const host = req.headers.host?.split(':')[0];
 
   if (!host) {
