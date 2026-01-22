@@ -1,6 +1,10 @@
 FROM node:20-alpine
 
 WORKDIR /app
+
+# 🔴 THIS LINE WAS MISSING (MOST IMPORTANT)
+RUN apk add --no-cache curl wget
+
 RUN corepack enable
 
 COPY package.json ./
