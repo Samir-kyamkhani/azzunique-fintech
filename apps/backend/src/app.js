@@ -20,7 +20,7 @@ app.use(
     origin: [
       process.env.CLIENT_URL,
       'http://localhost:3000',
-      'http://localhost:3001',
+      'http://kkgws8gck8kk4g4w0000c8c4.147.93.20.127.sslip.io',
     ],
     credentials: true,
   }),
