@@ -3,10 +3,11 @@ import { db } from '../database/core/core-db.js';
 import { smtpConfigTable } from '../models/core/smtpConfig.schema.js';
 import { eq } from 'drizzle-orm';
 import { decrypt } from '../lib/lib.js';
+import { ApiError } from '../lib/ApiError.js';
 
 export async function sendMail(payload) {
   if (!payload.tenantId) {
-    throw new Error('tenantId is required for sending mail');
+    throw ApiError.badRequest('tenantId is required for sending mail');
   }
 
   const [smtp] = await db
@@ -16,7 +17,7 @@ export async function sendMail(payload) {
     .limit(1);
 
   if (!smtp) {
-    throw new Error('SMTP config not found for tenant');
+    throw ApiError.badRequest('SMTP config not found for tenant');
   }
 
   const smtpPassword = decrypt(smtp.smtpPassword);
