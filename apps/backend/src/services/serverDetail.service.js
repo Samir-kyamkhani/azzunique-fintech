@@ -34,12 +34,7 @@ class ServerDetailService {
         employeesTable,
         eq(employeesTable.id, serverDetailTable.createdByEmployeeId),
       )
-      .where(
-        and(
-          eq(serverDetailTable.tenantId, actor.tenantId),
-          sql`${serverDetailTable.deletedAt} IS NULL`,
-        ),
-      )
+      .where(eq(serverDetailTable.tenantId, actor.tenantId))
       .orderBy(serverDetailTable.createdAt)
       .limit(1);
 
