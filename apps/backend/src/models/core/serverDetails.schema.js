@@ -21,13 +21,13 @@ export const serverDetailTable = mysqlTable(
 
     hostname: varchar('hostname', { length: 255 }).notNull(),
 
-    value: varchar('value', { length: 45 }).notNull(),
+    value: varchar('value', { length: 255 }).notNull(),
 
     status: varchar('status', { length: 20 }).notNull().default('ACTIVE'), // ACTIVE | INACTIVE
 
     createdByUserId: varchar('created_by_user_id', {
       length: 36,
-    }).notNull(),
+    }),
 
     createdByEmployeeId: varchar('created_by_employee_id', {
       length: 36,

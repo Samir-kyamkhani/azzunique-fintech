@@ -61,7 +61,7 @@ class ServerDetailService {
 
   //  UPSERT SERVER DETAIL (TENANT SAFE)
   static async upsert(payload = {}, actor) {
-    if (!actor?.tenantId || !actor?.type) {
+    if (!actor?.tenantId || !actor?.type || !actor?.id) {
       throw ApiError.unauthorized('Invalid actor');
     }
 
@@ -69,7 +69,29 @@ class ServerDetailService {
       throw ApiError.badRequest('Missing required server detail fields');
     }
 
+    /* ================= NORMALIZATION ================= */
+
     const normalizedHostname = payload.hostname.trim().toLowerCase();
+
+    let normalizedValue = payload.value.trim().toLowerCase();
+
+    // DNS-safe validation
+    if (payload.recordType === 'CNAME') {
+      // remove protocol
+      normalizedValue = normalizedValue.replace(/^https?:\/\//, '');
+
+      // remove trailing slash
+      normalizedValue = normalizedValue.replace(/\/$/, '');
+
+      // strict hostname only
+      if (!/^[a-z0-9.-]+$/.test(normalizedValue)) {
+        throw ApiError.badRequest(
+          'CNAME value must be a valid hostname (no protocol, path, port)',
+        );
+      }
+    }
+
+    /* ================= EXISTING CHECK ================= */
 
     const [existingRecord] = await db
       .select()
@@ -79,27 +101,24 @@ class ServerDetailService {
           eq(serverDetailTable.tenantId, actor.tenantId),
           eq(serverDetailTable.recordType, payload.recordType),
           eq(serverDetailTable.hostname, normalizedHostname),
-          sql`${serverDetailTable.deletedAt} IS NULL`,
         ),
       )
       .limit(1);
 
     /* ================= UPDATE ================= */
+
     if (existingRecord) {
       const updatedFields = {};
 
-      if (
-        payload.value !== undefined &&
-        payload.value !== existingRecord.value
-      ) {
-        updatedFields.value = payload.value;
+      if (normalizedValue !== existingRecord.value) {
+        updatedFields.value = normalizedValue;
       }
 
       if (payload.status && payload.status !== existingRecord.status) {
         updatedFields.status = payload.status;
       }
 
-      if (Object.keys(updatedFields).length === 0) {
+      if (!Object.keys(updatedFields).length) {
         return { id: existingRecord.id };
       }
 
@@ -115,29 +134,25 @@ class ServerDetailService {
           ),
         );
 
-      return {
-        id: existingRecord.id,
-        ...updatedFields,
-      };
+      return { id: existingRecord.id, ...updatedFields };
     }
 
     /* ================= CREATE ================= */
-    const id = crypto.randomUUID();
 
     const data = {
-      id,
+      id: crypto.randomUUID(),
       tenantId: actor.tenantId,
       recordType: payload.recordType,
       hostname: normalizedHostname,
-      value: payload.value,
+      value: normalizedValue,
       status: payload.status ?? 'ACTIVE',
-
       createdByUserId: actor.type === 'USER' ? actor.id : null,
       createdByEmployeeId: actor.type === 'EMPLOYEE' ? actor.id : null,
 
       createdAt: new Date(),
       updatedAt: new Date(),
     };
+    console.log(data);
 
     await db.insert(serverDetailTable).values(data);
 
@@ -167,12 +182,7 @@ class ServerDetailService {
         employeesTable,
         eq(employeesTable.id, serverDetailTable.createdByEmployeeId),
       )
-      .where(
-        and(
-          eq(serverDetailTable.tenantId, actor.tenantId),
-          sql`${serverDetailTable.deletedAt} IS NULL`,
-        ),
-      )
+      .where(and(eq(serverDetailTable.tenantId, actor.tenantId)))
       .orderBy(serverDetailTable.createdAt);
 
     if (!rows.length) {
