@@ -4,10 +4,11 @@ WORKDIR /app
 RUN apk add --no-cache curl wget
 RUN corepack enable
 
-COPY package.json ./
-RUN pnpm install
-
 COPY . .
+
+WORKDIR /app/apps/web
+
+RUN pnpm install
 RUN pnpm build
 
 ENV NODE_ENV=production
