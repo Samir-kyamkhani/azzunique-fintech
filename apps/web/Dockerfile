@@ -4,10 +4,10 @@ WORKDIR /app
 RUN apk add --no-cache curl wget
 RUN corepack enable
 
+# repo root already = web
 COPY . .
 
-WORKDIR /app/apps/web
-
+# yahin package.json hai
 RUN pnpm install
 RUN pnpm build
 
