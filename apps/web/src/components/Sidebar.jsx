@@ -32,6 +32,7 @@ const Sidebar = () => {
     logoutMutate(undefined, {
       onSuccess: () => {
         dispatch(logoutAction());
+        queryClient.clear();
         router.push("/login");
       },
     });

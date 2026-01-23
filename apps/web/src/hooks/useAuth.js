@@ -15,5 +15,6 @@ export const useLogout = () =>
     mutationFn: async () =>
       apiClient("/auth/logout", {
         method: "POST",
+        credentials: "include",
       }),
   });
