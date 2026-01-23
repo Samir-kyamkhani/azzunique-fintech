@@ -1,5 +1,8 @@
 import authService from '../services/auth.service.js';
-import { cookieOptions, refreshCookieOptions } from '../lib/auth.cookies.js';
+import {
+  accessCookieOptions,
+  refreshCookieOptions,
+} from '../lib/auth.cookies.js';
 
 export const login = async (req, res) => {
   const data = req.body;
@@ -12,8 +15,8 @@ export const login = async (req, res) => {
   const { accessToken, refreshToken, ...rest } = result;
 
   res
-    .cookie('accessToken', accessToken, cookieOptions)
-    .cookie('refreshToken', refreshToken, refreshCookieOptions)
+    .cookie('accessToken', accessToken, accessCookieOptions(req))
+    .cookie('refreshToken', refreshToken, refreshCookieOptions(req))
     .json(rest);
 };
 
