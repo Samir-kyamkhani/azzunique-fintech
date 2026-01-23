@@ -2,7 +2,12 @@ import { z } from 'zod';
 
 export const createTenantDomainSchema = z
   .object({
-    domainName: z.string().min(3, 'Domain name is too short').max(255),
+    domainName: z
+      .string()
+      .regex(
+        /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i,
+        'Invalid domain',
+      ),
     tenantId: z.string().uuid().optional(),
     serverDetailId: z.string().uuid(),
     status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'DELETED']),
