@@ -6,7 +6,8 @@ import { eq } from 'drizzle-orm';
 
 export async function tenantContextMiddleware(req, res, next) {
   try {
-    const host = req.headers.host?.split(':')[0];
+    const host = extractTenantHost(req);
+
     if (!host) {
       return next(ApiError.badRequest('Invalid host'));
     }
@@ -21,7 +22,7 @@ export async function tenantContextMiddleware(req, res, next) {
       .select()
       .from(tenantsDomainsTable)
       .where(eq(tenantsDomainsTable.domainName, host))
-      .limit(1);
+      .limit(1);m
 
     if (!domain) {
       return next(ApiError.notFound('Tenant not found'));
@@ -37,13 +38,7 @@ export async function tenantContextMiddleware(req, res, next) {
       return next(ApiError.forbidden('Tenant inactive'));
     }
 
-    console.log(req.context);
-
-    req.context = {
-      tenant,
-      domain,
-    };
-
+    req.context = { tenant, domain };
     next();
   } catch (err) {
     next(err);
