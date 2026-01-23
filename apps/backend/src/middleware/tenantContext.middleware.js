@@ -4,19 +4,12 @@ import { tenantsDomainsTable } from '../models/core/tenantDomain.schema.js';
 import { tenantsTable } from '../models/core/tenant.schema.js';
 import { eq } from 'drizzle-orm';
 
-export async function tenantContextMiddleware(req, res, next) {
+export async function tenantContextMiddleware(req, _, next) {
   try {
     const host = extractTenantHost(req);
 
     if (!host) {
       return next(ApiError.badRequest('Invalid host'));
-    }
-
-    const clientHost = new URL(process.env.CLIENT_URL).hostname;
-
-    if (host === clientHost) {
-      req.context = { role: 'OWNER' };
-      return next();
     }
 
     const [domain] = await db
