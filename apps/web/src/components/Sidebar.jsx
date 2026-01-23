@@ -21,8 +21,10 @@ import { useLogout } from "@/hooks/useAuth";
 import Button from "./ui/Button";
 import { useDispatch } from "react-redux";
 import { logout as logoutAction } from "@/store/authSlice";
+import { useQueryClient } from "@tanstack/react-query";
 
 const Sidebar = () => {
+  const queryClient = useQueryClient();
   const pathname = usePathname();
   const { mutate: logoutMutate, isPending } = useLogout();
   const dispatch = useDispatch();
