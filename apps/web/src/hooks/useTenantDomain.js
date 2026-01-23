@@ -1,14 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/apiClient";
 
-/* ================= GET (SINGLE) ================= */
-export const useTenantDomain = () =>
-  useQuery({
-    queryKey: ["tenant-domain"],
-    queryFn: () => apiClient("/tenant-domain"),
-    staleTime: 5 * 60 * 1000,
-  });
-
 /* ================= UPSERT ================= */
 export const useUpsertTenantDomain = () =>
   useMutation({
@@ -22,25 +14,10 @@ export const useUpsertTenantDomain = () =>
 export const useTenantDomainByTenantId = (tenantId) =>
   useQuery({
     queryKey: ["tenant-domain", tenantId],
-    queryFn: () => apiClient(`/tenant-domain/${tenantId}`, { method: "GET" }),
+    queryFn: () => apiClient(`/tenant-domain/${tenantId}`),
     enabled: !!tenantId,
-  });
-
-export const useMyTenantDomain = () =>
-  useQuery({
-    queryKey: ["tenant-domain", "me"],
-    queryFn: () => apiClient("/tenant-domain/me"),
     staleTime: 5 * 60 * 1000,
     retry: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-  });
-
-/* ================= DELETE ================= */
-export const useDeleteTenantDomain = () =>
-  useMutation({
-    mutationFn: async (id) =>
-      apiClient(`/tenant-domain/${id}`, {
-        method: "DELETE",
-      }),
   });

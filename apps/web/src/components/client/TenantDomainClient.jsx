@@ -13,7 +13,6 @@ import PageSkeleton from "@/components/details/PageSkeleton";
 import { Globe, Shield, Lock, Calendar, Edit, RefreshCw } from "lucide-react";
 
 import {
-  useMyTenantDomain,
   useTenantDomainByTenantId,
   useUpsertTenantDomain,
 } from "@/hooks/useTenantDomain";
@@ -54,7 +53,7 @@ export default function TenantDomainClient() {
   const [openModal, setOpenModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const { data, refetch, isLoading } = useMyTenantDomain();
+  const { data, refetch, isLoading } = useTenantDomainByTenantId(tenant?.id);
   const { mutate: upsertTenantDomain, isPending } = useUpsertTenantDomain();
 
   /* ================= SYNC API → REDUX ================= */

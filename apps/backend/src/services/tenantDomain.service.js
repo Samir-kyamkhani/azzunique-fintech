@@ -10,46 +10,6 @@ import { ApiError } from '../lib/ApiError.js';
 import crypto from 'node:crypto';
 
 class TenantDomainService {
-  static async getByTenant(actor) {
-    if (!actor?.tenantId) {
-      throw ApiError.unauthorized('Invalid actor');
-    }
-
-    const [result] = await db
-      .select({
-        domain: tenantsDomainsTable,
-        userNumber: usersTable.userNumber,
-        employeeNumber: employeesTable.employeeNumber,
-        tenantNumber: tenantsTable.tenantNumber,
-      })
-      .from(tenantsDomainsTable)
-      .leftJoin(tenantsTable, eq(tenantsTable.id, tenantsDomainsTable.tenantId))
-      .leftJoin(
-        usersTable,
-        eq(usersTable.id, tenantsDomainsTable.createdByUserId),
-      )
-      .leftJoin(
-        employeesTable,
-        eq(employeesTable.id, tenantsDomainsTable.createdByEmployeeId),
-      )
-      .where(and(eq(tenantsDomainsTable.tenantId, actor.tenantId)))
-      .limit(1);
-
-    if (!result) {
-      throw ApiError.notFound('Domain not found');
-    }
-
-    return {
-      ...result.domain,
-      createdBy: result.userNumber
-        ? { type: 'USER', userNumber: result.userNumber }
-        : result.employeeNumber
-          ? { type: 'EMPLOYEE', employeeNumber: result.employeeNumber }
-          : null,
-      tenantNumber: result.tenantNumber,
-    };
-  }
-
   static async upsert(payload, actor) {
     if (!actor?.tenantId) {
       throw ApiError.unauthorized('Invalid actor');
@@ -103,7 +63,7 @@ class TenantDomainService {
     return { id };
   }
 
-  static async findByTenant(actor) {
+  static async findByTenantId(tenantId) {
     const [result] = await db
       .select({
         domain: tenantsDomainsTable,
@@ -121,11 +81,7 @@ class TenantDomainService {
         employeesTable,
         eq(employeesTable.id, tenantsDomainsTable.createdByEmployeeId),
       )
-      .where(
-        and(
-          eq(tenantsDomainsTable.tenantId, actor.tenantId),
-        ),
-      )
+      .where(and(eq(tenantsDomainsTable.tenantId, tenantId)))
       .limit(1);
 
     return result

@@ -1,8 +1,7 @@
 import { Router } from 'express';
 import {
   createTenantDomain,
-  getTenantId,
-  getMyDomain,
+  getByTenantId,
 } from '../controllers/tenantDomain.controller.js';
 import { validate } from '../middleware/zod-validate.js';
 import {
@@ -23,12 +22,10 @@ router.post(
   asyncHandler(createTenantDomain),
 );
 
-router.get('/me', asyncHandler(getMyDomain));
-
-// // Get by tenant id
-// router.get(
-//   '/:tenantId',
-//   validate({ params: idParamSchema }),
-//   asyncHandler(getTenantId),
-// );
+// Get by tenant id
+router.get(
+  '/:tenantId',
+  validate({ params: idParamSchema }),
+  asyncHandler(getByTenantId),
+);
 export default router;

@@ -5,7 +5,7 @@ const getRootDomain = (hostname) => {
 
 export const accessCookieOptions = (req) => ({
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
+  secure: true,
   sameSite: 'none',
   domain: getRootDomain(req.hostname),
   path: '/',

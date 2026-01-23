@@ -5,14 +5,7 @@ export const createTenantDomain = async (req, res) => {
   res.status(201).json(domain);
 };
 
-export const getTenantId = async (req, res) => {
-  const domain = await TenantDomainService.getByTenantId(req.params.tenantId);
+export const getByTenantId = async (req, res) => {
+  const domain = await TenantDomainService.findByTenantId(req.params.tenantId);
   res.json(domain);
-};
-
-export const getMyDomain = async (req, res) => {
-  const actor = req.user;
-  const domain = await TenantDomainService.findByTenant(actor);
-
-  res.json(domain );
 };
