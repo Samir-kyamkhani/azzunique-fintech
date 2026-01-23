@@ -1,3 +1,9 @@
+import { db } from '../database/core/core-db.js';
+import { ApiError } from '../lib/ApiError.js';
+import { tenantsDomainsTable } from '../models/core/tenantDomain.schema.js';
+import { tenantsTable } from '../models/core/tenant.schema.js';
+import { eq } from 'drizzle-orm';
+
 export async function tenantContextMiddleware(req, res, next) {
   try {
     const host = req.headers.host?.split(':')[0];
