@@ -10,7 +10,7 @@ const upsertTenantWebsite = async (req, res) => {
 };
 
 const getTenantWebsite = async (req, res) => {
-  const tenantId = req.tenant.id;
+  const tenantId = req.context.tenant.id;
   const website = await TenantWebsiteService.getByTenantId(tenantId);
   res.json(website);
 };

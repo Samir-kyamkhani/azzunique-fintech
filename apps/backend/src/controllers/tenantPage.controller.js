@@ -25,7 +25,7 @@ export const getTenantPageById = async (req, res) => {
 };
 
 export const getPublicTenantPages = async (req, res) => {
-  const tenantId = req.tenant.id; // from tenantContextMiddleware
+  const tenantId = req.context.tenant.id; // from tenantContextMiddleware
   const pages = await TenantPageService.getAll(tenantId);
   res.json(pages);
 };

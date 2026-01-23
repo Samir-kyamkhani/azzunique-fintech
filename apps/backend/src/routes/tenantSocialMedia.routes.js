@@ -7,7 +7,6 @@ import {
   upsertTenantSocialMedia,
   getTenantSocialMedia,
 } from '../controllers/tenantSocialMedia.controller.js';
-import { tenantContextMiddleware } from '../middleware/tenantContext.middleware.js';
 
 const router = Router();
 
@@ -20,6 +19,6 @@ router.post(
 );
 
 // GET
-router.get('/', tenantContextMiddleware, asyncHandler(getTenantSocialMedia));
+router.get('/', asyncHandler(getTenantSocialMedia));
 
 export default router;

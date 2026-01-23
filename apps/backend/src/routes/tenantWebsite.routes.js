@@ -5,7 +5,6 @@ import {
 } from '../controllers/tenantWebsite.controller.js';
 import upload from '../middleware/multer.middleware.js';
 import asyncHandler from '../lib/AsyncHandler.js';
-import { tenantContextMiddleware } from '../middleware/tenantContext.middleware.js';
 import { AuthMiddleware } from '../middleware/auth.middleware.js';
 import { upsertTenantWebsiteSchema } from '../validators/tenantWebsite.schema.js';
 import { validate } from '../middleware/zod-validate.js';
@@ -23,6 +22,6 @@ router.post(
   asyncHandler(upsertTenantWebsite),
 );
 
-router.get('/', tenantContextMiddleware, asyncHandler(getTenantWebsite));
+router.get('/', asyncHandler(getTenantWebsite));
 
 export default router;

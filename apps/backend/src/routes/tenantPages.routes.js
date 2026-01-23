@@ -1,7 +1,6 @@
 import Router from 'express';
 import asyncHandler from '../lib/AsyncHandler.js';
 import { AuthMiddleware } from '../middleware/auth.middleware.js';
-import { tenantContextMiddleware } from '../middleware/tenantContext.middleware.js';
 import { validate } from '../middleware/zod-validate.js';
 import {
   createTenantPageSchema,
@@ -49,10 +48,6 @@ router.get(
 );
 
 // 🌍 PUBLIC ROUTE
-router.get(
-  '/public/all',
-  tenantContextMiddleware,
-  asyncHandler(getPublicTenantPages),
-);
+router.get('/public/all', asyncHandler(getPublicTenantPages));
 
 export default router;

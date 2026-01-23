@@ -18,11 +18,7 @@ app.get('/api/v1/health', (req, res) => {
 
 app.use(
   cors({
-    origin: [
-      process.env.CLIENT_URL,
-      'http://localhost:3000',
-      'http://kkgws8gck8kk4g4w0000c8c4.147.93.20.127.sslip.io',
-    ],
+    origin: [process.env.CLIENT_URL, 'http://localhost:3000'],
     credentials: true,
   }),
 );
