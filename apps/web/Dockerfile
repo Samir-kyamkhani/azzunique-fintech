@@ -5,7 +5,7 @@ WORKDIR /app
 RUN corepack enable
 
 # Only web files (kyunki context = apps/web)
-COPY package.json pnpm-lock.yaml ./
+COPY package.json ./
 
 RUN pnpm install --frozen-lockfile
 
