@@ -27,8 +27,8 @@ export const logout = async (req, res) => {
   });
 
   res
-    .clearCookie('accessToken', accessCookieOptions)
-    .clearCookie('refreshToken', refreshCookieOptions)
+    .clearCookie('accessToken', accessCookieOptions(req))
+    .clearCookie('refreshToken', refreshCookieOptions(req))
     .json({ data: null, message: 'logout success' });
 };
 
