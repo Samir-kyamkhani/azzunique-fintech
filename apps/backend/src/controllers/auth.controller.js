@@ -7,7 +7,7 @@ export const login = async (req, res) => {
   const result =
     data.type === 'EMPLOYEE'
       ? await authService.loginEmployee(data)
-      : await authService.loginUser(data);
+      : await authService.loginUser(req.context, data);
 
   const { accessToken, refreshToken, ...rest } = result;
 

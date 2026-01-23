@@ -10,7 +10,7 @@ import { generateTokens, hashToken, verifyPassword } from '../lib/lib.js';
 import { ApiError } from '../lib/ApiError.js';
 
 class AuthService {
-  async loginUser(data) {
+  async loginUser(context, data) {
     const [user] = await db
       .select({
         id: usersTable.id,
@@ -25,6 +25,11 @@ class AuthService {
       .leftJoin(roleTable, eq(usersTable.roleId, roleTable.id))
       .where(eq(usersTable.userNumber, data.identifier))
       .limit(1);
+
+    // DOMAIN → TENANT LOGIN CHECK (CORRECT PLACE)
+    if (context?.tenant && user.tenantId !== context.tenant.id) {
+      throw ApiError.forbidden('This account does not belong to this domain');
+    }
 
     if (!user) {
       throw ApiError.unauthorized('Invalid credentials');

@@ -19,7 +19,7 @@ export const AuthMiddleware = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
-
+ 
     if (!decoded?.sub || !decoded?.tenantId || !decoded?.type) {
       throw ApiError.unauthorized('Invalid token payload');
     }
@@ -28,22 +28,11 @@ export const AuthMiddleware = async (req, res, next) => {
       id: decoded.sub,
       tenantId: decoded.tenantId,
       type: decoded.type,
-
+      
       roleLevel: decoded.roleLevel,
       roleId: decoded.type === 'USER' ? decoded.roleId : null,
       departmentId: decoded.type === 'EMPLOYEE' ? decoded.departmentId : null,
     };
-
-    // OWNER / PLATFORM bypass
-    if (req.context?.role !== 'OWNER') {
-      if (!req.context?.tenant) {
-        throw ApiError.forbidden('Tenant context missing');
-      }
-
-      if (req.user.tenantId !== req.context.tenant.id) {
-        throw ApiError.forbidden('Cross-tenant access denied');
-      }
-    }
 
     const ownership = await deriveTenantOwnership(req.user);
     req.user.isTenantOwner = ownership.isTenantOwner;
