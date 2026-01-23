@@ -14,7 +14,7 @@ export const useUpsertTenantDomain = () =>
 export const useTenantDomainByTenantId = (tenantId) =>
   useQuery({
     queryKey: ["tenant-domain", tenantId],
-    queryFn: () => apiClient(`/tenant-domain/${tenantId}`),
+    queryFn: () => apiClient(`/tenant-domain/${tenantId}`, { method: "GET" }),
     enabled: !!tenantId,
     staleTime: 5 * 60 * 1000,
     retry: false,

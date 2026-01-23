@@ -11,49 +11,63 @@ import crypto from 'node:crypto';
 
 class TenantDomainService {
   static async upsert(payload, actor) {
-    if (!actor?.tenantId) {
+    // 1. actor validation
+    if (!actor) {
       throw ApiError.unauthorized('Invalid actor');
     }
 
+    // 2. tenantId resolution (payload > actor)
+    const tenantId = payload?.tenantId ?? actor?.tenantId;
+    if (!tenantId) {
+      throw ApiError.badRequest('TenantId missing');
+    }
+
+    // 3. domain validation
     const domainName = payload.domainName?.trim().toLowerCase();
     if (!domainName) {
       throw ApiError.badRequest('Domain name required');
     }
 
+    const now = new Date();
+
     const [existing] = await db
       .select()
       .from(tenantsDomainsTable)
-      .where(and(eq(tenantsDomainsTable.tenantId, actor.tenantId)))
+      .where(
+        and(
+          eq(tenantsDomainsTable.tenantId, tenantId),
+          eq(tenantsDomainsTable.domainName, domainName),
+        ),
+      )
       .limit(1);
-
-    const now = new Date();
 
     if (existing) {
       await db
         .update(tenantsDomainsTable)
         .set({
-          domainName,
-          serverDetailId: payload.serverDetailId,
+          serverDetailId: payload.serverDetailId ?? existing.serverDetailId,
           status: payload.status ?? existing.status,
-          actionReason: payload.actionReason ?? null,
+          actionReason: payload.actionReason ?? existing.actionReason,
           actionedAt:
-            payload.status && payload.status !== 'ACTIVE' ? now : null,
+            payload.status && payload.status !== 'ACTIVE'
+              ? now
+              : existing.actionedAt,
           updatedAt: now,
         })
         .where(eq(tenantsDomainsTable.id, existing.id));
 
-      return { id: existing.id };
+      return { id: existing.id, updated: true };
     }
 
     const id = crypto.randomUUID();
-    const tenantId = payload.tenantId ? payload.tenantId : actor.tenantId;
 
     await db.insert(tenantsDomainsTable).values({
       id,
-      tenantId: tenantId,
+      tenantId,
       domainName,
-      serverDetailId: payload.serverDetailId,
+      serverDetailId: payload.serverDetailId ?? null,
       status: payload.status ?? 'ACTIVE',
+      actionReason: payload.actionReason ?? null,
       createdByUserId: actor.type === 'USER' ? actor.id : null,
       createdByEmployeeId: actor.type === 'EMPLOYEE' ? actor.id : null,
       createdAt: now,
