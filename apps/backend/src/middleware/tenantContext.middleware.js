@@ -22,7 +22,7 @@ export async function tenantContextMiddleware(req, res, next) {
       .select()
       .from(tenantsDomainsTable)
       .where(eq(tenantsDomainsTable.domainName, host))
-      .limit(1);m
+      .limit(1);
 
     if (!domain) {
       return next(ApiError.notFound('Tenant not found'));
@@ -43,4 +43,29 @@ export async function tenantContextMiddleware(req, res, next) {
   } catch (err) {
     next(err);
   }
+}
+
+function extractTenantHost(req) {
+  let host = req.headers.host;
+
+  if (!host && req.headers.origin) {
+    try {
+      host = new URL(req.headers.origin).hostname;
+    } catch {
+      return null;
+    }
+  }
+
+  if (!host) return null;
+
+  host = host.split(':')[0].toLowerCase();
+
+  // api.azzunique.cloud → azzunique.cloud
+  if (host.startsWith('api.')) {
+    host = host.replace(/^api\./, '');
+  }
+
+  host = host.replace(/\.$/, '');
+
+  return host;
 }
