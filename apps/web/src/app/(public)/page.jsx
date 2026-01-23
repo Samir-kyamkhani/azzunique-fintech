@@ -48,9 +48,11 @@ export default function HomePage() {
     "Automated Backups",
   ];
 
-  const { data: website } = useSelector(
-    (state) => state.tenantWebsite?.currentWebsite,
-  );
+  const website = useSelector((state) => state.tenantWebsite.currentWebsite);
+
+  if (!website) {
+    return null; // ya loader
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">

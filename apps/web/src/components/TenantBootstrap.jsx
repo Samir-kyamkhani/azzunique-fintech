@@ -7,23 +7,25 @@ import { setTenantWebsite } from "@/store/tenantWebsiteSlice";
 
 export default function TenantBootstrap({ children }) {
   const dispatch = useDispatch();
-  const { data: website, isLoading } = useTenantWebsite();
+  const { data, isLoading } = useTenantWebsite();
 
   useEffect(() => {
-    if (website) {
-      dispatch(setTenantWebsite(website));
+    if (data?.data) {
+      dispatch(setTenantWebsite(data.data));
     }
-  }, [website, dispatch]);
+  }, [data, dispatch]);
 
   if (isLoading) return null;
 
   return (
     <>
       {/* favicon */}
-      {website?.favIconUrl && <link rel="icon" href={website.favIconUrl} />}
+      {data?.data?.favIconUrl && (
+        <link rel="icon" href={data.data.favIconUrl} />
+      )}
 
       {/* title */}
-      <title>{website?.siteTitle ?? "Website"}</title>
+      <title>{data?.data?.brandName ?? "Website"}</title>
 
       {children}
     </>
