@@ -12,8 +12,9 @@ export async function tenantContextMiddleware(req, res, next) {
       return next(ApiError.badRequest('Invalid host'));
     }
 
-    // Platform owner
-    if (host === process.env.CLIENT_URL) {
+    const clientHost = new URL(process.env.CLIENT_URL).hostname;
+
+    if (host === clientHost) {
       req.context = { role: 'OWNER' };
       return next();
     }
@@ -51,16 +52,19 @@ function extractTenantHost(req) {
   if (!host && req.headers.origin) {
     try {
       host = new URL(req.headers.origin).hostname;
-    } catch {
-      return null;
-    }
+    } catch {}
+  }
+
+  if (!host && req.headers.referer) {
+    try {
+      host = new URL(req.headers.referer).hostname;
+    } catch {}
   }
 
   if (!host) return null;
 
   host = host.split(':')[0].toLowerCase();
 
-  // api.azzunique.cloud → azzunique.cloud
   if (host.startsWith('api.')) {
     host = host.replace(/^api\./, '');
   }
