@@ -7,19 +7,17 @@
 
 export const cookieOptions = {
   httpOnly: true,
-  secure: false, // HTTP
+  secure: true, // HTTP
   sameSite: 'lax',
   path: '/',
-  domain: '.147.93.20.127.sslip.io',
   maxAge: 24 * 60 * 60 * 1000,
 };
 
 export const refreshCookieOptions = {
   httpOnly: true,
-  secure: false,
+  secure: true,
   sameSite: 'lax',
   path: '/',
-  domain: '.147.93.20.127.sslip.io',
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
