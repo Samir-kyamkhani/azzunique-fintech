@@ -1,15 +1,10 @@
-import { db } from '../database/core/core-db.js';
-import { ApiError } from '../lib/ApiError.js';
-import { tenantsDomainsTable } from '../models/core/tenantDomain.schema.js';
-import { tenantsTable } from '../models/core/tenant.schema.js';
-import { eq } from 'drizzle-orm';
-
 export async function tenantContextMiddleware(req, _, next) {
   try {
     const host = extractTenantHost(req);
 
-    if (!host) {
-      return next(ApiError.badRequest('Invalid host'));
+    // Skip tenant check for health & internal routes
+    if (!host || host === 'localhost') {
+      return next();
     }
 
     const [domain] = await db
@@ -40,29 +35,18 @@ export async function tenantContextMiddleware(req, _, next) {
 }
 
 function extractTenantHost(req) {
-  let host = req.headers.host;
-
-  if (!host && req.headers.origin) {
-    try {
-      host = new URL(req.headers.origin).hostname;
-    } catch {}
-  }
-
-  if (!host && req.headers.referer) {
-    try {
-      host = new URL(req.headers.referer).hostname;
-    } catch {}
-  }
+  let host = req.headers['x-forwarded-host'] || req.headers.host;
 
   if (!host) return null;
 
-  host = host.split(':')[0].toLowerCase();
+  host = host.split(',')[0]; // proxy safe
+  host = host.split(':')[0]; // remove port
+  host = host.toLowerCase();
 
+  // strip api.
   if (host.startsWith('api.')) {
-    host = host.replace(/^api\./, '');
+    host = host.slice(4);
   }
-
-  host = host.replace(/\.$/, '');
 
   return host;
 }
