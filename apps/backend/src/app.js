@@ -12,7 +12,7 @@ import { tenantContextMiddleware } from './middleware/tenantContext.middleware.j
 
 const app = express();
 
-app.get('/api/v1/health', (req, res) => {
+app.get('/v1/health', (req, res) => {
   res.status(200).send('OK');
 });
 
@@ -35,7 +35,7 @@ app.use(rateLimiterMiddleware);
 app.use(httpResponseFilter);
 
 // Routes
-app.use('/api/v1', tenantContextMiddleware, indexRoutes);
+app.use('/v1', tenantContextMiddleware, indexRoutes);
 
 // 404
 app.use((req, res, next) => {
