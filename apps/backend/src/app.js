@@ -12,37 +12,29 @@ import { tenantContextMiddleware } from './middleware/tenantContext.middleware.j
 
 const app = express();
 
-app.get('/api/v1/health', (req, res) => {
+// ---------- HEALTH (NO TENANT) ----------
+app.get('/v1/health', (req, res) => {
   res.status(200).send('OK');
 });
 
-app.use(
-  cors({
-    origin: true,
-    credentials: true,
-  }),
-);
-
+// ---------- MIDDLEWARE ----------
+app.use(cors({ origin: true, credentials: true }));
 app.set('trust proxy', 1);
-
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use(express.static('public'));
 app.use(cookieParser());
 app.use(helmet());
 app.use(rateLimiterMiddleware);
-
 app.use(httpResponseFilter);
 
-// Routes
-app.use('/api/v1', tenantContextMiddleware, indexRoutes);
+// ---------- API ----------
+app.use('/v1', tenantContextMiddleware, indexRoutes);
 
-// 404
+// ---------- 404 ----------
 app.use((req, res, next) => {
   next(ApiError.notFound('Route not found'));
 });
 
-// Global error handler
 app.use(httpExceptionFilter);
 
 export default app;

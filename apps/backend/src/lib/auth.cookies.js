@@ -1,22 +1,17 @@
-const getRootDomain = (hostname) => {
-  const parts = hostname.split('.');
-  return '.' + parts.slice(-2).join('.');
-};
+const isProd = process.env.NODE_ENV === 'production';
 
-export const accessCookieOptions = (req) => ({
+export const accessCookieOptions = () => ({
   httpOnly: true,
-  secure: true,
-  sameSite: 'none',
-  domain: getRootDomain(req.hostname),
+  secure: isProd,
+  sameSite: isProd ? 'none' : 'lax',
   path: '/',
-  maxAge: 24 * 60 * 60 * 1000, // 1 day
+  maxAge: 24 * 60 * 60 * 1000,
 });
 
-export const refreshCookieOptions = (req) => ({
+export const refreshCookieOptions = () => ({
   httpOnly: true,
-  secure: true,
-  sameSite: 'none',
-  domain: getRootDomain(req.hostname),
+  secure: isProd,
+  sameSite: isProd ? 'none' : 'lax',
   path: '/',
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  maxAge: 7 * 24 * 60 * 60 * 1000,
 });
