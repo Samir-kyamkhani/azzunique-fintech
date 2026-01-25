@@ -178,6 +178,7 @@ class AuthService {
         roleId: usersTable.roleId,
         isSystem: roleTable.isSystem,
         userStatus: usersTable.userStatus,
+        roleCode: roleTable.roleCode,
       })
       .from(usersTable)
       .leftJoin(roleTable, eq(usersTable.roleId, roleTable.id))
@@ -193,6 +194,7 @@ class AuthService {
       tenantId: user.tenantId,
       type: 'USER',
       roleId: user.roleId,
+      roleCode: user.roleCode,
       isSystem: user.isSystem,
     };
   }
