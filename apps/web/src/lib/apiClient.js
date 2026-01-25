@@ -1,7 +1,17 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const getApiBaseUrl = () => {
+  const host = window.location.hostname;
+
+  // localhost support
+  if (host === "localhost") {
+    return `http://localhost:3001/${process.env.NEXT_PUBLIC_API_VERSION}`;
+  }
+
+  return `https://api.${host}/${process.env.NEXT_PUBLIC_API_VERSION}`;
+};
 
 export const apiClient = async (url, options = {}) => {
   const isFormData = options.body instanceof FormData;
+  const API_URL = getApiBaseUrl();
 
   const res = await fetch(`${API_URL}${url}`, {
     ...options,
