@@ -85,6 +85,15 @@ export default function TenantsClient() {
 
   const { mutate: createTenant, isPending: isCreating } = useCreateTenant();
   const { mutate: updateTenant, isPending: isUpdating } = useUpdateTenant();
+  const { data: meRes, isLoading: meLoading } = useMe();
+
+  if (meLoading) return null;
+
+  useEffect(() => {
+    if (meRes?.data) {
+      dispatch(loginSuccess(meRes?.data));
+    }
+  }, [meRes?.data, dispatch]);
 
   /* ================= NORMALIZE ================= */
   const tenants =
@@ -95,16 +104,6 @@ export default function TenantsClient() {
     })) || [];
 
   const meta = data?.meta || {};
-
-  const { data: meRes, isLoading: meLoading } = useMe();
-
-  if (meLoading) return null;
-
-  useEffect(() => {
-    if (meRes?.data) {
-      dispatch(loginSuccess(meRes?.data));
-    }
-  }, [meRes?.data, dispatch]);
 
   /* ================= STATS ================= */
   const stats = [
