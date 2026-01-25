@@ -96,6 +96,8 @@ export default function TenantsClient() {
   const meta = data?.meta || {};
 
   const { data: meRes, isLoading: meLoading } = useMe();
+  console.log("data", data);
+  console.log("meRes.data", meRes.data);
 
   if (meLoading) return null;
 
@@ -103,7 +105,7 @@ export default function TenantsClient() {
     if (meRes?.data) {
       dispatch(loginSuccess(meRes.data));
     }
-  }, [meRes, dispatch]);
+  }, [meRes.data, dispatch]);
 
   /* ================= STATS ================= */
   const stats = [
