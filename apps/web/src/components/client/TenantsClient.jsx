@@ -18,6 +18,7 @@ import Button from "@/components/ui/Button";
 
 import { Building2, UserX, CheckCircle, Ban, RefreshCw } from "lucide-react";
 import { formatDateTime } from "@/lib/utils";
+import { useMe } from "@/hooks/useAuth";
 
 /* ================= SCHEMA ALIGNED ================= */
 
@@ -94,6 +95,12 @@ export default function TenantsClient() {
 
   const meta = data?.meta || {};
 
+  const { data: meRes, isLoading: meLoading } = useMe();
+
+  const currentUser = meRes?.data;
+
+  if (meLoading) return null;
+
   /* ================= STATS ================= */
   const stats = [
     {
@@ -143,7 +150,7 @@ export default function TenantsClient() {
     const onError = (err) => {
       if (err?.type === "FIELD") {
         err.errors.forEach(({ field, message }) =>
-          setError(field, { message })
+          setError(field, { message }),
         );
         return;
       }
@@ -181,7 +188,7 @@ export default function TenantsClient() {
           refetch();
         },
         onError,
-      }
+      },
     );
   };
 
@@ -243,7 +250,7 @@ export default function TenantsClient() {
           isEditing={isEditing}
           isPending={isEditing ? isUpdating : isCreating}
           initialData={editingTenant}
-          currentUser=""
+          currentUser={currentUser}
         />
       )}
     </>

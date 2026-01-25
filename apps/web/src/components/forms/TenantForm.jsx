@@ -50,7 +50,7 @@ export default function TenantForm({
   const actionReasonRequired = CRITICAL_STATUSES.includes(tenantStatus);
 
   const userTypeOptions = useMemo(() => {
-    if ("AZZUNIQUE" === "AZZUNIQUE") {
+    if (currentUser?.userType === "AZZUNIQUE") {
       return [{ value: "RESELLER", label: "Reseller" }];
     }
 

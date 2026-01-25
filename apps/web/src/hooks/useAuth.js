@@ -10,6 +10,13 @@ export const useLogin = () =>
       }),
   });
 
+export const useMe = () =>
+  useQuery({
+    queryKey: ["me"],
+    queryFn: () => apiClient("/auth/me"),
+    staleTime: 5 * 60 * 1000,
+  });
+
 export const useLogout = () =>
   useMutation({
     mutationFn: async () =>
