@@ -98,15 +98,15 @@ export default function TenantsClient() {
   const { data: meRes, isLoading: meLoading } = useMe();
   console.log("data", data);
   console.log("meRes", meRes);
-  console.log("meRes.data", meRes.data);
+  console.log("meRes.data", meRes?.data);
 
   if (meLoading) return null;
 
   useEffect(() => {
     if (meRes?.data) {
-      dispatch(loginSuccess(meRes.data));
+      dispatch(loginSuccess(meRes?.data));
     }
-  }, [meRes.data, dispatch]);
+  }, [meRes?.data, dispatch]);
 
   /* ================= STATS ================= */
   const stats = [
