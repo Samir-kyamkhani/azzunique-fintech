@@ -97,6 +97,7 @@ export default function TenantsClient() {
 
   const { data: meRes, isLoading: meLoading } = useMe();
   console.log("data", data);
+  console.log("meRes", meRes);
   console.log("meRes.data", meRes.data);
 
   if (meLoading) return null;
