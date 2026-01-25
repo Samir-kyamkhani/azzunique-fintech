@@ -8,6 +8,7 @@ import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import SelectField from "@/components/ui/SelectField";
 import { onlyDigits } from "@/lib/utils";
+import { useSelector } from "react-redux";
 
 const CRITICAL_STATUSES = ["INACTIVE", "SUSPENDED", "DELETED"];
 
@@ -16,7 +17,6 @@ export default function TenantForm({
   isEditing = false,
   onSubmit,
   isPending = false,
-  currentUser,
 }) {
   const {
     register,
@@ -49,12 +49,14 @@ export default function TenantForm({
 
   const actionReasonRequired = CRITICAL_STATUSES.includes(tenantStatus);
 
-  const userTypeOptions = useMemo(() => {
-    if (currentUser?.userType === "AZZUNIQUE") {
+  const { user: currentUser } = useSelector((state) => state.auth);
+
+  const roleCodeOptions = useMemo(() => {
+    if (currentUser?.roleCode === "AZZUNIQUE") {
       return [{ value: "RESELLER", label: "Reseller" }];
     }
 
-    if (currentUser?.userType === "RESELLER") {
+    if (currentUser?.roleCode === "RESELLER") {
       return [{ value: "WHITELABEL", label: "White Label" }];
     }
 
@@ -62,11 +64,11 @@ export default function TenantForm({
   }, [currentUser]);
 
   useEffect(() => {
-    if (currentUser?.userType === "AZZUNIQUE") {
+    if (currentUser?.roleCode === "AZZUNIQUE") {
       setValue("userType", "RESELLER");
     }
 
-    if (currentUser?.userType === "RESELLER") {
+    if (currentUser?.roleCode === "RESELLER") {
       setValue("userType", "WHITELABEL");
     }
   }, [currentUser, setValue]);
@@ -211,10 +213,10 @@ export default function TenantForm({
               render={({ field }) => (
                 <SelectField
                   {...field}
-                  options={userTypeOptions}
+                  options={roleCodeOptions}
                   placeholder="Select user type"
                   error={errors.userType}
-                  disabled={userTypeOptions.length === 0}
+                  disabled={roleCodeOptions.length === 0}
                 />
               )}
             />

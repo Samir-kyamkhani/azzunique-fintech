@@ -12,7 +12,6 @@ export default function TenantModal({
   isEditing = false,
   isPending = false,
   initialData,
-  currentUser,
 }) {
   useLockBodyScroll(open);
   if (!open) return null;
@@ -54,7 +53,6 @@ export default function TenantModal({
             isPending={isPending}
             initialData={initialData}
             isEditing={isEditing}
-            currentUser={currentUser}
           />
         </div>
       </div>

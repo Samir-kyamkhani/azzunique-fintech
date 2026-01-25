@@ -97,9 +97,13 @@ export default function TenantsClient() {
 
   const { data: meRes, isLoading: meLoading } = useMe();
 
-  const currentUser = meRes?.data;
-
   if (meLoading) return null;
+
+  useEffect(() => {
+    if (meRes?.data) {
+      dispatch(loginSuccess(meRes.data));
+    }
+  }, [meRes, dispatch]);
 
   /* ================= STATS ================= */
   const stats = [
@@ -250,7 +254,6 @@ export default function TenantsClient() {
           isEditing={isEditing}
           isPending={isEditing ? isUpdating : isCreating}
           initialData={editingTenant}
-          currentUser={currentUser}
         />
       )}
     </>
