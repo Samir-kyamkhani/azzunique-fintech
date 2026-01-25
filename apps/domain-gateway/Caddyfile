@@ -3,9 +3,12 @@
 }
 
 :80 {
-    @allowed {
-        not host gateway.azzunique.cloud
+
+    @block_gateway {
+        host gateway.azzunique.cloud
     }
+
+    respond @block_gateway 404
 
     reverse_proxy frontend:3000 {
         header_up Host {host}
