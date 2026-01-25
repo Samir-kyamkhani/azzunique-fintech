@@ -87,13 +87,13 @@ export default function TenantsClient() {
   const { mutate: updateTenant, isPending: isUpdating } = useUpdateTenant();
   const { data: meRes, isLoading: meLoading } = useMe();
 
-  if (meLoading) return null;
-
   useEffect(() => {
     if (meRes?.data) {
       dispatch(loginSuccess(meRes?.data));
     }
   }, [meRes?.data, dispatch]);
+
+  if (meLoading) return null;
 
   /* ================= NORMALIZE ================= */
   const tenants =
