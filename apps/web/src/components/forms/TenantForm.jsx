@@ -49,7 +49,7 @@ export default function TenantForm({
 
   const actionReasonRequired = CRITICAL_STATUSES.includes(tenantStatus);
 
-  const { user: currentUser } = useSelector((state) => state.auth);
+  const currentUser = useSelector((state) => state.auth?.user);
 
   const roleCodeOptions = useMemo(() => {
     if (currentUser?.roleCode === "AZZUNIQUE") {

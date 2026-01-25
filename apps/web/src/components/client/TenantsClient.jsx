@@ -19,6 +19,7 @@ import Button from "@/components/ui/Button";
 import { Building2, UserX, CheckCircle, Ban, RefreshCw } from "lucide-react";
 import { formatDateTime } from "@/lib/utils";
 import { useMe } from "@/hooks/useAuth";
+import { loginSuccess } from "@/store/authSlice";
 
 /* ================= SCHEMA ALIGNED ================= */
 
@@ -96,9 +97,6 @@ export default function TenantsClient() {
   const meta = data?.meta || {};
 
   const { data: meRes, isLoading: meLoading } = useMe();
-  console.log("data", data);
-  console.log("meRes", meRes);
-  console.log("meRes.data", meRes?.data);
 
   if (meLoading) return null;
 
