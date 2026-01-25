@@ -1,4 +1,12 @@
+{
+    auto_https off
+}
+
 :80 {
+    @allowed {
+        not host gateway.azzunique.cloud
+    }
+
     reverse_proxy frontend:3000 {
         header_up Host {host}
         header_up X-Forwarded-Proto {scheme}
