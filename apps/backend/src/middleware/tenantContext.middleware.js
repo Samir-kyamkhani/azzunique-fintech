@@ -9,9 +9,9 @@ export async function tenantContextMiddleware(req, _, next) {
     const host = extractTenantHost(req);
 
     // Skip tenant check for health & internal routes
-    if (!host || host === 'localhost') {
-      return next();
-    }
+    // if (!host || host === 'localhost') {
+    //   return next();
+    // }
 
     const [domain] = await db
       .select()

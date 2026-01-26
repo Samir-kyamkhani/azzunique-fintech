@@ -21,6 +21,8 @@ import { setTenantDomain, clearTenantDomain } from "@/store/tenantDomainSlice";
 
 import { formatDateTime, statusColor } from "@/lib/utils";
 import { toast } from "@/lib/toast";
+import { useMe } from "@/hooks/useAuth";
+import { loginSuccess } from "@/store/authSlice";
 
 const FIELDS = [
   "domainName",
@@ -46,6 +48,7 @@ export default function TenantDomainClient() {
   const dispatch = useDispatch();
 
   const tenant = useSelector((state) => state.tenant?.currentTenant ?? null);
+  const currentUser = useSelector((state) => state.auth?.user ?? null);
   const tenantDomain = useSelector(
     (state) => state.tenantDomain?.currentDomain ?? null,
   );
@@ -53,8 +56,18 @@ export default function TenantDomainClient() {
   const [openModal, setOpenModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const { data, refetch, isLoading } = useTenantDomainByTenantId(tenant?.id);
+  const { data, refetch, isLoading } = useTenantDomainByTenantId(
+    tenant?.id ?? currentUser?.tenantId,
+  );
   const { mutate: upsertTenantDomain, isPending } = useUpsertTenantDomain();
+
+  const { data: meRes, isLoading: meLoading } = useMe();
+
+  useEffect(() => {
+    if (meRes?.data) {
+      dispatch(loginSuccess(meRes?.data));
+    }
+  }, [meRes?.data, dispatch]);
 
   /* ================= SYNC API → REDUX ================= */
   useEffect(() => {
@@ -100,7 +113,7 @@ export default function TenantDomainClient() {
 
   const statusMeta = tenantDomain ? statusColor[tenantDomain.status] : null;
 
-  const isInitialLoading = isLoading && !tenantDomain;
+  const isInitialLoading = isLoading || (meLoading && !tenantDomain);
   if (isInitialLoading) return <PageSkeleton />;
 
   /* ================= RENDER ================= */
