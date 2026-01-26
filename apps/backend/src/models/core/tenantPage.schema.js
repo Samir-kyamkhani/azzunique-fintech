@@ -25,6 +25,7 @@ export const tenantPagesTable = mysqlTable(
     pageContent: text('page_content'),
 
     pageUrl: varchar('page_url', { length: 255 }).notNull(),
+    pageType: varchar('page_type', { length: 30 }).notNull(),
 
     status: varchar('status', { length: 20 }).notNull().default('DRAFT'),
     // DRAFT | PUBLISHED | ARCHIVED
