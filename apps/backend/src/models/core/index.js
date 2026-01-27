@@ -36,3 +36,5 @@ export * from './roleCommissionSetting.schema.js';
 export * from './userCommissionSetting.schema.js';
 export * from './walletSnapshot.schema.js';
 export * from './tenantPageSections.schema.js';
+export * from './tenantMasterPages.schema.js';
+export * from './tenantMasterPageSections.schema.js';
