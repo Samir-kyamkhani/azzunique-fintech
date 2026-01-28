@@ -10,7 +10,7 @@ import {
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 
-import { tenantMasterPagesTable, tenantsTable, usersTable } from './index.js';
+import {  tenantsTable, usersTable } from './index.js';
 
 export const tenantPagesTable = mysqlTable(
   'tenants_pages',
@@ -55,12 +55,6 @@ export const tenantPagesTable = mysqlTable(
       name: 'tp_created_by_user_fk',
       columns: [table.createdByUserId],
       foreignColumns: [usersTable.id],
-    }),
-
-    tenantPageMasterFk: foreignKey({
-      name: 'tp_master_fk',
-      columns: [table.sourceMasterPageId],
-      foreignColumns: [tenantMasterPagesTable.id],
     }),
 
     uniqTenantPageUrl: uniqueIndex('uniq_tenant_page_url').on(
