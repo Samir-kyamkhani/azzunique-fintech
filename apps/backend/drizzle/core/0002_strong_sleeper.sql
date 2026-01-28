@@ -1,1 +1,0 @@
-ALTER TABLE `server_details` MODIFY COLUMN `value` varchar(255) NOT NULL;

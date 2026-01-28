@@ -189,9 +189,9 @@ CREATE TABLE `server_details` (
 	`tenant_id` varchar(36) NOT NULL,
 	`record_type` varchar(50) NOT NULL,
 	`hostname` varchar(255) NOT NULL,
-	`value` varchar(45) NOT NULL,
+	`value` varchar(255) NOT NULL,
 	`status` varchar(20) NOT NULL DEFAULT 'ACTIVE',
-	`created_by_user_id` varchar(36) NOT NULL,
+	`created_by_user_id` varchar(36),
 	`created_by_employee_id` varchar(36),
 	`created_at` timestamp NOT NULL DEFAULT (now()),
 	`updated_at` timestamp NOT NULL DEFAULT (now()),
@@ -251,9 +251,13 @@ CREATE TABLE `tenants_pages` (
 	`page_title` varchar(255) NOT NULL,
 	`page_content` text,
 	`page_url` varchar(255) NOT NULL,
+	`page_type` varchar(30) NOT NULL,
+	`is_home_page` boolean NOT NULL DEFAULT false,
 	`status` varchar(20) NOT NULL DEFAULT 'DRAFT',
 	`created_by_user_id` varchar(36) NOT NULL,
 	`created_by_employee_id` varchar(36),
+	`source_master_page_id` varchar(36),
+	`deleted_at` timestamp,
 	`created_at` timestamp NOT NULL DEFAULT (now()),
 	`updated_at` timestamp NOT NULL DEFAULT (now()),
 	CONSTRAINT `tenants_pages_id` PRIMARY KEY(`id`),
@@ -582,6 +586,41 @@ CREATE TABLE `wallet_snapshots` (
 	CONSTRAINT `wallet_snapshots_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
+CREATE TABLE `tenant_page_sections` (
+	`id` varchar(36) NOT NULL DEFAULT (UUID()),
+	`tenant_page_id` varchar(36) NOT NULL,
+	`section_type` varchar(50) NOT NULL,
+	`sort_order` int NOT NULL,
+	`section_data` json NOT NULL,
+	`source_master_section_id` varchar(36),
+	`created_at` timestamp NOT NULL DEFAULT (now()),
+	CONSTRAINT `tenant_page_sections_id` PRIMARY KEY(`id`),
+	CONSTRAINT `uniq_tenant_section_order` UNIQUE(`tenant_page_id`,`sort_order`)
+);
+--> statement-breakpoint
+CREATE TABLE `master_pages` (
+	`id` varchar(36) NOT NULL DEFAULT (UUID()),
+	`page_type` varchar(30) NOT NULL,
+	`title` varchar(255) NOT NULL,
+	`slug` varchar(255) NOT NULL,
+	`version` int NOT NULL DEFAULT 1,
+	`is_home_page` boolean NOT NULL DEFAULT false,
+	`created_at` timestamp NOT NULL DEFAULT (now()),
+	CONSTRAINT `master_pages_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `master_page_sections` (
+	`id` varchar(36) NOT NULL DEFAULT (UUID()),
+	`master_page_id` varchar(36) NOT NULL,
+	`section_type` varchar(50) NOT NULL,
+	`sort_order` int NOT NULL,
+	`section_data` json NOT NULL,
+	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`updated_at` timestamp NOT NULL DEFAULT (now()),
+	CONSTRAINT `master_page_sections_id` PRIMARY KEY(`id`),
+	CONSTRAINT `uniq_master_section_order` UNIQUE(`master_page_id`,`sort_order`)
+);
+--> statement-breakpoint
 ALTER TABLE `audit_log` ADD CONSTRAINT `audit_user_fk` FOREIGN KEY (`perform_by_user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `audit_log` ADD CONSTRAINT `audit_tenant_fk` FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `users` ADD CONSTRAINT `user_role_fk` FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -615,6 +654,7 @@ ALTER TABLE `tenants_websites` ADD CONSTRAINT `tw_tenant_fk` FOREIGN KEY (`tenan
 ALTER TABLE `tenants_social_media` ADD CONSTRAINT `tsm_website_fk` FOREIGN KEY (`tenant_website_id`) REFERENCES `tenants_websites`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `tenants_pages` ADD CONSTRAINT `tp_tenant_fk` FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `tenants_pages` ADD CONSTRAINT `tp_created_by_user_fk` FOREIGN KEY (`created_by_user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `tenants_pages` ADD CONSTRAINT `tp_master_fk` FOREIGN KEY (`source_master_page_id`) REFERENCES `master_pages`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `tenants_seo` ADD CONSTRAINT `tseo_page_fk` FOREIGN KEY (`tenant_page_id`) REFERENCES `tenants_pages`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `tenants_smtp_config` ADD CONSTRAINT `smtp_tenant_fk` FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `tenants_smtp_config` ADD CONSTRAINT `smtp_created_by_user_fk` FOREIGN KEY (`created_by_user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -663,6 +703,9 @@ ALTER TABLE `user_commission_settings` ADD CONSTRAINT `ucs_platform_service_fk` 
 ALTER TABLE `user_commission_settings` ADD CONSTRAINT `ucs_platform_service_feature_fk` FOREIGN KEY (`platform_service_feature_id`) REFERENCES `platform_service_features`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `user_commission_settings` ADD CONSTRAINT `ucs_user_fk` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `wallet_snapshots` ADD CONSTRAINT `wallet_snapshots_wallet_id_wallets_id_fk` FOREIGN KEY (`wallet_id`) REFERENCES `wallets`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `tenant_page_sections` ADD CONSTRAINT `tps_page_fk` FOREIGN KEY (`tenant_page_id`) REFERENCES `tenants_pages`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `tenant_page_sections` ADD CONSTRAINT `tps_master_section_fk` FOREIGN KEY (`source_master_section_id`) REFERENCES `master_page_sections`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `master_page_sections` ADD CONSTRAINT `mps_master_page_fk` FOREIGN KEY (`master_page_id`) REFERENCES `master_pages`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX `idx_user_tenant_status` ON `users` (`tenant_id`,`user_status`);--> statement-breakpoint
 CREATE INDEX `idx_user_owner` ON `users` (`owner_user_id`);--> statement-breakpoint
 CREATE INDEX `idx_tenant_parent` ON `tenants` (`parent_tenant_id`);--> statement-breakpoint
@@ -674,7 +717,7 @@ CREATE INDEX `idx_emp_department` ON `employees` (`department_id`);--> statement
 CREATE INDEX `idx_server_hostname_status` ON `server_details` (`hostname`,`status`);--> statement-breakpoint
 CREATE INDEX `idx_tenant_domain_tenant` ON `tenants_domains` (`tenant_id`);--> statement-breakpoint
 CREATE INDEX `idx_tenant_domain_status` ON `tenants_domains` (`status`);--> statement-breakpoint
-CREATE INDEX `idx_tenant_pages_tenant` ON `tenants_pages` (`tenant_id`);--> statement-breakpoint
+CREATE INDEX `idx_tenant_page_type` ON `tenants_pages` (`page_type`);--> statement-breakpoint
 CREATE INDEX `idx_tenant_pages_status` ON `tenants_pages` (`status`);--> statement-breakpoint
 CREATE INDEX `idx_tenant_kyc_status` ON `tenants_kyc` (`status`);--> statement-breakpoint
 CREATE INDEX `idx_user_kyc_status` ON `users_kyc` (`verification_status`);--> statement-breakpoint
@@ -699,4 +742,7 @@ CREATE INDEX `idx_commission_transaction` ON `commission_earnings` (`transaction
 CREATE INDEX `idx_rcs_tenant` ON `role_commission_settings` (`tenant_id`);--> statement-breakpoint
 CREATE INDEX `idx_rcs_role` ON `role_commission_settings` (`role_id`);--> statement-breakpoint
 CREATE INDEX `idx_rcs_feature` ON `role_commission_settings` (`platform_service_feature_id`);--> statement-breakpoint
-CREATE INDEX `idx_wallet_snapshots_wallet` ON `wallet_snapshots` (`wallet_id`);
+CREATE INDEX `idx_wallet_snapshots_wallet` ON `wallet_snapshots` (`wallet_id`);--> statement-breakpoint
+CREATE INDEX `idx_tenant_section_type` ON `tenant_page_sections` (`section_type`);--> statement-breakpoint
+CREATE INDEX `idx_master_page_type` ON `master_pages` (`page_type`);--> statement-breakpoint
+CREATE INDEX `idx_master_section_type` ON `master_page_sections` (`section_type`);

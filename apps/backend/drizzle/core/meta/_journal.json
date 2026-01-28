@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "5",
-      "when": 1768913980756,
-      "tag": "0000_right_ken_ellis",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "5",
-      "when": 1769062208848,
-      "tag": "0001_kind_natasha_romanoff",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "5",
-      "when": 1769062363576,
-      "tag": "0002_strong_sleeper",
+      "when": 1769502556899,
+      "tag": "0000_small_archangel",
       "breakpoints": true
     }
   ]

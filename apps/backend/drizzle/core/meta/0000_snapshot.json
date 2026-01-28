@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "197fd8ca-0be2-455b-a4ee-c08896d5e569",
+  "id": "ef5f27a1-b508-4792-93b8-26e2428b3a1d",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "audit_log": {
@@ -1659,7 +1659,7 @@
         },
         "value": {
           "name": "value",
-          "type": "varchar(45)",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -1676,7 +1676,7 @@
           "name": "created_by_user_id",
           "type": "varchar(36)",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "created_by_employee_id": {
@@ -2181,6 +2181,21 @@
           "notNull": true,
           "autoincrement": false
         },
+        "page_type": {
+          "name": "page_type",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "is_home_page": {
+          "name": "is_home_page",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
         "status": {
           "name": "status",
           "type": "varchar(20)",
@@ -2199,6 +2214,20 @@
         "created_by_employee_id": {
           "name": "created_by_employee_id",
           "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "source_master_page_id": {
+          "name": "source_master_page_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -2229,10 +2258,10 @@
           ],
           "isUnique": true
         },
-        "idx_tenant_pages_tenant": {
-          "name": "idx_tenant_pages_tenant",
+        "idx_tenant_page_type": {
+          "name": "idx_tenant_page_type",
           "columns": [
-            "tenant_id"
+            "page_type"
           ],
           "isUnique": false
         },
@@ -2264,6 +2293,19 @@
           "tableTo": "users",
           "columnsFrom": [
             "created_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "tp_master_fk": {
+          "name": "tp_master_fk",
+          "tableFrom": "tenants_pages",
+          "tableTo": "master_pages",
+          "columnsFrom": [
+            "source_master_page_id"
           ],
           "columnsTo": [
             "id"
@@ -5241,6 +5283,294 @@
       "compositePrimaryKeys": {
         "wallet_snapshots_id": {
           "name": "wallet_snapshots_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "tenant_page_sections": {
+      "name": "tenant_page_sections",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(UUID())"
+        },
+        "tenant_page_id": {
+          "name": "tenant_page_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "section_type": {
+          "name": "section_type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "section_data": {
+          "name": "section_data",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_master_section_id": {
+          "name": "source_master_section_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "uniq_tenant_section_order": {
+          "name": "uniq_tenant_section_order",
+          "columns": [
+            "tenant_page_id",
+            "sort_order"
+          ],
+          "isUnique": true
+        },
+        "idx_tenant_section_type": {
+          "name": "idx_tenant_section_type",
+          "columns": [
+            "section_type"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "tps_page_fk": {
+          "name": "tps_page_fk",
+          "tableFrom": "tenant_page_sections",
+          "tableTo": "tenants_pages",
+          "columnsFrom": [
+            "tenant_page_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "tps_master_section_fk": {
+          "name": "tps_master_section_fk",
+          "tableFrom": "tenant_page_sections",
+          "tableTo": "master_page_sections",
+          "columnsFrom": [
+            "source_master_section_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "tenant_page_sections_id": {
+          "name": "tenant_page_sections_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "master_pages": {
+      "name": "master_pages",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(UUID())"
+        },
+        "page_type": {
+          "name": "page_type",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "version": {
+          "name": "version",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
+        },
+        "is_home_page": {
+          "name": "is_home_page",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "idx_master_page_type": {
+          "name": "idx_master_page_type",
+          "columns": [
+            "page_type"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "master_pages_id": {
+          "name": "master_pages_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "master_page_sections": {
+      "name": "master_page_sections",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(UUID())"
+        },
+        "master_page_id": {
+          "name": "master_page_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "section_type": {
+          "name": "section_type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "section_data": {
+          "name": "section_data",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "uniq_master_section_order": {
+          "name": "uniq_master_section_order",
+          "columns": [
+            "master_page_id",
+            "sort_order"
+          ],
+          "isUnique": true
+        },
+        "idx_master_section_type": {
+          "name": "idx_master_section_type",
+          "columns": [
+            "section_type"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "mps_master_page_fk": {
+          "name": "mps_master_page_fk",
+          "tableFrom": "master_page_sections",
+          "tableTo": "master_pages",
+          "columnsFrom": [
+            "master_page_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "master_page_sections_id": {
+          "name": "master_page_sections_id",
           "columns": [
             "id"
           ]
