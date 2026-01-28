@@ -1,5 +1,6 @@
 import { seedPermissions } from './permissions.seed.js';
 import { seedRoles } from './role.seed.js';
+import { createDefaultDomain } from './tenantDoamin.seed.js';
 import { seedTenants } from './tenants.seed.js';
 import { seedUsers } from './user.seed.js';
 
@@ -16,8 +17,12 @@ async function run() {
     console.log('✅ Roles seeded successfully\n');
 
     console.log('➡️ Seeding users...');
-    await seedUsers(tenantId);
+    const userId = await seedUsers(tenantId);
     console.log('✅ Users seeded successfully\n');
+
+    console.log('➡️ Seeding tenant domains...');
+    await createDefaultDomain(tenantId, userId);
+    console.log('✅ Tenant domains seeded successfully\n');
 
     console.log('➡️ Seeding permissions...');
     await seedPermissions();

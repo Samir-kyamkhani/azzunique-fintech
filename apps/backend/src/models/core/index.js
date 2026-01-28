@@ -35,4 +35,3 @@ export * from './commissionEarning.schema.js';
 export * from './roleCommissionSetting.schema.js';
 export * from './userCommissionSetting.schema.js';
 export * from './walletSnapshot.schema.js';
-export * from './tenantPageSections.schema.js';
