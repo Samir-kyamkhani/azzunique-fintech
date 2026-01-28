@@ -16,6 +16,6 @@ export const useUpsertTenantWebsite = () =>
     mutationFn: async (payload) =>
       apiClient("/website", {
         method: "POST",
-        body: JSON.stringify(payload),
+        body: payload,
       }),
   });

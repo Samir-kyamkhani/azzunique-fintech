@@ -1,5 +1,12 @@
 import { z } from 'zod';
 
+const fileSchema = z
+  .object({
+    mimetype: z.enum(['image/jpeg', 'image/jpg', 'image/png', 'image/webp']),
+    size: z.number().max(2 * 1024 * 1024, 'Max file size is 2MB'),
+  })
+  .refine((file) => !!file, 'File is required');
+
 export const upsertTenantWebsiteSchema = z.object({
   brandName: z.string().min(2, 'Brand name is required').max(255).optional(),
 
@@ -21,4 +28,7 @@ export const upsertTenantWebsiteSchema = z.object({
     .string()
     .regex(/^[0-9+]{8,20}$/, 'Invalid phone number')
     .optional(),
+
+  logo: fileSchema.optional(),
+  favicon: fileSchema.optional(),
 });

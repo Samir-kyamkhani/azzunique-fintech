@@ -2,14 +2,17 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/apiClient";
 
 /* ================= GET ALL ================= */
-export const useEmployees = ({ page, limit, search, status }) =>
+export const useEmployees = ({ page, limit, search = "", status = "all" }) =>
   useQuery({
     queryKey: ["employees", page, limit, search, status],
     queryFn: () =>
       apiClient(
-        `/employees?page=${page}&limit=${limit}&search=${search}&status=${status}`
+        `/employees?page=${page}&limit=${limit}&search=${search}&status=${status}`,
       ),
     keepPreviousData: true,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
 /* ================= GET BY ID ================= */
@@ -18,6 +21,9 @@ export const useEmployeeById = (id) =>
     queryKey: ["employee", id],
     queryFn: () => apiClient(`/employees/${id}`),
     enabled: !!id,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
 /* ================= CREATE ================= */

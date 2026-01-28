@@ -27,4 +27,7 @@ export const useSmtpConfigById = () =>
   useQuery({
     queryKey: ["smtp-config"],
     queryFn: () => apiClient(`/smtp-configs`),
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });

@@ -149,7 +149,6 @@ class EmployeeService {
         and(
           eq(employeesTable.id, id),
           eq(employeesTable.tenantId, actor.tenantId),
-          sql`${employeesTable.deletedAt} IS NULL`,
         ),
       )
       .limit(1);
@@ -178,10 +177,7 @@ class EmployeeService {
 
     const offset = (page - 1) * limit;
 
-    const conditions = [
-      eq(employeesTable.tenantId, actor.tenantId),
-      sql`${employeesTable.deletedAt} IS NULL`,
-    ];
+    const conditions = [eq(employeesTable.tenantId, actor.tenantId)];
 
     if (search) {
       const term = `%${search}%`;
@@ -354,7 +350,7 @@ class EmployeeService {
     return this.findOne(id, actor);
   }
 
-  //  SOFT DELETE
+  // DELETE
   static async delete(id, actor) {
     const employee = await this.findOne(id, actor);
 
@@ -363,11 +359,7 @@ class EmployeeService {
     }
 
     await db
-      .update(employeesTable)
-      .set({
-        deletedAt: new Date(),
-        employeeStatus: 'DELETED',
-      })
+      .delete(employeesTable)
       .where(
         and(
           eq(employeesTable.id, id),

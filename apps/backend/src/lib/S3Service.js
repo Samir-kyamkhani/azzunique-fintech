@@ -70,7 +70,7 @@ class S3Service {
 
       return {
         key: s3Key, // 🔥 store this in DB
-        url: `https://${this.bucket}.s3.${env.s3.region}.amazonaws.com/${s3Key}`,
+        url: `https://${this.bucket}.s3.${envConfig.s3.region}.amazonaws.com/${s3Key}`,
       };
     } finally {
       // cleanup local file (always)
@@ -99,7 +99,7 @@ class S3Service {
   buildS3Url(key) {
     if (!key) return null;
 
-    return `https://${env.s3.bucket}.s3.${env.s3.region}.amazonaws.com/${key}`;
+    return `https://${envConfig.s3.bucket}.s3.${envConfig.s3.region}.amazonaws.com/${key}`;
   }
 
   // ================= HELPERS =================

@@ -17,8 +17,13 @@ import {
   useUpsertTenantWebsite,
 } from "@/hooks/useTenantWebsite";
 
-
-import { clearTenantWebsite, setTenantWebsite } from "@/store/tenantWebsiteSlice";
+import {
+  clearTenantWebsite,
+  setTenantWebsite,
+} from "@/store/tenantWebsiteSlice";
+import Image from "next/image";
+import ImagePreviewModal from "../ImagePreviewModal";
+import { toast } from "@/lib/toast";
 
 export default function TenantWebsiteClient() {
   const dispatch = useDispatch();
@@ -29,21 +34,35 @@ export default function TenantWebsiteClient() {
   const { data, isLoading } = useTenantWebsite();
   const { mutate, isPending } = useUpsertTenantWebsite();
 
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
+
+  const handleImagePreview = (url) => {
+    setPreviewImage(url);
+    setPreviewOpen(true);
+  };
+
   useEffect(() => {
     if (data?.data) dispatch(setTenantWebsite(data.data));
     else dispatch(clearTenantWebsite());
   }, [data, dispatch]);
 
-  const handleSubmit = (payload, setError) => {
-    mutate(payload, {
+  const handleSubmit = (formData, setError) => {
+    mutate(formData, {
       onSuccess: (res) => {
         dispatch(setTenantWebsite(res.data));
+        toast.success("Branding updated successfully");
         setOpenModal(false);
       },
-      onError: (err) =>
-        setError("root", {
-          message: err.message || "Failed to update branding",
-        }),
+      onError: (err) => {
+        if (err?.type === "FIELD") {
+          err.errors.forEach(({ field, message }) =>
+            setError(field, { message }),
+          );
+          return;
+        }
+        setError("root", { message: err?.message });
+      },
     });
   };
 
@@ -51,12 +70,14 @@ export default function TenantWebsiteClient() {
 
   return (
     <>
-      {/* HEADER */}
-      <div className="mb-8 flex justify-between">
+      {/* ===== HEADER ===== */}
+      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Branding Settings</h1>
-          <p className="text-muted-foreground">
-            Control tenant branding and support information
+          <h1 className="text-3xl font-bold tracking-tight">
+            Branding Settings
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Manage your tenant identity, visuals and support details
           </p>
         </div>
 
@@ -65,51 +86,125 @@ export default function TenantWebsiteClient() {
         </Button>
       </div>
 
-      {/* CONTENT */}
+      {/* ===== LOGO + FAVICON SECTION ===== */}
+      {(website?.logoUrl || website?.favIconUrl) && (
+        <div className="grid sm:grid-cols-2 gap-6 mb-8">
+          {website.logoUrl && (
+            <div
+              onClick={() => handleImagePreview(website.logoUrl)}
+              className="group cursor-pointer rounded-xl border bg-card p-5 flex items-center gap-4 hover:shadow-md transition"
+            >
+              <div className="h-16 w-16 rounded-lg border bg-muted flex items-center justify-center overflow-hidden">
+                <Image
+                  src={website.logoUrl}
+                  alt="Logo"
+                  width={64}
+                  height={64}
+                  className="object-contain group-hover:scale-105 transition"
+                />
+              </div>
+              <div>
+                <p className="font-medium">Brand Logo</p>
+                <p className="text-xs text-muted-foreground">
+                  Click to preview full size
+                </p>
+              </div>
+            </div>
+          )}
+
+          {website.favIconUrl && (
+            <div
+              onClick={() => handleImagePreview(website.favIconUrl)}
+              className="group cursor-pointer rounded-xl border bg-card p-5 flex items-center gap-4 hover:shadow-md transition"
+            >
+              <div className="h-12 w-12 rounded border bg-muted flex items-center justify-center overflow-hidden">
+                <Image
+                  src={website.favIconUrl}
+                  alt="Favicon"
+                  width={32}
+                  height={32}
+                  className="object-contain group-hover:scale-110 transition"
+                />
+              </div>
+              <div>
+                <p className="font-medium">Favicon</p>
+                <p className="text-xs text-muted-foreground">
+                  Used in browser tabs
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ===== BRAND INFO CARD ===== */}
       {website ? (
-        <InfoCard icon={Palette} title="Brand Information">
-          <div className="space-y-2">
-            <InfoItem
-              label="Brand Name"
-              value={website.brandName}
-              icon={Type}
-            />
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* LEFT MAIN INFO */}
+          <InfoCard
+            icon={Palette}
+            title="Brand Information"
+            className="lg:col-span-2"
+          >
+            <div className="space-y-3 grid grid-cols-1 md:grid-cols-2 w-full">
+              <InfoItem
+                label="Brand Name"
+                value={website.brandName}
+                icon={Type}
+              />
+              <InfoItem
+                label="Tag Line"
+                value={website.tagLine || "—"}
+                icon={Quote}
+              />
+              <InfoItem
+                label="Support Email"
+                value={website.supportEmail || "—"}
+                icon={Mail}
+                onClick={
+                  website.supportEmail
+                    ? () =>
+                        window.open(`mailto:${website.supportEmail}`, "_blank")
+                    : undefined
+                }
+              />
+              <InfoItem
+                label="Support Phone"
+                value={website.supportPhone || "—"}
+                icon={Phone}
+                onClick={
+                  website.supportPhone
+                    ? () => window.open(`tel:${website.supportPhone}`, "_blank")
+                    : undefined
+                }
+              />
+            </div>
+          </InfoCard>
 
-            <InfoItem
-              label="Tag Line"
-              value={website.tagLine || "—"}
-              icon={Quote}
-            />
-
-            <InfoItem
-              label="Support Email"
-              value={website.supportEmail || "—"}
-              icon={Mail}
-              onClick={
-                website.supportEmail
-                  ? () =>
-                      window.open(`mailto:${website.supportEmail}`, "_blank")
-                  : undefined
-              }
-            />
-
-            <InfoItem
-              label="Support Phone"
-              value={website.supportPhone || "—"}
-              icon={Phone}
-              onClick={
-                website.supportPhone
-                  ? () => window.open(`tel:${website.supportPhone}`, "_blank")
-                  : undefined
-              }
-            />
-          </div>
-        </InfoCard>
+          <InfoCard
+            icon={Palette}
+            title="Brand Colors"
+            className="lg:col-span-1 h-fit"
+          >
+            <div className="space-y-3">
+              <InfoItem
+                label="Primary"
+                value={website.primaryColor}
+                icon={Type}
+              />
+              <InfoItem
+                label="Secondary"
+                value={website.secondaryColor}
+                icon={Type}
+              />
+            </div>
+          </InfoCard>
+        </div>
       ) : (
         <DataTableSearchEmpty
           isEmpty
           emptyTitle="Branding not configured"
-          emptyDescription="Set up brand identity for your tenant"
+          emptyDescription="Set up your brand identity, logo and support details"
           emptyAction={
             <Button icon={Palette} onClick={() => setOpenModal(true)}>
               Setup Branding
@@ -118,7 +213,7 @@ export default function TenantWebsiteClient() {
         />
       )}
 
-      {/* MODAL */}
+      {/* ===== MODAL ===== */}
       {openModal && (
         <TenantWebsiteModal
           open={openModal}
@@ -128,6 +223,12 @@ export default function TenantWebsiteClient() {
           initialData={website}
         />
       )}
+
+      <ImagePreviewModal
+        open={previewOpen}
+        image={previewImage}
+        onClose={() => setPreviewOpen(false)}
+      />
     </>
   );
 }
