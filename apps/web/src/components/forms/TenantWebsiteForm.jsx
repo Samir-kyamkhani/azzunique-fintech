@@ -24,13 +24,13 @@ export default function TenantWebsiteForm({
     handleSubmit,
     clearErrors,
     setError,
-    formState: { errors, dirtyFields },
+    formState: { errors },
   } = useForm({
     defaultValues: {
       brandName: "",
       tagLine: "",
-      primaryColor: "#000000",
-      secondaryColor: "#ffffff",
+      primaryColor: "#f59e0a",
+      secondaryColor: "#262626",
       supportEmail: "",
       supportPhone: "",
       ...initialData,
