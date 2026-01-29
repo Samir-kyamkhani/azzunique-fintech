@@ -49,42 +49,19 @@ export default function Header() {
 
   const navigationLinks = [
     {
-      name: "Dashboard",
-      href: "/dashboard",
+      name: "Home",
+      href: "/",
       icon: Home,
     },
     {
-      name: "Team",
-      href: "/team",
+      name: "About Us",
+      href: "/about-us",
       icon: Users,
     },
     {
-      name: "Business",
-      href: "/business",
+      name: "Services",
+      href: "/services",
       icon: Building,
-    },
-    {
-      name: "Settings",
-      href: "/settings",
-      icon: Settings,
-    },
-  ];
-
-  const quickLinks = [
-    {
-      href: "/dashboard",
-      label: "Dashboard",
-      icon: Home, // ✅ Changed: Pass component, not JSX
-    },
-    {
-      href: "/settings",
-      label: "Settings",
-      icon: Settings, // ✅ Changed: Pass component, not JSX
-    },
-    {
-      href: "/profile",
-      label: "Profile",
-      icon: User, // ✅ Changed: Pass component, not JSX
     },
   ];
 
@@ -120,22 +97,20 @@ export default function Header() {
           </div>
 
           {/* Desktop Navigation */}
-          {isAuthenticated && (
-            <nav className="hidden md:flex items-center space-x-4">
-              {navigationLinks.map((link) => (
-                <Button
-                  key={link.name}
-                  href={link.href}
-                  variant="ghost"
-                  size="sm"
-                  className="text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/10"
-                  icon={link.icon}
-                >
-                  {link.name}
-                </Button>
-              ))}
-            </nav>
-          )}
+          <nav className="hidden md:flex items-center space-x-4">
+            {navigationLinks.map((link) => (
+              <Button
+                key={link.name}
+                href={link.href}
+                variant="ghost"
+                size="sm"
+                className="text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/10"
+                icon={link.icon}
+              >
+                {link.name}
+              </Button>
+            ))}
+          </nav>
 
           {/* Right side - User actions */}
           <div className="flex items-center space-x-3">
@@ -194,22 +169,6 @@ export default function Header() {
                             ₹{userData.balance.toLocaleString()}
                           </p>
                         </div>
-                      </div>
-
-                      {/* Quick Actions */}
-                      <div className="p-2">
-                        {quickLinks.map((link) => (
-                          <Button
-                            key={link.label}
-                            href={link.href}
-                            variant="ghost"
-                            className="w-full justify-start"
-                            icon={link.icon}
-                            onClick={() => setIsProfileOpen(false)}
-                          >
-                            {link.label}
-                          </Button>
-                        ))}
                       </div>
 
                       {/* Logout */}
