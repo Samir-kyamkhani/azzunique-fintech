@@ -15,6 +15,7 @@ import { Palette, Edit, Mail, Phone, Type, Quote } from "lucide-react";
 import {
   useTenantWebsite,
   useUpsertTenantWebsite,
+  useWebsite,
 } from "@/hooks/useTenantWebsite";
 
 import {
@@ -27,7 +28,7 @@ import { toast } from "@/lib/toast";
 
 export default function TenantWebsiteClient() {
   const dispatch = useDispatch();
-  const website = useSelector((state) => state.tenantWebsite.currentWebsite);
+  const website = useWebsite();
 
   const [openModal, setOpenModal] = useState(false);
 

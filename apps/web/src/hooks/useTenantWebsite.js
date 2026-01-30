@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/apiClient";
+import { useSelector } from "react-redux";
 
 export const useTenantWebsite = () =>
   useQuery({
@@ -19,3 +20,7 @@ export const useUpsertTenantWebsite = () =>
         body: payload,
       }),
   });
+
+export const useWebsite = () => {
+  return useSelector((state) => state.tenantWebsite?.currentWebsite);
+};

@@ -11,14 +11,34 @@ import {
   Youtube,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
-import { useSelector } from "react-redux";
+import { useWebsite } from "@/hooks/useTenantWebsite";
+
+/* ================= DEFAULT FALLBACK PAGES ================= */
+const DEFAULT_FOOTER_PAGES = {
+  company: [
+    { title: "About", slug: "about" },
+    { title: "Contact", slug: "contact" },
+  ],
+  resources: [
+    { title: "Help Center", slug: "help" },
+    { title: "Security", slug: "security" },
+    { title: "System Status", slug: "status" },
+  ],
+  legal: [
+    { title: "Privacy Policy", slug: "privacy" },
+    { title: "Terms", slug: "terms" },
+    { title: "Refund Policy", slug: "refund-policy" },
+    { title: "AML Policy", slug: "aml-policy" },
+    { title: "KYC Policy", slug: "kyc-policy" },
+  ],
+};
 
 export default function Footer() {
-  const currentYear = new Date().getFullYear();
-  const website = useSelector((state) => state.tenantWebsite?.currentWebsite);
+  const website = useWebsite();
 
   if (!website) return null;
 
+  /* ================= SOCIAL ================= */
   const social = website.socialLinks || {};
 
   const socialItems = [
@@ -29,42 +49,19 @@ export default function Footer() {
     { icon: Youtube, href: social.youtube, label: "YouTube" },
   ].filter((s) => s.href);
 
-  const linkSections = [
-    {
-      title: "Company",
-      links: [
-        { label: "About", href: "/about" },
-        { label: "Pricing", href: "/pricing" },
-        { label: "Contact", href: "/contact" },
-      ],
-    },
-    {
-      title: "Resources",
-      links: [
-        { label: "Help Center", href: "/help" },
-        { label: "Security", href: "/security" },
-        { label: "API Docs", href: "/api-docs" },
-        { label: "Status", href: "/status" },
-      ],
-    },
-    {
-      title: "Legal",
-      links: [
-        { label: "Privacy Policy", href: "/privacy" },
-        { label: "Terms of Service", href: "/terms" },
-        { label: "Refund Policy", href: "/refund-policy" },
-        { label: "AML Policy", href: "/aml-policy" },
-        { label: "KYC Policy", href: "/kyc-policy" },
-      ],
-    },
-  ];
+  /* ================= PAGE MERGE SYSTEM ================= */
+  const tenantPages = website.footerPages || {};
+
+  const companyPages = tenantPages.company || DEFAULT_FOOTER_PAGES.company;
+  const resourcePages = tenantPages.resources || DEFAULT_FOOTER_PAGES.resources;
+  const legalPages = tenantPages.legal || DEFAULT_FOOTER_PAGES.legal;
 
   return (
     <footer className="bg-card text-card-foreground border-t border-border">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="py-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
+      <div className="px-8">
+        <div className="py-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}
-          <div className="space-y-4">
+          <div className="space-y-4 flex flex-col">
             <h2 className="text-2xl font-bold text-foreground">
               {website.brandName}
             </h2>
@@ -89,72 +86,43 @@ export default function Footer() {
           </div>
 
           {/* Company */}
-          <div className="space-y-4">
-            <h3 className="font-semibold text-foreground">Company</h3>
-            <div className="flex flex-col gap-2 text-sm">
-              <Button
-                href="/about"
-                variant="link"
-                className="p-0 h-auto text-muted-foreground"
-              >
-                About
-              </Button>
-              <Button
-                href="/pricing"
-                variant="link"
-                className="p-0 h-auto text-muted-foreground"
-              >
-                Pricing
-              </Button>
-              <Button
-                href="/contact"
-                variant="link"
-                className="p-0 h-auto text-muted-foreground"
-              >
-                Contact
-              </Button>
+          <div className="space-y-4 flex flex-col justify-start items-start">
+            <h3 className="font-semibold text-foreground pl-3">Company</h3>
+            <div className="flex flex-col items-start text-sm">
+              {companyPages.map((page) => (
+                <Button
+                  key={page.slug}
+                  href={`/${page.slug}`}
+                  variant="link"
+                  className="p-0 h-auto text-muted-foreground"
+                >
+                  {page.title}
+                </Button>
+              ))}
             </div>
           </div>
 
           {/* Resources */}
-          <div className="space-y-4">
-            <h3 className="font-semibold text-foreground">Resources</h3>
-            <div className="flex flex-col gap-2 text-sm">
-              <Button
-                href="/help"
-                variant="link"
-                className="p-0 h-auto text-muted-foreground"
-              >
-                Help Center
-              </Button>
-              <Button
-                href="/security"
-                variant="link"
-                className="p-0 h-auto text-muted-foreground"
-              >
-                Security
-              </Button>
-              <Button
-                href="/api-docs"
-                variant="link"
-                className="p-0 h-auto text-muted-foreground"
-              >
-                API Documentation
-              </Button>
-              <Button
-                href="/status"
-                variant="link"
-                className="p-0 h-auto text-muted-foreground"
-              >
-                System Status
-              </Button>
+          <div className="space-y-4 flex flex-col justify-start items-start">
+            <h3 className="font-semibold text-foreground pl-3">Resources</h3>
+            <div className="flex flex-col items-start text-sm">
+              {resourcePages.map((page) => (
+                <Button
+                  key={page.slug}
+                  href={`/${page.slug}`}
+                  variant="link"
+                  className="-p-3 h-auto text-muted-foreground"
+                >
+                  {page.title}
+                </Button>
+              ))}
             </div>
           </div>
 
           {/* Social */}
-          <div className="space-y-4 lg:text-right">
+          <div className="space-y-4 flex flex-col items-start lg:items-end">
             <h3 className="font-semibold text-foreground">Connect</h3>
-            <div className="flex gap-3 lg:justify-end">
+            <div className="flex gap-3">
               {socialItems.map((s) => (
                 <Button
                   key={s.label}
@@ -177,25 +145,20 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Bottom */}
-        <div className="py-6 border-t border-border text-center text-muted-foreground text-sm">
-          © {currentYear} {website.brandName}. All rights reserved.
-          <div className="mt-4 flex flex-wrap justify-center gap-4 text-xs">
-            <Button href="/privacy" variant="link" className="p-0 h-auto">
-              Privacy Policy
-            </Button>
-            <Button href="/terms" variant="link" className="p-0 h-auto">
-              Terms
-            </Button>
-            <Button href="/refund-policy" variant="link" className="p-0 h-auto">
-              Refund
-            </Button>
-            <Button href="/aml-policy" variant="link" className="p-0 h-auto">
-              AML
-            </Button>
-            <Button href="/kyc-policy" variant="link" className="p-0 h-auto">
-              KYC
-            </Button>
+        {/* Bottom Legal */}
+        <div className="py-8 border-t border-border text-center text-muted-foreground text-sm flex flex-col items-center gap-4">
+          © 2026 {website.brandName}. All rights reserved.
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs">
+            {legalPages.map((page) => (
+              <Button
+                key={page.slug}
+                href={`/${page.slug}`}
+                variant="link"
+                className="p-0 h-auto"
+              >
+                {page.title}
+              </Button>
+            ))}
           </div>
         </div>
       </div>

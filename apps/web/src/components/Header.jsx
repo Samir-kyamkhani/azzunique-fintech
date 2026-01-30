@@ -2,12 +2,10 @@
 
 import { useState } from "react";
 import {
-  Shield,
   Bell,
   User,
   LogOut,
   Home,
-  Settings,
   Users,
   Building,
   Wallet,
@@ -19,6 +17,9 @@ import Button from "@/components/ui/Button";
 import Link from "next/link";
 import { useLogout } from "@/hooks/useAuth";
 import dynamic from "next/dynamic";
+import { useWebsite } from "@/hooks/useTenantWebsite";
+import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 export default function Header() {
   const ThemeToggle = dynamic(
@@ -32,8 +33,6 @@ export default function Header() {
   const router = useRouter();
 
   const { isAuthenticated, user } = useSelector((state) => state.auth || {});
-
-  const userType = user?.type || "USER";
 
   const handleLogout = () => {
     logoutMutate(undefined, {
@@ -65,32 +64,26 @@ export default function Header() {
     },
   ];
 
-  // Static user data for UI (you can replace with actual user data)
-  const userData = {
-    name: user?.name || user?.identifier || "User",
-    email: user?.email || "user@example.com",
-    role: userType === "EMPLOYEE" ? "Employee" : "Business Admin",
-    balance: 12500.75,
-  };
+  const website = useWebsite();
 
   return (
-    <header className="sticky top-0 z-50 bg-gradient-theme shadow-lg-border">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 bg-gradient-theme">
+      <div className=" px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
             <Link href="/" className="shrink-0 flex items-center">
-              <div className="p-2 bg-primary-foreground/20 rounded-border mr-3">
-                <Shield className="h-6 w-6 text-primary-foreground" />
-              </div>
-
-              <span className="text-primary-foreground font-bold text-xl">
-                SecurePortal
-              </span>
-
-              {isAuthenticated && (
-                <span className="ml-3 px-2 py-1 text-xs bg-primary-foreground/20 text-primary-foreground rounded-full">
-                  {userType === "EMPLOYEE" ? "Employee" : "User"}
+              {website?.logoUrl ? (
+                <Image
+                  width={100}
+                  height={100}
+                  src={website?.logoUrl}
+                  alt={"Logo"}
+                  className="h-8 w-8 mr-2 object-contain"
+                />
+              ) : (
+                <span className="text-primary-foreground font-bold text-xl">
+                  {website?.brandName}
                 </span>
               )}
             </Link>
@@ -112,83 +105,19 @@ export default function Header() {
             ))}
           </nav>
 
-          {/* Right side - User actions */}
           <div className="flex items-center space-x-3">
-            {/* Theme Toggle Button */}
             <ThemeToggle />
-
             {isAuthenticated ? (
               <>
-                {/* Notifications */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/10 relative"
+                <Button href={"/dashboard"}>Dashboard</Button>
+                <button
+                  onClick={handleLogout}
+                  className={"bg-red-600 py-2 px-3 rounded-sm"}
                 >
-                  <Bell className="h-5 w-5" />
-                  <span className="absolute top-1 right-1 h-2 w-2 bg-destructive rounded-full"></span>
-                </Button>
-
-                {/* Profile dropdown - Only for authenticated users */}
-                <div className="relative">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-primary-foreground/90 hover:text-primary-foreground hover:bg-primary-foreground/10"
-                    onClick={() => setIsProfileOpen(!isProfileOpen)}
-                    icon={User}
-                  >
-                    <span className="hidden md:inline">{userData.name}</span>
-                  </Button>
-
-                  {isProfileOpen && (
-                    <div className="absolute right-0 mt-2 w-64 bg-popover rounded-lg-border shadow-lg border border-border z-50">
-                      {/* User Info */}
-                      <div className="p-4 border-b border-border">
-                        <div className="flex items-center">
-                          <div className="h-10 w-10 bg-gradient-theme rounded-full flex items-center justify-center text-primary-foreground font-semibold">
-                            {userData.name.charAt(0)}
-                          </div>
-                          <div className="ml-3">
-                            <p className="font-medium text-popover-foreground">
-                              {userData.name}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {userData.email}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="mt-4 p-3 bg-accent rounded-border">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">
-                              Wallet Balance
-                            </span>
-                            <Wallet className="h-4 w-4 text-muted-foreground" />
-                          </div>
-                          <p className="text-lg font-bold text-popover-foreground mt-1">
-                            ₹{userData.balance.toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Logout */}
-                      <div className="p-3 border-t border-border">
-                        <Button
-                          variant="default"
-                          className="w-full"
-                          icon={LogOut}
-                          loading={isPending}
-                          onClick={handleLogout}
-                        >
-                          Sign Out
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                  Logout
+                </button>
               </>
             ) : (
-              // For non-authenticated users (public header)
               <div className="flex items-center space-x-3">
                 <Button
                   href="/login"

@@ -1,5 +1,5 @@
 import { db } from '../database/core/core-db.js';
-import { tenantsWebsitesTable } from '../models/core/index.js';
+import { tenantSocialMediaTable, tenantsWebsitesTable } from '../models/core/index.js';
 import { eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import { ApiError } from '../lib/ApiError.js';
@@ -8,19 +8,41 @@ import S3Service from '../lib/S3Service.js';
 export class TenantWebsiteService {
   // ================= GET BY TENANT =================
   static async getByTenantId(tenantId) {
-    const [website] = await db
-      .select()
+    const [data] = await db
+      .select({
+        website: tenantsWebsitesTable,
+        social: tenantSocialMediaTable,
+      })
       .from(tenantsWebsitesTable)
+      .leftJoin(
+        tenantSocialMediaTable,
+        eq(tenantSocialMediaTable.tenantWebsiteId, tenantsWebsitesTable.id),
+      )
       .where(eq(tenantsWebsitesTable.tenantId, tenantId))
       .limit(1);
 
-    if (!website) return null;
+    if (!data) return null;
+
+    const { website, social } = data;
 
     return {
       ...website,
+
+      // S3 Images
       logoUrl: website.logoUrl ? S3Service.buildS3Url(website.logoUrl) : null,
       favIconUrl: website.favIconUrl
         ? S3Service.buildS3Url(website.favIconUrl)
+        : null,
+
+      // Social Media Object
+      socialLinks: social
+        ? {
+            facebook: social.facebookUrl || null,
+            twitter: social.twitterUrl || null,
+            instagram: social.instagramUrl || null,
+            linkedin: social.linkedInUrl || null,
+            youtube: social.youtubeUrl || null,
+          }
         : null,
     };
   }
