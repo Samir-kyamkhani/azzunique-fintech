@@ -31,3 +31,15 @@ export const createRoleCommissionSchema = z.object({
   roleId: z.string().uuid(),
   ...baseCommissionSchema,
 });
+
+export const commissionListQuerySchema = z.object({
+  type: z.enum(['USER', 'ROLE', 'ALL']).optional().default('ALL'),
+
+  search: z.string().trim().optional().default(''),
+
+  isActive: z.enum(['true', 'false']).optional(),
+
+  page: z.string().regex(/^\d+$/).transform(Number).optional().default('1'),
+
+  limit: z.string().regex(/^\d+$/).transform(Number).optional().default('10'),
+});

@@ -27,6 +27,9 @@ export const useTenantById = (tenantId) =>
     queryKey: ["tenant", tenantId],
     queryFn: () => apiClient(`/tenants/${tenantId}`),
     enabled: !!tenantId,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
 /* ================= LIST ================= */
@@ -35,7 +38,9 @@ export const useTenants = ({ page, limit, search, status }) =>
     queryKey: ["tenants", page, limit, search, status],
     queryFn: () =>
       apiClient(
-        `/tenants?page=${page}&limit=${limit}&search=${search}&status=${status}`
+        `/tenants?page=${page}&limit=${limit}&search=${search}&status=${status}`,
       ),
-    keepPreviousData: true, // smooth pagination
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });

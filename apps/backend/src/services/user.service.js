@@ -128,6 +128,8 @@ class UserService {
     const ownerUserId = isCreatingFirstOwner ? null : actor.id;
 
     const password = generatePassword();
+    console.log(password);
+
     const pin = generateTransactionPin();
     const userId = randomUUID();
 

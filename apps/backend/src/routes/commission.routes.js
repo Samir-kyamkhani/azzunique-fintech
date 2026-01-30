@@ -8,11 +8,13 @@ import { PermissionsRegistry } from '../lib/PermissionsRegistry.js';
 import {
   setUserCommission,
   setRoleCommission,
+  getAllCommissionList,
 } from '../controllers/commission.controller.js';
 
 import {
   createUserCommissionSchema,
   createRoleCommissionSchema,
+  commissionListQuerySchema,
 } from '../validators/commission.schema.js';
 
 const router = Router();
@@ -31,6 +33,13 @@ router.post(
   PermissionMiddleware(PermissionsRegistry.COMMISSION.SET_ROLE_RULE),
   validate({ body: createRoleCommissionSchema }),
   asyncHandler(setRoleCommission),
+);
+
+router.get(
+  '/',
+  PermissionMiddleware(PermissionsRegistry.COMMISSION.READ),
+  validate({ query: commissionListQuerySchema }),
+  asyncHandler(getAllCommissionList),
 );
 
 export default router;

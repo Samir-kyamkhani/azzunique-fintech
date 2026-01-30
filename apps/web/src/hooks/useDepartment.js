@@ -7,6 +7,9 @@ export const useDepartments = () =>
     queryKey: ["departments"],
     queryFn: () => apiClient("/departments"),
     staleTime: 5 * 60 * 1000,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
 /* ================= GET BY ID ================= */
@@ -15,6 +18,9 @@ export const useDepartmentById = (id) =>
     queryKey: ["department", id],
     queryFn: () => apiClient(`/departments/${id}`),
     enabled: !!id,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
 /* ================= CREATE ================= */

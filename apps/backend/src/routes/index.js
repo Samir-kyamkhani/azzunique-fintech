@@ -13,6 +13,7 @@ import tenantWebsiteRoutes from './tenantWebsite.routes.js';
 import tenantSocialMediaRoutes from './tenantSocialMedia.routes.js';
 import rechargeRoutes from './recharge/recharge.routes.js';
 import platformRoutes from './platform.routes.js';
+import commisionRoutes from './commission.routes.js';
 
 const router = Router();
 
@@ -30,5 +31,6 @@ router.use('/website', tenantWebsiteRoutes);
 router.use('/social-media', tenantSocialMediaRoutes);
 router.use('/recharge', rechargeRoutes);
 router.use('/platform', platformRoutes);
+router.use('/commission', commisionRoutes);
 
 export default router;
