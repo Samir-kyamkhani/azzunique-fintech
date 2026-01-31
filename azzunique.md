@@ -1,211 +1,204 @@
+1️⃣ platform_services
+👉 “System kya-kya service deta hai?”
+platform_services
 
----
+🔹 Example rows
+code	name
+RECHARGE	Mobile Recharge
+DMT	Money Transfer
+BBPS	Bill Payment
+🔹 Kaun banata hai?
 
-## 1️⃣ platform_services
+✅ AZZUNIQUE (Super Admin)
+(seeding time ya admin panel se)
 
-### 👉 Purpose  
-**System kya-kya services provide karta hai**
+🔹 Kaun use karta hai?
 
-### 📦 Table
-`platform_services`
+tenant_services
 
-### 🔹 Columns (suggested)
+service_providers
 
-| column | type | description |
-|------|------|-------------|
-| id | uuid | primary key |
-| code | string | unique service code |
-| name | string | human readable name |
-| isActive | boolean | system level toggle |
+Runtime service resolution (RechargeRuntimeService)
 
-### 🔹 Example Data
+🔹 Kyu zaroori hai?
 
-| code | name |
-|-----|-----|
-| RECHARGE | Mobile Recharge |
-| DMT | Money Transfer |
-| BBPS | Bill Payment |
+Ye master list hai
+Bina iske tenant ya provider kuch enable hi nahi kar sakte
 
-### 👤 Managed By
-✅ **AZZUNIQUE (Super Admin)**
+2️⃣ platform_service_features
+👉 “Ek service ke andar kya-kya options/features hain?”
+platform_service_features
 
-### ❓ Why needed?
-- Master service list
-- No tenant / provider can work without this
+🔹 Example
 
----
+Recharge service ke features:
 
-## 2️⃣ platform_service_features
+service	feature
+RECHARGE	PREPAID
+RECHARGE	POSTPAID
+RECHARGE	DTH
 
-### 👉 Purpose  
-**Service ke andar available features / modes**
+DMT ke:
 
-### 📦 Table
-`platform_service_features`
+service	feature
+DMT	IMPS
+DMT	NEFT
+🔹 Kaun banata hai?
 
-### 🔹 Columns
+✅ AZZUNIQUE
 
-| column | type |
-|------|------|
-| id | uuid |
-| platformServiceId | fk |
-| featureCode | string |
-| isActive | boolean |
+🔹 Kaun use karta hai?
 
-### 🔹 Example
+Commission rules
 
-| service | feature |
-|------|--------|
-| RECHARGE | PREPAID |
-| RECHARGE | POSTPAID |
-| RECHARGE | DTH |
-| DMT | IMPS |
-| DMT | NEFT |
+Provider capability mapping
 
-### 👤 Managed By
-✅ **AZZUNIQUE**
+Feature-wise enable/disable
 
-### ❓ Why separate table?
-- Commission
-- Pricing
-- Provider support  
-👉 sab **feature-level** pe change hota hai
+🔹 Kyu alag table?
 
----
+Kyuki commission, provider support, pricing
+feature ke hisaab se alag hota hai
 
-## 3️⃣ service_providers
 
-### 👉 Purpose  
-**Kaunsa vendor kaunsi service deta hai**
+3️⃣ service_providers
+👉 “Kaunsa vendor kaunsi service deta hai?”
+service_providers
 
-### 📦 Table
-`service_providers`
+🔹 Example
+platformService	provider
+RECHARGE	MPLAN
+RECHARGE	RECHARGE_EXCHANGE
+DMT	PAYTM
+DMT	ICICI
+🔹 handler ka matlab?
+plugins/recharge/mplan.plugin.js
 
-### 🔹 Columns
 
-| column | type |
-|------|------|
-| id | uuid |
-| platformServiceId | fk |
-| providerCode | string |
-| handler | string |
-| isActive | boolean |
+Ye batata hai code mein kaunsa plugin use hoga
 
-### 🔹 Example
+🔹 Kaun banata hai?
 
-| service | provider | handler |
-|------|----------|---------|
-| RECHARGE | MPLAN | plugins/recharge/mplan.plugin.js |
-| RECHARGE | RECHARGE_EXCHANGE | plugins/recharge/rex.plugin.js |
-| DMT | PAYTM | plugins/dmt/paytm.plugin.js |
+✅ AZZUNIQUE
 
-### 👤 Managed By
-✅ **AZZUNIQUE**
+🔹 Kyu zaroori?
 
-### ❓ Why needed?
-- Multiple vendors per service
-- Fallback & failover
-- Cost optimization
+Same service ke multiple vendors ho sakte hain
+(fallback, pricing, downtime handling)
 
----
 
-## 4️⃣ service_provider_features
+4️⃣ service_provider_features
+👉 “Kaunsa provider kaunsa feature support karta hai?”
+service_provider_features
 
-### 👉 Purpose  
-**Provider kis feature ko support karta hai**
+🔹 Example
+provider	feature
+MPLAN	PREPAID
+MPLAN	DTH
+RECHARGE_EXCHANGE	PREPAID
+🔹 Kaun banata hai?
 
-### 📦 Table
-`service_provider_features`
+✅ AZZUNIQUE
 
-### 🔹 Columns
+🔹 Runtime mein kya kaam?
 
-| column | type |
-|------|------|
-| id | uuid |
-| serviceProviderId | fk |
-| featureCode | string |
-| isActive | boolean |
+Validate: “ye provider ye feature kar sakta hai ya nahi”
 
-### 🔹 Example
+Future fallback logic
 
-| provider | feature |
-|--------|---------|
-| MPLAN | PREPAID |
-| MPLAN | DTH |
-| RECHARGE_EXCHANGE | PREPAID |
+🔹 Kyu zaroori?
 
-### 👤 Managed By
-✅ **AZZUNIQUE**
+Sab providers sab feature nahi dete
+Ye table truth source hai
 
-### ❓ Why needed?
-- Validation layer
-- Truth source for capabilities
 
----
+5️⃣ tenant_services
+👉 “Kaunsa tenant kaunsi service use kar sakta hai?”
+tenant_services
 
-## 5️⃣ tenant_services
+🔹 Example
+tenant	service	enabled
+WL1	RECHARGE	✅
+WL1	DMT	❌
+🔹 Kaun banata hai?
 
-### 👉 Purpose  
-**Tenant kaunsa service use kar sakta hai**
+✅ Tenant Owner
+(AZZUNIQUE → Reseller → WhiteLabel)
 
-### 📦 Table
-`tenant_services`
+🔹 Runtime use
+RechargeRuntimeService.resolve()
 
-### 🔹 Columns
 
-| column | type |
-|------|------|
-| id | uuid |
-| tenantId | fk |
-| platformServiceId | fk |
-| isEnabled | boolean |
+Agar chain mein kahin bhi isEnabled=false → service block
 
-### 🔹 Example
+🔹 Kyu?
 
-| tenant | service | enabled |
-|------|---------|--------|
-| WL1 | RECHARGE | true |
-| WL1 | DMT | false |
+Hierarchy control
+Parent disable kare to child bhi disable
 
-### 👤 Managed By
-✅ **Tenant Owner / Parent Tenant**
 
-### ❓ Why needed?
-- Hierarchy control
-- Parent disable → child auto disable
+6️⃣ tenant_service_providers
+👉 “Tenant kis provider ke saath kaam karega?”
+tenant_service_providers
 
----
+🔹 Example
+tenant	service	provider	config
+WL1	RECHARGE	MPLAN	apiKey
+RESELLER	RECHARGE	RECHARGE_EXCHANGE	token
+🔹 config kya hai?
 
-## 6️⃣ tenant_service_providers
+Provider-specific secrets:
 
-### 👉 Purpose  
-**Tenant kis vendor ke saath kaam karega**
-
-### 📦 Table
-`tenant_service_providers`
-
-### 🔹 Columns
-
-| column | type |
-|------|------|
-| id | uuid |
-| tenantId | fk |
-| platformServiceId | fk |
-| serviceProviderId | fk |
-| config | json |
-| isActive | boolean |
-
-### 🔹 Example
-
-| tenant | service | provider |
-|------|--------|---------|
-| WL1 | RECHARGE | MPLAN |
-| RESELLER | RECHARGE | RECHARGE_EXCHANGE |
-
-### 🔐 Config Example
-
-```json
 {
   "apiKey": "xxxx",
   "token": "yyyy"
 }
+
+🔹 Kaun banata hai?
+
+✅ Tenant Owner / Parent Tenant
+
+🔹 Runtime mein kya hota hai?
+getRechargePlugin(providerId, config)
+
+
+Top-most tenant ka provider win karta hai
+
+🔹 Kyu?
+
+Multi-tenant SaaS flexibility
+Har tenant apna vendor choose kar sake
+
+
+🔁 RUNTIME FLOW (Recharge example)
+User recharge karta hai
+↓
+RechargeRuntimeService.resolve()
+↓
+tenant_services → enabled check (chain)
+↓
+tenant_service_providers → provider pick
+↓
+service_providers → plugin handler
+↓
+plugin.recharge()
+
+🧑‍💼 KAUN KYA BANATA HAI (CLEAR TABLE)
+Role	Tables
+AZZUNIQUE	platform_services, features, providers
+AZZUNIQUE	provider_features
+Tenant Owner	tenant_services
+Tenant Owner	tenant_service_providers
+Runtime	sirf READ
+🏁 FINAL SUMMARY (YAAD RAKHO)
+
+platform_ = system definition*
+
+service_provider_ = vendor capability*
+
+tenant_ = business decision*
+
+runtime kabhi insert/update nahi karta
+
+Tumne bahut clean, scalable SaaS design banaya hai —
+ye structure Railway / Stripe-level systems mein use hota hai.
