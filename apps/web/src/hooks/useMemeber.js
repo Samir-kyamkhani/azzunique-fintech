@@ -1,7 +1,6 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/apiClient";
 
-/* GET MEMBERS */
 export const useGetMembers = ({ page, limit, search, status }) =>
   useQuery({
     queryKey: ["members", page, limit, search, status],
@@ -9,12 +8,11 @@ export const useGetMembers = ({ page, limit, search, status }) =>
       apiClient(
         `/members?page=${page}&limit=${limit}${
           search ? `&search=${search}` : ""
-        }${status && status !== "all" ? `&status=${status.toUpperCase()}` : ""}`
+        }${status && status !== "all" ? `&status=${status}` : ""}`,
       ),
-    keepPreviousData: true, // 🔥 important for pagination UX
+    keepPreviousData: true,
   });
 
-/* GET MEMBER BY ID */
 export const useGetMemberById = (id) =>
   useQuery({
     queryKey: ["member", id],
@@ -22,7 +20,6 @@ export const useGetMemberById = (id) =>
     enabled: !!id,
   });
 
-/* CREATE MEMBER */
 export const useCreateMember = () =>
   useMutation({
     mutationFn: (payload) =>
@@ -32,7 +29,6 @@ export const useCreateMember = () =>
       }),
   });
 
-/* UPDATE MEMBER */
 export const useUpdateMember = () =>
   useMutation({
     mutationFn: ({ id, data }) => {
@@ -51,10 +47,23 @@ export const useUpdateMember = () =>
     },
   });
 
-/* GET DESCENDANTS */
-export const useGetMemberDescendants = (id) =>
+export const useGetMemberDescendants = (id, query = {}) =>
   useQuery({
-    queryKey: ["member-descendants", id],
-    queryFn: () => apiClient(`/members/${id}/descendants`),
+    queryKey: ["member-descendants", id, query],
+    queryFn: () =>
+      apiClient(
+        `/members/${id}/descendants?page=${query.page ?? 1}&limit=${
+          query.limit ?? 20
+        }`,
+      ),
     enabled: !!id,
+  });
+
+export const useAssignMemberPermissions = () =>
+  useMutation({
+    mutationFn: ({ id, permissions }) =>
+      apiClient(`/members/${id}/permissions`, {
+        method: "POST",
+        body: JSON.stringify({ permissions }),
+      }),
   });
