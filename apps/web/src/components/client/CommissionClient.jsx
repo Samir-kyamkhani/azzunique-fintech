@@ -2,19 +2,25 @@
 
 import { useState } from "react";
 import { RefreshCw, Percent, Users, ShieldCheck } from "lucide-react";
+import {
+  useCommissionList,
+  useSetUserCommission,
+  useSetRoleCommission,
+} from "@/hooks/useCommission";
 
-import { useCommissionList } from "@/hooks/useCommission";
 import CommissionTable from "@/components/tables/CommissionTable";
+import CommissionModal from "@/components/modals/CommissionModal";
 import QuickStats from "@/components/QuickStats";
 import Button from "@/components/ui/Button";
 import { useDebounce } from "@/hooks/useDebounce";
-
-/* ================= CLIENT ================= */
 
 export default function CommissionClient() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("ALL");
   const [page, setPage] = useState(1);
+
+  const [openModal, setOpenModal] = useState(false);
+  const [editingRule, setEditingRule] = useState(null);
 
   const debouncedSearch = useDebounce(search, 400);
   const perPage = 10;
@@ -26,12 +32,13 @@ export default function CommissionClient() {
     search: debouncedSearch,
   });
 
-  /* ================= NORMALIZE ================= */
+  const { mutate: setUserRule, isPending: userPending } =
+    useSetUserCommission();
+  const { mutate: setRoleRule, isPending: rolePending } =
+    useSetRoleCommission();
 
   const commissions = data?.data || [];
   const meta = data?.meta || {};
-
-  /* ================= STATS ================= */
 
   const stats = [
     {
@@ -57,7 +64,52 @@ export default function CommissionClient() {
     },
   ];
 
-  /* ================= RENDER ================= */
+  const handleAddRule = () => {
+    setEditingRule(null);
+    setOpenModal(true);
+  };
+
+  const handleEditRule = (rule) => {
+    setEditingRule({
+      ...rule,
+      isActive: rule.isActive === "ACTIVE",
+    });
+    setOpenModal(true);
+  };
+
+  // 🔥 MAIN FIX HERE
+  const handleSubmitRule = (formData, setError) => {
+    const onError = (err) => setError("root", { message: err.message });
+
+    // EDIT MODE
+    if (editingRule) {
+      if (editingRule.type === "USER") {
+        setUserRule(
+          { ...formData, userId: editingRule.userId },
+          { onSuccess: refetch, onError }
+        );
+      } else {
+        setRoleRule(
+          { ...formData, roleId: editingRule.roleId },
+          { onSuccess: refetch, onError }
+        );
+      }
+    }
+
+    // CREATE MODE
+    else {
+      if (formData.type === "USER" && formData.userId) {
+        setUserRule(formData, { onSuccess: refetch, onError });
+      } else if (formData.type === "ROLE" && formData.roleId) {
+        setRoleRule(formData, { onSuccess: refetch, onError });
+      } else {
+        setError("root", { message: "Select User or Role" });
+        return;
+      }
+    }
+
+    setOpenModal(false);
+  };
 
   return (
     <>
@@ -94,8 +146,23 @@ export default function CommissionClient() {
           setTypeFilter(v);
           setPage(1);
         }}
-        loading={isLoading}
+        onAdd={handleAddRule}
+        onEdit={handleEditRule}
       />
+
+      {openModal && (
+        <CommissionModal
+          open={openModal}
+          onClose={() => {
+            setOpenModal(false);
+            setEditingRule(null);
+          }}
+          onSubmit={handleSubmitRule}
+          isEditing={Boolean(editingRule)}
+          isPending={userPending || rolePending}
+          initialData={editingRule}
+        />
+      )}
     </>
   );
 }

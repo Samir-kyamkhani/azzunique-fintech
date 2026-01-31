@@ -6,8 +6,8 @@ import TableHeader from "./core/TableHeader";
 import TableBody from "./core/TableBody";
 import TablePagination from "./core/TablePagination";
 
-const commissionColumns = [
-  { key: "type", label: "Type" }, // USER / ROLE
+const columns = [
+  { key: "type", label: "Type" },
   { key: "name", label: "User / Role" },
   { key: "tenantNumber", label: "Tenant Number" },
   { key: "userNumber", label: "User Number" },
@@ -20,45 +20,29 @@ const commissionColumns = [
   { key: "createdAt", label: "Created At" },
   { key: "actions", label: "Actions" },
 ];
-const formatCommissionData = (rows = []) =>
+
+const formatRows = (rows = []) =>
   rows.map((r) => ({
-    id: r.id,
-
-    type: r.type,
-
+    ...r,
     name:
       r.type === "USER"
         ? `${r.firstName || ""} ${r.lastName || ""}`
         : r.roleCode || "-",
-
     tenantNumber: r.tenantNumber || "-",
     userNumber: r.userNumber || "-",
-
-    tenantName: r.tenantName || "-",
-
     commission:
       r.commissionType === "PERCENTAGE"
         ? `${r.commissionValue}%`
         : `₹${r.commissionValue}`,
-
     surcharge:
       r.surchargeType === "PERCENTAGE"
         ? `${r.surchargeValue}%`
         : `₹${r.surchargeValue}`,
-
     gst: r.gstApplicable ? `${r.gstRate}%` : "No GST",
-
     maxCommissionValue: r.maxCommissionValue ? `₹${r.maxCommissionValue}` : "-",
-
     isActive: r.isActive ? "ACTIVE" : "INACTIVE",
-
     createdAt: new Date(r.createdAt).toLocaleDateString(),
   }));
-const typeOptions = [
-  { label: "All", value: "ALL" },
-  { label: "User", value: "USER" },
-  { label: "Role", value: "ROLE" },
-];
 
 export default function CommissionTable({
   commissions,
@@ -71,9 +55,7 @@ export default function CommissionTable({
   typeFilter,
   onTypeFilterChange,
   onAdd,
-  onView,
   onEdit,
-  onDelete,
 }) {
   return (
     <TableShell>
@@ -82,21 +64,22 @@ export default function CommissionTable({
         subtitle={`${total} rules found`}
         search={search}
         setSearch={onSearch}
-        searchPlaceholder="Search user or role…"
         filterValue={typeFilter}
         onFilterChange={onTypeFilterChange}
-        filterOptions={typeOptions}
-        filterPlaceholder="Rule Type"
+        filterOptions={[
+          { label: "All", value: "ALL" },
+          { label: "User", value: "USER" },
+          { label: "Role", value: "ROLE" },
+        ]}
         addLabel="Add Rule"
         addIcon={Percent}
+        onAdd={onAdd}
       />
 
       <TableBody
-        columns={commissionColumns}
-        data={formatCommissionData(commissions)}
-        onView={onView}
+        columns={columns}
+        data={formatRows(commissions)}
         onEdit={onEdit}
-        onDelete={onDelete}
       />
 
       <TablePagination
