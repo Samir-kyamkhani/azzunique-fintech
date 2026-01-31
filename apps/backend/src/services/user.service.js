@@ -205,7 +205,7 @@ class UserService {
     ];
 
     if (query.status) {
-      conditions.push(eq(usersTable.userStatus, query.status));
+      conditions.push(eq(usersTable.userStatus, query.status.toUpperCase()));
     }
 
     if (query.search) {
@@ -215,7 +215,11 @@ class UserService {
           like(usersTable.email, searchTerm),
           like(usersTable.mobileNumber, searchTerm),
           like(usersTable.userNumber, searchTerm),
+          like(usersTable.firstName, searchTerm),
+          like(usersTable.lastName, searchTerm),
+
           like(tenantsTable.tenantNumber, searchTerm),
+          like(tenantsTable.tenantName, searchTerm),
         ),
       );
     }

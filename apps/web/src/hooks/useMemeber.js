@@ -1,68 +1,71 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/apiClient";
 
-export const useGetMembers = ({ page, limit, search, status }) =>
-  useQuery({
-    queryKey: ["members", page, limit, search, status],
-    queryFn: () =>
-      apiClient(
-        `/members?page=${page}&limit=${limit}${
-          search ? `&search=${search}` : ""
-        }${status && status !== "all" ? `&status=${status}` : ""}`,
-      ),
-    keepPreviousData: true,
-  });
-
-export const useGetMemberById = (id) =>
-  useQuery({
-    queryKey: ["member", id],
-    queryFn: () => apiClient(`/members/${id}`),
-    enabled: !!id,
-  });
-
+/* ================= CREATE USER ================= */
 export const useCreateMember = () =>
   useMutation({
-    mutationFn: (payload) =>
+    mutationFn: async (formData) =>
       apiClient("/members", {
         method: "POST",
-        body: JSON.stringify(payload),
+        body: JSON.stringify(formData),
       }),
   });
 
-export const useUpdateMember = () =>
+/* ================= UPDATE USER ================= */
+export const useMemberUpdate = () =>
   useMutation({
-    mutationFn: ({ id, data }) => {
-      const formData = new FormData();
-
-      Object.entries(data).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          formData.append(key, value);
-        }
-      });
-
-      return apiClient(`/members/${id}`, {
+    mutationFn: async ({ id, payload }) =>
+      apiClient(`/users/${id}`, {
         method: "PUT",
-        body: formData,
-      });
-    },
+        body: payload, // FormData (because multer upload)
+      }),
   });
 
-export const useGetMemberDescendants = (id, query = {}) =>
+/* ================= GET USER BY ID ================= */
+export const useMemberById = (userId) =>
   useQuery({
-    queryKey: ["member-descendants", id, query],
-    queryFn: () =>
-      apiClient(
-        `/members/${id}/descendants?page=${query.page ?? 1}&limit=${
-          query.limit ?? 20
-        }`,
-      ),
-    enabled: !!id,
+    queryKey: ["user", userId],
+    queryFn: () => apiClient(`/users/${userId}`),
+    enabled: !!userId,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
+/* ================= LIST USERS ================= */
+export const useMembers = ({ page, limit, search, status }) =>
+  useQuery({
+    queryKey: ["members", page, limit, search, status],
+    queryFn: () => {
+      const params = new URLSearchParams({
+        page,
+        limit,
+      });
+
+      if (search) params.append("search", search);
+      if (status) params.append("status", status);
+
+      return apiClient(`/members?${params.toString()}`);
+    },
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+
+/* ================= GET USER DESCENDANTS ================= */
+export const useMemberDescendants = (userId) =>
+  useQuery({
+    queryKey: ["user-descendants", userId],
+    queryFn: () => apiClient(`/users/${userId}/descendants`),
+    enabled: !!userId,
+    retry: false,
+  });
+
+/* ================= ASSIGN PERMISSIONS ================= */
 export const useAssignMemberPermissions = () =>
   useMutation({
-    mutationFn: ({ id, permissions }) =>
-      apiClient(`/members/${id}/permissions`, {
+    mutationFn: async ({ id, permissions }) =>
+      apiClient(`/users/${id}/permissions`, {
         method: "POST",
         body: JSON.stringify({ permissions }),
       }),

@@ -75,11 +75,13 @@ export default function TenantsClient() {
   const isEditing = Boolean(editingTenant);
   const perPage = 10;
 
+  const debouncedTenantSearch = useDebounce(search, 400);
+
   /* ================= API ================= */
   const { data, isLoading, refetch } = useTenants({
     page,
     limit: perPage,
-    search,
+    debouncedTenantSearch,
     status: statusFilter,
   });
 
