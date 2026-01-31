@@ -12,9 +12,9 @@ export default function MemberModal({
   isEditing = false,
   initialData,
   isPending,
-  roleOptions = [],
-  tenantOptions = [],
-  onTenantSearch = "",
+  roles = [],
+  tenants = [],
+  onTenantSearch = () => {},
 }) {
   useLockBodyScroll(open);
 
@@ -55,8 +55,8 @@ export default function MemberModal({
             isEditing={isEditing}
             initialData={initialData}
             isPending={isPending}
-            roleOptions={roleOptions}
-            tenantOptions={tenantOptions}
+            roles={roles}
+            tenants={tenants}
             onTenantSearch={onTenantSearch}
           />
         </div>

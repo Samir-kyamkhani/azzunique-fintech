@@ -1,161 +1,114 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { RefreshCw, Users, CheckCircle, Ban, UserX } from "lucide-react";
 
 import MembersTable from "@/components/tables/MembersTable";
 import MemberModal from "@/components/modals/MemberModal";
 import QuickStats from "@/components/QuickStats";
 import Button from "@/components/ui/Button";
 
-import { Users, UserCheck, UserX, RefreshCw } from "lucide-react";
 import { formatDateTime } from "@/lib/utils";
-import { useMe } from "@/hooks/useAuth";
-import { loginSuccess } from "@/store/authSlice";
+import { toast } from "@/lib/toast";
+import { useDispatch } from "react-redux";
+import { useRouter } from "next/navigation";
+import { setMember } from "@/store/memberSlice";
+import ImagePreviewModal from "../ImagePreviewModal";
 import {
   useCreateMember,
   useMembers,
-  useMemberUpdate,
-} from "@/hooks/useMemeber";
-import { useDebounce } from "@/hooks/useDebounce";
+  useUpdateMember,
+} from "@/hooks/useMember";
 import { useRoles } from "@/hooks/useRole";
 import { useTenants } from "@/hooks/useTenant";
+import { useDebounce } from "@/hooks/useDebounce";
 
-/* ================= FIELD RULES ================= */
-
-const CREATE_FIELDS = [
-  "firstName",
-  "lastName",
-  "email",
-  "mobileNumber",
-  "roleId",
-  "tenantId",
-];
-
-const UPDATE_FIELDS = [
-  "firstName",
-  "lastName",
-  "email",
-  "mobileNumber",
-  "roleId",
-  "tenantId",
-  "userStatus",
-  "actionReason",
-];
-
-export const buildCreatePayload = (formData) => {
-  const data = new FormData();
-
-  CREATE_FIELDS.forEach((key) => {
-    if (formData[key]) data.append(key, formData[key]);
-  });
-
-  return data;
-};
-
-export const buildUpdatePayload = (formData, initialData) => {
-  const data = new FormData();
-
-  UPDATE_FIELDS.forEach((key) => {
-    if (formData[key] && formData[key] !== initialData?.[key]) {
-      data.append(key, formData[key]);
-    }
-  });
-
-  if (formData.profilePicture instanceof File) {
-    data.append("profilePicture", formData.profilePicture);
-  }
-
-  return data;
-};
-
-/* ================= COMPONENT ================= */
-
-export default function MembersClient() {
-  const dispatch = useDispatch();
-  const router = useRouter();
-
+export default function MemberClient() {
   /* ================= UI STATE ================= */
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebounce(search, 400);
-  const [status, setStatus] = useState("ALL");
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
+
+
   const [openModal, setOpenModal] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
 
-  const [tenantSearch, setTenantSearch] = useState("");
-  const debouncedTenantSearch = useDebounce(tenantSearch, 400);
-
   const perPage = 10;
   const isEditing = Boolean(editingMember);
+
+  const dispatch = useDispatch();
+  const router = useRouter();
 
   /* ================= API ================= */
   const { data, isLoading, refetch } = useMembers({
     page,
     limit: perPage,
-    search: debouncedSearch,
-    status: status === "ALL" ? undefined : status,
+    search,
+    status: statusFilter === "ALL" ? undefined : statusFilter,
   });
 
-  const { data: rolesRes } = useRoles();
-  const roleOptions =
-    rolesRes?.data?.map((role) => ({
-      value: role.id,
-      label: role.roleName,
-    })) || [];
+  const [tenantSearch, setTenantSearch] = useState("");
+  const debouncedTenantSearch = useDebounce(tenantSearch, 400);
 
-  const { data: tenantsRes } = useTenants({
-    page,
-    limit: perPage,
+  const { data: tenantRes } = useTenants({
+    page: 1,
+    limit: 10,
     search: debouncedTenantSearch,
     status: "all",
   });
 
-  const tenantOptions = (tenantsRes?.data?.data || tenantsRes?.data || []).map(
-    (t) => ({
-      value: t.id,
-      label: t.tenantName,
-    }),
-  );
+  const { data: roleRes } = useRoles();
 
-  const {
-    mutate: createMember,
-    isPending: isCreating,
-    reset: resetCreate,
-  } = useCreateMember();
-
-  const {
-    mutate: updateMember,
-    isPending: isUpdating,
-    reset: resetUpdate,
-  } = useMemberUpdate();
-
-  const { data: meRes, isLoading: meLoading } = useMe();
-
-  useEffect(() => {
-    if (meRes?.data) dispatch(loginSuccess(meRes.data));
-  }, [meRes, dispatch]);
-
-  if (meLoading) return null;
+  const { mutate: createMember, isPending: creating } = useCreateMember();
+  const { mutate: updateMember, isPending: updating } = useUpdateMember();
 
   /* ================= NORMALIZE ================= */
   const members =
-    data?.data?.flatMap((entry) =>
-      entry.users.map((u) => ({
-        id: u.id,
-        fullName: `${u.firstName} ${u.lastName}`,
-        email: u.email,
-        mobileNumber: u.mobileNumber,
-        status: u.userStatus,
-        createdAt: formatDateTime(u.createdAt),
-        updatedAt: formatDateTime(u.updatedAt),
-        tenantId: entry.tenant.id,
-        tenantName: entry.tenant.tenantName,
-      })),
-    ) || [];
+    data?.data
+      ?.map((item) => {
+        const user = item.users?.[0]; // ← actual member
+        const tenant = item.tenant;
+
+        if (!user) return null;
+
+        return {
+          id: user.id,
+          userNumber: user.userNumber,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          fullName: `${user.firstName} ${user.lastName}`,
+          email: user.email,
+          mobileNumber: user.mobileNumber,
+          roleId: user.roleId,
+          actionReason: user.actionReason,
+          profilePictureUrl: user.profilePictureUrl,
+          userStatus: user.userStatus,
+          createdAt: formatDateTime(user.createdAt),
+
+          // optional extras if needed
+          tenantName: tenant?.tenantName,
+          tenantNumber: tenant?.tenantNumber,
+          tenantId: tenant?.id,
+        };
+      })
+      .filter(Boolean) || [];
 
   const meta = data?.meta || {};
+
+  const roles =
+    roleRes?.data?.map((d) => ({
+      label: d.roleCode,
+      value: d.id,
+    })) || [];
+
+  const tenants =
+    tenantRes?.data?.map((d) => ({
+      label: d.tenantName,
+      value: d.id,
+    })) || [];
 
   /* ================= STATS ================= */
   const stats = [
@@ -163,80 +116,89 @@ export default function MembersClient() {
       title: "Total Members",
       value: meta.total ?? 0,
       icon: Users,
+      iconColor: "text-primary",
+      bgColor: "bg-primary/10",
     },
     {
       title: "Active Members",
-      value: members.filter((m) => m.status === "ACTIVE").length,
-      icon: UserCheck,
+      value: members.filter((m) => m.userStatus === "ACTIVE").length,
+      icon: CheckCircle,
+      iconColor: "text-success",
+      bgColor: "bg-success/10",
+    },
+    {
+      title: "Suspended Members",
+      value: members.filter((m) => m.userStatus === "SUSPENDED").length,
+      icon: Ban,
+      iconColor: "text-warning",
+      bgColor: "bg-warning/10",
     },
     {
       title: "Inactive Members",
-      value: members.filter((m) => m.status !== "ACTIVE").length,
+      value: members.filter((m) => m.userStatus === "INACTIVE").length,
       icon: UserX,
+      iconColor: "text-destructive",
+      bgColor: "bg-destructive/10",
     },
   ];
 
   /* ================= ACTIONS ================= */
 
+  const handleImagePreview = (imageUrl) => {
+    setPreviewImage(imageUrl);
+    setPreviewOpen(true);
+  };
+
+  const handleAdd = () => {
+    setEditingMember(null);
+    setOpenModal(true);
+  };
+
+  const handleEdit = (member) => {
+    setEditingMember(member);
+    setOpenModal(true);
+  };
+
+  const handleView = (member) => {
+    if (!member?.id) return;
+    dispatch(setMember(member));
+    router.push(`/dashboard/member-management/members/${member.id}`);
+  };
+
   const handleSubmit = (formData, setError) => {
-    const onError = (err) => {
-      if (err?.type === "FIELD") {
-        err.errors.forEach(({ field, message }) =>
-          setError(field, { message }),
-        );
-        return;
-      }
-      setError("root", { message: err.message });
-    };
+    const action = isEditing ? updateMember : createMember;
+    const args = isEditing
+      ? { id: editingMember.id, payload: formData }
+      : formData;
 
-    if (!editingMember) {
-      createMember(buildCreatePayload(formData), {
-        onSuccess: () => {
-          setOpenModal(false);
-          refetch();
-        },
-        onError,
-      });
-      return;
-    }
-
-    const payload = buildUpdatePayload(formData, editingMember);
-
-    if (!payload || payload.entries().next().done) {
-      setError("root", { message: "No changes detected" });
-      return;
-    }
-
-    updateMember(
-      { id: editingMember.id, payload },
-      {
-        onSuccess: () => {
-          setOpenModal(false);
-          setEditingMember(null);
-          refetch();
-        },
-        onError,
+    action(args, {
+      onSuccess: () => {
+        toast.success(isEditing ? "Member updated" : "Member created");
+        setOpenModal(false);
+        setEditingMember(null);
+        refetch();
       },
-    );
+      onError: (err) => {
+        if (err?.type === "FIELD") {
+          err.errors.forEach(({ field, message }) =>
+            setError(field, { message }),
+          );
+          return;
+        }
+        setError("root", { message: err?.message });
+      },
+    });
   };
 
   /* ================= RENDER ================= */
-
   return (
     <>
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Member Management</h1>
-          <p className="text-muted-foreground">
-            Manage members, roles and permissions
-          </p>
-        </div>
-
+      <div className="mb-6 flex justify-end">
         <Button
           onClick={refetch}
-          loading={isLoading}
           variant="outline"
           icon={RefreshCw}
+          loading={isLoading}
         >
           Refresh
         </Button>
@@ -245,46 +207,49 @@ export default function MembersClient() {
       <QuickStats stats={stats} />
 
       <MembersTable
-        rawData={data?.data || []}
+        members={members}
         total={meta.total ?? 0}
         page={page}
         perPage={perPage}
         onPageChange={setPage}
         search={search}
-        onSearch={setSearch}
-        statusFilter={status}
-        onStatusFilterChange={setStatus}
-        onAddMember={() => {
-          resetCreate();
-          setEditingMember(null);
-          setOpenModal(true);
+        onSearch={(v) => {
+          setSearch(v);
+          setPage(1);
         }}
-        onEditMember={(m) => {
-          resetUpdate();
-          setEditingMember(m);
-          setOpenModal(true);
+        statusFilter={statusFilter}
+        onStatusFilterChange={(v) => {
+          setStatusFilter(v);
+          setPage(1);
         }}
+        onAddMember={handleAdd}
+        onEdit={handleEdit}
+        onView={handleView}
         loading={isLoading}
+        onImagePreview={handleImagePreview}
       />
 
       {openModal && (
         <MemberModal
           open={openModal}
           onClose={() => {
-            resetCreate();
-            resetUpdate();
             setOpenModal(false);
             setEditingMember(null);
           }}
           onSubmit={handleSubmit}
-          isEditing={isEditing}
-          isPending={isEditing ? isUpdating : isCreating}
+          isPending={creating || updating}
           initialData={editingMember}
-          roleOptions={roleOptions}
-          tenantOptions={tenantOptions}
+          roles={roles}
+          tenants={tenants}
           onTenantSearch={setTenantSearch}
         />
       )}
+
+      <ImagePreviewModal
+        open={previewOpen}
+        image={previewImage}
+        onClose={() => setPreviewOpen(false)}
+      />
     </>
   );
 }
