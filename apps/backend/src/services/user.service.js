@@ -2,6 +2,7 @@ import {
   permissionTable,
   rolePermissionTable,
   roleTable,
+  smtpConfigTable,
   tenantsTable,
   userPermissionTable,
   usersTable,
@@ -51,6 +52,17 @@ class UserService {
 
     if (!actorRole) {
       throw ApiError.forbidden('Invalid actor role');
+    }
+
+    // SMTP must exist
+    const [smtp] = await db
+      .select({ id: smtpConfigTable.id })
+      .from(smtpConfigTable)
+      .where(eq(smtpConfigTable.tenantId, actor.tenantId))
+      .limit(1);
+
+    if (!smtp) {
+      throw ApiError.badRequest('SMTP must be configured first');
     }
 
     if (actorRole.roleLevel >= targetRole.roleLevel) {
@@ -128,7 +140,6 @@ class UserService {
     const ownerUserId = isCreatingFirstOwner ? null : actor.id;
 
     const password = generatePassword();
-    console.log(password);
 
     const pin = generateTransactionPin();
     const userId = randomUUID();
@@ -165,9 +176,10 @@ class UserService {
     const sent = eventBus.emit(EVENTS.USER_CREATED, {
       userId,
       userNumber: payload.userNumber,
+      email: payload.email,
       password,
       transactionPin: pin,
-      tenantId: resolvedTenantId,
+      tenantId: actor.tenantId,
     });
 
     if (!sent) {

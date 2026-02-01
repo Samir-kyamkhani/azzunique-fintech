@@ -162,7 +162,7 @@ export default function MemberClient() {
   const handleView = (member) => {
     if (!member?.id) return;
     dispatch(setMember(member));
-    router.push(`/dashboard/member-management/members/${member.id}`);
+    router.push(`/dashboard/members/${member.id}`);
   };
 
   const handleSubmit = (formData, setError) => {

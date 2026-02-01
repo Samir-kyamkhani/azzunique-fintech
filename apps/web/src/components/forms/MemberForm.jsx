@@ -22,9 +22,7 @@ export default function MemberForm({
   /* ================= STATE ================= */
   const isEditMode = Boolean(initialData?.id);
 
-  const [preview, setPreview] = useState(
-    initialData?.profilePictureUrl || null,
-  );
+  const [preview, setPreview] = useState(initialData?.profilePictureUrl);
 
   /* ================= FORM ================= */
   const {
@@ -112,7 +110,7 @@ export default function MemberForm({
 
               <div className="flex items-center gap-4">
                 {preview ? (
-                  <Image
+                  <img
                     src={preview}
                     alt="Profile Preview"
                     width={64}
@@ -134,7 +132,7 @@ export default function MemberForm({
                     const file = e.target.files?.[0];
                     if (file) setPreview(URL.createObjectURL(file));
                   }}
-                  error={errors.profilePicture}
+                  error={errors?.profilePicture}
                 />
               </div>
             </div>
@@ -236,7 +234,7 @@ export default function MemberForm({
             </div>
           )}
         </div>
-        {status !== "ACTIVE" && (
+        {isEditMode && status !== "ACTIVE" && (
           <TextareaField
             label="Action Reason"
             name="actionReason"
