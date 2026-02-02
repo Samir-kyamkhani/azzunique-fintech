@@ -96,7 +96,7 @@ class TenantDomainService {
       throw ApiError.badRequest('Tenant email not found');
     }
 
-    eventBus.emit(EVENTS.DOMAIN_CREATE, {
+    const sent = eventBus.emit(EVENTS.DOMAIN_CREATE, {
       domainId: id,
       email: existingTenant.email,
       tenantId: actor.tenantId,
