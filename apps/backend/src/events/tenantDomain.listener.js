@@ -30,16 +30,6 @@ export async function getTenantMailContext(tenantId) {
     throw ApiError.badRequest('SMTP not configured for tenant');
   }
 
-  const [domain] = await db
-    .select()
-    .from(tenantsDomainsTable)
-    .where(eq(tenantsDomainsTable.tenantId, tenantId))
-    .limit(1);
-
-  if (!domain) {
-    throw ApiError.badRequest('Tenant domain not whitelisted');
-  }
-
   const [serverDetail] = await db
     .select()
     .from(serverDetailTable)
@@ -53,16 +43,15 @@ export async function getTenantMailContext(tenantId) {
   return {
     tenant,
     smtp,
-    domain,
     serverDetail,
   };
 }
 
 eventBus.on(EVENTS.DOMAIN_CREATE, async (data) => {
   try {
-    console.log('👤 DOMAIN_CREATE event', data);
+    console.log('👤 DOMAIN_CREATE event');
 
-    const { tenant, smtp, domain, serverDetail } = await getTenantMailContext(
+    const { tenant, smtp, serverDetail } = await getTenantMailContext(
       data.tenantId,
     );
 

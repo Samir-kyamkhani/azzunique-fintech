@@ -90,8 +90,6 @@ class TenantDomainService {
       existingTenant = tenant;
     }
 
-    console.log('existingTenant :', existingTenant);
-
     if (!existingTenant?.email) {
       throw ApiError.badRequest('Tenant email not found');
     }
