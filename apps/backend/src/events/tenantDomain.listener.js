@@ -62,7 +62,9 @@ eventBus.on(EVENTS.DOMAIN_CREATE, async (data) => {
   try {
     console.log('👤 DOMAIN_CREATE event');
 
-    const { tenant, smtp, domain } = await getTenantMailContext(data.tenantId);
+    const { tenant, smtp, domain, serverDetail } = await getTenantMailContext(
+      data.tenantId,
+    );
 
     const mail = MailTemplates.tenantDomainCreated({
       tenantName: tenant.tenantName,
