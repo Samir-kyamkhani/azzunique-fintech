@@ -9,7 +9,7 @@ export default function TextareaField({
   error,
   required = false,
   placeholder,
-  rows = 4,
+  rows = 2,
   disabled = false,
   className,
   ...rest

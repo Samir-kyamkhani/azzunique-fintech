@@ -61,11 +61,6 @@ export default function TenantDomainForm({
   const onFormSubmit = (data) => {
     clearErrors();
 
-    // if (!tenantId) {
-    //   setError("root", { message: "Tenant context missing" });
-    //   return;
-    // }
-
     if (actionReasonRequired && !data.actionReason?.trim()) {
       setError("actionReason", {
         message: "Action reason is required for this status",
@@ -78,7 +73,7 @@ export default function TenantDomainForm({
         ...data,
         tenantId,
       },
-      setError
+      setError,
     );
   };
 

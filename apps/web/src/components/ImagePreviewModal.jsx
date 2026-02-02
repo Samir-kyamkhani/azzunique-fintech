@@ -6,7 +6,7 @@ export default function ImagePreviewModal({ open, image, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center">
-      <Image
+      <img
         src={image}
         width={800}
         height={600}

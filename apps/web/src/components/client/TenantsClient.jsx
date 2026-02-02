@@ -20,6 +20,7 @@ import { Building2, UserX, CheckCircle, Ban, RefreshCw } from "lucide-react";
 import { formatDateTime } from "@/lib/utils";
 import { useMe } from "@/hooks/useAuth";
 import { loginSuccess } from "@/store/authSlice";
+import { useDebounce } from "@/hooks/useDebounce";
 
 /* ================= SCHEMA ALIGNED ================= */
 
@@ -75,11 +76,13 @@ export default function TenantsClient() {
   const isEditing = Boolean(editingTenant);
   const perPage = 10;
 
+  const debouncedTenantSearch = useDebounce(search, 400);
+
   /* ================= API ================= */
   const { data, isLoading, refetch } = useTenants({
     page,
     limit: perPage,
-    search,
+    debouncedTenantSearch,
     status: statusFilter,
   });
 

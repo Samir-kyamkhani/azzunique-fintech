@@ -50,7 +50,9 @@ export const updateUserSchema = z
   });
 
 export const listUsersQuerySchema = z.object({
-  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'DELETED']).optional(),
+  status: z
+    .enum(['ALL', 'ACTIVE', 'INACTIVE', 'SUSPENDED', 'DELETED'])
+    .optional(),
 });
 
 export const hierarchyParamSchema = z.object({

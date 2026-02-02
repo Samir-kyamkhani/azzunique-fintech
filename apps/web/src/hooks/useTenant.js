@@ -33,7 +33,12 @@ export const useTenantById = (tenantId) =>
   });
 
 /* ================= LIST ================= */
-export const useTenants = ({ page, limit, search, status }) =>
+export const useTenants = ({
+  page = 1,
+  limit = 50,
+  search = "",
+  status = "",
+}) =>
   useQuery({
     queryKey: ["tenants", page, limit, search, status],
     queryFn: () =>

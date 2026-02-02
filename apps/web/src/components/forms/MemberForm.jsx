@@ -1,47 +1,37 @@
 "use client";
 
-import { useForm } from "react-hook-form";
-import { useMemo, useState } from "react";
-import { Eye, EyeOff, AlertCircle, Lock } from "lucide-react";
+import { useState } from "react";
+import { useForm, Controller, useWatch } from "react-hook-form";
+import { AlertCircle, ImageIcon } from "lucide-react";
+import Image from "next/image";
 
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import SelectField from "@/components/ui/SelectField";
-
-const CRITICAL_STATUSES = ["INACTIVE", "SUSPENDED", "DELETED"];
+import { onlyDigits } from "@/lib/utils";
+import TextareaField from "../ui/TextareaField";
 
 export default function MemberForm({
   initialData = null,
-  isEditing = false,
+  isPending,
   onSubmit,
-  isPending = false,
-  error = null,
   roles = [],
-  tenants = [
-    {
-      id: "tenant_001",
-      name: "Azzuni Fintech Pvt Ltd",
-    },
-    {
-      id: "tenant_002",
-      name: "FinPay Solutions",
-    },
-    {
-      id: "tenant_003",
-      name: "PayWave Technologies",
-    },
-  ],
+  tenants = [],
+  onTenantSearch,
 }) {
-  const [showPassword, setShowPassword] = useState(false);
+  /* ================= STATE ================= */
+  const isEditMode = Boolean(initialData?.id);
 
+  const [preview, setPreview] = useState(initialData?.profilePictureUrl);
+
+  /* ================= FORM ================= */
   const {
     register,
     handleSubmit,
-    setValue,
-    getValues,
-    setError,
     clearErrors,
-    formState: { errors },
+    setError,
+    control,
+    formState: { errors, dirtyFields },
   } = useForm({
     defaultValues: {
       firstName: "",
@@ -49,187 +39,213 @@ export default function MemberForm({
       email: "",
       mobileNumber: "",
       roleId: "",
-      tenantId: "",
-      userStatus: "ACTIVE",
-      password: "",
+      userStatus: "INACTIVE",
       actionReason: "",
       ...initialData,
     },
   });
 
-  const currentStatus = getValues("userStatus");
+  const status = useWatch({
+    control,
+    name: "userStatus",
+  });
 
-  const actionReasonRequired = useMemo(
-    () => CRITICAL_STATUSES.includes(currentStatus),
-    [currentStatus]
-  );
-
-  const validate = (data) => {
-    if (!data.firstName?.trim())
-      return setError("firstName", { message: "First name is required" });
-
-    if (!data.lastName?.trim())
-      return setError("lastName", { message: "Last name is required" });
-
-    if (!data.email?.trim())
-      return setError("email", { message: "Email is required" });
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email))
-      return setError("email", { message: "Invalid email address" });
-
-    if (!/^[0-9]{10,15}$/.test(data.mobileNumber))
-      return setError("mobileNumber", {
-        message: "Mobile number must be 10–15 digits",
-      });
-
-    if (!data.roleId)
-      return setError("roleId", { message: "Role is required" });
-
-    if (!data.tenantId)
-      return setError("tenantId", { message: "Tenant is required" });
-
-    if (!isEditing && !data.password)
-      return setError("password", { message: "Password is required" });
-
-    if (actionReasonRequired && !data.actionReason?.trim())
-      return setError("actionReason", {
-        message: "Action reason is required",
-      });
-
-    return true;
-  };
-
+  /* ================= SUBMIT ================= */
   const onFormSubmit = (data) => {
     clearErrors();
-    if (validate(data) === true) {
-      onSubmit(data);
+
+    /* ---------- CREATE ---------- */
+    if (!isEditMode) {
+      onSubmit(data, setError);
+      return;
     }
+
+    /* ---------- UPDATE (FormData) ---------- */
+    const formData = new FormData();
+
+    Object.keys(dirtyFields).forEach((key) => {
+      if (key !== "profilePicture") {
+        formData.append(key, data[key]);
+      }
+    });
+
+    if (data.profilePicture?.[0]) {
+      formData.append("profilePicture", data.profilePicture[0]);
+    }
+
+    if (
+      formData.has("userStatus") &&
+      data.userStatus !== initialData.userStatus &&
+      !data.actionReason
+    ) {
+      setError("actionReason", {
+        message: "Action reason is required",
+      });
+      return;
+    }
+
+    onSubmit(formData, setError);
   };
 
+  /* ================= RENDER ================= */
   return (
-    <div className="w-full max-w-2xl">
-      {/* BODY */}
-      <div>
-        {(error || Object.keys(errors).length > 0) && (
-          <div className="p-3 mb-4 rounded-border bg-destructive/10 border border-destructive/20">
-            <div className="flex items-center gap-2 text-destructive-foreground">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <p className="text-sm font-medium">
-                {error?.message || Object.values(errors)[0]?.message}
-              </p>
-            </div>
+    <>
+      {errors?.root && (
+        <div className="mb-6 rounded-lg border border-destructive/20 bg-destructive/10 p-4">
+          <div className="flex gap-2">
+            <AlertCircle className="h-4 w-4 text-destructive" />
+            <p className="text-sm">{errors.root.message}</p>
           </div>
-        )}
+        </div>
+      )}
 
-        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
-          {/* PERSONAL */}
+      <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* PROFILE PICTURE */}
+          {isEditMode && (
+            <div className="space-y-2 md:col-span-2">
+              <label className="block text-sm font-medium">
+                Profile Picture
+              </label>
+
+              <div className="flex items-center gap-4">
+                {preview ? (
+                  <img
+                    src={preview}
+                    alt="Profile Preview"
+                    width={64}
+                    height={64}
+                    className="h-16 w-16 rounded-full object-cover border"
+                  />
+                ) : (
+                  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
+                    <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                )}
+
+                <InputField
+                  type="file"
+                  name="profilePicture"
+                  accept="image/*"
+                  register={register}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) setPreview(URL.createObjectURL(file));
+                  }}
+                  error={errors?.profilePicture}
+                />
+              </div>
+            </div>
+          )}
+
           <InputField
             label="First Name"
             name="firstName"
             register={register}
             required
+            error={errors.firstName}
           />
-
           <InputField
             label="Last Name"
             name="lastName"
             register={register}
             required
+            error={errors.lastName}
           />
-
           <InputField
-            label="Email Address"
+            label="Email"
             name="email"
             register={register}
             required
+            error={errors.email}
           />
-
           <InputField
             label="Mobile Number"
             name="mobileNumber"
+            maxLength={10}
             register={register}
             required
+            onInput={onlyDigits(10)}
+            error={errors.mobileNumber}
           />
 
-          {/* ACCOUNT */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-foreground">
-                Role <span className="text-destructive">*</span>
-              </label>
-
-              <SelectField
-                value={getValues("roleId")}
-                onChange={(v) => setValue("roleId", v)}
-                options={roles.map((r) => ({
-                  value: r.id,
-                  label: r.name,
-                }))}
-                placeholder="Select Role"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-foreground">
-                Tenant <span className="text-destructive">*</span>
-              </label>
-
-              <SelectField
-                value={getValues("tenantId")}
-                onChange={(v) => setValue("tenantId", v)}
-                options={tenants.map((t) => ({
-                  value: t.id,
-                  label: t.name,
-                }))}
-                placeholder="Select Tenant"
-              />
-            </div>
+          {/* ROLE */}
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium">
+              Role <span className="text-destructive">*</span>
+            </label>
+            <Controller
+              name="roleId"
+              control={control}
+              rules={{ required: "Role is required" }}
+              render={({ field }) => (
+                <SelectField
+                  options={roles}
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={errors.roleId}
+                />
+              )}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium">
+              Tenant <span className="text-destructive">*</span>
+            </label>
+            <Controller
+              name="tenantId"
+              control={control}
+              rules={{ required: "Tenant is required" }}
+              render={({ field }) => (
+                <SelectField
+                  options={tenants}
+                  value={field.value}
+                  onChange={field.onChange}
+                  searchable
+                  onSearch={onTenantSearch} // 🔥 CONNECTED
+                  error={errors.tenantId}
+                />
+              )}
+            />
           </div>
 
-          {!isEditing && (
-            <InputField
-              label="Password"
-              name="password"
-              register={register}
-              required
-              type={showPassword ? "text" : "password"}
-              rightIcon={showPassword ? <EyeOff /> : <Eye />}
-              onRightIconClick={() => setShowPassword((p) => !p)}
-            />
+          {/* STATUS */}
+          {isEditMode && (
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium">
+                Status <span className="text-destructive">*</span>
+              </label>
+              <Controller
+                name="userStatus"
+                control={control}
+                render={({ field }) => (
+                  <SelectField
+                    options={[
+                      { label: "Active", value: "ACTIVE" },
+                      { label: "Inactive", value: "INACTIVE" },
+                      { label: "Suspended", value: "SUSPENDED" },
+                    ]}
+                    value={field.value}
+                    onChange={field.onChange}
+                    error={errors.userStatus}
+                  />
+                )}
+              />
+            </div>
           )}
-
-          {isEditing && actionReasonRequired && (
-            <InputField
-              label="Action Reason"
-              name="actionReason"
-              register={register}
-              required
-            />
-          )}
-
-          <Button
-            type="submit"
-            loading={isPending}
-            disabled={isPending}
-            className="w-full"
-          >
-            {isEditing ? "Update Member" : "Create Member"}
-          </Button>
-        </form>
-
-        {/* FOOTER */}
-        <div className="mt-6 pt-4 border-t border-border text-center">
-          <div className="flex items-center justify-center text-muted-foreground mb-2">
-            <Lock className="h-3 w-3 mr-1" />
-            <p className="text-xs">
-              Member data is securely stored and audited
-            </p>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Fields marked with * are mandatory
-          </p>
         </div>
-      </div>
-    </div>
+        {isEditMode && status !== "ACTIVE" && (
+          <TextareaField
+            label="Action Reason"
+            name="actionReason"
+            register={register}
+            error={errors.actionReason}
+          />
+        )}
+        <Button type="submit" loading={isPending} className="w-full">
+          Save Member
+        </Button>
+      </form>
+    </>
   );
 }

@@ -37,7 +37,9 @@ const FIELDS = ["recordType", "hostname", "value", "status"];
 const buildUpsertPayload = (formData) => {
   const payload = {};
   FIELDS.forEach((key) => {
-    if (formData[key]) payload[key] = formData[key];
+    if (formData[key] !== undefined && formData[key] !== "") {
+      payload[key] = formData[key];
+    }
   });
   return payload;
 };
@@ -54,7 +56,6 @@ export default function ServerDetailClient() {
   const [openModal, setOpenModal] = useState(false);
 
   const { data, isLoading, isFetching, isError, refetch } = useServerDetail();
-
   const { mutate: upsertServerDetail, isPending } = useUpsertServerDetail();
 
   /* ================= SYNC DATA ================= */
@@ -88,127 +89,126 @@ export default function ServerDetailClient() {
     toast.success(`${label} copied`);
   };
 
-  /* ================= STATES ================= */
-
-  if (isLoading) {
-    return <PageSkeleton />;
-  }
-
-  if (isError || !serverDetail) {
-    return (
-      <DataTableSearchEmpty
-        isEmpty
-        emptyTitle="No server configuration found"
-        emptyDescription="Create DNS and server records to continue."
-        emptyAction={
-          <Button icon={Server} onClick={() => setOpenModal(true)}>
-            Create Server Configuration
-          </Button>
-        }
-      />
-    );
-  }
-
-  const statusMeta = statusColor[serverDetail.status];
+  const statusMeta = serverDetail ? statusColor[serverDetail.status] : null;
 
   /* ================= RENDER ================= */
 
   return (
     <>
-      {/* HEADER */}
-      <div className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Server Configuration</h1>
-          <p className="text-muted-foreground max-w-2xl">
-            Configure DNS and server records to route traffic.
-          </p>
-        </div>
-
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            icon={RefreshCw}
-            loading={isFetching}
-            onClick={refetch}
-          >
-            Refresh
-          </Button>
-
-          <Button icon={Edit} onClick={() => setOpenModal(true)}>
-            Edit Configuration
-          </Button>
-        </div>
-      </div>
-
-      {/* CONTENT */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          {/* SERVER CONFIG */}
-          <InfoCard icon={Server} title="Server Configuration">
-            <span
-              className={`inline-flex px-3 py-1 text-xs rounded-full ${statusMeta.className}`}
-            >
-              {statusMeta.label}
-            </span>
-
-            <InfoItem
-              label="Record Type"
-              value={serverDetail.recordType}
-              icon={Globe}
-            />
-
-            <InfoItem
-              label="Hostname"
-              value={serverDetail.hostname}
-              icon={Server}
-              onClick={() => handleCopy(serverDetail.hostname, "Hostname")}
-            />
-
-            <InfoItem
-              label="Value"
-              value={serverDetail.value}
-              icon={ExternalLink}
-            />
-          </InfoCard>
-
-          {/* TECH DETAILS */}
-          <InfoCard icon={Shield} title="Technical Details">
-            <InfoItem
-              label="Tenant ID"
-              value={serverDetail.tenantNumber}
-              icon={Shield}
-            />
-
-            <InfoItem
-              label="Configuration ID"
-              value={serverDetail.id}
-              icon={Lock}
-            />
-          </InfoCard>
-        </div>
-
-        <InfoCard icon={Calendar} title="Timeline">
-          <InfoItem
-            label="Created"
-            value={formatDateTime(serverDetail.createdAt)}
-          />
-          <InfoItem
-            label="Updated"
-            value={formatDateTime(serverDetail.updatedAt)}
-          />
-        </InfoCard>
-      </div>
-
-      {/* MODAL */}
+      {/* 🔥 MODAL ALWAYS MOUNTED */}
       {openModal && (
         <ServerDetailModal
           open={openModal}
           onClose={() => setOpenModal(false)}
           onSubmit={handleSubmit}
-          isEditing
+          isEditing={!!serverDetail}
           isPending={isPending}
           initialData={serverDetail}
         />
+      )}
+
+      {/* LOADING */}
+      {isLoading && <PageSkeleton />}
+
+      {/* EMPTY STATE */}
+      {!isLoading && isError && !serverDetail && (
+        <DataTableSearchEmpty
+          isEmpty
+          emptyTitle="No server configuration found"
+          emptyDescription="Create DNS and server records to continue."
+          emptyAction={
+            <Button icon={Server} onClick={() => setOpenModal(true)}>
+              Create Server Configuration
+            </Button>
+          }
+        />
+      )}
+
+      {/* MAIN UI */}
+      {!isLoading && serverDetail && (
+        <>
+          {/* HEADER */}
+          <div className="mb-8 flex items-start justify-between">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Server Configuration</h1>
+              <p className="text-muted-foreground max-w-2xl">
+                Configure DNS and server records to route traffic.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                icon={RefreshCw}
+                loading={isFetching}
+                onClick={refetch}
+              >
+                Refresh
+              </Button>
+
+              <Button icon={Edit} onClick={() => setOpenModal(true)}>
+                Edit Configuration
+              </Button>
+            </div>
+          </div>
+
+          {/* CONTENT */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              <InfoCard icon={Server} title="Server Configuration">
+                <span
+                  className={`inline-flex px-3 py-1 text-xs rounded-full ${statusMeta?.className}`}
+                >
+                  {statusMeta?.label}
+                </span>
+
+                <InfoItem
+                  label="Record Type"
+                  value={serverDetail.recordType}
+                  icon={Globe}
+                />
+
+                <InfoItem
+                  label="Hostname"
+                  value={serverDetail.hostname}
+                  icon={Server}
+                  onClick={() => handleCopy(serverDetail.hostname, "Hostname")}
+                />
+
+                <InfoItem
+                  label="Value"
+                  value={serverDetail.value}
+                  icon={ExternalLink}
+                />
+              </InfoCard>
+
+              <InfoCard icon={Shield} title="Technical Details">
+                <InfoItem
+                  label="Tenant ID"
+                  value={serverDetail.tenantNumber}
+                  icon={Shield}
+                />
+
+                <InfoItem
+                  label="Configuration ID"
+                  value={serverDetail.id}
+                  icon={Lock}
+                />
+              </InfoCard>
+            </div>
+
+            <InfoCard icon={Calendar} title="Timeline">
+              <InfoItem
+                label="Created"
+                value={formatDateTime(serverDetail.createdAt)}
+              />
+              <InfoItem
+                label="Updated"
+                value={formatDateTime(serverDetail.updatedAt)}
+              />
+            </InfoCard>
+          </div>
+        </>
       )}
     </>
   );

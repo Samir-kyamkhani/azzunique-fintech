@@ -79,7 +79,7 @@ class TenantService {
       throw ApiError.conflict('Tenant already exists under this parent');
     }
 
-    const tenantPrefix = generatePrefix(payload.userType);
+    const tenantPrefix = generatePrefix('TNT');
 
     // 5️⃣ Insert tenant
     await db.insert(tenantsTable).values({

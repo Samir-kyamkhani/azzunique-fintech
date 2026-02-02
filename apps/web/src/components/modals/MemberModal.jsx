@@ -11,6 +11,10 @@ export default function MemberModal({
   onSubmit,
   isEditing = false,
   initialData,
+  isPending,
+  roles = [],
+  tenants = [],
+  onTenantSearch = () => {},
 }) {
   useLockBodyScroll(open);
 
@@ -20,15 +24,8 @@ export default function MemberModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="bg-card border border-border rounded-lg shadow-xl w-full max-w-2xl overflow-hidden">
         <div className="relative bg-gradient-theme px-6 py-8 border-b border-border">
-          {/* Close button */}
           <div className="absolute right-4 top-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              aria-label="Close modal"
-              className="text-primary-foreground hover:bg-primary-foreground/10"
-            >
+            <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -52,9 +49,16 @@ export default function MemberModal({
           </div>
         </div>
 
-        {/* BODY */}
         <div className="p-6">
-          <MemberForm onSubmit={onSubmit} />
+          <MemberForm
+            onSubmit={onSubmit}
+            isEditing={isEditing}
+            initialData={initialData}
+            isPending={isPending}
+            roles={roles}
+            tenants={tenants}
+            onTenantSearch={onTenantSearch}
+          />
         </div>
       </div>
     </div>
