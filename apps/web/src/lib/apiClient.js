@@ -6,7 +6,7 @@ const getApiBaseUrl = () => {
     return `http://localhost:3001/${process.env.NEXT_PUBLIC_API_VERSION}`;
   }
 
-  return `https://api.${host}/${process.env.NEXT_PUBLIC_API_VERSION}`;
+  return `https://${host}/api/${process.env.NEXT_PUBLIC_API_VERSION}`;
 };
 
 export const apiClient = async (url, options = {}) => {
