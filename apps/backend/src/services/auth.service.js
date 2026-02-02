@@ -4,6 +4,7 @@ import {
   employeesTable,
   roleTable,
   tenantsTable,
+  walletTable,
 } from '../models/core/index.js';
 import { and, eq } from 'drizzle-orm';
 import { generateTokens, hashToken, verifyPassword } from '../lib/lib.js';
@@ -144,44 +145,97 @@ class AuthService {
   }
 
   async getCurrentUser(actor) {
-    const { id: userId, type, tenantId } = actor;
-
-    if (type === 'EMPLOYEE') {
-      const [employee] = await db
-        .select({
-          id: employeesTable.id,
-          tenantId: employeesTable.tenantId,
-          departmentId: employeesTable.departmentId,
-          employeeStatus: employeesTable.employeeStatus,
-        })
-        .from(employeesTable)
-        .where(eq(employeesTable.id, userId))
-        .limit(1);
-
-      if (!employee || employee.employeeStatus !== 'ACTIVE') {
-        throw ApiError.unauthorized('Session expired');
-      }
-
-      return {
-        id: employee.id,
-        tenantId: employee.tenantId,
-        type: 'EMPLOYEE',
-        departmentId: employee.departmentId,
-      };
+    if (!actor?.id || !actor?.type) {
+      throw ApiError.unauthorized('Invalid session');
     }
 
-    // USER
+    return actor.type === 'EMPLOYEE'
+      ? this.#getEmployee(actor.id)
+      : this.#getUser(actor.id);
+  }
+
+  async #getEmployee(userId) {
+    const [employee] = await db
+      .select({
+        id: employeesTable.id,
+        employeeNumber: employeesTable.employeeNumber,
+        firstName: employeesTable.firstName,
+        lastName: employeesTable.lastName,
+        email: employeesTable.email,
+        departmentId: employeesTable.departmentId,
+        employeeStatus: employeesTable.employeeStatus,
+        tenantId: employeesTable.tenantId,
+
+        tenantName: tenantsTable.tenantName,
+        tenantNumber: tenantsTable.tenantNumber,
+        tenantEmail: tenantsTable.tenantEmail,
+        tenantWhatsapp: tenantsTable.tenantWhatsapp,
+        tenantStatus: tenantsTable.tenantStatus,
+        tenantType: tenantsTable.tenantType,
+        userType: tenantsTable.userType,
+        parentTenantId: tenantsTable.parentTenantId,
+      })
+      .from(employeesTable)
+      .leftJoin(tenantsTable, eq(employeesTable.tenantId, tenantsTable.id))
+      .where(eq(employeesTable.id, userId))
+      .limit(1);
+
+    if (!employee || employee.employeeStatus !== 'ACTIVE') {
+      throw ApiError.unauthorized('Session expired');
+    }
+
+    return {
+      type: 'EMPLOYEE',
+      employee: {
+        id: employee.id,
+        employeeNumber: employee.employeeNumber,
+        firstName: employee.firstName,
+        lastName: employee.lastName,
+        email: employee.email,
+        departmentId: employee.departmentId,
+      },
+      tenant: this.#tenantShape(employee),
+    };
+  }
+
+  async #getUser(userId) {
     const [user] = await db
       .select({
         id: usersTable.id,
-        tenantId: usersTable.tenantId,
-        roleId: usersTable.roleId,
-        isSystem: roleTable.isSystem,
+        userNumber: usersTable.userNumber,
+        firstName: usersTable.firstName,
+        lastName: usersTable.lastName,
+        email: usersTable.email,
+        mobileNumber: usersTable.mobileNumber,
+        profilePicture: usersTable.profilePicture,
         userStatus: usersTable.userStatus,
+        isKycVerified: usersTable.isKycVerified,
+        roleId: usersTable.roleId,
+        tenantId: usersTable.tenantId,
+        ownerUserId: usersTable.ownerUserId,
+        actionReason: usersTable.actionReason,
+
         roleCode: roleTable.roleCode,
+        roleName: roleTable.roleName,
+        roleLevel: roleTable.roleLevel,
+        isSystem: roleTable.isSystem,
+
+        tenantName: tenantsTable.tenantName,
+        tenantNumber: tenantsTable.tenantNumber,
+        tenantEmail: tenantsTable.tenantEmail,
+        tenantWhatsapp: tenantsTable.tenantWhatsapp,
+        tenantStatus: tenantsTable.tenantStatus,
+        tenantType: tenantsTable.tenantType,
+        userType: tenantsTable.userType,
+        parentTenantId: tenantsTable.parentTenantId,
+
+        // Wallet Info
+        balance: walletTable.balance,
       })
       .from(usersTable)
       .leftJoin(roleTable, eq(usersTable.roleId, roleTable.id))
+      .leftJoin(tenantsTable, eq(usersTable.tenantId, tenantsTable.id))
+      .leftJoin(walletTable, eq(walletTable.ownerId, usersTable.id))
       .where(eq(usersTable.id, userId))
       .limit(1);
 
@@ -190,12 +244,46 @@ class AuthService {
     }
 
     return {
-      id: user.id,
-      tenantId: user.tenantId,
       type: 'USER',
-      roleId: user.roleId,
-      roleCode: user.roleCode,
-      isSystem: user.isSystem,
+      user: {
+        id: user.id,
+        userNumber: user.userNumber,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        mobileNumber: user.mobileNumber,
+        profilePicture: user.profilePicture,
+        status: user.userStatus,
+        isKycVerified: user.isKycVerified,
+        ownerUserId: user.ownerUserId,
+        actionReason: user.actionReason,
+      },
+      role: {
+        id: user.roleId,
+        roleCode: user.roleCode,
+        roleName: user.roleName,
+        roleLevel: user.roleLevel,
+        isSystem: user.isSystem,
+      },
+      tenant: this.#tenantShape(user),
+
+      wallet: {
+        balance: user.balance ?? 0,
+      },
+    };
+  }
+
+  #tenantShape(row) {
+    return {
+      id: row.tenantId,
+      tenantName: row.tenantName,
+      tenantNumber: row.tenantNumber,
+      tenantEmail: row.tenantEmail,
+      tenantWhatsapp: row.tenantWhatsapp,
+      tenantStatus: row.tenantStatus,
+      tenantType: row.tenantType,
+      userType: row.userType,
+      parentTenantId: row.parentTenantId,
     };
   }
 

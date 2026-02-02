@@ -13,33 +13,52 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import { logout as logoutAction } from "@/store/authSlice";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { useLogout } from "@/hooks/useAuth";
 
 const DashboardNavbar = () => {
   const ThemeToggle = dynamic(
     () => import("./theme/ThemeToggle").then((m) => m.ThemeToggle),
-    { ssr: false }
+    { ssr: false },
   );
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const dispatch = useDispatch();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const currentUser = useSelector((state) => state.auth.user);
+  const { mutate: logoutMutate, isPending } = useLogout();
+
   // Empty functions (no logic)
   const handleLogout = () => {
-    // No logic - empty function
+    logoutMutate(undefined, {
+      onSuccess: () => {
+        dispatch(logoutAction());
+        queryClient.clear();
+        router.push("/login");
+      },
+    });
   };
+
+  if (isPending) return null;
 
   const handleSearch = () => {
     // No logic - empty function
   };
-
-  // Static user data (UI only)
   const userData = {
-    name: "John Doe",
-    email: "john@example.com",
+    name: currentUser?.user.firstName + " " + currentUser?.user.lastName,
+    email: currentUser?.user.email,
     role: "Business Admin",
     avatar: "",
-    balance: 12500.75,
+    balance: currentUser?.wallet.balance,
   };
 
   const quickLinks = [
@@ -140,7 +159,7 @@ const DashboardNavbar = () => {
                         <Wallet className="h-4 w-4 text-muted-foreground" />
                       </div>
                       <p className="text-lg font-bold text-popover-foreground mt-1">
-                        ₹{userData.balance.toLocaleString()}
+                        ₹{userData?.balance?.toLocaleString()}
                       </p>
                     </div>
                   </div>

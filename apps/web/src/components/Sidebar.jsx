@@ -22,6 +22,7 @@ import Button from "./ui/Button";
 import { useDispatch } from "react-redux";
 import { logout as logoutAction } from "@/store/authSlice";
 import { useQueryClient } from "@tanstack/react-query";
+import { useSelector } from "react-redux";
 
 const Sidebar = () => {
   const queryClient = useQueryClient();
@@ -29,6 +30,9 @@ const Sidebar = () => {
   const { mutate: logoutMutate, isPending } = useLogout();
   const dispatch = useDispatch();
   const router = useRouter();
+
+  const website = useSelector((state) => state.tenantWebsite.currentWebsite);
+  const currentUser = useSelector((state) => state.auth.user);
 
   const handleLogout = () => {
     logoutMutate(undefined, {
@@ -38,10 +42,6 @@ const Sidebar = () => {
         router.push("/login");
       },
     });
-  };
-
-  const getPanelType = () => {
-    return "";
   };
 
   const menuSections = [
@@ -139,16 +139,6 @@ const Sidebar = () => {
     },
   ];
 
-  // Static user data (UI only)
-  const userData = {
-    firstName: "John",
-    lastName: "Doe",
-    username: "johndoe",
-    profileImage: "",
-    wallets: [{ balance: 0 }],
-    role: { name: "USER", type: "business" },
-  };
-
   const MenuItem = ({ item }) => {
     const Icon = item.icon;
     const isActive = pathname === item.path;
@@ -194,11 +184,6 @@ const Sidebar = () => {
     </div>
   );
 
-  const firstName = userData.firstName;
-  const lastName = userData.lastName;
-  const walletBalance = userData.wallets[0].balance;
-  const initials = firstName ? firstName[0].toUpperCase() : "U";
-
   return (
     <div className="w-64 h-full flex flex-col border-r border-border bg-sidebar">
       {/* Header */}
@@ -209,9 +194,11 @@ const Sidebar = () => {
           </div>
           <div>
             <h2 className="text-lg font-bold text-foreground">
-              Payment System
+              {website?.brandName}
             </h2>
-            <p className="text-xs text-muted-foreground">User Panel</p>
+            <p className="text-xs text-muted-foreground">
+              {currentUser?.role?.roleCode} Panel
+            </p>
           </div>
         </div>
       </div>
@@ -228,7 +215,7 @@ const Sidebar = () => {
               <Wallet className="h-4 w-4 text-muted-foreground" />
             </div>
             <p className="text-lg font-bold mt-1 text-primary">
-              ₹{walletBalance.toLocaleString()}
+              ₹{currentUser?.wallet?.balance}
             </p>
           </div>
         </div>
