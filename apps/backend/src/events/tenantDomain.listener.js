@@ -60,7 +60,7 @@ export async function getTenantMailContext(tenantId) {
 
 eventBus.on(EVENTS.DOMAIN_CREATE, async (data) => {
   try {
-    console.log('👤 DOMAIN_CREATE event');
+    console.log('👤 DOMAIN_CREATE event', data);
 
     const { tenant, smtp, domain, serverDetail } = await getTenantMailContext(
       data.tenantId,
@@ -70,9 +70,8 @@ eventBus.on(EVENTS.DOMAIN_CREATE, async (data) => {
       tenantName: tenant.tenantName,
       smtpFromEmail: smtp.fromEmail,
       tenantWhatsapp: tenant.tenantWhatsapp,
-      loginUrl: domain.domainName,
       recordType: serverDetail.recordType,
-      hostName: serverDetail.hostName,
+      hostName: serverDetail.hostname,
       value: serverDetail.value,
     });
 

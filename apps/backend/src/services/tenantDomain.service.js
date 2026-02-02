@@ -89,9 +89,11 @@ class TenantDomainService {
         .limit(1);
     }
 
+    console.log('existingTenant :', existingTenant);
+
     const sent = eventBus.emit(EVENTS.DOMAIN_CREATE, {
       domainId: id,
-      email: existingTenant?.email || null,
+      email: existingTenant.email,
       tenantId: actor.tenantId,
     });
 
