@@ -4,21 +4,23 @@ import { ApiError } from '../lib/ApiError.js';
 import { platformServiceTable } from '../models/core/index.js';
 
 class PlatformServiceService {
-  async create(data, actor) {
+  assertAzzunique(actor) {
     if (actor.roleLevel !== 0) {
-      throw ApiError.forbidden('Only AZZUNIQUE can create platform services');
+      throw ApiError.forbidden('Only AZZUNIQUE allowed');
     }
+  }
 
-    const existingService = await db
+  async create(data, actor) {
+    this.assertAzzunique(actor);
+
+    const existing = await db
       .select()
       .from(platformServiceTable)
       .where(eq(platformServiceTable.code, data.code))
       .limit(1);
 
-    if (existingService.length) {
-      throw ApiError.conflict(
-        `Platform service with code '${data.code}' already exists`,
-      );
+    if (existing.length) {
+      throw ApiError.conflict('Platform service already exists');
     }
 
     await db.insert(platformServiceTable).values({
@@ -32,6 +34,49 @@ class PlatformServiceService {
 
   async list() {
     return db.select().from(platformServiceTable);
+  }
+
+  async getById(id) {
+    const [service] = await db
+      .select()
+      .from(platformServiceTable)
+      .where(eq(platformServiceTable.id, id));
+
+    if (!service) {
+      throw ApiError.notFound('Platform service not found');
+    }
+
+    return service;
+  }
+
+  async update(id, data, actor) {
+    this.assertAzzunique(actor);
+
+    await this.getById(id);
+
+    await db
+      .update(platformServiceTable)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(platformServiceTable.id, id));
+
+    return this.getById(id);
+  }
+
+  async delete(id, actor) {
+    this.assertAzzunique(actor);
+
+    await this.getById(id);
+
+    // Soft delete
+    await db
+      .update(platformServiceTable)
+      .set({ isActive: false })
+      .where(eq(platformServiceTable.id, id));
+
+    return { success: true };
   }
 }
 

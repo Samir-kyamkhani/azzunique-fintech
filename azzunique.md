@@ -1,204 +1,169 @@
-1️⃣ platform_services
-👉 “System kya-kya service deta hai?”
-platform_services
-
-🔹 Example rows
-code	name
-RECHARGE	Mobile Recharge
-DMT	Money Transfer
-BBPS	Bill Payment
-🔹 Kaun banata hai?
-
-✅ AZZUNIQUE (Super Admin)
-(seeding time ya admin panel se)
-
-🔹 Kaun use karta hai?
-
-tenant_services
-
-service_providers
-
-Runtime service resolution (RechargeRuntimeService)
-
-🔹 Kyu zaroori hai?
-
-Ye master list hai
-Bina iske tenant ya provider kuch enable hi nahi kar sakte
-
-2️⃣ platform_service_features
-👉 “Ek service ke andar kya-kya options/features hain?”
-platform_service_features
-
-🔹 Example
-
-Recharge service ke features:
-
-service	feature
-RECHARGE	PREPAID
-RECHARGE	POSTPAID
-RECHARGE	DTH
-
-DMT ke:
-
-service	feature
-DMT	IMPS
-DMT	NEFT
-🔹 Kaun banata hai?
-
-✅ AZZUNIQUE
-
-🔹 Kaun use karta hai?
-
-Commission rules
-
-Provider capability mapping
-
-Feature-wise enable/disable
-
-🔹 Kyu alag table?
-
-Kyuki commission, provider support, pricing
-feature ke hisaab se alag hota hai
-
-
-3️⃣ service_providers
-👉 “Kaunsa vendor kaunsi service deta hai?”
-service_providers
-
-🔹 Example
-platformService	provider
-RECHARGE	MPLAN
-RECHARGE	RECHARGE_EXCHANGE
-DMT	PAYTM
-DMT	ICICI
-🔹 handler ka matlab?
-plugins/recharge/mplan.plugin.js
-
-
-Ye batata hai code mein kaunsa plugin use hoga
-
-🔹 Kaun banata hai?
-
-✅ AZZUNIQUE
-
-🔹 Kyu zaroori?
-
-Same service ke multiple vendors ho sakte hain
-(fallback, pricing, downtime handling)
-
-
-4️⃣ service_provider_features
-👉 “Kaunsa provider kaunsa feature support karta hai?”
-service_provider_features
-
-🔹 Example
-provider	feature
-MPLAN	PREPAID
-MPLAN	DTH
-RECHARGE_EXCHANGE	PREPAID
-🔹 Kaun banata hai?
-
-✅ AZZUNIQUE
-
-🔹 Runtime mein kya kaam?
-
-Validate: “ye provider ye feature kar sakta hai ya nahi”
-
-Future fallback logic
-
-🔹 Kyu zaroori?
-
-Sab providers sab feature nahi dete
-Ye table truth source hai
-
-
-5️⃣ tenant_services
-👉 “Kaunsa tenant kaunsi service use kar sakta hai?”
-tenant_services
-
-🔹 Example
-tenant	service	enabled
-WL1	RECHARGE	✅
-WL1	DMT	❌
-🔹 Kaun banata hai?
-
-✅ Tenant Owner
-(AZZUNIQUE → Reseller → WhiteLabel)
-
-🔹 Runtime use
-RechargeRuntimeService.resolve()
-
-
-Agar chain mein kahin bhi isEnabled=false → service block
-
-🔹 Kyu?
-
-Hierarchy control
-Parent disable kare to child bhi disable
-
-
-6️⃣ tenant_service_providers
-👉 “Tenant kis provider ke saath kaam karega?”
-tenant_service_providers
-
-🔹 Example
-tenant	service	provider	config
-WL1	RECHARGE	MPLAN	apiKey
-RESELLER	RECHARGE	RECHARGE_EXCHANGE	token
-🔹 config kya hai?
-
-Provider-specific secrets:
-
-{
-  "apiKey": "xxxx",
-  "token": "yyyy"
-}
-
-🔹 Kaun banata hai?
-
-✅ Tenant Owner / Parent Tenant
-
-🔹 Runtime mein kya hota hai?
-getRechargePlugin(providerId, config)
-
-
-Top-most tenant ka provider win karta hai
-
-🔹 Kyu?
-
-Multi-tenant SaaS flexibility
-Har tenant apna vendor choose kar sake
-
-
-🔁 RUNTIME FLOW (Recharge example)
-User recharge karta hai
+🔁 OVERALL FLOW (END-TO-END)
+AZZUNIQUE
 ↓
-RechargeRuntimeService.resolve()
+RESELLER
 ↓
-tenant_services → enabled check (chain)
+WHITELABEL
 ↓
-tenant_service_providers → provider pick
+USER
+
+Tumhara system upar se neeche control aur neeche se upar commission pe chalta hai.
+
+🧠 FLOW-1: AZZUNIQUE SETUP FLOW (ONE TIME / ADMIN FLOW)
+Step 1️⃣ — AZZUNIQUE service define karta hai
+
+“Platform pe kaunsi service hogi?”
+
+Platform Service: DMT
+
+✔ Sirf AZZUNIQUE
+✔ Global definition
+
+Step 2️⃣ — AZZUNIQUE service ke features define karta hai
+
+“Is service me kya-kya allowed hai?”
+
+DMT → IMPS, NEFT
+
+✔ Sirf AZZUNIQUE
+✔ Feature = capability
+
+Step 3️⃣ — AZZUNIQUE provider register karta hai
+
+“Is service ko kaunsi company handle karegi?”
+
+Provider: PAYTM
+Handler: paytm.dmt.handler
+
+✔ Sirf AZZUNIQUE
+✔ Abhi secrets nahi
+
+Step 4️⃣ — AZZUNIQUE provider ko service ke saath map karta hai
+
+“PAYTM DMT ke IMPS feature ko support karega”
+
+✔ Capability mapping
+✔ Ab system jaanta hai:
+
+“Kaun kya handle karega”
+
+Step 5️⃣ — AZZUNIQUE provider ka actual config deta hai
+
+“Vendor API key, secret, env kya hoga”
+
+merchantId
+secret
+env
+
+✔ Sirf AZZUNIQUE
+❌ Tenant ka koi role nahi
+
+👉 Yahin pe API ownership lock hoti hai
+
+🧠 FLOW-2: SERVICE DISTRIBUTION FLOW (CONTROL FLOW)
+Step 6️⃣ — AZZUNIQUE reseller ko service enable karta hai
+
+“Tum DMT use kar sakte ho”
+
+AZZUNIQUE → RESELLER
+
+✔ Agar AZZUNIQUE disable kare → sab niche band
+
+Step 7️⃣ — RESELLER whitelabel ko service deta hai
+
+“Jo service mujhe mili, wahi main aage de sakta hoon”
+
+RESELLER → WHITELABEL
+
+❌ Agar reseller ke paas DMT nahi → whitelabel ko nahi milegi
+
+Step 8️⃣ — WHITELABEL apne users ke liye decide karta hai
+
+“Mera kaunsa user DMT use karega”
+
+WHITELABEL → USERS
+
+✔ User-level permission
+✔ Business rule
+
+🧠 FLOW-3: RUNTIME TRANSACTION FLOW (MOST IMPORTANT)
+Jab USER DMT karta hai 👇
+USER clicks "Send Money"
+
+System ye sequence follow karta hai:
+
+Step 1️⃣ — User ka tenant kaun?
+User → WHITELABEL
+
+Step 2️⃣ — WHITELABEL ke paas DMT enabled hai?
+
+❌ Nahi → STOP
+✅ Haan → next
+
+Step 3️⃣ — RESELLER ke paas DMT enabled hai?
+
+❌ Nahi → STOP
+✅ Haan → next
+
+Step 4️⃣ — Platform pe DMT active hai?
+
+❌ Nahi → STOP
+✅ Haan → next
+
+Step 5️⃣ — Is service ka provider active hai?
+
+❌ Nahi → STOP
+✅ Haan → next
+
+Step 6️⃣ — Provider ka config load hota hai
+merchantId
+secret
+env
+
+👉 Ye AZZUNIQUE ka config hota hai
+👉 Tenant ko kabhi dikhta hi nahi
+
+Step 7️⃣ — Provider handler call hota hai
+paytm.dmt.handler.execute()
+
+Step 8️⃣ — Vendor response aata hai
+SUCCESS / FAILED
+
+💰 FLOW-4: COMMISSION FLOW (BOTTOM → TOP)
+
+User ne transaction ki 👇
+
+User pays
+
+Commission distribution:
+
+USER
 ↓
-service_providers → plugin handler
+WHITELABEL margin
 ↓
-plugin.recharge()
+RESELLER margin
+↓
+AZZUNIQUE margin
+↓
+Vendor cost
 
-🧑‍💼 KAUN KYA BANATA HAI (CLEAR TABLE)
-Role	Tables
-AZZUNIQUE	platform_services, features, providers
-AZZUNIQUE	provider_features
-Tenant Owner	tenant_services
-Tenant Owner	tenant_service_providers
-Runtime	sirf READ
-🏁 FINAL SUMMARY (YAAD RAKHO)
+✔ Automatic
+✔ Hierarchy-safe
+✔ No leakage
 
-platform_ = system definition*
+🔒 IMPORTANT SECURITY FLOW
 
-service_provider_ = vendor capability*
+❌ WHITELABEL provider change nahi kar sakta
 
-tenant_ = business decision*
+❌ RESELLER secret nahi de sakta
 
-runtime kabhi insert/update nahi karta
+❌ Tenant API replace nahi kar sakta
 
-Tumne bahut clean, scalable SaaS design banaya hai —
-ye structure Railway / Stripe-level systems mein use hota hai.
+✅ AZZUNIQUE full control me
+
+🧠 ONE-LINE SUMMARY (YAAD RAKHO)
+
+AZZUNIQUE system banata hai,
+services neeche distribute hoti hain,
+transactions upar control hoti hain,
+aur commissions neeche se upar jaati hain.

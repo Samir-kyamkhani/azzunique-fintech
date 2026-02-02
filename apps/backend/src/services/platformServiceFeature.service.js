@@ -2,15 +2,19 @@ import { eq, and } from 'drizzle-orm';
 import { db } from '../database/core/core-db.js';
 import { ApiError } from '../lib/ApiError.js';
 import {
-  platformServiceFeatureTable,
   platformServiceTable,
+  platformServiceFeatureTable,
 } from '../models/core/index.js';
 
 class PlatformServiceFeatureService {
-  async create(data, actor) {
+  assertAzzunique(actor) {
     if (actor.roleLevel !== 0) {
-      throw ApiError.forbidden('Only AZZUNIQUE can create service features');
+      throw ApiError.forbidden('Only AZZUNIQUE allowed');
     }
+  }
+
+  async create(data, actor) {
+    this.assertAzzunique(actor);
 
     const service = await db
       .select()
@@ -19,10 +23,10 @@ class PlatformServiceFeatureService {
       .limit(1);
 
     if (!service.length) {
-      throw ApiError.badRequest('Platform service does not exist');
+      throw ApiError.badRequest('Platform service not found');
     }
 
-    const existingFeature = await db
+    const exists = await db
       .select()
       .from(platformServiceFeatureTable)
       .where(
@@ -36,18 +40,48 @@ class PlatformServiceFeatureService {
       )
       .limit(1);
 
-    if (existingFeature.length) {
-      throw ApiError.conflict(
-        `Feature with code '${data.code}' already exists for this service`,
-      );
+    if (exists.length) {
+      throw ApiError.conflict('Feature already exists');
     }
 
     await db.insert(platformServiceFeatureTable).values({
-      platformServiceId: data.platformServiceId,
-      code: data.code,
-      name: data.name,
+      ...data,
       isActive: data.isActive ?? true,
     });
+
+    return { success: true };
+  }
+
+  async listByService(platformServiceId) {
+    return db
+      .select()
+      .from(platformServiceFeatureTable)
+      .where(
+        eq(platformServiceFeatureTable.platformServiceId, platformServiceId),
+      );
+  }
+
+  async update(id, data, actor) {
+    this.assertAzzunique(actor);
+
+    await db
+      .update(platformServiceFeatureTable)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(platformServiceFeatureTable.id, id));
+
+    return { success: true };
+  }
+
+  async delete(id, actor) {
+    this.assertAzzunique(actor);
+
+    await db
+      .update(platformServiceFeatureTable)
+      .set({ isActive: false })
+      .where(eq(platformServiceFeatureTable.id, id));
 
     return { success: true };
   }
