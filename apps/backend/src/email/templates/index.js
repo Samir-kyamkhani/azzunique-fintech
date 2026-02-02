@@ -4,6 +4,7 @@ import {
   employeeInactiveTemplate,
   employeeSuspendedTemplate,
 } from './employees.template.js';
+import { domainCreatedTemplate } from './tenantDomain.template.js';
 
 import {
   userActivatedTemplate,
@@ -25,4 +26,6 @@ export const MailTemplates = {
   usersInactive: userInactiveTemplate,
   usersSuspended: userSuspendedTemplate,
   usersDeleted: userDeletedTemplate,
+
+  tenantDomainCreated: domainCreatedTemplate,
 };

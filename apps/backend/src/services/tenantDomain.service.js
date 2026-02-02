@@ -10,6 +10,8 @@ import {
 } from '../models/core/index.js';
 import { db } from '../database/core/core-db.js';
 import { ApiError } from '../lib/ApiError.js';
+import { EVENTS } from '../events/events.constants.js';
+import { eventBus } from '../events/events.js';
 
 class TenantDomainService {
   static async upsert(payload, actor) {
@@ -23,8 +25,21 @@ class TenantDomainService {
     }
 
     const domainName = payload.domainName?.trim().toLowerCase();
-    if (!domainName) {
-      throw ApiError.badRequest('Domain name required');
+
+    const domainRegex =
+      /^(?!-)[A-Za-z0-9-]{1,63}(?<!-)\.(?:[A-Za-z]{2,6}|[A-Za-z0-9-]{2,30}\.[A-Za-z]{2,3})$/;
+    if (!domainRegex.test(domainName)) {
+      throw ApiError.badRequest('Invalid domain name format');
+    }
+
+    const [serverDetail] = await db
+      .select({ id: serverDetailTable.id })
+      .from(serverDetailTable)
+      .where(eq(serverDetailTable.tenantId, actor.tenantId))
+      .limit(1);
+
+    if (!serverDetail) {
+      throw ApiError.badRequest('Server detail must be configured first');
     }
 
     const now = new Date();
@@ -64,6 +79,25 @@ class TenantDomainService {
 
     const id = crypto.randomUUID();
 
+    let existingTenant = null;
+
+    if (payload.tenantId) {
+      existingTenant = await db
+        .select({ email: tenantsTable.tenantEmail })
+        .from(tenantsTable)
+        .where(eq(tenantsTable.id, payload.tenantId))
+        .limit(1);
+    }
+
+    const sent = eventBus.emit(EVENTS.DOMAIN_CREATE, {
+      domainId: id,
+      email: existingTenant?.email || null,
+      tenantId: actor.tenantId,
+    });
+
+    if (!sent) {
+      throw ApiError.internal('Failed to send domain create event');
+    }
     await db.insert(tenantsDomainsTable).values({
       id,
       tenantId,
