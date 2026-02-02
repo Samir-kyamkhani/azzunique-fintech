@@ -111,7 +111,7 @@ export default function ServerDetailClient() {
       {isLoading && <PageSkeleton />}
 
       {/* EMPTY STATE */}
-      {!isLoading && (isError || !serverDetail) && (
+      {!isLoading && isError && !serverDetail && (
         <DataTableSearchEmpty
           isEmpty
           emptyTitle="No server configuration found"

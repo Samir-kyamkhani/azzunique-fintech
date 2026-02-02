@@ -40,10 +40,26 @@ class TenantDomainService {
       )
       .limit(1);
 
+    /* ================= UPDATE CASE ================= */
     if (existing) {
+      const updatePayload = {
+        status: payload.status ?? existing.status,
+        updatedAt: now,
+      };
+
+      if (payload.serverDetailId) {
+        updatePayload.serverDetailId = payload.serverDetailId;
+      }
+
+      await db
+        .update(tenantsDomainsTable)
+        .set(updatePayload)
+        .where(eq(tenantsDomainsTable.id, existing.id));
+
       return { id: existing.id, updated: true };
     }
 
+    /* ================= INSERT CASE ================= */
     const server = await resolveServerForTenant(tenantId);
 
     const id = crypto.randomUUID();
@@ -52,15 +68,15 @@ class TenantDomainService {
       id,
       tenantId,
       domainName,
-      serverDetailId: server.id, // 👈 AUTO
-      status: 'PENDING',
+      serverDetailId: payload.serverDetailId ?? server.id,
+      status: payload.status || 'PENDING',
       createdByUserId: actor.type === 'USER' ? actor.id : null,
       createdByEmployeeId: actor.type === 'EMPLOYEE' ? actor.id : null,
       createdAt: now,
       updatedAt: now,
     });
 
-    return { id };
+    return { id, created: true };
   }
 
   static async findByTenantId(tenantId) {
