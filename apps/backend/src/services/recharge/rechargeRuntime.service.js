@@ -1,7 +1,7 @@
 import { db } from '../../database/core/core-db.js';
 import {
   tenantServiceTable,
-  tenantServiceProviderTable,
+  platformServiceProviderTable,
   platformServiceTable,
 } from '../../models/core/index.js';
 import { ApiError } from '../../lib/ApiError.js';
@@ -27,9 +27,9 @@ class RechargeRuntimeService {
         .from(tenantServiceTable)
         .where(
           and(
-            eq(tenantServiceProviderTable.tenantId, tenantId),
-            eq(tenantServiceProviderTable.platformServiceId, service.id),
-            eq(tenantServiceProviderTable.isActive, true),
+            eq(platformServiceProviderTable.tenantId, tenantId),
+            eq(platformServiceProviderTable.platformServiceId, service.id),
+            eq(platformServiceProviderTable.isActive, true),
           ),
         )
         .limit(1);
@@ -45,12 +45,12 @@ class RechargeRuntimeService {
     for (const tenantId of tenantChain) {
       const [provider] = await db
         .select()
-        .from(tenantServiceProviderTable)
+        .from(platformServiceProviderTable)
         .where(
           and(
-            eq(tenantServiceProviderTable.tenantId, tenantId),
-            eq(tenantServiceProviderTable.platformServiceId, service.id),
-            eq(tenantServiceProviderTable.isActive, true),
+            eq(platformServiceProviderTable.tenantId, tenantId),
+            eq(platformServiceProviderTable.platformServiceId, service.id),
+            eq(platformServiceProviderTable.isActive, true),
           ),
         )
         .limit(1);

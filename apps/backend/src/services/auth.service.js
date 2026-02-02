@@ -26,10 +26,10 @@ class AuthService {
       .where(eq(usersTable.userNumber, data.identifier))
       .limit(1);
 
-    // DOMAIN → TENANT LOGIN CHECK (CORRECT PLACE)
-    if (context?.tenant && user.tenantId !== context.tenant.id) {
-      throw ApiError.forbidden('This account does not belong to this domain');
-    }
+    // // DOMAIN → TENANT LOGIN CHECK (CORRECT PLACE)
+    // if (context?.tenant && user.tenantId !== context.tenant.id) {
+    //   throw ApiError.forbidden('This account does not belong to this domain');
+    // }
 
     if (!user) {
       throw ApiError.unauthorized('Invalid credentials');

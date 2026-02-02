@@ -12,7 +12,9 @@ import employeeRoutes from './employee.routes.js';
 import tenantWebsiteRoutes from './tenantWebsite.routes.js';
 import tenantSocialMediaRoutes from './tenantSocialMedia.routes.js';
 import rechargeRoutes from './recharge/recharge.routes.js';
-import platformRoutes from './platform.routes.js';
+import platformServiceRoutes from './platformService.routes.js';
+import serviceProviderRoutes from './serviceProvider.routes.js';
+import tenantServiceRoutes from './tenantService.routes.js';
 import commisionRoutes from './commission.routes.js';
 
 const router = Router();
@@ -30,7 +32,9 @@ router.use('/employees', employeeRoutes);
 router.use('/website', tenantWebsiteRoutes);
 router.use('/social-media', tenantSocialMediaRoutes);
 router.use('/recharge', rechargeRoutes);
-router.use('/platform', platformRoutes);
+router.use('/platform', platformServiceRoutes);
+router.use('/platform', serviceProviderRoutes);
+router.use('/platform', tenantServiceRoutes);
 router.use('/commission', commisionRoutes);
 
 export default router;
