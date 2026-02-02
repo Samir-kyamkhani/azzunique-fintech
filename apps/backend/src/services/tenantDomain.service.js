@@ -6,6 +6,7 @@ import {
   tenantsTable,
   usersTable,
   employeesTable,
+  serverDetailTable,
 } from '../models/core/index.js';
 import { db } from '../database/core/core-db.js';
 import { ApiError } from '../lib/ApiError.js';
