@@ -80,18 +80,23 @@ class TenantDomainService {
     const id = crypto.randomUUID();
 
     let existingTenant = null;
-
     if (payload.tenantId) {
-      existingTenant = await db
+      const [tenant] = await db
         .select({ email: tenantsTable.tenantEmail })
         .from(tenantsTable)
         .where(eq(tenantsTable.id, payload.tenantId))
         .limit(1);
+
+      existingTenant = tenant;
     }
 
     console.log('existingTenant :', existingTenant);
 
-    const sent = eventBus.emit(EVENTS.DOMAIN_CREATE, {
+    if (!existingTenant?.email) {
+      throw ApiError.badRequest('Tenant email not found');
+    }
+
+    eventBus.emit(EVENTS.DOMAIN_CREATE, {
       domainId: id,
       email: existingTenant.email,
       tenantId: actor.tenantId,
