@@ -16,16 +16,17 @@ const envConfig = {
     bucket: process.env.S3_BUCKET,
   },
 
-  rechage: {
-    mplanpluginUrl: process.env.MPLAN_PLUGIN_URL,
-    rechargeExchangePluginUrl: process.env.RECHARGE_EXCHANGE_PLUGIN_URL,
-    rechargeExchangeStatusPluginUrl:
-      process.env.RECHARGE_EXCHANGE_STATUS_PLUGIN_URL,
-  },
+  // db se ayenege recharge plugin ke urls
+  // rechage: {
+  //   mplanpluginUrl: process.env.MPLAN_PLUGIN_URL,
+  //   rechargeExchangePluginUrl: process.env.RECHARGE_EXCHANGE_PLUGIN_URL,
+  //   rechargeExchangeStatusPluginUrl:
+  //     process.env.RECHARGE_EXCHANGE_STATUS_PLUGIN_URL,
+  // },
 
-  callback: {
-    callbackSecret: process.env.RECHARGE_CALLBACK_SECRET,
-  },
+  // callback: {
+  //   callbackSecret: process.env.RECHARGE_CALLBACK_SECRET,
+  // },
 };
 
 export default envConfig;

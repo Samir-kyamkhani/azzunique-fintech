@@ -1,19 +1,18 @@
 import axios from 'axios';
-import RechargePlugin from './recharge.interface.js';
+import RechargeExchangePluginInterface from './rechargeExchange.interface.js';
 import { ApiError } from '../../lib/ApiError.js';
-import envConfig from '../../config/config.js';
 
-class RechargeExchangePlugin extends RechargePlugin {
+class RechargeExchangePlugin extends RechargeExchangePluginInterface {
   constructor(config) {
     super(config);
 
     this.txClient = axios.create({
-      baseURL: envConfig.rechage.rechargeExchangePluginUrl,
+      baseURL: this.config.rechargeExchangePluginUrl,
       timeout: 15000,
     });
 
     this.statusClient = axios.create({
-      baseURL: envConfig.rechage.rechargeExchangeStatusPluginUrl,
+      baseURL: this.config.rechargeExchangeStatusPluginUrl,
       timeout: 15000,
     });
   }

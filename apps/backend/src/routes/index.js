@@ -32,10 +32,11 @@ router.use('/departments', departmentRoutes);
 router.use('/employees', employeeRoutes);
 router.use('/website', tenantWebsiteRoutes);
 router.use('/social-media', tenantSocialMediaRoutes);
-router.use('/recharge', rechargeRoutes);
 router.use('/platform', platformServiceRoutes);
 router.use('/platform', serviceProviderRoutes);
 router.use('/platform', tenantServiceRoutes);
 router.use('/commission', commisionRoutes);
+router.use('/recharge', rechargeRoutes);
+
 router.use('/permissions', permissionRoutes);
 export default router;

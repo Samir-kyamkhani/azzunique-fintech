@@ -261,7 +261,7 @@ class WalletService {
     });
   }
 
-  // 9️⃣ RELEASE BLOCKED AMOUNT (FAIL / TIMEOUT)
+  // 8️⃣ RELEASE BLOCKED AMOUNT (FAIL / TIMEOUT)
   static async releaseBlockedAmount({ walletId, amount, transactionId }) {
     if (amount <= 0) return;
 
@@ -303,7 +303,7 @@ class WalletService {
     });
   }
 
-  // 8️⃣ DEBIT BLOCKED AMOUNT (SUCCESS CASE ONLY)
+  // 9️⃣ DEBIT BLOCKED AMOUNT (SUCCESS CASE ONLY)
   static async debitBlockedAmount({ walletId, amount, transactionId }) {
     if (amount <= 0) {
       throw ApiError.badRequest('Invalid debit amount');
@@ -357,7 +357,7 @@ class WalletService {
     });
   }
 
-  // 9️⃣ FETCH COMMISSION WALLET
+  // 🔟 FETCH COMMISSION WALLET
   static async getCommissionWallet(userId, tenantId) {
     const [wallet] = await db
       .select()

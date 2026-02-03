@@ -3,6 +3,7 @@ import { rechargeTransactionTable } from '../../models/recharge/index.js';
 import { eq } from 'drizzle-orm';
 import WalletService from '../wallet.service.js';
 import CommissionReversalService from '../commission-reversal.service.js';
+import { RECHARGE_SERVICE_CODE } from '../../config/constant.js';
 
 class RechargeStatusService {
   async processPendingTransactions() {
@@ -22,7 +23,7 @@ class RechargeStatusService {
     // 1️⃣ Resolve provider
     const { provider } = await RechargeRuntimeService.resolve({
       tenantChain: [txn.tenantId],
-      platformServiceCode: 'RECHARGE',
+      platformServiceCode: RECHARGE_SERVICE_CODE,
     });
 
     const plugin = getRechargePlugin(
