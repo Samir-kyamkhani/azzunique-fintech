@@ -46,8 +46,8 @@ export const PermissionsRegistry = {
   },
 
   COMMISSION: {
-    READ: 'commission.read',
-    SET_USER_RULE: 'commission.user.set',
-    SET_ROLE_RULE: 'commission.role.set',
+    READ: 'COMMISSION.READ',
+    SET_USER_RULE: 'COMMISSION.SET_USER_RULE',
+    SET_ROLE_RULE: 'COMMISSION.SET_ROLE_RULE',
   },
 };

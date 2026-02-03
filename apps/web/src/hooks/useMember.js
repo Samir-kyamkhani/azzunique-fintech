@@ -51,3 +51,13 @@ export const useUpdateMember = () =>
         body: payload, // FormData
       }),
   });
+
+/* ================= ASSIGN PERMISSIONS ================= */
+export const useAssignMemberPermissions = () =>
+  useMutation({
+    mutationFn: ({ memberId, payload }) =>
+      apiClient(`/members/${memberId}/permissions`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+  });

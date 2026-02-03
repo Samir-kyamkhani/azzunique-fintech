@@ -145,6 +145,8 @@ class AuthService {
   }
 
   async getCurrentUser(actor) {
+    console.log(actor);
+    
     if (!actor?.id || !actor?.type) {
       throw ApiError.unauthorized('Invalid session');
     }
