@@ -1,25 +1,16 @@
 /**
+ * “Jo bhi recharge provider banna chahta hai, ye functions implement karne honge.”
  *  Recharge Plugin Interface
  *
  * NOTE:
- * - Plan / Offer optional
  * - Transaction mandatory
  */
-export default class RechargePlugin {
+export default class RechargeExchangePluginInterface {
   constructor(config) {
     this.config = config;
   }
 
-  // Optional (MPLAN)
-  async fetchPlans(_params) {
-    throw new Error('fetchPlans not implemented');
-  }
-
-  async fetchOffers(_params) {
-    throw new Error('fetchOffers not implemented');
-  }
-
-  // Mandatory (RechargeExchange)
+  // Mandatory (RECHARGE_EXCHANGE)
   async recharge(_params) {
     throw new Error('recharge not implemented');
   }

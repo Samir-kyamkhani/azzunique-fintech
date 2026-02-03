@@ -1,1 +1,1 @@
-export const skipTenantCheckRoles = ['AZZUNIQUE', 'RESELLER', 'WHITE_LABEL'];
+export const RECHARGE_SERVICE_CODE = 'RECHARGE';

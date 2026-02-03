@@ -13,24 +13,28 @@ import rateLimit from 'express-rate-limit';
 const router = Router();
 
 const callbackLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 30,
+  windowMs: 60 * 1000, // 1 minute
+  max: 30, // limit each IP to 30 requests per windowMs
 });
 
 router.use(AuthMiddleware);
 
 const rechargeLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 5,
+  windowMs: 60 * 1000, // 1 minute
+  max: 5, // limit each IP to 5 requests per windowMs
 });
 
 // MPLAN — FETCH PLANS GET /api/recharge/plans
-router.get('/plans', validate(rechargePlanSchema, 'query'), fetchRechargePlans);
+router.get(
+  '/plans',
+  validate({ query: rechargePlanSchema }),
+  fetchRechargePlans,
+);
 
 // MPLAN — FETCH OFFERS GET /api/recharge/offers
 router.get(
   '/offers',
-  validate(rechargeOfferSchema, 'query'),
+  validate({ query: rechargeOfferSchema }),
   fetchRechargeOffers,
 );
 
@@ -38,7 +42,7 @@ router.get(
 router.post(
   '/',
   rechargeLimiter,
-  validate(rechargeTransactionSchema),
+  validate({ body: rechargeTransactionSchema }),
   initiateRecharge,
 );
 

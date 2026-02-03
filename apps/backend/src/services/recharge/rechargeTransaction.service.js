@@ -14,24 +14,20 @@ import MultiLevelCommission from '../../lib/multilevel-commission.engine.js';
 
 import OperatorMapService from '../recharge-admin/operatorMap.service.js';
 import CircleMapService from '../recharge-admin/circleMap.service.js';
+import { RECHARGE_SERVICE_CODE } from '../../config/constant.js';
+import { buildTenantChain } from '../../lib/tenantHierarchy.util.js';
 
 class RechargeTransactionService {
   // MAIN ENTRY
   static async initiateRecharge({ payload, actor }) {
     const { mobileNumber, operatorCode, circleCode, amount } = payload;
 
-    // 1️⃣ Build tenant hierarchy (BOTTOM → TOP)
-    const tenantChain = [
-      actor.tenantId,
-      actor.whiteLabelTenantId,
-      actor.resellerTenantId,
-      actor.azzuniqueTenantId,
-    ].filter(Boolean);
+    const tenantChain = await buildTenantChain(actor.tenantId);
 
     // 2️⃣ Resolve service + provider
     const { service, provider } = await RechargeRuntimeService.resolve({
       tenantChain,
-      platformServiceCode: 'RECHARGE',
+      platformServiceCode: RECHARGE_SERVICE_CODE,
     });
 
     // ✅ IDEMPOTENCY CHECK (CRITICAL)
@@ -89,7 +85,7 @@ class RechargeTransactionService {
       amount,
       platformServiceId: service.id,
       platformServiceFeatureId: null, // recharge has single feature
-      providerCode: provider.serviceProviderId,
+      providerCode: provider.code,
 
       status: 'INITIATED',
       createdAt: new Date(),
@@ -97,10 +93,7 @@ class RechargeTransactionService {
     });
 
     // 7️⃣ Call provider
-    const plugin = getRechargePlugin(
-      provider.serviceProviderId,
-      provider.config,
-    );
+    const plugin = getRechargePlugin(provider.code, provider.config);
 
     let providerResponse;
 
@@ -108,13 +101,13 @@ class RechargeTransactionService {
       const providerOperatorCode = await OperatorMapService.resolve({
         internalOperatorCode: operatorCode,
         platformServiceId: service.id,
-        providerCode: provider.serviceProviderId,
+        providerCode: provider.code,
       });
 
       const providerCircleCode = circleCode
         ? await CircleMapService.resolve({
             internalCircleCode: circleCode,
-            providerCode: provider.serviceProviderId,
+            providerCode: provider.code,
           })
         : null;
 

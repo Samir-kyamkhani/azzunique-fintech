@@ -1,17 +1,31 @@
 import { db } from '../../database/core/core-db.js';
+import { eq, and } from 'drizzle-orm';
 import {
   tenantServiceTable,
   platformServiceProviderTable,
   platformServiceTable,
+  serviceProviderTable,
 } from '../../models/core/index.js';
 import { ApiError } from '../../lib/ApiError.js';
 
 // RULE: User → WL → Reseller → AZZUNIQUE (sab ke liye service enabled honi chahiye)
+
+/*
+ * RechargeRuntimeService.resolve() ka sirf ek kaam hai:
+ * Runtime pe ye decide karna:
+ * Recharge service allowed hai ya nahi (hierarchy ke har level pe)
+ * Kaunsa provider use hoga (WL / Reseller / AZZUNIQUE)
+ */
+
 class RechargeRuntimeService {
   static async resolve({ tenantChain, platformServiceCode }) {
-    // 1️⃣ Find platform service
+    // 1️⃣ Platform service
     const [service] = await db
-      .select()
+      .select({
+        id: platformServiceTable.id,
+        code: platformServiceTable.code,
+        name: platformServiceTable.name,
+      })
       .from(platformServiceTable)
       .where(eq(platformServiceTable.code, platformServiceCode))
       .limit(1);
@@ -20,16 +34,16 @@ class RechargeRuntimeService {
       throw ApiError.notFound('Recharge service not configured');
     }
 
-    // 2️⃣ Hierarchy enable check (BOTTOM → TOP)
+    // 2️⃣ Hierarchy enable check
     for (const tenantId of tenantChain) {
       const [enabled] = await db
         .select()
         .from(tenantServiceTable)
         .where(
           and(
-            eq(platformServiceProviderTable.tenantId, tenantId),
-            eq(platformServiceProviderTable.platformServiceId, service.id),
-            eq(platformServiceProviderTable.isActive, true),
+            eq(tenantServiceTable.tenantId, tenantId),
+            eq(tenantServiceTable.platformServiceId, service.id),
+            eq(tenantServiceTable.isEnabled, true),
           ),
         )
         .limit(1);
@@ -41,29 +55,41 @@ class RechargeRuntimeService {
       }
     }
 
-    // 3️⃣ Final provider resolution (TOP MOST CONFIG WINS)
-    for (const tenantId of tenantChain) {
-      const [provider] = await db
-        .select()
-        .from(platformServiceProviderTable)
-        .where(
-          and(
-            eq(platformServiceProviderTable.tenantId, tenantId),
-            eq(platformServiceProviderTable.platformServiceId, service.id),
-            eq(platformServiceProviderTable.isActive, true),
-          ),
-        )
-        .limit(1);
+    // 3️⃣ Provider resolve WITH CODE
+    const [row] = await db
+      .select({
+        providerId: platformServiceProviderTable.serviceProviderId,
+        providerCode: serviceProviderTable.code, // ✅ IMPORTANT
+        config: platformServiceProviderTable.config,
+      })
+      .from(platformServiceProviderTable)
+      .innerJoin(
+        serviceProviderTable,
+        eq(
+          serviceProviderTable.id,
+          platformServiceProviderTable.serviceProviderId,
+        ),
+      )
+      .where(
+        and(
+          eq(platformServiceProviderTable.platformServiceId, service.id),
+          eq(platformServiceProviderTable.isActive, true),
+        ),
+      )
+      .limit(1);
 
-      if (provider) {
-        return {
-          service,
-          provider,
-        };
-      }
+    if (!row) {
+      throw ApiError.internal('Recharge provider not configured');
     }
 
-    throw ApiError.internal('Recharge provider not configured');
+    return {
+      service,
+      provider: {
+        id: row.providerId,
+        code: row.providerCode, // ✅ IMPORTANT
+        config: row.config,
+      },
+    };
   }
 }
 

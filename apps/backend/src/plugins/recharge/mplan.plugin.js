@@ -1,13 +1,12 @@
 import axios from 'axios';
-import RechargePlugin from './recharge.interface.js';
+import MplanPluginInterface from './mplan.interface.js';
 import { ApiError } from '../../lib/ApiError.js';
-import envConfig from '../../config/config.js';
 
-class MplanPlugin extends RechargePlugin {
+class MplanPlugin extends MplanPluginInterface {
   constructor(config) {
     super(config);
     this.client = axios.create({
-      baseURL: envConfig.rechage.mplanpluginUrl,
+      baseURL: this.config.mplanpluginUrl, //rechage.mplanpluginUrl
       timeout: 10000,
     });
   }
