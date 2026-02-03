@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { RefreshCw, Users, CheckCircle, Ban, UserX } from "lucide-react";
 
 import MembersTable from "@/components/tables/MembersTable";
@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { setMember } from "@/store/memberSlice";
 import ImagePreviewModal from "../ImagePreviewModal";
 import {
+  useAssignMemberPermissions,
   useCreateMember,
   useMembers,
   useUpdateMember,
@@ -22,6 +23,10 @@ import {
 import { useRoles } from "@/hooks/useRole";
 import { useTenants } from "@/hooks/useTenant";
 import { useDebounce } from "@/hooks/useDebounce";
+import MemberPermissionModal from "../modals/MemberPermissionModal";
+import { usePermissions } from "@/hooks/usePermission";
+import { Shield } from "lucide-react";
+import { setPermissions } from "@/store/permissionSlice";
 
 export default function MemberClient() {
   /* ================= UI STATE ================= */
@@ -32,9 +37,24 @@ export default function MemberClient() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
 
-
   const [openModal, setOpenModal] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
+
+  const [permOpen, setPermOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
+
+  const openPermissionModal = (member) => {
+    setSelectedMember(member);
+    setPermOpen(true);
+  };
+
+  const extraActions = [
+    {
+      icon: Shield,
+      label: "Permissions",
+      onClick: openPermissionModal,
+    },
+  ];
 
   const perPage = 10;
   const isEditing = Boolean(editingMember);
@@ -65,11 +85,42 @@ export default function MemberClient() {
   const { mutate: createMember, isPending: creating } = useCreateMember();
   const { mutate: updateMember, isPending: updating } = useUpdateMember();
 
+  const { data: permissionList } = usePermissions();
+  const { mutate: assignPermissions, isPending: permSaving } =
+    useAssignMemberPermissions();
+
+  useEffect(() => {
+    if (permissionList) {
+      dispatch(setPermissions(permissionList));
+    }
+  }, [permissionList, dispatch]);
+
+  const handlePermissionSubmit = (data, setError) => {
+    assignPermissions(
+      { memberId: selectedMember?.id, payload: data },
+      {
+        onSuccess: () => {
+          toast.success("Permissions updated");
+          setPermOpen(false);
+        },
+        onError: (err) => {
+          if (err?.type === "FIELD") {
+            err.errors.forEach(({ field, message }) =>
+              setError(field, { message }),
+            );
+            return;
+          }
+          setError("root", { message: err?.message || "Update failed" });
+        },
+      },
+    );
+  };
+
   /* ================= NORMALIZE ================= */
   const members =
     data?.data
       ?.map((item) => {
-        const user = item.users?.[0]; // ← actual member
+        const user = item.users?.[0];
         const tenant = item.tenant;
 
         if (!user) return null;
@@ -92,6 +143,8 @@ export default function MemberClient() {
           tenantName: tenant?.tenantName,
           tenantNumber: tenant?.tenantNumber,
           tenantId: tenant?.id,
+
+          permissions: user.permissions,
         };
       })
       .filter(Boolean) || [];
@@ -227,6 +280,7 @@ export default function MemberClient() {
         onView={handleView}
         loading={isLoading}
         onImagePreview={handleImagePreview}
+        extraActions={extraActions}
       />
 
       {openModal && (
@@ -249,6 +303,14 @@ export default function MemberClient() {
         open={previewOpen}
         image={previewImage}
         onClose={() => setPreviewOpen(false)}
+      />
+
+      <MemberPermissionModal
+        open={permOpen}
+        onClose={() => setPermOpen(false)}
+        member={selectedMember}
+        onSubmit={handlePermissionSubmit}
+        isPending={permSaving}
       />
     </>
   );

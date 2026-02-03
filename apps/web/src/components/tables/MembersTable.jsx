@@ -16,39 +16,27 @@ const options = [
   { label: "Suspended", value: "SUSPENDED" },
 ];
 
-/* ---------------- EXTRA ACTIONS ---------------- */
-const extraActions = [
-  {
-    icon: Shield,
-    label: "Permissions",
-    onClick: (member) => {
-      console.log("Member ID:", member.id);
-      console.log("Department ID:", member.departmentId);
-    },
-  },
-];
-
 /* ===================== COLUMNS ===================== */
 const getColumns = (onImagePreview) => [
- {
-  key: "profilePictureUrl",
-  label: "Photo",
-  render: (row) =>
-    row.profilePictureUrl ? (
-      <img
-        src={row.profilePictureUrl}
-        alt={row.fullName}
-        width={40}
-        height={40}
-        className="rounded-full object-cover cursor-pointer border"
-        onClick={() => onImagePreview(row.profilePictureUrl)}
-      />
-    ) : (
-      <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-        <User size={16} />
-      </div>
-    ),
-},
+  {
+    key: "profilePictureUrl",
+    label: "Photo",
+    render: (row) =>
+      row.profilePictureUrl ? (
+        <img
+          src={row.profilePictureUrl}
+          alt={row.fullName}
+          width={40}
+          height={40}
+          className="rounded-full object-cover cursor-pointer border"
+          onClick={() => onImagePreview(row.profilePictureUrl)}
+        />
+      ) : (
+        <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+          <User size={16} />
+        </div>
+      ),
+  },
   { key: "userNumber", label: "Member No" },
   { key: "fullName", label: "Name" },
   { key: "email", label: "Email" },
@@ -76,6 +64,7 @@ export default function MembersTable({
   onView,
   onDelete,
   onImagePreview,
+  extraActions,
 }) {
   const columns = getColumns(onImagePreview);
 

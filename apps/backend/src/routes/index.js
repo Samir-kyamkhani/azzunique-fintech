@@ -16,6 +16,7 @@ import platformServiceRoutes from './platformService.routes.js';
 import serviceProviderRoutes from './serviceProvider.routes.js';
 import tenantServiceRoutes from './tenantService.routes.js';
 import commisionRoutes from './commission.routes.js';
+import permissionRoutes from './permission.routes.js';
 
 const router = Router();
 
@@ -37,4 +38,5 @@ router.use('/platform', tenantServiceRoutes);
 router.use('/commission', commisionRoutes);
 router.use('/recharge', rechargeRoutes);
 
+router.use('/permissions', permissionRoutes);
 export default router;

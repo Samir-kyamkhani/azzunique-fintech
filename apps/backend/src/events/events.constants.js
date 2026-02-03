@@ -6,4 +6,6 @@ export const EVENTS = {
 
   USER_CREATED: 'user.created',
   USER_STATUS_CHANGED: 'users.status.changed',
+
+  DOMAIN_CREATE: 'domain.create',
 };
