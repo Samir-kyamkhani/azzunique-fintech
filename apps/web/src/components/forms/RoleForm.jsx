@@ -1,16 +1,31 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { AlertCircle, Shield } from "lucide-react";
+import { useSelector } from "react-redux";
 
 import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import TextareaField from "@/components/ui/TextareaField";
+import SelectField from "@/components/ui/SelectField";
+import { ROLE_FLOW } from "../client/RoletClient";
 
 export default function RoleForm({ initialData = null, isPending, onSubmit }) {
+  const actorRoleCode = useSelector((s) => s.auth.user?.roleCode);
+  const allowedRoles = ROLE_FLOW[actorRoleCode] || [];
+
+  const roleOptions = [
+    ...new Map(
+      [initialData?.roleCode, ...allowedRoles]
+        .filter(Boolean)
+        .map((r) => [r, { label: r.replaceAll("_", " "), value: r }]),
+    ).values(),
+  ];
+
   const {
     register,
     handleSubmit,
+    control,
     clearErrors,
     setError,
     formState: { errors },
@@ -26,7 +41,7 @@ export default function RoleForm({ initialData = null, isPending, onSubmit }) {
   const onFormSubmit = (data) => {
     clearErrors();
 
-    if (!data.roleCode?.trim()) {
+    if (!data.roleCode) {
       setError("roleCode", { message: "Role code is required" });
       return;
     }
@@ -36,13 +51,7 @@ export default function RoleForm({ initialData = null, isPending, onSubmit }) {
       return;
     }
 
-    onSubmit(
-      {
-        ...data,
-        roleCode: data.roleCode.toUpperCase(),
-      },
-      setError,
-    );
+    onSubmit(data, setError);
   };
 
   return (
@@ -57,19 +66,27 @@ export default function RoleForm({ initialData = null, isPending, onSubmit }) {
       )}
 
       <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
-        <InputField
-          label="Role Code"
-          name="roleCode"
-          placeholder="RESELLER, DISTRIBUTOR"
-          register={(name) =>
-            register(name, {
-              setValueAs: (v) => v?.toUpperCase(),
-            })
-          }
-          required
-          error={errors.roleCode}
-        />
+        {/* ROLE CODE SELECT */}
+        <div>
+          <label className="block text-sm font-medium mb-1">Role Code</label>
 
+          <Controller
+            name="roleCode"
+            control={control}
+            render={({ field }) => (
+              <SelectField
+                value={field.value}
+                onChange={field.onChange}
+                options={roleOptions}
+                placeholder="Select Role"
+                error={errors.roleCode}
+                disabled={!!initialData}
+              />
+            )}
+          />
+        </div>
+
+        {/* ROLE NAME */}
         <InputField
           label="Role Name"
           name="roleName"
@@ -79,6 +96,7 @@ export default function RoleForm({ initialData = null, isPending, onSubmit }) {
           error={errors.roleName}
         />
 
+        {/* DESCRIPTION */}
         <TextareaField
           label="Description"
           name="roleDescription"
@@ -95,7 +113,7 @@ export default function RoleForm({ initialData = null, isPending, onSubmit }) {
           <div className="flex justify-center gap-1 text-muted-foreground">
             <Shield className="h-3 w-3" />
             <p className="text-xs">
-              Roles control system hierarchy & permissions
+              Roles define system hierarchy & permissions
             </p>
           </div>
         </div>

@@ -10,24 +10,25 @@ import RoleModal from "@/components/modals/RoleModal";
 
 import { Shield, Hash, FileText, Plus } from "lucide-react";
 
-import {
-  useRoles,
-  useCreateRole,
-  useUpdateRole,
-  useDeleteRole,
-} from "@/hooks/useRole";
+import { useRoles, useCreateRole, useUpdateRole } from "@/hooks/useRole";
 
 import { setRoles, setRole, clearRole } from "@/store/roleSlice";
 
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import RowActions from "../tables/core/RowActions";
-import ConfirmDialog from "../ConfirmDialog";
+
+export const ROLE_FLOW = {
+  AZZUNIQUE: ["RESELLER"],
+  RESELLER: ["WHITE_LABEL"],
+  WHITE_LABEL: ["STATE_HEAD", "MASTER_DISTRIBUTOR", "DISTRIBUTOR", "RETAILER"],
+  STATE_HEAD: [],
+  MASTER_DISTRIBUTOR: [],
+  DISTRIBUTOR: [],
+  RETAILER: [],
+};
 
 export default function RoleClient() {
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [selectedRole, setSelectedRole] = useState(null);
-
   const dispatch = useDispatch();
   const roles = useSelector((s) => s.role.list);
   const current = useSelector((s) => s.role.current);
@@ -37,11 +38,15 @@ export default function RoleClient() {
   const { data, isLoading, refetch } = useRoles();
   const { mutate: createMutate, isPending: creating } = useCreateRole();
   const { mutate: updateMutate, isPending: updating } = useUpdateRole();
-  const { mutate: deleteMutate, isPending: deleting } = useDeleteRole();
 
   useEffect(() => {
     dispatch(setRoles(data?.data || []));
   }, [data, dispatch]);
+
+  const actorRoleCode = useSelector((s) => s.auth.user?.role.roleCode);
+  const allowedRoles = ROLE_FLOW[actorRoleCode] || [];
+
+  const nextRoleExists = roles.some((r) => allowedRoles.includes(r.roleCode));
 
   const handleSubmit = (payload, setError) => {
     const action = current ? updateMutate : createMutate;
@@ -66,27 +71,6 @@ export default function RoleClient() {
     });
   };
 
-  const askDelete = (role) => {
-    setSelectedRole(role);
-    setConfirmOpen(true);
-  };
-
-  const confirmDelete = () => {
-    if (!selectedRole) return;
-
-    deleteMutate(selectedRole.id, {
-      onSuccess: () => {
-        toast.success("Role deleted");
-        setConfirmOpen(false);
-        setSelectedRole(null);
-        refetch();
-      },
-      onError: (err) => {
-        toast.error(err?.message || "Failed to delete role");
-      },
-    });
-  };
-
   if (isLoading) return <PageSkeleton />;
 
   return (
@@ -100,15 +84,17 @@ export default function RoleClient() {
           </p>
         </div>
 
-        <Button
-          icon={Plus}
-          onClick={() => {
-            dispatch(clearRole());
-            setOpenModal(true);
-          }}
-        >
-          Add Role
-        </Button>
+        {allowedRoles.length > 0 && !nextRoleExists && (
+          <Button
+            icon={Plus}
+            onClick={() => {
+              dispatch(clearRole());
+              setOpenModal(true);
+            }}
+          >
+            Add Role
+          </Button>
+        )}
       </div>
 
       {/* LIST */}
@@ -128,7 +114,6 @@ export default function RoleClient() {
                     dispatch(setRole(role));
                     setOpenModal(true);
                   }}
-                  onDelete={() => askDelete(role)}
                   extraActions={[
                     {
                       icon: Shield,
@@ -185,19 +170,6 @@ export default function RoleClient() {
           onSubmit={handleSubmit}
           isPending={creating || updating}
           initialData={current}
-        />
-      )}
-
-      {confirmOpen && (
-        <ConfirmDialog
-          open={confirmOpen}
-          onClose={() => setConfirmOpen(false)}
-          onConfirm={confirmDelete}
-          title="Delete Role"
-          description={`Are you sure you want to delete "${selectedRole?.roleName}"? This action cannot be undone.`}
-          confirmText="Delete"
-          variant="danger"
-          loading={deleting}
         />
       )}
     </>

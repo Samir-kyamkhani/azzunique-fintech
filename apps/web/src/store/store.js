@@ -10,6 +10,7 @@ import tenantSocialMediaReducer from "./tenantSocialMediaSlice";
 import departmentReducer from "./departmentSlice";
 import employeeReducer from "./employeeSlice";
 import permissionReducer from "./permissionSlice";
+import roleReducer from "./roleSlice";
 
 export const store = configureStore({
   reducer: {
@@ -24,5 +25,6 @@ export const store = configureStore({
     department: departmentReducer,
     employee: employeeReducer,
     permission: permissionReducer,
+    role: roleReducer,
   },
 });
