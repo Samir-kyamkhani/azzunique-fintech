@@ -95,13 +95,22 @@ export default function MemberClient() {
     }
   }, [permissionList, dispatch]);
 
-  const handlePermissionSubmit = (data) => {
+  const handlePermissionSubmit = (data, setError) => {
     assignPermissions(
       { memberId: selectedMember?.id, payload: data },
       {
         onSuccess: () => {
           toast.success("Permissions updated");
           setPermOpen(false);
+        },
+        onError: (err) => {
+          if (err?.type === "FIELD") {
+            err.errors.forEach(({ field, message }) =>
+              setError(field, { message }),
+            );
+            return;
+          }
+          setError("root", { message: err?.message || "Update failed" });
         },
       },
     );

@@ -9,13 +9,21 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 export default function PermissionForm({
   onSubmit,
   isPending,
-  memberPermissions = [], // 👈 new prop
+
+  memberPermissions = [],
 }) {
   const { data: permissions } = useSelector(
     (state) => state.permission.permissions,
   ) || { data: [] };
 
-  const { handleSubmit, setValue, getValues, control } = useForm({
+  const {
+    handleSubmit,
+    setValue,
+    getValues,
+    control,
+    setError,
+    formState: { errors },
+  } = useForm({
     defaultValues: { permissions: [] },
   });
 
@@ -67,7 +75,7 @@ export default function PermissionForm({
   const isAllowed = (id) => selected.some((p) => p.permissionId === id);
 
   const onFormSubmit = () => {
-    onSubmit({ permissions: getValues("permissions") });
+    onSubmit({ permissions: getValues("permissions") }, setError);
   };
 
   return (
@@ -76,6 +84,11 @@ export default function PermissionForm({
       className="flex flex-col h-full relative"
     >
       <div className="flex-1 overflow-y-auto overflow-x-visible pr-2">
+        {errors.permissions && (
+          <p className="text-xs text-destructive text-red-500 px-1 mb-2">
+            {errors.permissions.message}
+          </p>
+        )}
         <div className="grid md:grid-cols-2 gap-4 relative">
           {Object.entries(grouped).map(([resource, resourcePerms]) => {
             const allowedCount = resourcePerms.filter((perm) =>
