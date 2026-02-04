@@ -37,13 +37,14 @@ CREATE TABLE `recharge_transactions` (
 CREATE TABLE `recharge_callbacks` (
 	`id` varchar(36) NOT NULL,
 	`transaction_id` varchar(36) NOT NULL,
+	`provider_txn_id` varchar(100) NOT NULL,
 	`status` varchar(20) NOT NULL,
-	`provider_txn_id` varchar(100),
 	`message` varchar(255),
 	`raw_payload` json NOT NULL,
 	`created_at` timestamp DEFAULT (now()),
 	`updated_at` timestamp DEFAULT (now()),
-	CONSTRAINT `recharge_callbacks_id` PRIMARY KEY(`id`)
+	CONSTRAINT `recharge_callbacks_id` PRIMARY KEY(`id`),
+	CONSTRAINT `uniq_recharge_callback` UNIQUE(`transaction_id`,`provider_txn_id`,`status`)
 );
 --> statement-breakpoint
 CREATE TABLE `recharge_circle_map` (

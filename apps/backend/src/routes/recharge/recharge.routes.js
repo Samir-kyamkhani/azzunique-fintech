@@ -9,6 +9,7 @@ import { rechargePlanSchema } from '../../validators/recharge/rechargePlan.schem
 import { rechargeOfferSchema } from '../../validators/recharge/rechargeOffer.schema.js';
 import { rechargeTransactionSchema } from '../../validators/recharge/rechargeTransaction.schema.js';
 import rateLimit from 'express-rate-limit';
+import { rawQueryMiddleware } from '../../middleware/rawQuery.middleware.js';
 
 const router = Router();
 
@@ -47,6 +48,6 @@ router.post(
 );
 
 // PUBLIC CALLBACK (NO AUTH) RechargeExchange will hit this
-router.get('/callback', callbackLimiter, rechargeCallback);
+router.get('/callback', rawQueryMiddleware, callbackLimiter, rechargeCallback);
 
 export default router;

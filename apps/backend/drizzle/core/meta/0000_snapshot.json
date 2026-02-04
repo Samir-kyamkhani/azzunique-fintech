@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "a297a29e-f0fe-4872-b004-7261e8e53ecb",
+  "id": "65c242b1-d1db-4daf-be85-a572bbe00a85",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "audit_log": {
@@ -3649,6 +3649,111 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
+    "platform_service_providers": {
+      "name": "platform_service_providers",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(UUID())"
+        },
+        "platform_service_id": {
+          "name": "platform_service_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "service_provider_id": {
+          "name": "service_provider_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "config": {
+          "name": "config",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "uniq_platform_service_provider": {
+          "name": "uniq_platform_service_provider",
+          "columns": [
+            "platform_service_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "psp_platform_service_fk": {
+          "name": "psp_platform_service_fk",
+          "tableFrom": "platform_service_providers",
+          "tableTo": "platform_services",
+          "columnsFrom": [
+            "platform_service_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "psp_service_provider_fk": {
+          "name": "psp_service_provider_fk",
+          "tableFrom": "platform_service_providers",
+          "tableTo": "service_providers",
+          "columnsFrom": [
+            "service_provider_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "platform_service_providers_id": {
+          "name": "platform_service_providers_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
     "service_providers": {
       "name": "service_providers",
       "columns": {
@@ -3959,123 +4064,6 @@
       "compositePrimaryKeys": {
         "tenant_services_id": {
           "name": "tenant_services_id",
-          "columns": [
-            "id"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "checkConstraint": {}
-    },
-    "tenant_service_providers": {
-      "name": "tenant_service_providers",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(UUID())"
-        },
-        "tenant_id": {
-          "name": "tenant_id",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "platform_service_id": {
-          "name": "platform_service_id",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "service_provider_id": {
-          "name": "service_provider_id",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "config": {
-          "name": "config",
-          "type": "json",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "is_enabled": {
-          "name": "is_enabled",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(now())"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(now())"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "tsp_tenant_fk": {
-          "name": "tsp_tenant_fk",
-          "tableFrom": "tenant_service_providers",
-          "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "tsp_platform_service_fk": {
-          "name": "tsp_platform_service_fk",
-          "tableFrom": "tenant_service_providers",
-          "tableTo": "platform_services",
-          "columnsFrom": [
-            "platform_service_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "tsp_service_provider_fk": {
-          "name": "tsp_service_provider_fk",
-          "tableFrom": "tenant_service_providers",
-          "tableTo": "service_providers",
-          "columnsFrom": [
-            "service_provider_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "tenant_service_providers_id": {
-          "name": "tenant_service_providers_id",
           "columns": [
             "id"
           ]

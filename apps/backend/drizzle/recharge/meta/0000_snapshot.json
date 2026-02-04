@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "18cf34d6-7496-4e51-9cc6-b157bb4f3ecf",
+  "id": "6d592de2-9180-4436-bcd5-06618f7c404f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "recharge_operator_map": {
@@ -258,18 +258,18 @@
           "notNull": true,
           "autoincrement": false
         },
+        "provider_txn_id": {
+          "name": "provider_txn_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "status": {
           "name": "status",
           "type": "varchar(20)",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
-        },
-        "provider_txn_id": {
-          "name": "provider_txn_id",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": false,
           "autoincrement": false
         },
         "message": {
@@ -303,7 +303,17 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_recharge_callback": {
+          "name": "uniq_recharge_callback",
+          "columns": [
+            "transaction_id",
+            "provider_txn_id",
+            "status"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {
         "recharge_callbacks_id": {

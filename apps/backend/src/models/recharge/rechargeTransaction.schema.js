@@ -1,4 +1,10 @@
-import { mysqlTable, timestamp, varchar, int, uniqueIndex } from 'drizzle-orm/mysql-core';
+import {
+  mysqlTable,
+  timestamp,
+  varchar,
+  int,
+  uniqueIndex,
+} from 'drizzle-orm/mysql-core';
 
 export const rechargeTransactionTable = mysqlTable(
   'recharge_transactions',
@@ -24,6 +30,7 @@ export const rechargeTransactionTable = mysqlTable(
     }).notNull(),
 
     providerCode: varchar('provider_code', { length: 40 }).notNull(),
+    providerId: varchar('provider_id', { length: 36 }).notNull(),
 
     status: varchar('status', { length: 20 }).notNull(),
     // INITIATED | SUCCESS | FAILED | PENDING | REFUNDED

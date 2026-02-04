@@ -420,6 +420,18 @@ CREATE TABLE `platform_service_features` (
 	CONSTRAINT `uniq_platform_service_feature` UNIQUE(`platform_service_id`,`code`)
 );
 --> statement-breakpoint
+CREATE TABLE `platform_service_providers` (
+	`id` varchar(36) NOT NULL DEFAULT (UUID()),
+	`platform_service_id` varchar(36) NOT NULL,
+	`service_provider_id` varchar(36) NOT NULL,
+	`config` json NOT NULL,
+	`is_active` boolean NOT NULL DEFAULT true,
+	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`updated_at` timestamp NOT NULL DEFAULT (now()),
+	CONSTRAINT `platform_service_providers_id` PRIMARY KEY(`id`),
+	CONSTRAINT `uniq_platform_service_provider` UNIQUE(`platform_service_id`)
+);
+--> statement-breakpoint
 CREATE TABLE `service_providers` (
 	`id` varchar(36) NOT NULL DEFAULT (UUID()),
 	`platform_service_id` varchar(36) NOT NULL,
@@ -452,18 +464,6 @@ CREATE TABLE `tenant_services` (
 	`updated_at` timestamp NOT NULL DEFAULT (now()),
 	CONSTRAINT `tenant_services_id` PRIMARY KEY(`id`),
 	CONSTRAINT `uniq_tenant_service` UNIQUE(`tenant_id`,`platform_service_id`)
-);
---> statement-breakpoint
-CREATE TABLE `tenant_service_providers` (
-	`id` varchar(36) NOT NULL DEFAULT (UUID()),
-	`tenant_id` varchar(36) NOT NULL,
-	`platform_service_id` varchar(36) NOT NULL,
-	`service_provider_id` varchar(36) NOT NULL,
-	`config` json NOT NULL,
-	`is_enabled` boolean NOT NULL DEFAULT true,
-	`created_at` timestamp NOT NULL DEFAULT (now()),
-	`updated_at` timestamp NOT NULL DEFAULT (now()),
-	CONSTRAINT `tenant_service_providers_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
 CREATE TABLE `wallets` (
@@ -637,14 +637,13 @@ ALTER TABLE `pii_consent` ADD CONSTRAINT `pii_consent_tenant_fk` FOREIGN KEY (`t
 ALTER TABLE `transactions` ADD CONSTRAINT `txn_initiated_by_user_fk` FOREIGN KEY (`initiated_by_user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `transactions` ADD CONSTRAINT `txn_tenant_fk` FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `platform_service_features` ADD CONSTRAINT `psf_ps_fk` FOREIGN KEY (`platform_service_id`) REFERENCES `platform_services`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `platform_service_providers` ADD CONSTRAINT `psp_platform_service_fk` FOREIGN KEY (`platform_service_id`) REFERENCES `platform_services`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `platform_service_providers` ADD CONSTRAINT `psp_service_provider_fk` FOREIGN KEY (`service_provider_id`) REFERENCES `service_providers`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `service_providers` ADD CONSTRAINT `sp_ps_fk` FOREIGN KEY (`platform_service_id`) REFERENCES `platform_services`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `service_provider_features` ADD CONSTRAINT `spf_service_provider_fk` FOREIGN KEY (`service_provider_id`) REFERENCES `service_providers`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `service_provider_features` ADD CONSTRAINT `spf_platform_service_feature_fk` FOREIGN KEY (`platform_service_feature_id`) REFERENCES `platform_service_features`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `tenant_services` ADD CONSTRAINT `ts_tenant_fk` FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `tenant_services` ADD CONSTRAINT `ts_platform_service_fk` FOREIGN KEY (`platform_service_id`) REFERENCES `platform_services`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `tenant_service_providers` ADD CONSTRAINT `tsp_tenant_fk` FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `tenant_service_providers` ADD CONSTRAINT `tsp_platform_service_fk` FOREIGN KEY (`platform_service_id`) REFERENCES `platform_services`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `tenant_service_providers` ADD CONSTRAINT `tsp_service_provider_fk` FOREIGN KEY (`service_provider_id`) REFERENCES `service_providers`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `wallets` ADD CONSTRAINT `wallets_tenant_id_tenants_id_fk` FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `ledgers` ADD CONSTRAINT `ledger_wallet_fk` FOREIGN KEY (`wallet_id`) REFERENCES `wallets`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `ledgers` ADD CONSTRAINT `ledger_transaction_fk` FOREIGN KEY (`transaction_id`) REFERENCES `transactions`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint

@@ -85,7 +85,7 @@ class RechargeRuntimeService {
     return {
       service,
       provider: {
-        id: row.providerId,
+        providerId: row.providerId,
         code: row.providerCode, // ✅ IMPORTANT
         config: row.config,
       },

@@ -12,6 +12,7 @@ import employeeRoutes from './employee.routes.js';
 import tenantWebsiteRoutes from './tenantWebsite.routes.js';
 import tenantSocialMediaRoutes from './tenantSocialMedia.routes.js';
 import rechargeRoutes from './recharge/recharge.routes.js';
+import rechargeAdminRoutes from './recharge-admin/recharge-admin.routes.js';
 import platformServiceRoutes from './platformService.routes.js';
 import serviceProviderRoutes from './serviceProvider.routes.js';
 import tenantServiceRoutes from './tenantService.routes.js';
@@ -37,6 +38,7 @@ router.use('/platform', serviceProviderRoutes);
 router.use('/platform', tenantServiceRoutes);
 router.use('/commission', commisionRoutes);
 router.use('/recharge', rechargeRoutes);
+router.use('/recharge-admin', rechargeAdminRoutes);
 
 router.use('/permissions', permissionRoutes);
 export default router;

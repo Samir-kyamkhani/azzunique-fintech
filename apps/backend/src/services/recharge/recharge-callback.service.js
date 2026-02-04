@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 import { rechargeDb as db } from '../../database/recharge/recharge-db.js';
 import {
@@ -16,12 +16,16 @@ import WalletService from '../wallet.service.js';
 import CommissionEngine from '../../lib/commission.engine.js';
 import MultiLevelCommission from '../../lib/multilevel-commission.engine.js';
 import { ApiError } from '../../lib/ApiError.js';
+import { verifyHmac } from '../../lib/verifyHmac.utils.js';
 
 class RechargeCallbackService {
-  static async handle(payload) {
-    const { status, yourtransid, opid, txnid, message } = payload;
+  static async handle({ query, headers, ip, rawQuery }) {
+    const { status, yourtransid, opid, txnid, message } = query;
 
-    if (!['SUCCESS', 'FAIL'].includes(status.toUpperCase())) return;
+    const finalStatus = status?.toUpperCase();
+    if (!['SUCCESS', 'FAIL'].includes(finalStatus)) return;
+
+    const normalizedStatus = finalStatus === 'FAIL' ? 'FAILED' : 'SUCCESS';
 
     // 1️⃣ Find transaction
     const [txn] = await db
@@ -46,58 +50,99 @@ class RechargeCallbackService {
           platformServiceProviderTable.serviceProviderId,
         ),
       )
-      .where(
-        eq(
-          platformServiceProviderTable.platformServiceId,
-          txn.platformServiceId,
-        ),
-      )
+      .where(eq(platformServiceProviderTable.id, txn.providerId))
       .limit(1);
 
     if (!providerRow) {
       throw ApiError.internal('Provider config not found for callback');
     }
 
-    const expectedSecret = providerRow.config?.callbackSecret;
+    const config = providerRow.config || {};
 
-    // first we need to decode the secret from expectedSecret
+    // 4️⃣ IP allowlist
+    if (Array.isArray(config.callbackIps) && config.callbackIps.length > 0) {
+      if (!config.callbackIps.includes(ip)) {
+        console.warn(`Blocked callback IP ${ip}`);
+        return;
+      }
+    }
 
-    // 🔐 SECRET VALIDATION (PROVIDER-SPECIFIC)
-    if (!expectedSecret || secret !== expectedSecret) {
+    if (!config.callbackSecret) {
       console.warn(
-        `Invalid callback secret for txn ${txn.id} (${providerRow.providerCode})`,
+        `Callback secret missing for provider ${providerRow.providerCode}`,
       );
       return;
     }
+    const secret = Buffer.from(config.callbackSecret, 'base64');
+
+    const isValid = verifyHmac({
+      rawQuery,
+      headers,
+      secret,
+      algo: config.hmacAlgo || 'sha256',
+    });
+
+    if (!isValid) {
+      console.warn('Invalid callback signature');
+      return;
+    }
+
+    // 6️⃣ Replay attack guard
+    const [alreadyProcessed] = await db
+      .select({ id: rechargeCallbackTable.id })
+      .from(rechargeCallbackTable)
+      .where(
+        and(
+          eq(rechargeCallbackTable.transactionId, txn.id),
+          eq(rechargeCallbackTable.providerTxnId, opid),
+          eq(rechargeCallbackTable.status, normalizedStatus),
+        ),
+      )
+      .limit(1);
+
+    if (alreadyProcessed) return;
 
     // 2️⃣ Idempotency guard
     if (txn.status === 'SUCCESS' || txn.status === 'FAILED') return;
 
     // 3️⃣ Store raw callback
-    await db.insert(rechargeCallbackTable).values({
-      id: crypto.randomUUID(),
-      transactionId: txn.id,
-      status: status.tpUpperCase(),
-      providerTxnId: opid,
-      message,
-      rawPayload: payload,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
+    try {
+      await db.insert(rechargeCallbackTable).values({
+        id: crypto.randomUUID(),
+        transactionId: txn.id,
+        status: normalizedStatus,
+        providerTxnId: opid,
+        message,
+        rawPayload: query,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    } catch (e) {
+      return; // duplicate callback, safe exit
+    }
 
-    if (status === 'SUCCESS') {
+    if (normalizedStatus === 'SUCCESS') {
       await this.handleSuccess(txn, { opid, txnid });
       return;
     }
 
-    if (status === 'FAIL') {
+    if (normalizedStatus === 'FAILED') {
       await this.handleFailure(txn, message);
     }
   }
 
   static async handleSuccess(txn, { opid, txnid }) {
-    await db.transaction(async () => {
-      await db
+    await db.transaction(async (tx) => {
+      const [lockedTxn] = await tx
+        .select()
+        .from(rechargeTransactionTable)
+        .where(eq(rechargeTransactionTable.id, txn.id))
+        .forUpdate()
+        .limit(1);
+
+      if (lockedTxn.status !== 'PENDING') return;
+
+      await tx
         .update(rechargeTransactionTable)
         .set({
           status: 'SUCCESS',
@@ -145,7 +190,7 @@ class RechargeCallbackService {
         })
         .where(eq(rechargeTransactionTable.id, txn.id));
 
-      await WalletService.creditWallet({
+      await WalletService.releaseBlockedAmount({
         walletId: lockedTxn.walletId,
         amount: lockedTxn.amount,
         transactionId: lockedTxn.id,

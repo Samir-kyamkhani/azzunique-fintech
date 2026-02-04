@@ -86,6 +86,7 @@ class RechargeTransactionService {
       platformServiceId: service.id,
       platformServiceFeatureId: null, // recharge has single feature
       providerCode: provider.code,
+      providerId: provider.providerId,
 
       status: 'INITIATED',
       createdAt: new Date(),

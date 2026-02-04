@@ -1,12 +1,18 @@
 import RechargeCallbackService from '../../services/recharge/recharge-callback.service.js';
 
 export const rechargeCallback = async (req, res) => {
-  // ✅ ACK FIRST (provider requirement)
-  res.json({ success: true });
+  res.json({ success: true }); // FAST ACK
+
+  // ✅ REAL CLIENT IP (proxy safe)
+  const clientIp =
+    req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip;
 
   setImmediate(() => {
-    RechargeCallbackService.handle(req.query).catch((err) => {
-      console.error('Recharge callback service error:', err);
-    });
+    RechargeCallbackService.handle({
+      query: req.query,
+      headers: req.headers,
+      ip: clientIp, // 👈 YAHI PASS KARO
+      rawQuery: req.rawQuery, // 👈 middleware se
+    }).catch(console.error);
   });
 };
