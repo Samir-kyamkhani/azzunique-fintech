@@ -345,10 +345,8 @@ class UserService {
         profilePictureUrl: users.profilePicture
           ? s3Service.buildS3Url(users.profilePicture)
           : null,
-        permissions: [
-          ...(rolePermMap.get(users.roleId) || []),
-          ...(userPermMap.get(users.id) || []),
-        ],
+        rolePermissions: rolePermMap.get(users.roleId) || [],
+        userPermissions: userPermMap.get(users.id) || [],
       });
     });
 
@@ -442,21 +440,19 @@ class UserService {
       profilePictureUrl: user.profilePicture
         ? s3Service.buildS3Url(user.profilePicture)
         : null,
-      permissions: [
-        ...rolePermissions.map((p) => ({
-          id: p.permissionId,
-          resource: p.resource,
-          action: p.action,
-          source: 'ROLE',
-        })),
-        ...userPermissions.map((p) => ({
-          id: p.permissionId,
-          resource: p.resource,
-          action: p.action,
-          effect: p.effect,
-          source: 'USER',
-        })),
-      ],
+
+      rolePermissions: rolePermissions.map((p) => ({
+        id: p.permissionId,
+        resource: p.resource,
+        action: p.action,
+      })),
+
+      userPermissions: userPermissions.map((p) => ({
+        id: p.permissionId,
+        resource: p.resource,
+        action: p.action,
+        effect: p.effect,
+      })),
     };
   }
 

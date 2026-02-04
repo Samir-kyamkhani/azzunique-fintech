@@ -5,15 +5,17 @@ import Button from "../ui/Button";
 import PermissionForm from "../forms/PermissionForm";
 import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
 
-export default function MemberPermissionModal({
+export default function RolePermissionModal({
   open,
   onClose,
-  member,
+  role,
   onSubmit,
   isPending,
 }) {
   useLockBodyScroll(open);
   if (!open) return null;
+
+  console.log(role);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -31,18 +33,18 @@ export default function MemberPermissionModal({
           <div className="flex items-center gap-3 text-primary-foreground">
             <Shield />
             <div>
-              <h2 className="text-xl font-bold">Assign Permissions</h2>
-              <p className="text-sm opacity-90">{member.fullName}</p>
+              <h2 className="text-xl font-bold">Role Permissions</h2>
+              <p className="text-sm opacity-90">{role.roleName}</p>
             </div>
           </div>
         </div>
 
         <div className="p-6">
           <PermissionForm
-            mode="member"
+            mode="role"
             onSubmit={onSubmit}
             isPending={isPending}
-            permissions={member?.userPermissions || []}
+            permissions={role?.permissions || []}
           />
         </div>
       </div>

@@ -9,12 +9,13 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 export default function PermissionForm({
   onSubmit,
   isPending,
-
-  memberPermissions = [],
+  mode,
+  permissions = [],
 }) {
-  const { data: permissions } = useSelector(
-    (state) => state.permission.permissions,
-  ) || { data: [] };
+  const permissionState = useSelector((state) => state.permission?.permissions);
+  const permissionsData = Array.isArray(permissionState?.data)
+    ? permissionState.data
+    : [];
 
   const {
     handleSubmit,
@@ -36,20 +37,18 @@ export default function PermissionForm({
     }) || [];
 
   useEffect(() => {
-    if (memberPermissions.length) {
-      const mapped = memberPermissions
-        .filter((p) => p.effect === "ALLOW")
-        .map((p) => ({
-          permissionId: p.id,
-          effect: "ALLOW",
-        }));
+    if (!permissions?.length) return;
 
-      setValue("permissions", mapped);
-    }
-  }, [memberPermissions, setValue]);
+    const mapped = permissions.map((p) => ({
+      permissionId: p.id,
+      effect: "ALLOW",
+    }));
+
+    setValue("permissions", mapped);
+  }, [permissions, setValue]);
 
   // Grouping
-  const grouped = permissions.reduce((acc, perm) => {
+  const grouped = permissionsData.reduce((acc, perm) => {
     if (!acc[perm.resource]) acc[perm.resource] = [];
     acc[perm.resource].push(perm);
     return acc;
@@ -75,7 +74,14 @@ export default function PermissionForm({
   const isAllowed = (id) => selected.some((p) => p.permissionId === id);
 
   const onFormSubmit = () => {
-    onSubmit({ permissions: getValues("permissions") }, setError);
+    const selected = getValues("permissions") || [];
+
+    if (mode === "role") {
+      const permissionIds = selected?.map((p) => p?.permissionId);
+      onSubmit({ permissionIds }, setError);
+    } else {
+      onSubmit({ permissions: selected }, setError);
+    }
   };
 
   return (
