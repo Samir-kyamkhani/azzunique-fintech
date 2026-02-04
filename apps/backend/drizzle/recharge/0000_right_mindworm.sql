@@ -22,6 +22,8 @@ CREATE TABLE `recharge_transactions` (
 	`platform_service_id` varchar(36) NOT NULL,
 	`platform_service_feature_id` varchar(36) NOT NULL,
 	`provider_code` varchar(40) NOT NULL,
+	`provider_id` varchar(36) NOT NULL,
+	`provider_config` json NOT NULL,
 	`status` varchar(20) NOT NULL,
 	`provider_txn_id` varchar(100),
 	`reference_id` varchar(100),

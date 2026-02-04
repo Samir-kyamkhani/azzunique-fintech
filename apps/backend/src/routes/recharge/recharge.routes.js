@@ -47,6 +47,9 @@ router.post(
   initiateRecharge,
 );
 
+// RECHARGE TRANSACTION RETRY POST /api/recharge/:transactionId/retry
+router.post('/:transactionId/retry', rechargeLimiter, retryRecharge);
+
 // PUBLIC CALLBACK (NO AUTH) RechargeExchange will hit this
 router.get('/callback', rawQueryMiddleware, callbackLimiter, rechargeCallback);
 

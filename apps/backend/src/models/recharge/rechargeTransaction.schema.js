@@ -4,6 +4,7 @@ import {
   varchar,
   int,
   uniqueIndex,
+  json,
 } from 'drizzle-orm/mysql-core';
 
 export const rechargeTransactionTable = mysqlTable(
@@ -31,6 +32,7 @@ export const rechargeTransactionTable = mysqlTable(
 
     providerCode: varchar('provider_code', { length: 40 }).notNull(),
     providerId: varchar('provider_id', { length: 36 }).notNull(),
+    providerConfig: json('provider_config').notNull(),
 
     status: varchar('status', { length: 20 }).notNull(),
     // INITIATED | SUCCESS | FAILED | PENDING | REFUNDED

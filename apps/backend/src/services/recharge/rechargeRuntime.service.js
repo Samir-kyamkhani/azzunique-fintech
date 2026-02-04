@@ -8,6 +8,13 @@ import {
 } from '../../models/core/index.js';
 import { ApiError } from '../../lib/ApiError.js';
 
+import { rechargeDb as db } from '../../database/recharge/recharge-db.js';
+import { rechargeTransactionTable } from '../../models/recharge/index.js';
+
+import { getRechargePlugin } from '../../plugin_registry/pluginRegistry.js';
+import OperatorMapService from '../recharge-admin/operatorMap.service.js';
+import CircleMapService from '../recharge-admin/circleMap.service.js';
+
 // RULE: User → WL → Reseller → AZZUNIQUE (sab ke liye service enabled honi chahiye)
 
 /*
@@ -89,6 +96,68 @@ class RechargeRuntimeService {
         code: row.providerCode, // ✅ IMPORTANT
         config: row.config,
       },
+    };
+  }
+
+  static async execute({ transactionId, isRetry = false }) {
+    // 1️⃣ Load transaction
+    const [txn] = await db
+      .select()
+      .from(rechargeTransactionTable)
+      .where(eq(rechargeTransactionTable.id, transactionId))
+      .limit(1);
+
+    if (!txn) {
+      throw ApiError.notFound('Recharge transaction not found');
+    }
+
+    // 2️⃣ Only retry-safe states
+    if (!['FAILED', 'PENDING'].includes(txn.status)) {
+      throw ApiError.badRequest('Transaction not retryable');
+    }
+
+    // 3️⃣ Resolve provider plugin (FROZEN PROVIDER)
+    const plugin = getRechargePlugin(
+      txn.providerCode,
+      txn.providerConfig, // 👉 recommended: store providerConfig snapshot
+    );
+
+    // 4️⃣ Operator / circle mapping
+    const providerOperatorCode = await OperatorMapService.resolve({
+      internalOperatorCode: txn.operatorCode,
+      platformServiceId: txn.platformServiceId,
+      providerCode: txn.providerCode,
+    });
+
+    const providerCircleCode = txn.circleCode
+      ? await CircleMapService.resolve({
+          internalCircleCode: txn.circleCode,
+          providerCode: txn.providerCode,
+        })
+      : null;
+
+    // 5️⃣ Call provider (NO WALLET TOUCH)
+    const response = await plugin.recharge({
+      opcode: providerOperatorCode,
+      number: txn.mobileNumber,
+      amount: txn.amount,
+      transid: txn.id, // SAME TXN ID
+      circle: providerCircleCode,
+      isRetry,
+    });
+
+    // 6️⃣ Update status → PENDING (callback will finalize)
+    await db
+      .update(rechargeTransactionTable)
+      .set({
+        status: 'PENDING',
+        updatedAt: new Date(),
+      })
+      .where(eq(rechargeTransactionTable.id, txn.id));
+
+    return {
+      status: 'RETRIED',
+      providerResponse: response,
     };
   }
 }

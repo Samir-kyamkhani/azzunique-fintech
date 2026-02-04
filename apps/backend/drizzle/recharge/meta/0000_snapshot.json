@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "6d592de2-9180-4436-bcd5-06618f7c404f",
+  "id": "581fbdf3-5050-4ccb-a56c-4a812c7bcbc3",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "recharge_operator_map": {
@@ -155,6 +155,20 @@
         "provider_code": {
           "name": "provider_code",
           "type": "varchar(40)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "provider_id": {
+          "name": "provider_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "provider_config": {
+          "name": "provider_config",
+          "type": "json",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
