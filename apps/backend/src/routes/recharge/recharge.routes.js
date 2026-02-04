@@ -3,7 +3,7 @@ import { validate } from '../../middleware/zod-validate.js';
 import { AuthMiddleware } from '../../middleware/auth.middleware.js';
 import { fetchRechargePlans } from '../../controllers/recharge/rechargePlan.controller.js';
 import { fetchRechargeOffers } from '../../controllers/recharge/rechargeOffer.controller.js';
-import { initiateRecharge } from '../../controllers/recharge/rechargeTransaction.controller.js';
+import { initiateRecharge, retryRecharge } from '../../controllers/recharge/rechargeTransaction.controller.js';
 import { rechargeCallback } from '../../controllers/recharge/rechargeCallback.controller.js';
 import { rechargePlanSchema } from '../../validators/recharge/rechargePlan.schema.js';
 import { rechargeOfferSchema } from '../../validators/recharge/rechargeOffer.schema.js';

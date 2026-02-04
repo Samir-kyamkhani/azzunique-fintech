@@ -1,5 +1,5 @@
 import { rechargeDb as db } from '../../database/recharge/recharge-db.js';
-import { rechargeTransactionTable } from '../../models/core/index.js';
+import { rechargeTransactionTable } from '../../models/recharge/index.js';
 import { eq } from 'drizzle-orm';
 import { ApiError } from '../../lib/ApiError.js';
 import { canRetryRecharge } from '../../guard/rechargeRetry.guard.js';

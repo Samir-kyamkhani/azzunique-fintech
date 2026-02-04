@@ -8,7 +8,7 @@ import {
 } from '../../models/core/index.js';
 import { ApiError } from '../../lib/ApiError.js';
 
-import { rechargeDb as db } from '../../database/recharge/recharge-db.js';
+import { rechargeDb } from '../../database/recharge/recharge-db.js';
 import { rechargeTransactionTable } from '../../models/recharge/index.js';
 
 import { getRechargePlugin } from '../../plugin_registry/pluginRegistry.js';
@@ -101,7 +101,7 @@ class RechargeRuntimeService {
 
   static async execute({ transactionId, isRetry = false }) {
     // 1️⃣ Load transaction
-    const [txn] = await db
+    const [txn] = await rechargeDb
       .select()
       .from(rechargeTransactionTable)
       .where(eq(rechargeTransactionTable.id, transactionId))
@@ -147,7 +147,7 @@ class RechargeRuntimeService {
     });
 
     // 6️⃣ Update status → PENDING (callback will finalize)
-    await db
+    await rechargeDb
       .update(rechargeTransactionTable)
       .set({
         status: 'PENDING',
