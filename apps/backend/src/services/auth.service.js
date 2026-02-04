@@ -5,6 +5,9 @@ import {
   roleTable,
   tenantsTable,
   walletTable,
+  permissionTable,
+  userPermissionTable,
+  rolePermissionTable,
 } from '../models/core/index.js';
 import { and, eq } from 'drizzle-orm';
 import { generateTokens, hashToken, verifyPassword } from '../lib/lib.js';
@@ -243,13 +246,15 @@ class AuthService {
       throw ApiError.unauthorized('Session expired');
     }
 
-    const permissions = await resolvePermissions({
-      id: user.id,
-      type: 'USER',
-      roleId: user.roleId,
-      tenantId: user.tenantId,
-      isTenantOwner: user.ownerUserId === null,
-    });
+    let rolePermissions = [];
+    let userPermissions = [];
+
+    if (user.isSystem) {
+      rolePermissions = ['*'];
+    } else {
+      rolePermissions = await this.#getRolePermissions(user.roleId);
+      userPermissions = await this.#getUserPermissions(user.id);
+    }
 
     return {
       type: 'USER',
@@ -280,7 +285,10 @@ class AuthService {
 
       wallet: { balance: user.balance ?? 0 },
 
-      permissions, // ✅ THIS WAS MISSING
+      permissions: {
+        role: rolePermissions,
+        user: userPermissions,
+      },
     };
   }
 
@@ -296,6 +304,52 @@ class AuthService {
       userType: row.userType,
       parentTenantId: row.parentTenantId,
     };
+  }
+
+  async #getUserPermissions(userId) {
+    const rows = await db
+      .select({
+        id: permissionTable.id,
+        resource: permissionTable.resource,
+        action: permissionTable.action,
+        effect: userPermissionTable.effect,
+      })
+      .from(userPermissionTable)
+      .leftJoin(
+        permissionTable,
+        eq(permissionTable.id, userPermissionTable.permissionId),
+      )
+      .where(eq(userPermissionTable.userId, userId));
+
+    return rows.map((p) => ({
+      id: p.id,
+      resource: p.resource,
+      action: p.action,
+      effect: p.effect,
+      source: 'USER',
+    }));
+  }
+
+  async #getRolePermissions(roleId) {
+    const rows = await db
+      .select({
+        id: permissionTable.id,
+        resource: permissionTable.resource,
+        action: permissionTable.action,
+      })
+      .from(rolePermissionTable)
+      .leftJoin(
+        permissionTable,
+        eq(permissionTable.id, rolePermissionTable.permissionId),
+      )
+      .where(eq(rolePermissionTable.roleId, roleId));
+
+    return rows.map((p) => ({
+      id: p.id,
+      resource: p.resource,
+      action: p.action,
+      source: 'ROLE',
+    }));
   }
 
   async validateOwnerChain(userId, ownerUserId, tenantId) {
