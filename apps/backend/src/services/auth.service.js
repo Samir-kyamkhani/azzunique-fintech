@@ -9,6 +9,7 @@ import {
 import { and, eq } from 'drizzle-orm';
 import { generateTokens, hashToken, verifyPassword } from '../lib/lib.js';
 import { ApiError } from '../lib/ApiError.js';
+import { resolvePermissions } from './permission.resolver.js';
 
 class AuthService {
   async loginUser(context, data) {
@@ -146,7 +147,7 @@ class AuthService {
 
   async getCurrentUser(actor) {
     console.log(actor);
-    
+
     if (!actor?.id || !actor?.type) {
       throw ApiError.unauthorized('Invalid session');
     }
@@ -231,7 +232,6 @@ class AuthService {
         userType: tenantsTable.userType,
         parentTenantId: tenantsTable.parentTenantId,
 
-        // Wallet Info
         balance: walletTable.balance,
       })
       .from(usersTable)
@@ -244,6 +244,14 @@ class AuthService {
     if (!user || user.userStatus !== 'ACTIVE') {
       throw ApiError.unauthorized('Session expired');
     }
+
+    const permissions = await resolvePermissions({
+      id: user.id,
+      type: 'USER',
+      roleId: user.roleId,
+      tenantId: user.tenantId,
+      isTenantOwner: user.ownerUserId === null,
+    });
 
     return {
       type: 'USER',
@@ -268,14 +276,14 @@ class AuthService {
         isSystem: user.isSystem,
       },
       tenant: this.#tenantShape(user),
+      wallet: { balance: user.balance ?? 0 },
 
-      wallet: {
-        balance: user.balance ?? 0,
-      },
+      // 🚀 FINAL POWER
+      permissions,
     };
   }
 
-  #tenantShape(row) {
+  async #tenantShape(row) {
     return {
       id: row.tenantId,
       tenantName: row.tenantName,
