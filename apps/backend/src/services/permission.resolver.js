@@ -11,6 +11,8 @@ import { eq, sql, and } from 'drizzle-orm';
 import { ApiError } from '../lib/ApiError.js';
 
 export async function resolvePermissions(actor) {
+  console.log(actor);
+  
   if (actor.type !== 'USER' && actor.type !== 'EMPLOYEE') {
     return [];
   }
@@ -110,6 +112,9 @@ export async function resolvePermissions(actor) {
       p.effect === 'ALLOW' ? permissions.add(p.key) : permissions.delete(p.key);
     });
   }
+
+  console.log("++++++++++", permissions);
+  
 
   return [...permissions];
 }

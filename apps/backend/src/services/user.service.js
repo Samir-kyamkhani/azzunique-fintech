@@ -9,6 +9,7 @@ import {
 } from '../models/core/index.js';
 import { randomUUID } from 'node:crypto';
 import {
+  decrypt,
   encrypt,
   generateNumber,
   generatePassword,
@@ -342,6 +343,7 @@ class UserService {
 
       tenantMap[tenants.id].users.push({
         ...users,
+        passwordHash: decrypt(users.passwordHash),
         profilePictureUrl: users.profilePicture
           ? s3Service.buildS3Url(users.profilePicture)
           : null,

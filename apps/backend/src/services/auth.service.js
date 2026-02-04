@@ -146,8 +146,6 @@ class AuthService {
   }
 
   async getCurrentUser(actor) {
-    console.log(actor);
-
     if (!actor?.id || !actor?.type) {
       throw ApiError.unauthorized('Invalid session');
     }
@@ -255,6 +253,7 @@ class AuthService {
 
     return {
       type: 'USER',
+
       user: {
         id: user.id,
         userNumber: user.userNumber,
@@ -268,6 +267,7 @@ class AuthService {
         ownerUserId: user.ownerUserId,
         actionReason: user.actionReason,
       },
+
       role: {
         id: user.roleId,
         roleCode: user.roleCode,
@@ -275,11 +275,12 @@ class AuthService {
         roleLevel: user.roleLevel,
         isSystem: user.isSystem,
       },
+
       tenant: this.#tenantShape(user),
+
       wallet: { balance: user.balance ?? 0 },
 
-      // 🚀 FINAL POWER
-      permissions,
+      permissions, // ✅ THIS WAS MISSING
     };
   }
 
