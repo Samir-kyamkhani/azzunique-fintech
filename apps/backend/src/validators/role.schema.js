@@ -4,12 +4,18 @@ export const roleIdParamSchema = z.object({
   id: z.string().uuid('Invalid role id'),
 });
 
+export const ROLE_CODES = [
+  'AZZUNIQUE',
+  'RESELLER',
+  'WHITE_LABEL',
+  'STATE_HEAD',
+  'MASTER_DISTRIBUTOR',
+  'DISTRIBUTOR',
+  'RETAILER',
+];
+
 export const createRoleSchema = z.object({
-  roleCode: z
-    .string()
-    .min(2, 'Role code must be at least 2 characters')
-    .max(50)
-    .transform((v) => v.toUpperCase()),
+  roleCode: z.enum(ROLE_CODES),
 
   roleName: z
     .string()

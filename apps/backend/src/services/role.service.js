@@ -10,23 +10,52 @@ import { ApiError } from '../lib/ApiError.js';
 import crypto from 'crypto';
 import { resolvePermissions } from './permission.resolver.js';
 
+const ROLE_HIERARCHY = {
+  AZZUNIQUE: 'RESELLER',
+
+  RESELLER: 'WHITE_LABEL',
+
+  WHITE_LABEL: ['STATE_HEAD', 'MASTER_DISTRIBUTOR', 'DISTRIBUTOR', 'RETAILER'],
+
+  STATE_HEAD: null,
+  MASTER_DISTRIBUTOR: null,
+  DISTRIBUTOR: null,
+  RETAILER: null,
+};
 class RoleService {
   async create(payload, actor) {
     if (!actor?.tenantId) {
       throw ApiError.badRequest('Tenant missing');
     }
 
-    const [actorRole] = await db
-      .select({ roleLevel: roleTable.roleLevel })
+    const [actorRoleData] = await db
+      .select({ roleCode: roleTable.roleCode })
       .from(roleTable)
       .where(eq(roleTable.id, actor.roleId))
       .limit(1);
 
-    if (!actorRole) {
+    if (!actorRoleData) {
       throw ApiError.forbidden('Invalid actor role');
     }
 
-    // Role code uniqueness
+    const actorRoleCode = actorRoleData.roleCode;
+
+    const allowedNext = ROLE_HIERARCHY[actorRoleCode];
+
+    if (!allowedNext) {
+      throw ApiError.forbidden(`${actorRoleCode} cannot create roles`);
+    }
+
+    const isAllowed = Array.isArray(allowedNext)
+      ? allowedNext.includes(payload.roleCode)
+      : allowedNext === payload.roleCode;
+
+    if (!isAllowed) {
+      throw ApiError.forbidden(
+        `${actorRoleCode} cannot create role ${payload.roleCode}`,
+      );
+    }
+
     const [existingCode] = await db
       .select({ id: roleTable.id })
       .from(roleTable)
@@ -42,25 +71,6 @@ class RoleService {
       throw ApiError.conflict('Role code already exists');
     }
 
-    const newRoleLevel = actorRole.roleLevel + 1;
-
-    const [levelExists] = await db
-      .select({ id: roleTable.id })
-      .from(roleTable)
-      .where(
-        and(
-          eq(roleTable.tenantId, actor.tenantId),
-          eq(roleTable.roleLevel, newRoleLevel),
-        ),
-      )
-      .limit(1);
-
-    if (levelExists) {
-      throw ApiError.conflict(
-        `Role level ${newRoleLevel} already exists in this tenant`,
-      );
-    }
-
     const id = crypto.randomUUID();
 
     await db.insert(roleTable).values({
@@ -68,8 +78,6 @@ class RoleService {
       roleCode: payload.roleCode,
       roleName: payload.roleName,
       roleDescription: payload.roleDescription,
-
-      roleLevel: newRoleLevel,
 
       tenantId: actor.tenantId,
       isSystem: false,
@@ -81,7 +89,7 @@ class RoleService {
       updatedAt: new Date(),
     });
 
-    return this.findOne(id, actor);
+    return this.findOne(actor);
   }
 
   async findAll(actor) {

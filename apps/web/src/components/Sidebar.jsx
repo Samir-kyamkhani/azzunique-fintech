@@ -67,10 +67,10 @@ const Sidebar = () => {
           path: "/dashboard/tenants",
         },
         {
-          id: "members",
-          label: "Members",
+          id: "member-management",
+          label: "Member Management",
           icon: Users,
-          path: "/dashboard/members",
+          path: "/dashboard/member-management",
         },
         {
           id: "commission",
