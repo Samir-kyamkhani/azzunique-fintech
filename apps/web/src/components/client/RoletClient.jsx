@@ -10,13 +10,21 @@ import RoleModal from "@/components/modals/RoleModal";
 
 import { Shield, Hash, FileText, Plus } from "lucide-react";
 
-import { useRoles, useCreateRole, useUpdateRole } from "@/hooks/useRole";
+import {
+  useRoles,
+  useCreateRole,
+  useUpdateRole,
+  useAssignRolePermissions,
+} from "@/hooks/useRole";
 
 import { setRoles, setRole, clearRole } from "@/store/roleSlice";
 
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import RowActions from "../tables/core/RowActions";
+import RolePermissionModal from "../modals/RolePermissionModal";
+import { usePermissions } from "@/hooks/usePermission";
+import { setPermissions } from "@/store/permissionSlice";
 
 export const ROLE_FLOW = {
   AZZUNIQUE: ["RESELLER"],
@@ -34,10 +42,42 @@ export default function RoleClient() {
   const current = useSelector((s) => s.role.current);
 
   const [openModal, setOpenModal] = useState(false);
+  const [permOpen, setPermOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(null);
+
+  const openPermissionModal = (role) => {
+    setSelectedRole(role);
+    setPermOpen(true);
+  };
 
   const { data, isLoading, refetch } = useRoles();
   const { mutate: createMutate, isPending: creating } = useCreateRole();
   const { mutate: updateMutate, isPending: updating } = useUpdateRole();
+
+  const { mutate: assignRolePerms, isPending: permSaving } =
+    useAssignRolePermissions();
+  const { data: permissionList } = usePermissions();
+
+  useEffect(() => {
+    if (permissionList) {
+      dispatch(setPermissions(permissionList));
+    }
+  }, [permissionList, dispatch]);
+
+  const handleRolePermissionSubmit = (data, setError) => {
+    assignRolePerms(
+      { id: selectedRole?.id, permissionIds: data.permissionIds },
+      {
+        onSuccess: () => {
+          toast.success("Role permissions updated");
+          setPermOpen(false);
+        },
+        onError: (err) => {
+          setError("root", { message: err?.message });
+        },
+      },
+    );
+  };
 
   useEffect(() => {
     dispatch(setRoles(data?.data || []));
@@ -118,7 +158,7 @@ export default function RoleClient() {
                     {
                       icon: Shield,
                       label: "Permissions",
-                      onClick: () => console.log("Role ID:", role.id),
+                      onClick: () => openPermissionModal(role),
                     },
                   ]}
                 />
@@ -172,6 +212,14 @@ export default function RoleClient() {
           initialData={current}
         />
       )}
+
+      <RolePermissionModal
+        open={permOpen}
+        onClose={() => setPermOpen(false)}
+        role={selectedRole}
+        onSubmit={handleRolePermissionSubmit}
+        isPending={permSaving}
+      />
     </>
   );
 }

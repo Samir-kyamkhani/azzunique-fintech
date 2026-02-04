@@ -85,9 +85,9 @@ export default function MemberClient() {
   const { mutate: createMember, isPending: creating } = useCreateMember();
   const { mutate: updateMember, isPending: updating } = useUpdateMember();
 
-  const { data: permissionList } = usePermissions();
   const { mutate: assignPermissions, isPending: permSaving } =
     useAssignMemberPermissions();
+  const { data: permissionList } = usePermissions();
 
   useEffect(() => {
     if (permissionList) {
@@ -144,7 +144,8 @@ export default function MemberClient() {
           tenantNumber: tenant?.tenantNumber,
           tenantId: tenant?.id,
 
-          permissions: user.permissions,
+          userPermissions: user.userPermissions,
+          rolePermissions: user.rolePermissions,
         };
       })
       .filter(Boolean) || [];

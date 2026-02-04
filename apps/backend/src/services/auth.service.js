@@ -5,10 +5,14 @@ import {
   roleTable,
   tenantsTable,
   walletTable,
+  permissionTable,
+  userPermissionTable,
+  rolePermissionTable,
 } from '../models/core/index.js';
 import { and, eq } from 'drizzle-orm';
 import { generateTokens, hashToken, verifyPassword } from '../lib/lib.js';
 import { ApiError } from '../lib/ApiError.js';
+import { resolvePermissions } from './permission.resolver.js';
 
 class AuthService {
   async loginUser(context, data) {
@@ -145,8 +149,6 @@ class AuthService {
   }
 
   async getCurrentUser(actor) {
-    console.log(actor);
-    
     if (!actor?.id || !actor?.type) {
       throw ApiError.unauthorized('Invalid session');
     }
@@ -231,7 +233,6 @@ class AuthService {
         userType: tenantsTable.userType,
         parentTenantId: tenantsTable.parentTenantId,
 
-        // Wallet Info
         balance: walletTable.balance,
       })
       .from(usersTable)
@@ -245,8 +246,19 @@ class AuthService {
       throw ApiError.unauthorized('Session expired');
     }
 
+    let rolePermissions = [];
+    let userPermissions = [];
+
+    if (user.isSystem) {
+      rolePermissions = ['*'];
+    } else {
+      rolePermissions = await this.#getRolePermissions(user.roleId);
+      userPermissions = await this.#getUserPermissions(user.id);
+    }
+
     return {
       type: 'USER',
+
       user: {
         id: user.id,
         userNumber: user.userNumber,
@@ -260,6 +272,7 @@ class AuthService {
         ownerUserId: user.ownerUserId,
         actionReason: user.actionReason,
       },
+
       role: {
         id: user.roleId,
         roleCode: user.roleCode,
@@ -267,15 +280,19 @@ class AuthService {
         roleLevel: user.roleLevel,
         isSystem: user.isSystem,
       },
+
       tenant: this.#tenantShape(user),
 
-      wallet: {
-        balance: user.balance ?? 0,
+      wallet: { balance: user.balance ?? 0 },
+
+      permissions: {
+        role: rolePermissions,
+        user: userPermissions,
       },
     };
   }
 
-  #tenantShape(row) {
+  async #tenantShape(row) {
     return {
       id: row.tenantId,
       tenantName: row.tenantName,
@@ -287,6 +304,52 @@ class AuthService {
       userType: row.userType,
       parentTenantId: row.parentTenantId,
     };
+  }
+
+  async #getUserPermissions(userId) {
+    const rows = await db
+      .select({
+        id: permissionTable.id,
+        resource: permissionTable.resource,
+        action: permissionTable.action,
+        effect: userPermissionTable.effect,
+      })
+      .from(userPermissionTable)
+      .leftJoin(
+        permissionTable,
+        eq(permissionTable.id, userPermissionTable.permissionId),
+      )
+      .where(eq(userPermissionTable.userId, userId));
+
+    return rows.map((p) => ({
+      id: p.id,
+      resource: p.resource,
+      action: p.action,
+      effect: p.effect,
+      source: 'USER',
+    }));
+  }
+
+  async #getRolePermissions(roleId) {
+    const rows = await db
+      .select({
+        id: permissionTable.id,
+        resource: permissionTable.resource,
+        action: permissionTable.action,
+      })
+      .from(rolePermissionTable)
+      .leftJoin(
+        permissionTable,
+        eq(permissionTable.id, rolePermissionTable.permissionId),
+      )
+      .where(eq(rolePermissionTable.roleId, roleId));
+
+    return rows.map((p) => ({
+      id: p.id,
+      resource: p.resource,
+      action: p.action,
+      source: 'ROLE',
+    }));
   }
 
   async validateOwnerChain(userId, ownerUserId, tenantId) {
