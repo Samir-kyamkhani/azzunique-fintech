@@ -29,7 +29,7 @@ class RoleService {
     }
 
     const [actorRoleData] = await db
-      .select({ roleCode: roleTable.roleCode })
+      .select({ roleCode: roleTable.roleCode, roleLevel: roleTable.roleLevel })
       .from(roleTable)
       .where(eq(roleTable.id, actor.roleId))
       .limit(1);
@@ -37,6 +37,8 @@ class RoleService {
     if (!actorRoleData) {
       throw ApiError.forbidden('Invalid actor role');
     }
+
+    const nextRoleLevel = actorRoleData.roleLevel + 1;
 
     const actorRoleCode = actorRoleData.roleCode;
 
@@ -78,7 +80,7 @@ class RoleService {
       roleCode: payload.roleCode,
       roleName: payload.roleName,
       roleDescription: payload.roleDescription,
-
+      roleLevel: nextRoleLevel,
       tenantId: actor.tenantId,
       isSystem: false,
 
@@ -89,7 +91,7 @@ class RoleService {
       updatedAt: new Date(),
     });
 
-    return this.findOne(actor);
+    return this.findOne(id, actor);
   }
 
   async findAll(actor) {

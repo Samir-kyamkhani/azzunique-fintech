@@ -1,4 +1,4 @@
-import RoleClient from "@/components/client/RoletClient";
+import RoleClient from "@/components/client/RoleClient";
 
 function page() {
   return <RoleClient />;
