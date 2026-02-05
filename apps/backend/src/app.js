@@ -3,7 +3,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 
-import { rateLimiterMiddleware } from './middleware/rateLimiter.middleware.js';
+// import { rateLimiterMiddleware } from './middleware/rateLimiter.middleware.js';
 import indexRoutes from './routes/index.js';
 import { ApiError } from './lib/ApiError.js';
 import { httpExceptionFilter } from './middleware/httpExceptionFilter.middleware.js';
@@ -24,7 +24,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 app.use(helmet());
-app.use(rateLimiterMiddleware);
+// app.use(rateLimiterMiddleware);
 app.use(httpResponseFilter);
 
 // ---------- API ----------
