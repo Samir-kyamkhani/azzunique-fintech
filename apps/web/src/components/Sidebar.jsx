@@ -76,11 +76,11 @@ const Sidebar = () => {
           permission: PERMISSIONS.TENANT.READ,
         },
         {
-          id: "member-management",
-          label: "Member Management",
+          id: "user-management",
+          label: "User Management",
           icon: Users,
-          path: "/dashboard/member-management",
-          permission: PERMISSIONS.USER.READ,
+          path: "/dashboard/user-management",
+          permissionGroup: [PERMISSIONS.USER.READ, PERMISSIONS.ROLE.READ],
         },
         {
           id: "commission",

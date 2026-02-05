@@ -5,10 +5,10 @@ import Button from "../ui/Button";
 import PermissionForm from "../forms/PermissionForm";
 import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
 
-export default function MemberPermissionModal({
+export default function UserPermissionModal({
   open,
   onClose,
-  member,
+  user,
   onSubmit,
   isPending,
 }) {
@@ -32,17 +32,17 @@ export default function MemberPermissionModal({
             <Shield />
             <div>
               <h2 className="text-xl font-bold">Assign Permissions</h2>
-              <p className="text-sm opacity-90">{member.fullName}</p>
+              <p className="text-sm opacity-90">{user.fullName}</p>
             </div>
           </div>
         </div>
 
         <div className="p-6">
           <PermissionForm
-            mode="member"
+            mode="user"
             onSubmit={onSubmit}
             isPending={isPending}
-            permissions={member?.userPermissions || []}
+            permissions={user?.userPermissions || []}
           />
         </div>
       </div>

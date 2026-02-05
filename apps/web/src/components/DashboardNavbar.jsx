@@ -96,7 +96,7 @@ const DashboardNavbar = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-                  placeholder="Search transactions, members, reports..."
+                  placeholder="Search transactions, users, reports..."
                   className="w-full pl-10 pr-4 py-2 border border-input bg-background rounded-border focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
                 />
               </div>

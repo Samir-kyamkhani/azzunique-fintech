@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { RefreshCw, Users, CheckCircle, Ban, UserX } from "lucide-react";
 
-import MembersTable from "@/components/tables/MembersTable";
-import MemberModal from "@/components/modals/MemberModal";
+import UsersTable from "@/components/tables/UsersTable";
+import UserModal from "@/components/modals/UserModal";
 import QuickStats from "@/components/QuickStats";
 import Button from "@/components/ui/Button";
 
@@ -12,23 +12,23 @@ import { formatDateTime } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
-import { setMember } from "@/store/memberSlice";
+import { setUser } from "@/store/userSlice";
 import ImagePreviewModal from "../ImagePreviewModal";
 import {
-  useAssignMemberPermissions,
-  useCreateMember,
-  useMembers,
-  useUpdateMember,
-} from "@/hooks/useMember";
+  useAssignUserPermissions,
+  useCreateUser,
+  useUsers,
+  useUpdateUser,
+} from "@/hooks/useUser";
 import { useRoles } from "@/hooks/useRole";
 import { useTenants } from "@/hooks/useTenant";
 import { useDebounce } from "@/hooks/useDebounce";
-import MemberPermissionModal from "../modals/MemberPermissionModal";
+import UserPermissionModal from "../modals/UserPermissionModal";
 import { usePermissions } from "@/hooks/usePermission";
 import { Shield } from "lucide-react";
 import { setPermissions } from "@/store/permissionSlice";
 
-export default function MemberClient() {
+export default function UserClient() {
   /* ================= UI STATE ================= */
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -38,13 +38,13 @@ export default function MemberClient() {
   const [previewImage, setPreviewImage] = useState(null);
 
   const [openModal, setOpenModal] = useState(false);
-  const [editingMember, setEditingMember] = useState(null);
+  const [editingUser, setEditingUser] = useState(null);
 
   const [permOpen, setPermOpen] = useState(false);
-  const [selectedMember, setSelectedMember] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
 
-  const openPermissionModal = (member) => {
-    setSelectedMember(member);
+  const openPermissionModal = (user) => {
+    setSelectedUser(user);
     setPermOpen(true);
   };
 
@@ -57,13 +57,13 @@ export default function MemberClient() {
   ];
 
   const perPage = 10;
-  const isEditing = Boolean(editingMember);
+  const isEditing = Boolean(editingUser);
 
   const dispatch = useDispatch();
   const router = useRouter();
 
   /* ================= API ================= */
-  const { data, isLoading, refetch } = useMembers({
+  const { data, isLoading, refetch } = useUsers({
     page,
     limit: perPage,
     search,
@@ -82,11 +82,11 @@ export default function MemberClient() {
 
   const { data: roleRes } = useRoles();
 
-  const { mutate: createMember, isPending: creating } = useCreateMember();
-  const { mutate: updateMember, isPending: updating } = useUpdateMember();
+  const { mutate: createUser, isPending: creating } = useCreateUser();
+  const { mutate: updateUser, isPending: updating } = useUpdateUser();
 
   const { mutate: assignPermissions, isPending: permSaving } =
-    useAssignMemberPermissions();
+    useAssignUserPermissions();
   const { data: permissionList } = usePermissions();
 
   useEffect(() => {
@@ -97,7 +97,7 @@ export default function MemberClient() {
 
   const handlePermissionSubmit = (data, setError) => {
     assignPermissions(
-      { memberId: selectedMember?.id, payload: data },
+      { userId: selectedUser?.id, payload: data },
       {
         onSuccess: () => {
           toast.success("Permissions updated");
@@ -117,7 +117,7 @@ export default function MemberClient() {
   };
 
   /* ================= NORMALIZE ================= */
-  const members =
+  const users =
     data?.data
       ?.map((item) => {
         const user = item.users?.[0];
@@ -167,29 +167,29 @@ export default function MemberClient() {
   /* ================= STATS ================= */
   const stats = [
     {
-      title: "Total Members",
+      title: "Total Users",
       value: meta.total ?? 0,
       icon: Users,
       iconColor: "text-primary",
       bgColor: "bg-primary/10",
     },
     {
-      title: "Active Members",
-      value: members.filter((m) => m.userStatus === "ACTIVE").length,
+      title: "Active Users",
+      value: users.filter((m) => m.userStatus === "ACTIVE").length,
       icon: CheckCircle,
       iconColor: "text-success",
       bgColor: "bg-success/10",
     },
     {
-      title: "Suspended Members",
-      value: members.filter((m) => m.userStatus === "SUSPENDED").length,
+      title: "Suspended Users",
+      value: users.filter((m) => m.userStatus === "SUSPENDED").length,
       icon: Ban,
       iconColor: "text-warning",
       bgColor: "bg-warning/10",
     },
     {
-      title: "Inactive Members",
-      value: members.filter((m) => m.userStatus === "INACTIVE").length,
+      title: "Inactive Users",
+      value: users.filter((m) => m.userStatus === "INACTIVE").length,
       icon: UserX,
       iconColor: "text-destructive",
       bgColor: "bg-destructive/10",
@@ -204,32 +204,32 @@ export default function MemberClient() {
   };
 
   const handleAdd = () => {
-    setEditingMember(null);
+    setEditingUser(null);
     setOpenModal(true);
   };
 
-  const handleEdit = (member) => {
-    setEditingMember(member);
+  const handleEdit = (user) => {
+    setEditingUser(user);
     setOpenModal(true);
   };
 
-  const handleView = (member) => {
-    if (!member?.id) return;
-    dispatch(setMember(member));
-    router.push(`/dashboard/members/${member.id}`);
+  const handleView = (user) => {
+    if (!user?.id) return;
+    dispatch(setUser(user));
+    router.push(`/dashboard/users/${user.id}`);
   };
 
   const handleSubmit = (formData, setError) => {
-    const action = isEditing ? updateMember : createMember;
+    const action = isEditing ? updateUser : createUser;
     const args = isEditing
-      ? { id: editingMember.id, payload: formData }
+      ? { id: editingUser.id, payload: formData }
       : formData;
 
     action(args, {
       onSuccess: () => {
-        toast.success(isEditing ? "Member updated" : "Member created");
+        toast.success(isEditing ? "User updated" : "User created");
         setOpenModal(false);
-        setEditingMember(null);
+        setEditingUser(null);
         refetch();
       },
       onError: (err) => {
@@ -260,8 +260,8 @@ export default function MemberClient() {
 
       <QuickStats stats={stats} />
 
-      <MembersTable
-        members={members}
+      <UsersTable
+        users={users}
         total={meta.total ?? 0}
         page={page}
         perPage={perPage}
@@ -276,7 +276,7 @@ export default function MemberClient() {
           setStatusFilter(v);
           setPage(1);
         }}
-        onAddMember={handleAdd}
+        onAddUser={handleAdd}
         onEdit={handleEdit}
         onView={handleView}
         loading={isLoading}
@@ -285,15 +285,15 @@ export default function MemberClient() {
       />
 
       {openModal && (
-        <MemberModal
+        <UserModal
           open={openModal}
           onClose={() => {
             setOpenModal(false);
-            setEditingMember(null);
+            setEditingUser(null);
           }}
           onSubmit={handleSubmit}
           isPending={creating || updating}
-          initialData={editingMember}
+          initialData={editingUser}
           roles={roles}
           tenants={tenants}
           onTenantSearch={setTenantSearch}
@@ -306,10 +306,10 @@ export default function MemberClient() {
         onClose={() => setPreviewOpen(false)}
       />
 
-      <MemberPermissionModal
+      <UserPermissionModal
         open={permOpen}
         onClose={() => setPermOpen(false)}
-        member={selectedMember}
+        user={selectedUser}
         onSubmit={handlePermissionSubmit}
         isPending={permSaving}
       />

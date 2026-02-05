@@ -9,17 +9,17 @@ export default function EmployeeManagementLayout({ children }) {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-xl font-semibold">Member Management</h1>
+        <h1 className="text-xl font-semibold">User Management</h1>
         <p className="text-sm text-muted-foreground">
-          Manage members and roles
+          Manage users and roles
         </p>
       </div>
 
       <TabsNav
         tabs={[
           {
-            label: "Members",
-            value: "members",
+            label: "Users",
+            value: "users",
             icon: Users,
           },
           {
@@ -28,7 +28,7 @@ export default function EmployeeManagementLayout({ children }) {
             icon: Building2,
           },
         ]}
-        basePath="/dashboard/member-management"
+        basePath="/dashboard/user-management"
       />
 
       {/* Content */}

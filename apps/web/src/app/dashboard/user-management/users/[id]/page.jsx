@@ -26,8 +26,8 @@ import InfoItem from "@/components/details/InfoItem";
 import CopyableInfoItem from "@/components/details/CopyableInfoItem";
 import QuickActionsCard from "@/components/details/QuickActionsCard";
 
-import { clearMember, setMember } from "@/store/memberSlice";
-import { useMemberById } from "@/hooks/useMember";
+import { clearUser, setUser } from "@/store/userSlice";
+import { useUserById } from "@/hooks/useUser";
 import PageSkeleton from "@/components/details/PageSkeleton";
 import ImagePreviewModal from "@/components/ImagePreviewModal";
 
@@ -38,27 +38,27 @@ export default function Page() {
 
   const [previewOpen, setPreviewOpen] = useState(false);
 
-  const member = useSelector((state) => state.member.currentMember);
-  const { data, isLoading } = useMemberById(id);
+  const user = useSelector((state) => state.user.currentUser);
+  const { data, isLoading } = useUserById(id);
 
   useEffect(() => {
-    if (!member && data?.data) {
-      dispatch(setMember(data.data));
+    if (!user && data?.data) {
+      dispatch(setUser(data.data));
     }
-  }, [member, data, dispatch]);
+  }, [user, data, dispatch]);
 
   /* redirect if not found */
   useEffect(() => {
-    if (!member && !isLoading && !data?.data) {
-      router.replace("/dashboard/members");
+    if (!user && !isLoading && !data?.data) {
+      router.replace("/dashboard/users");
     }
-  }, [member, isLoading, data, router]);
+  }, [user, isLoading, data, router]);
 
   useEffect(() => {
-    return () => dispatch(clearMember());
+    return () => dispatch(clearUser());
   }, [dispatch]);
 
-  if (isLoading || !member) return <PageSkeleton />;
+  if (isLoading || !user) return <PageSkeleton />;
 
   const copy = (value, label) => {
     navigator.clipboard.writeText(value);
@@ -70,13 +70,13 @@ export default function Page() {
       {/* HEADER */}
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-4 mb-6">
-          {member.profilePictureUrl ? (
+          {user.profilePictureUrl ? (
             <button
               onClick={() => setPreviewOpen(true)}
               className="relative group"
             >
               <img
-                src={member.profilePictureUrl}
+                src={user.profilePictureUrl}
                 alt="Profile"
                 className="h-16 w-16 rounded-full border object-cover"
               />
@@ -89,18 +89,18 @@ export default function Page() {
 
           <div>
             <h1 className="text-2xl font-semibold">
-              {member.firstName} {member.lastName}
+              {user.firstName} {user.lastName}
             </h1>
-            <p className="text-sm text-muted-foreground">{member.userNumber}</p>
+            <p className="text-sm text-muted-foreground">{user.userNumber}</p>
           </div>
         </div>
 
         <Button
           variant="outline"
           icon={ArrowLeft}
-          onClick={() => router.push("/dashboard/member-management/members")}
+          onClick={() => router.push("/dashboard/user-management/users")}
         >
-          Back to Members
+          Back to users
         </Button>
       </div>
 
@@ -110,24 +110,24 @@ export default function Page() {
           <InfoCard icon={Users} title="Basic Information">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <InfoItem
-                label="Member Name"
-                value={`${member.firstName} ${member.lastName}`}
+                label="User Name"
+                value={`${user.firstName} ${user.lastName}`}
                 icon={Users}
               />
               <InfoItem
-                label="Member Number"
-                value={member.userNumber}
+                label="User Number"
+                value={user.userNumber}
                 icon={Key}
               />
-              <InfoItem label="Status" value={member.userStatus} icon={Ban} />
+              <InfoItem label="Status" value={user.userStatus} icon={Ban} />
               <InfoItem
                 label="Tenant"
-                value={member.tenantName}
+                value={user.tenantName}
                 icon={Building2}
               />
               <InfoItem
                 label="Tenant Number"
-                value={member.tenantNumber}
+                value={user.tenantNumber}
                 icon={Building2}
               />
             </div>
@@ -137,15 +137,15 @@ export default function Page() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <InfoItem
                 label="Email"
-                value={member.email}
+                value={user.email}
                 icon={Mail}
-                onClick={() => window.open(`mailto:${member.email}`)}
+                onClick={() => window.open(`mailto:${user.email}`)}
               />
               <InfoItem
                 label="Mobile"
-                value={member.mobileNumber}
+                value={user.mobileNumber}
                 icon={Phone}
-                onClick={() => window.open(`tel:${member.mobileNumber}`)}
+                onClick={() => window.open(`tel:${user.mobileNumber}`)}
               />
             </div>
           </InfoCard>
@@ -153,20 +153,20 @@ export default function Page() {
           <InfoCard icon={Settings} title="System Information">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <CopyableInfoItem
-                label="Member ID"
-                value={member.id}
+                label="User ID"
+                value={user.id}
                 icon={Key}
-                onCopy={() => copy(member.id, "Member ID")}
+                onCopy={() => copy(user.id, "user ID")}
               />
               <InfoItem
                 label="Created At"
-                value={formatDateTime(member.createdAt)}
+                value={formatDateTime(user.createdAt)}
                 icon={Settings}
               />
-              {member.actionReason && (
+              {user.actionReason && (
                 <InfoItem
                   label="Action Reason"
-                  value={member.actionReason}
+                  value={user.actionReason}
                   icon={Settings}
                 />
               )}
@@ -182,18 +182,17 @@ export default function Page() {
               {
                 label: "Send Email",
                 icon: Mail,
-                onClick: () => window.open(`mailto:${member.email}`),
+                onClick: () => window.open(`mailto:${user.email}`),
               },
               {
                 label: "Copy Email",
                 icon: Key,
-                onClick: () => copy(member.email, "Email"),
+                onClick: () => copy(user.email, "Email"),
               },
               {
-                label: "Edit Member",
+                label: "Edit User",
                 icon: Edit,
-                onClick: () =>
-                  router.push("/dashboard/member-management/members"),
+                onClick: () => router.push("/dashboard/user-management/users"),
               },
             ]}
           />
@@ -201,7 +200,7 @@ export default function Page() {
       </div>
       <ImagePreviewModal
         open={previewOpen}
-        image={member.profilePictureUrl}
+        image={user.profilePictureUrl}
         onClose={() => setPreviewOpen(false)}
       />
     </>

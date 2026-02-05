@@ -1,7 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./authSlice";
 import tenantReducer from "./tenantSlice";
-import memberReducer from "./memberSlice";
+import userReducer from "./userSlice";
 import serverDetailReducer from "./serverDetailSlice";
 import tenantDomainReducer from "./tenantDomainSlice";
 import smtpConfigReducer from "./smtpConfigSlice";
@@ -16,7 +16,7 @@ export const store = configureStore({
   reducer: {
     auth: authReducer,
     tenant: tenantReducer,
-    member: memberReducer,
+    user: userReducer,
     serverDetail: serverDetailReducer,
     tenantDomain: tenantDomainReducer,
     smtpConfig: smtpConfigReducer,
