@@ -126,25 +126,16 @@ const Sidebar = () => {
       title: "System",
       items: [
         {
-          id: "settings-general",
-          label: "General Settings",
+          id: "settings",
+          label: "Settings",
           icon: Settings,
-          path: "/dashboard/settings/general",
-          permission: PERMISSIONS.WEBSITE.READ,
-        },
-        {
-          id: "settings-domain",
-          label: "Domain Settings",
-          icon: Settings,
-          path: "/dashboard/settings/domains",
-          permission: PERMISSIONS.DOMAIN.READ,
-        },
-        {
-          id: "settings-smtp",
-          label: "SMTP Settings",
-          icon: Settings,
-          path: "/dashboard/settings/smtp",
-          permission: PERMISSIONS.SMTP.READ,
+          path: "/dashboard/settings",
+          permissionGroup: [
+            PERMISSIONS.WEBSITE.READ,
+            PERMISSIONS.SERVER.READ,
+            PERMISSIONS.DOMAIN.READ,
+            PERMISSIONS.SMTP.READ,
+          ],
         },
       ],
     },
@@ -184,11 +175,19 @@ const Sidebar = () => {
   };
 
   const MenuSection = ({ title, items }) => {
-    const visibleItems = items.filter(
-      (item) =>
-        !item.permission ||
-        can(item.permission.resource, item.permission.action),
-    );
+    const visibleItems = items.filter((item) => {
+      if (item.permission) {
+        return can(item.permission.resource, item.permission.action);
+      }
+
+      if (item.permissionGroup) {
+        return item.permissionGroup.some((perm) =>
+          can(perm.resource, perm.action),
+        );
+      }
+
+      return true;
+    });
 
     if (visibleItems.length === 0) return null;
 
