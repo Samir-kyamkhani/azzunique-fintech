@@ -1,43 +1,32 @@
 "use client";
-
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { usePermissionChecker } from "@/hooks/usePermission";
+import { useSelector } from "react-redux";
 import { PERMISSIONS } from "@/lib/permissionKeys";
+import { canServer } from "@/lib/serverPermission";
 
 export default function Page() {
   const router = useRouter();
-  const { can } = usePermissionChecker();
+  const perms = useSelector((s) => s.auth.user?.permissions);
 
   useEffect(() => {
-    if (
-      can(PERMISSIONS.WEBSITE.READ.resource, PERMISSIONS.WEBSITE.READ.action) ||
-      can(
-        PERMISSIONS.SOCIAL_MEDIA.READ.resource,
-        PERMISSIONS.SOCIAL_MEDIA.READ.action,
-      )
-    ) {
-      router.replace("/dashboard/settings/general");
-      return;
-    }
+    if (!perms) return;
 
-    if (can(PERMISSIONS.SERVER.READ.resource, PERMISSIONS.SERVER.READ.action)) {
-      router.replace("/dashboard/settings/server");
-      return;
-    }
+    const routes = [
+      { path: "general", perm: PERMISSIONS.WEBSITE.READ },
+      { path: "server", perm: PERMISSIONS.SERVER.READ },
+      { path: "domain", perm: PERMISSIONS.DOMAIN.READ },
+      { path: "smtp", perm: PERMISSIONS.SMTP.READ },
+    ];
 
-    if (can(PERMISSIONS.DOMAIN.READ.resource, PERMISSIONS.DOMAIN.READ.action)) {
-      router.replace("/dashboard/settings/domain");
-      return;
-    }
+    const allowed = routes.find((r) =>
+      canServer(perms, r.perm.resource, r.perm.action),
+    );
 
-    if (can(PERMISSIONS.SMTP.READ.resource, PERMISSIONS.SMTP.READ.action)) {
-      router.replace("/dashboard/settings/smtp");
-      return;
-    }
-
-    router.replace("/dashboard");
-  }, [can, router]);
+    router.replace(
+      allowed ? `/dashboard/settings/${allowed.path}` : "/dashboard",
+    );
+  }, [perms, router]);
 
   return null;
 }

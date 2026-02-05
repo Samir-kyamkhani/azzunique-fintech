@@ -1,44 +1,65 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
 import TabsNav from "@/components/details/TabsNav";
 import { Settings, Server, Globe, Mail } from "lucide-react";
-import { usePermissionChecker } from "@/hooks/usePermission";
 import { PERMISSIONS } from "@/lib/permissionKeys";
+import { canServer } from "@/lib/serverPermission";
+import { useEffect } from "react";
 
 export default function SettingsLayout({ children }) {
   const pathname = usePathname();
-  const { can } = usePermissionChecker();
+  const router = useRouter();
+  const perms = useSelector((s) => s.auth.user?.permissions);
 
-  const tabs = [
-    (can(PERMISSIONS.WEBSITE.READ.resource, PERMISSIONS.WEBSITE.READ.action) ||
-      can(
-        PERMISSIONS.SOCIAL_MEDIA.READ.resource,
-        PERMISSIONS.SOCIAL_MEDIA.READ.action,
-      )) && {
+  const can = (perm) => canServer(perms, perm.resource, perm.action);
+
+  const allTabs = [
+    {
       label: "General",
       value: "general",
       icon: Settings,
+      permission: PERMISSIONS.WEBSITE.READ,
     },
-
-    can(PERMISSIONS.SERVER.READ.resource, PERMISSIONS.SERVER.READ.action) && {
+    {
       label: "Server",
       value: "server",
       icon: Server,
+      permission: PERMISSIONS.SERVER.READ,
     },
-
-    can(PERMISSIONS.DOMAIN.READ.resource, PERMISSIONS.DOMAIN.READ.action) && {
+    {
       label: "Domain",
       value: "domain",
       icon: Globe,
+      permission: PERMISSIONS.DOMAIN.READ,
     },
-
-    can(PERMISSIONS.SMTP.READ.resource, PERMISSIONS.SMTP.READ.action) && {
+    {
       label: "SMTP",
       value: "smtp",
       icon: Mail,
+      permission: PERMISSIONS.SMTP.READ,
     },
-  ].filter(Boolean);
+  ];
+
+  const visibleTabs = allTabs.filter((t) => !t.permission || can(t.permission));
+
+  // If current tab not allowed → redirect to first allowed
+  useEffect(() => {
+    if (!visibleTabs.length) {
+      router.replace("/dashboard");
+      return;
+    }
+
+    const currentTab = pathname.split("/").pop();
+    const allowed = visibleTabs.some((t) => t.value === currentTab);
+
+    if (!allowed) {
+      router.replace(`/dashboard/settings/${visibleTabs[0].value}`);
+    }
+  }, [pathname, visibleTabs, router]);
+
+  if (!visibleTabs.length) return null;
 
   return (
     <div className="bg-background space-y-6">
@@ -49,9 +70,7 @@ export default function SettingsLayout({ children }) {
         </p>
       </div>
 
-      {tabs.length > 0 && (
-        <TabsNav tabs={tabs} basePath="/dashboard/settings" />
-      )}
+      <TabsNav tabs={visibleTabs} basePath="/dashboard/settings" />
 
       <div>{children}</div>
     </div>

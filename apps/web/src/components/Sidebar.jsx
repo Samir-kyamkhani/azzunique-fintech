@@ -21,9 +21,9 @@ import Button from "./ui/Button";
 import { useDispatch, useSelector } from "react-redux";
 import { logout as logoutAction } from "@/store/authSlice";
 import { useQueryClient } from "@tanstack/react-query";
+
 import { PERMISSIONS } from "@/lib/permissionKeys";
-import { PERMISSION_GROUPS } from "@/lib/permissionGroups";
-import { usePermissionChecker } from "@/hooks/usePermission";
+import { canServer } from "@/lib/serverPermission";
 
 const Sidebar = () => {
   const queryClient = useQueryClient();
@@ -31,10 +31,13 @@ const Sidebar = () => {
   const { mutate: logoutMutate, isPending } = useLogout();
   const dispatch = useDispatch();
   const router = useRouter();
-  const { can } = usePermissionChecker();
 
   const website = useSelector((state) => state.tenantWebsite.currentWebsite);
   const currentUser = useSelector((state) => state.auth.user);
+
+  const perms = currentUser?.permissions;
+
+  const can = (resource, action) => canServer(perms, resource, action);
 
   const handleLogout = () => {
     logoutMutate(undefined, {
@@ -46,11 +49,7 @@ const Sidebar = () => {
     });
   };
 
-  const hasAny = (group) => group.some((p) => can(p.resource, p.action));
-
-  const canSeeMemberMgmt = hasAny(PERMISSION_GROUPS.MEMBER_MANAGEMENT);
-  const canSeeEmployeeMgmt = hasAny(PERMISSION_GROUPS.EMPLOYEE_MANAGEMENT);
-  const canSeeSettings = hasAny(PERMISSION_GROUPS.SETTINGS);
+  // ================= MENU CONFIG =================
 
   const menuSections = [
     {
@@ -76,11 +75,12 @@ const Sidebar = () => {
           path: "/dashboard/tenants",
           permission: PERMISSIONS.TENANT.READ,
         },
-        canSeeMemberMgmt && {
+        {
           id: "member-management",
           label: "Member Management",
           icon: Users,
           path: "/dashboard/member-management",
+          permission: PERMISSIONS.USER.READ,
         },
         {
           id: "commission",
@@ -95,7 +95,7 @@ const Sidebar = () => {
           icon: History,
           path: "/dashboard/transactions",
         },
-      ].filter(Boolean),
+      ],
     },
     {
       title: "Administration",
@@ -106,11 +106,12 @@ const Sidebar = () => {
           icon: Shield,
           path: "/dashboard/kyc-request",
         },
-        canSeeEmployeeMgmt && {
+        {
           id: "employee-management",
           label: "Employee Management",
           icon: Users,
           path: "/dashboard/employee-management",
+          permission: PERMISSIONS.EMPLOYEE.READ,
         },
         {
           id: "reports",
@@ -119,31 +120,41 @@ const Sidebar = () => {
           path: "/dashboard/reports",
         },
         { id: "logs", label: "Logs", icon: FileCode, path: "/dashboard/logs" },
-      ].filter(Boolean),
+      ],
     },
     {
       title: "System",
       items: [
-        canSeeSettings && {
-          id: "settings",
-          label: "Settings",
+        {
+          id: "settings-general",
+          label: "General Settings",
           icon: Settings,
-          path: "/dashboard/settings",
+          path: "/dashboard/settings/general",
+          permission: PERMISSIONS.WEBSITE.READ,
         },
-      ].filter(Boolean),
+        {
+          id: "settings-domain",
+          label: "Domain Settings",
+          icon: Settings,
+          path: "/dashboard/settings/domains",
+          permission: PERMISSIONS.DOMAIN.READ,
+        },
+        {
+          id: "settings-smtp",
+          label: "SMTP Settings",
+          icon: Settings,
+          path: "/dashboard/settings/smtp",
+          permission: PERMISSIONS.SMTP.READ,
+        },
+      ],
     },
   ];
+
+  // ================= COMPONENTS =================
 
   const MenuItem = ({ item }) => {
     const Icon = item.icon;
     const isActive = pathname === item.path;
-
-    if (
-      item.permission &&
-      !can(item.permission.resource, item.permission.action)
-    ) {
-      return null;
-    }
 
     return (
       <Link
@@ -155,7 +166,11 @@ const Sidebar = () => {
         }`}
       >
         <Icon
-          className={`h-5 w-5 mr-3 ${isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`}
+          className={`h-5 w-5 mr-3 ${
+            isActive
+              ? "text-primary"
+              : "text-muted-foreground group-hover:text-foreground"
+          }`}
         />
         <span
           className={
@@ -169,14 +184,21 @@ const Sidebar = () => {
   };
 
   const MenuSection = ({ title, items }) => {
-    if (!items.length) return null;
+    const visibleItems = items.filter(
+      (item) =>
+        !item.permission ||
+        can(item.permission.resource, item.permission.action),
+    );
+
+    if (visibleItems.length === 0) return null;
+
     return (
       <div className="mb-6">
         <h3 className="text-xs font-semibold uppercase tracking-wider mb-3 px-3 text-muted-foreground">
           {title}
         </h3>
         <div className="space-y-1">
-          {items.map((item) => (
+          {visibleItems.map((item) => (
             <MenuItem key={item.id} item={item} />
           ))}
         </div>
@@ -184,9 +206,10 @@ const Sidebar = () => {
     );
   };
 
+  // ================= UI =================
+
   return (
     <div className="w-64 h-full flex flex-col border-r border-border bg-sidebar">
-      {/* Header */}
       <div className="px-6 py-2.5 bg-gradient-secondry border-b border-border shadow-border">
         <div className="flex items-center gap-3">
           <Play className="h-6 w-6 text-primary" />
@@ -199,7 +222,6 @@ const Sidebar = () => {
         </div>
       </div>
 
-      {/* Wallet */}
       <div className="p-4">
         <div className="bg-muted rounded-border p-3 border border-border">
           <div className="flex items-center justify-between">
@@ -214,7 +236,6 @@ const Sidebar = () => {
         </div>
       </div>
 
-      {/* Navigation */}
       <div className="flex-1 px-4 pb-4 overflow-y-auto">
         {menuSections.map((section) => (
           <MenuSection
