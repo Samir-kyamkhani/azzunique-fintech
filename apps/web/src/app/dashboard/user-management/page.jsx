@@ -1,31 +1,24 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useSelector } from "react-redux";
+import ClientGuard from "@/components/ClientGuard";
 import { PERMISSIONS } from "@/lib/permissionKeys";
-import { canServer } from "@/lib/serverPermission";
 
 export default function Page() {
-  const router = useRouter();
-  const perms = useSelector((s) => s.auth.user?.permissions);
-
-  useEffect(() => {
-    if (!perms) return;
-
-    const routes = [
-      { path: "users", perm: PERMISSIONS.USER.READ },
-      { path: "roles", perm: PERMISSIONS.ROLE.READ },
-    ];
-
-    const allowed = routes.find((r) =>
-      canServer(perms, r.perm.resource, r.perm.action),
-    );
-
-    router.replace(
-      allowed ? `/dashboard/user-management/${allowed.path}` : "/dashboard",
-    );
-  }, [perms, router]);
-
-  return null;
+  return (
+    <ClientGuard
+      anyOf={[PERMISSIONS.USER.READ, PERMISSIONS.ROLE.READ]}
+      redirectMap={[
+        {
+          path: "/dashboard/user-management/users",
+          perm: PERMISSIONS.USER.READ,
+        },
+        {
+          path: "/dashboard/user-management/roles",
+          perm: PERMISSIONS.ROLE.READ,
+        },
+      ]}
+    >
+      <div />
+    </ClientGuard>
+  );
 }

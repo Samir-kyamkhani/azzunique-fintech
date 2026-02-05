@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import TabsNav from "@/components/details/TabsNav";
 import { Settings, Server, Globe, Mail } from "lucide-react";
 import { PERMISSIONS } from "@/lib/permissionKeys";
-import { canServer } from "@/lib/serverPermission";
+import { canServer } from "@/lib/permissionCheker";
 import { useEffect } from "react";
 
 export default function SettingsLayout({ children }) {

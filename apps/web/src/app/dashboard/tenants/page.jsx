@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { PERMISSIONS } from "@/lib/permissionKeys";
-import { canServer } from "@/lib/serverPermission";
+import { canServer } from "@/lib/permissionCheker";
 import TenantsClient from "@/components/client/TenantsClient";
 
 export default function Page() {
