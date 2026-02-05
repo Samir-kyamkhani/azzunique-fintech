@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/apiClient";
 import { useSelector } from "react-redux";
-import { can, hasFullAccess } from "@/lib/permissions";
+import { useMemo } from "react";
+import { buildPermissionMap } from "@/lib/permissions";
 
 export const usePermissions = () =>
   useQuery({
@@ -11,10 +12,18 @@ export const usePermissions = () =>
   });
 
 export const usePermissionChecker = () => {
-  const perms = useSelector((s) => s.auth.user?.permissions);
+  const user = useSelector((s) => s.auth.user);
 
-  return {
-    can: (res, act) => can(perms, res, act),
-    isAdmin: hasFullAccess(perms),
+  const permMap = useMemo(
+    () => buildPermissionMap(user?.permissions),
+    [user?.permissions],
+  );
+
+  const can = (resource, action) => {
+    if (!user) return false;
+    if (user.type === "ROOT") return true;
+    return permMap.get(`${resource}.${action}`) === true;
   };
+
+  return { can };
 };

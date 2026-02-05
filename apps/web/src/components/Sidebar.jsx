@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3,
-  ArrowDownCircle,
   Shield,
   Users,
   Percent,
@@ -19,10 +18,12 @@ import {
 } from "lucide-react";
 import { useLogout } from "@/hooks/useAuth";
 import Button from "./ui/Button";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { logout as logoutAction } from "@/store/authSlice";
 import { useQueryClient } from "@tanstack/react-query";
-import { useSelector } from "react-redux";
+import { PERMISSIONS } from "@/lib/permissionKeys";
+import { PERMISSION_GROUPS } from "@/lib/permissionGroups";
+import { usePermissionChecker } from "@/hooks/usePermission";
 
 const Sidebar = () => {
   const queryClient = useQueryClient();
@@ -30,6 +31,7 @@ const Sidebar = () => {
   const { mutate: logoutMutate, isPending } = useLogout();
   const dispatch = useDispatch();
   const router = useRouter();
+  const { can } = usePermissionChecker();
 
   const website = useSelector((state) => state.tenantWebsite.currentWebsite);
   const currentUser = useSelector((state) => state.auth.user);
@@ -44,6 +46,12 @@ const Sidebar = () => {
     });
   };
 
+  const hasAny = (group) => group.some((p) => can(p.resource, p.action));
+
+  const canSeeMemberMgmt = hasAny(PERMISSION_GROUPS.MEMBER_MANAGEMENT);
+  const canSeeEmployeeMgmt = hasAny(PERMISSION_GROUPS.EMPLOYEE_MANAGEMENT);
+  const canSeeSettings = hasAny(PERMISSION_GROUPS.SETTINGS);
+
   const menuSections = [
     {
       title: "Main",
@@ -53,6 +61,7 @@ const Sidebar = () => {
           label: "Dashboard",
           icon: BarChart3,
           path: "/dashboard",
+          permission: PERMISSIONS.DASHBOARD.READ,
         },
         {
           id: "add-fund",
@@ -65,8 +74,9 @@ const Sidebar = () => {
           label: "Tenants",
           icon: Building2,
           path: "/dashboard/tenants",
+          permission: PERMISSIONS.TENANT.READ,
         },
-        {
+        canSeeMemberMgmt && {
           id: "member-management",
           label: "Member Management",
           icon: Users,
@@ -77,6 +87,7 @@ const Sidebar = () => {
           label: "Commission",
           icon: Percent,
           path: "/dashboard/commission",
+          permission: PERMISSIONS.COMMISSION.READ,
         },
         {
           id: "transactions",
@@ -84,18 +95,7 @@ const Sidebar = () => {
           icon: History,
           path: "/dashboard/transactions",
         },
-      ],
-    },
-    {
-      title: "Services",
-      items: [
-        {
-          id: "payout",
-          label: "Payouts",
-          icon: ArrowDownCircle,
-          path: "/dashboard/card-payout",
-        },
-      ],
+      ].filter(Boolean),
     },
     {
       title: "Administration",
@@ -106,7 +106,7 @@ const Sidebar = () => {
           icon: Shield,
           path: "/dashboard/kyc-request",
         },
-        {
+        canSeeEmployeeMgmt && {
           id: "employee-management",
           label: "Employee Management",
           icon: Users,
@@ -118,30 +118,32 @@ const Sidebar = () => {
           icon: BarChart3,
           path: "/dashboard/reports",
         },
-        {
-          id: "logs",
-          label: "Logs",
-          icon: FileCode,
-          path: "/dashboard/logs",
-        },
-      ],
+        { id: "logs", label: "Logs", icon: FileCode, path: "/dashboard/logs" },
+      ].filter(Boolean),
     },
     {
       title: "System",
       items: [
-        {
+        canSeeSettings && {
           id: "settings",
           label: "Settings",
           icon: Settings,
           path: "/dashboard/settings",
         },
-      ],
+      ].filter(Boolean),
     },
   ];
 
   const MenuItem = ({ item }) => {
     const Icon = item.icon;
     const isActive = pathname === item.path;
+
+    if (
+      item.permission &&
+      !can(item.permission.resource, item.permission.action)
+    ) {
+      return null;
+    }
 
     return (
       <Link
@@ -153,13 +155,8 @@ const Sidebar = () => {
         }`}
       >
         <Icon
-          className={`h-5 w-5 mr-3 ${
-            isActive
-              ? "text-primary"
-              : "text-muted-foreground group-hover:text-foreground"
-          }`}
+          className={`h-5 w-5 mr-3 ${isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`}
         />
-
         <span
           className={
             isActive ? "text-primary font-semibold" : "text-muted-foreground"
@@ -171,31 +168,30 @@ const Sidebar = () => {
     );
   };
 
-  const MenuSection = ({ title, items }) => (
-    <div className="mb-6">
-      <h3 className="text-xs font-semibold uppercase tracking-wider mb-3 px-3 text-muted-foreground">
-        {title}
-      </h3>
-      <div className="space-y-1">
-        {items.map((item) => (
-          <MenuItem key={item.id} item={item} />
-        ))}
+  const MenuSection = ({ title, items }) => {
+    if (!items.length) return null;
+    return (
+      <div className="mb-6">
+        <h3 className="text-xs font-semibold uppercase tracking-wider mb-3 px-3 text-muted-foreground">
+          {title}
+        </h3>
+        <div className="space-y-1">
+          {items.map((item) => (
+            <MenuItem key={item.id} item={item} />
+          ))}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="w-64 h-full flex flex-col border-r border-border bg-sidebar">
       {/* Header */}
       <div className="px-6 py-2.5 bg-gradient-secondry border-b border-border shadow-border">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-border flex items-center justify-center">
-            <Play className="h-6 w-6 text-primary" />
-          </div>
+          <Play className="h-6 w-6 text-primary" />
           <div>
-            <h2 className="text-lg font-bold text-foreground">
-              {website?.brandName}
-            </h2>
+            <h2 className="text-lg font-bold">{website?.brandName}</h2>
             <p className="text-xs text-muted-foreground">
               {currentUser?.role?.roleCode} Panel
             </p>
@@ -203,21 +199,18 @@ const Sidebar = () => {
         </div>
       </div>
 
-      {/* User Profile */}
+      {/* Wallet */}
       <div className="p-4">
-        <div className="glass rounded-xl border border-border overflow-hidden">
-          {/* Wallet Section */}
-          <div className="bg-muted rounded-border p-3 border border-border">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">
-                Wallet Balance
-              </span>
-              <Wallet className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <p className="text-lg font-bold mt-1 text-primary">
-              ₹{currentUser?.wallet?.balance}
-            </p>
+        <div className="bg-muted rounded-border p-3 border border-border">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">
+              Wallet Balance
+            </span>
+            <Wallet className="h-4 w-4 text-muted-foreground" />
           </div>
+          <p className="text-lg font-bold mt-1 text-primary">
+            ₹{currentUser?.wallet?.balance}
+          </p>
         </div>
       </div>
 
