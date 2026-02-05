@@ -2,14 +2,16 @@
 import { useSelector } from "react-redux";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { canServer } from "@/lib/permissionCheker";
+import { permissionChecker } from "@/lib/permissionCheker";
 
 export default function ClientGuard({ anyOf, redirectMap, children }) {
   const perms = useSelector((s) => s.auth.user?.permissions);
   const router = useRouter();
   const pathname = usePathname();
 
-  const allowed = anyOf.some((p) => canServer(perms, p.resource, p.action));
+  const allowed = anyOf.some((p) =>
+    permissionChecker(perms, p.resource, p.action),
+  );
 
   useEffect(() => {
     if (!perms) return;
@@ -24,7 +26,7 @@ export default function ClientGuard({ anyOf, redirectMap, children }) {
     if (redirectMap) {
       const current = pathname.split("/").pop();
       const found = redirectMap.find((r) =>
-        canServer(perms, r.perm.resource, r.perm.action),
+        permissionChecker(perms, r.perm.resource, r.perm.action),
       );
 
       if (found && current !== found.path) {

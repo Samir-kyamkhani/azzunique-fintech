@@ -213,9 +213,11 @@ export default function RoleClient() {
           emptyTitle="No roles yet"
           emptyDescription="Create roles to define system hierarchy"
           emptyAction={
-            <Button icon={Shield} onClick={() => setOpenModal(true)}>
-              Create Role
-            </Button>
+            canCreateRole && (
+              <Button icon={Shield} onClick={() => setOpenModal(true)}>
+                Create Role
+              </Button>
+            )
           }
         />
       )}

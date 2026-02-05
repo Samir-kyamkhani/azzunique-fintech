@@ -23,7 +23,7 @@ import { logout as logoutAction } from "@/store/authSlice";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { PERMISSIONS } from "@/lib/permissionKeys";
-import { canServer } from "@/lib/permissionCheker";
+import { permissionChecker } from "@/lib/permissionCheker";
 
 const Sidebar = () => {
   const queryClient = useQueryClient();
@@ -37,7 +37,7 @@ const Sidebar = () => {
 
   const perms = currentUser?.permissions;
 
-  const can = (resource, action) => canServer(perms, resource, action);
+  const can = (resource, action) => permissionChecker(perms, resource, action);
 
   const handleLogout = () => {
     logoutMutate(undefined, {
