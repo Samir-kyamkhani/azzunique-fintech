@@ -486,12 +486,14 @@ CREATE TABLE `ledgers` (
 	`wallet_id` varchar(36) NOT NULL,
 	`transaction_id` varchar(36),
 	`refund_id` varchar(36),
+	`reference` varchar(100) NOT NULL,
 	`entry_type` varchar(10) NOT NULL,
 	`amount` int NOT NULL DEFAULT 0,
 	`balance_after` int NOT NULL DEFAULT 0,
 	`created_at` timestamp NOT NULL DEFAULT (now()),
 	`updated_at` timestamp NOT NULL DEFAULT (now()),
-	CONSTRAINT `ledgers_id` PRIMARY KEY(`id`)
+	CONSTRAINT `ledgers_id` PRIMARY KEY(`id`),
+	CONSTRAINT `uniq_ledger_reference` UNIQUE(`reference`)
 );
 --> statement-breakpoint
 CREATE TABLE `refunds` (

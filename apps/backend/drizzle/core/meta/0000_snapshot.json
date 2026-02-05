@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "63902c21-583a-410c-9feb-a277beda56b1",
+  "id": "e6aac55e-84e3-46cf-a1f6-9167692a4de0",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "audit_log": {
@@ -4229,6 +4229,13 @@
           "notNull": false,
           "autoincrement": false
         },
+        "reference": {
+          "name": "reference",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "entry_type": {
           "name": "entry_type",
           "type": "varchar(10)",
@@ -4270,6 +4277,13 @@
         }
       },
       "indexes": {
+        "uniq_ledger_reference": {
+          "name": "uniq_ledger_reference",
+          "columns": [
+            "reference"
+          ],
+          "isUnique": true
+        },
         "idx_ledger_wallet_created": {
           "name": "idx_ledger_wallet_created",
           "columns": [
