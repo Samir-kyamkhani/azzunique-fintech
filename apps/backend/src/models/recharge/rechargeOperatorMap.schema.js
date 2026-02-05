@@ -7,7 +7,7 @@ export const rechargeOperatorMapTable = mysqlTable(
 
     platformServiceId: varchar('platform_service_id', { length: 36 }).notNull(),
 
-    providerCode: varchar('provider_code', { length: 30 }).notNull(), // ✅ NEW
+    providerCode: varchar('provider_code', { length: 30 }).notNull(),
 
     internalOperatorCode: varchar('internal_operator_code', {
       length: 20,
@@ -15,13 +15,13 @@ export const rechargeOperatorMapTable = mysqlTable(
 
     providerOperatorCode: varchar('provider_operator_code', {
       length: 20,
-    }).notNull(), // ✅ SINGLE SOURCE
+    }).notNull(),
 
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
   },
   (table) => ({
-    uniq: unique().on(
+    uniq: unique('uq_rom_int_ps_prov').on(
       table.internalOperatorCode,
       table.platformServiceId,
       table.providerCode,

@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "581fbdf3-5050-4ccb-a56c-4a812c7bcbc3",
+  "id": "2ccc8cb1-340d-4df6-b723-93dc34d3f293",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "recharge_operator_map": {
@@ -21,6 +21,13 @@
           "notNull": true,
           "autoincrement": false
         },
+        "provider_code": {
+          "name": "provider_code",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "internal_operator_code": {
           "name": "internal_operator_code",
           "type": "varchar(20)",
@@ -28,18 +35,11 @@
           "notNull": true,
           "autoincrement": false
         },
-        "mplan_operator_code": {
-          "name": "mplan_operator_code",
-          "type": "varchar(10)",
+        "provider_operator_code": {
+          "name": "provider_operator_code",
+          "type": "varchar(20)",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "recharge_exchange_operator_code": {
-          "name": "recharge_exchange_operator_code",
-          "type": "varchar(10)",
-          "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "created_at": {
@@ -69,7 +69,16 @@
           ]
         }
       },
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "uq_rom_int_ps_prov": {
+          "name": "uq_rom_int_ps_prov",
+          "columns": [
+            "internal_operator_code",
+            "platform_service_id",
+            "provider_code"
+          ]
+        }
+      },
       "checkConstraint": {}
     },
     "recharge_transactions": {
@@ -131,6 +140,13 @@
           "notNull": true,
           "autoincrement": false
         },
+        "blocked_amount": {
+          "name": "blocked_amount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "wallet_id": {
           "name": "wallet_id",
           "type": "varchar(36)",
@@ -149,7 +165,7 @@
           "name": "platform_service_feature_id",
           "type": "varchar(36)",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "provider_code": {
