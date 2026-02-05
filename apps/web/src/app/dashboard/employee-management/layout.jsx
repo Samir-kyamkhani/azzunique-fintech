@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import { useEffect } from "react";
 import TabsNav from "@/components/details/TabsNav";
 import { PERMISSIONS } from "@/lib/permissionKeys";
-import { canServer } from "@/lib/serverPermission";
+import { canServer } from "@/lib/permissionCheker";
 import { Building2, Users } from "lucide-react";
 
 export default function EmployeeManagementLayout({ children }) {

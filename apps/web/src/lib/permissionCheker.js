@@ -1,4 +1,4 @@
-export function canServer(perms, resource, action) {
+export function permissionChecker(perms, resource, action) {
   if (!perms) return false;
 
   //  GLOBAL BYPASS

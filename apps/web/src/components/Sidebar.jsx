@@ -23,7 +23,7 @@ import { logout as logoutAction } from "@/store/authSlice";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { PERMISSIONS } from "@/lib/permissionKeys";
-import { canServer } from "@/lib/serverPermission";
+import { canServer } from "@/lib/permissionCheker";
 
 const Sidebar = () => {
   const queryClient = useQueryClient();

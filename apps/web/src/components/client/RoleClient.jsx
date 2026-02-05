@@ -25,6 +25,8 @@ import RowActions from "../tables/core/RowActions";
 import RolePermissionModal from "../modals/RolePermissionModal";
 import { usePermissions } from "@/hooks/usePermission";
 import { setPermissions } from "@/store/permissionSlice";
+import { PERMISSIONS } from "@/lib/permissionKeys";
+import { permissionChecker } from "@/lib/permissionCheker";
 
 export const ROLE_FLOW = {
   AZZUNIQUE: ["RESELLER"],
@@ -44,6 +46,8 @@ export default function RoleClient() {
   const [openModal, setOpenModal] = useState(false);
   const [permOpen, setPermOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
+
+  const perms = useSelector((s) => s.auth.user?.permissions);
 
   const openPermissionModal = (role) => {
     setSelectedRole(role);
@@ -113,6 +117,12 @@ export default function RoleClient() {
 
   if (isLoading) return <PageSkeleton />;
 
+  // PERMISSION
+  const can = (perm) => permissionChecker(perms, perm.resource, perm.action);
+  const canCreateRole = can(PERMISSIONS.ROLE.CREATE);
+  const canEditRole = can(PERMISSIONS.ROLE.UPDATE);
+  const canAssignPerms = can(PERMISSIONS.ROLE.ASSIGN_PERMISSIONS);
+
   return (
     <>
       {/* HEADER */}
@@ -123,8 +133,7 @@ export default function RoleClient() {
             Manage access hierarchy and permissions
           </p>
         </div>
-
-        {allowedRoles.length > 0 && !nextRoleExists && (
+        {canCreateRole && allowedRoles.length > 0 && !nextRoleExists && (
           <Button
             icon={Plus}
             onClick={() => {
@@ -150,17 +159,25 @@ export default function RoleClient() {
             >
               <div className="absolute right-3 top-3">
                 <RowActions
-                  onEdit={() => {
-                    dispatch(setRole(role));
-                    setOpenModal(true);
-                  }}
-                  extraActions={[
-                    {
-                      icon: Shield,
-                      label: "Permissions",
-                      onClick: () => openPermissionModal(role),
-                    },
-                  ]}
+                  onEdit={
+                    canEditRole
+                      ? () => {
+                          dispatch(setRole(role));
+                          setOpenModal(true);
+                        }
+                      : undefined
+                  }
+                  extraActions={
+                    canAssignPerms
+                      ? [
+                          {
+                            icon: Shield,
+                            label: "Permissions",
+                            onClick: () => openPermissionModal(role),
+                          },
+                        ]
+                      : []
+                  }
                 />
               </div>
 
