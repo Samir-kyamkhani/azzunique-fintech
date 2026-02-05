@@ -37,7 +37,7 @@ const getColumns = (onImagePreview) => [
         </div>
       ),
   },
-  { key: "userNumber", label: "Member No" },
+  { key: "userNumber", label: "User No" },
   { key: "fullName", label: "Name" },
   { key: "email", label: "Email" },
   { key: "tenantNumber", label: "Tenant Number" },
@@ -49,8 +49,8 @@ const getColumns = (onImagePreview) => [
 ];
 
 /* ===================== COMPONENT ===================== */
-export default function MembersTable({
-  members,
+export default function UsersTable({
+  users,
   total,
   page,
   perPage,
@@ -59,7 +59,7 @@ export default function MembersTable({
   onSearch,
   statusFilter,
   onStatusFilterChange,
-  onAddMember,
+  onAddUser,
   onEdit,
   onView,
   onDelete,
@@ -71,25 +71,25 @@ export default function MembersTable({
   return (
     <TableShell>
       <TableHeader
-        title="All Members"
-        subtitle={`${total} members found`}
+        title="All Users"
+        subtitle={`${total} users found`}
         search={search}
         setSearch={onSearch}
-        searchPlaceholder="Search by name, email, member no. or mobile…"
+        searchPlaceholder="Search by name, email, user no. or mobile…"
         filterValue={statusFilter}
         onFilterChange={onStatusFilterChange}
         filterPlaceholder="Status"
         filterOptions={options}
-        onAdd={onAddMember}
-        addLabel="Add Member"
+        onAdd={onAddUser}
+        addLabel="Add User"
         addIcon={Users}
-        onExport={() => console.log("Export members")}
+        onExport={() => console.log("Export users")}
         exportIcon={Download}
       />
 
       <TableBody
         columns={columns}
-        data={members}
+        data={users}
         onEdit={onEdit}
         onView={onView}
         onDelete={onDelete}

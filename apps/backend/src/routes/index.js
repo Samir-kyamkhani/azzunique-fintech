@@ -28,7 +28,7 @@ router.use('/server-detail', serverDetailRoutes);
 router.use('/smtp-configs', smtpConfigRoutes);
 router.use('/audit-log', auditLogRoutes);
 router.use('/auth', authRoutes);
-router.use('/members', userRoutes);
+router.use('/users', userRoutes);
 router.use('/roles', roleRoutes);
 router.use('/departments', departmentRoutes);
 router.use('/employees', employeeRoutes);

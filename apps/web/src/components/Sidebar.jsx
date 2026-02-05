@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3,
-  ArrowDownCircle,
   Shield,
   Users,
   Percent,
@@ -19,10 +18,12 @@ import {
 } from "lucide-react";
 import { useLogout } from "@/hooks/useAuth";
 import Button from "./ui/Button";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { logout as logoutAction } from "@/store/authSlice";
 import { useQueryClient } from "@tanstack/react-query";
-import { useSelector } from "react-redux";
+
+import { PERMISSIONS } from "@/lib/permissionKeys";
+import { canServer } from "@/lib/serverPermission";
 
 const Sidebar = () => {
   const queryClient = useQueryClient();
@@ -34,6 +35,10 @@ const Sidebar = () => {
   const website = useSelector((state) => state.tenantWebsite.currentWebsite);
   const currentUser = useSelector((state) => state.auth.user);
 
+  const perms = currentUser?.permissions;
+
+  const can = (resource, action) => canServer(perms, resource, action);
+
   const handleLogout = () => {
     logoutMutate(undefined, {
       onSuccess: () => {
@@ -44,6 +49,8 @@ const Sidebar = () => {
     });
   };
 
+  // ================= MENU CONFIG =================
+
   const menuSections = [
     {
       title: "Main",
@@ -53,6 +60,7 @@ const Sidebar = () => {
           label: "Dashboard",
           icon: BarChart3,
           path: "/dashboard",
+          permission: PERMISSIONS.DASHBOARD.READ,
         },
         {
           id: "add-fund",
@@ -65,35 +73,27 @@ const Sidebar = () => {
           label: "Tenants",
           icon: Building2,
           path: "/dashboard/tenants",
+          permission: PERMISSIONS.TENANT.READ,
         },
         {
-          id: "member-management",
-          label: "Member Management",
+          id: "user-management",
+          label: "User Management",
           icon: Users,
-          path: "/dashboard/member-management",
+          path: "/dashboard/user-management",
+          permissionGroup: [PERMISSIONS.USER.READ, PERMISSIONS.ROLE.READ],
         },
         {
           id: "commission",
           label: "Commission",
           icon: Percent,
           path: "/dashboard/commission",
+          permission: PERMISSIONS.COMMISSION.READ,
         },
         {
           id: "transactions",
           label: "Transactions",
           icon: History,
           path: "/dashboard/transactions",
-        },
-      ],
-    },
-    {
-      title: "Services",
-      items: [
-        {
-          id: "payout",
-          label: "Payouts",
-          icon: ArrowDownCircle,
-          path: "/dashboard/card-payout",
         },
       ],
     },
@@ -111,6 +111,7 @@ const Sidebar = () => {
           label: "Employee Management",
           icon: Users,
           path: "/dashboard/employee-management",
+          permission: PERMISSIONS.EMPLOYEE.READ,
         },
         {
           id: "reports",
@@ -118,12 +119,7 @@ const Sidebar = () => {
           icon: BarChart3,
           path: "/dashboard/reports",
         },
-        {
-          id: "logs",
-          label: "Logs",
-          icon: FileCode,
-          path: "/dashboard/logs",
-        },
+        { id: "logs", label: "Logs", icon: FileCode, path: "/dashboard/logs" },
       ],
     },
     {
@@ -134,10 +130,18 @@ const Sidebar = () => {
           label: "Settings",
           icon: Settings,
           path: "/dashboard/settings",
+          permissionGroup: [
+            PERMISSIONS.WEBSITE.READ,
+            PERMISSIONS.SERVER.READ,
+            PERMISSIONS.DOMAIN.READ,
+            PERMISSIONS.SMTP.READ,
+          ],
         },
       ],
     },
   ];
+
+  // ================= COMPONENTS =================
 
   const MenuItem = ({ item }) => {
     const Icon = item.icon;
@@ -159,7 +163,6 @@ const Sidebar = () => {
               : "text-muted-foreground group-hover:text-foreground"
           }`}
         />
-
         <span
           className={
             isActive ? "text-primary font-semibold" : "text-muted-foreground"
@@ -171,31 +174,46 @@ const Sidebar = () => {
     );
   };
 
-  const MenuSection = ({ title, items }) => (
-    <div className="mb-6">
-      <h3 className="text-xs font-semibold uppercase tracking-wider mb-3 px-3 text-muted-foreground">
-        {title}
-      </h3>
-      <div className="space-y-1">
-        {items.map((item) => (
-          <MenuItem key={item.id} item={item} />
-        ))}
+  const MenuSection = ({ title, items }) => {
+    const visibleItems = items.filter((item) => {
+      if (item.permission) {
+        return can(item.permission.resource, item.permission.action);
+      }
+
+      if (item.permissionGroup) {
+        return item.permissionGroup.some((perm) =>
+          can(perm.resource, perm.action),
+        );
+      }
+
+      return true;
+    });
+
+    if (visibleItems.length === 0) return null;
+
+    return (
+      <div className="mb-6">
+        <h3 className="text-xs font-semibold uppercase tracking-wider mb-3 px-3 text-muted-foreground">
+          {title}
+        </h3>
+        <div className="space-y-1">
+          {visibleItems.map((item) => (
+            <MenuItem key={item.id} item={item} />
+          ))}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
+
+  // ================= UI =================
 
   return (
     <div className="w-64 h-full flex flex-col border-r border-border bg-sidebar">
-      {/* Header */}
       <div className="px-6 py-2.5 bg-gradient-secondry border-b border-border shadow-border">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-border flex items-center justify-center">
-            <Play className="h-6 w-6 text-primary" />
-          </div>
+          <Play className="h-6 w-6 text-primary" />
           <div>
-            <h2 className="text-lg font-bold text-foreground">
-              {website?.brandName}
-            </h2>
+            <h2 className="text-lg font-bold">{website?.brandName}</h2>
             <p className="text-xs text-muted-foreground">
               {currentUser?.role?.roleCode} Panel
             </p>
@@ -203,25 +221,20 @@ const Sidebar = () => {
         </div>
       </div>
 
-      {/* User Profile */}
       <div className="p-4">
-        <div className="glass rounded-xl border border-border overflow-hidden">
-          {/* Wallet Section */}
-          <div className="bg-muted rounded-border p-3 border border-border">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">
-                Wallet Balance
-              </span>
-              <Wallet className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <p className="text-lg font-bold mt-1 text-primary">
-              ₹{currentUser?.wallet?.balance}
-            </p>
+        <div className="bg-muted rounded-border p-3 border border-border">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">
+              Wallet Balance
+            </span>
+            <Wallet className="h-4 w-4 text-muted-foreground" />
           </div>
+          <p className="text-lg font-bold mt-1 text-primary">
+            ₹{currentUser?.wallet?.balance}
+          </p>
         </div>
       </div>
 
-      {/* Navigation */}
       <div className="flex-1 px-4 pb-4 overflow-y-auto">
         {menuSections.map((section) => (
           <MenuSection

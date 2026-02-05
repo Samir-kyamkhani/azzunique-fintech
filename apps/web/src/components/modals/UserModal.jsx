@@ -1,11 +1,11 @@
 "use client";
 
 import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
-import MemberForm from "../forms/MemberForm";
+import UserForm from "../forms/UserForm";
 import Button from "../ui/Button";
 import { User, X } from "lucide-react";
 
-export default function MemberModal({
+export default function UserModal({
   open,
   onClose,
   onSubmit,
@@ -38,19 +38,19 @@ export default function MemberModal({
             </div>
 
             <h2 className="text-2xl font-bold text-primary-foreground mb-2">
-              {isEditing ? "Update Member" : "Create Member"}
+              {isEditing ? "Update User" : "Create User"}
             </h2>
 
             <p className="text-primary-foreground/90 text-sm">
               {isEditing
-                ? "Manage member account and permissions"
-                : "Add a new member to your organization"}
+                ? "Manage user account and permissions"
+                : "Add a new user to your organization"}
             </p>
           </div>
         </div>
 
         <div className="p-6">
-          <MemberForm
+          <UserForm
             onSubmit={onSubmit}
             isEditing={isEditing}
             initialData={initialData}

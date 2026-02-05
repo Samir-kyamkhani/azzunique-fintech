@@ -8,11 +8,13 @@ import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import TextareaField from "@/components/ui/TextareaField";
 import SelectField from "@/components/ui/SelectField";
-import { ROLE_FLOW } from "../client/RoletClient";
+import { ROLE_FLOW } from "../client/RoleClient";
 
 export default function RoleForm({ initialData = null, isPending, onSubmit }) {
-  const actorRoleCode = useSelector((s) => s.auth.user?.roleCode);
+  const actorRoleCode = useSelector((s) => s.auth.user?.role?.roleCode);
   const allowedRoles = ROLE_FLOW[actorRoleCode] || [];
+
+  console.log(initialData);
 
   const roleOptions = [
     ...new Map(
@@ -21,6 +23,8 @@ export default function RoleForm({ initialData = null, isPending, onSubmit }) {
         .map((r) => [r, { label: r.replaceAll("_", " "), value: r }]),
     ).values(),
   ];
+
+  console.log(roleOptions);
 
   const {
     register,

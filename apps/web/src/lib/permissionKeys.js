@@ -1,0 +1,45 @@
+export const RESOURCES = Object.freeze({
+  USER: "USER",
+  ROLE: "ROLE",
+  TENANT: "TENANT",
+  WALLET: "WALLET",
+  DASHBOARD: "DASHBOARD",
+  COMMISSION: "COMMISSION",
+  EMPLOYEE: "EMPLOYEE",
+  DEPARTMENT: "DEPARTMENT",
+  SERVER: "SERVER",
+  SMTP: "SMTP",
+  WEBSITE: "WEBSITE",
+  DOMAIN: "DOMAIN",
+  SOCIAL_MEDIA: "SOCIAL_MEDIA",
+  PERMISSION: "PERMISSION",
+});
+
+export const ACTIONS = Object.freeze({
+  CREATE: "CREATE",
+  READ: "READ",
+  UPDATE: "UPDATE",
+  DELETE: "DELETE",
+  APPROVE: "APPROVE",
+});
+
+export const PERMISSIONS = {
+  USER: { READ: { resource: RESOURCES.USER, action: ACTIONS.READ } },
+  ROLE: { READ: { resource: RESOURCES.ROLE, action: ACTIONS.READ } },
+  TENANT: { READ: { resource: RESOURCES.TENANT, action: ACTIONS.READ } },
+  DASHBOARD: { READ: { resource: RESOURCES.DASHBOARD, action: ACTIONS.READ } },
+  COMMISSION: {
+    READ: { resource: RESOURCES.COMMISSION, action: ACTIONS.READ },
+  },
+  EMPLOYEE: { READ: { resource: RESOURCES.EMPLOYEE, action: ACTIONS.READ } },
+  DEPARTMENT: {
+    READ: { resource: RESOURCES.DEPARTMENT, action: ACTIONS.READ },
+  },
+  SERVER: { READ: { resource: RESOURCES.SERVER, action: ACTIONS.READ } },
+  SMTP: { READ: { resource: RESOURCES.SMTP, action: ACTIONS.READ } },
+  DOMAIN: { READ: { resource: RESOURCES.DOMAIN, action: ACTIONS.READ } },
+  WEBSITE: { READ: { resource: RESOURCES.WEBSITE, action: ACTIONS.READ } },
+  SOCIAL_MEDIA: {
+    READ: { resource: RESOURCES.SOCIAL_MEDIA, action: ACTIONS.READ },
+  },
+};

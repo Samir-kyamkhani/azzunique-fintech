@@ -1,5 +1,32 @@
-import { redirect } from "next/navigation";
+"use client";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
+import { PERMISSIONS } from "@/lib/permissionKeys";
+import { canServer } from "@/lib/serverPermission";
 
 export default function Page() {
-  redirect("/dashboard/settings/general");
+  const router = useRouter();
+  const perms = useSelector((s) => s.auth.user?.permissions);
+
+  useEffect(() => {
+    if (!perms) return;
+
+    const routes = [
+      { path: "general", perm: PERMISSIONS.WEBSITE.READ },
+      { path: "server", perm: PERMISSIONS.SERVER.READ },
+      { path: "domain", perm: PERMISSIONS.DOMAIN.READ },
+      { path: "smtp", perm: PERMISSIONS.SMTP.READ },
+    ];
+
+    const allowed = routes.find((r) =>
+      canServer(perms, r.perm.resource, r.perm.action),
+    );
+
+    router.replace(
+      allowed ? `/dashboard/settings/${allowed.path}` : "/dashboard",
+    );
+  }, [perms, router]);
+
+  return null;
 }

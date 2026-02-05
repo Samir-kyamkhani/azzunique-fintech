@@ -2,9 +2,9 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/apiClient";
 
 /* ================= GET ALL ================= */
-export const useMembers = ({ page, limit, search, status }) =>
+export const useUsers = ({ page, limit, search, status }) =>
   useQuery({
-    queryKey: ["members", page, limit, search, status],
+    queryKey: ["users", page, limit, search, status],
     queryFn: () => {
       const params = new URLSearchParams({
         page,
@@ -14,7 +14,7 @@ export const useMembers = ({ page, limit, search, status }) =>
       if (search) params.append("search", search);
       if (status) params.append("status", status);
 
-      return apiClient(`/members?${params.toString()}`);
+      return apiClient(`/users?${params.toString()}`);
     },
     retry: false,
     refetchOnWindowFocus: false,
@@ -22,10 +22,10 @@ export const useMembers = ({ page, limit, search, status }) =>
   });
 
 /* ================= GET BY ID ================= */
-export const useMemberById = (id) =>
+export const useUserById = (id) =>
   useQuery({
-    queryKey: ["member", id],
-    queryFn: () => apiClient(`/members/${id}`),
+    queryKey: ["user", id],
+    queryFn: () => apiClient(`/users/${id}`),
     enabled: !!id,
     retry: false,
     refetchOnWindowFocus: false,
@@ -33,30 +33,30 @@ export const useMemberById = (id) =>
   });
 
 /* ================= CREATE ================= */
-export const useCreateMember = () =>
+export const useCreateUser = () =>
   useMutation({
     mutationFn: (payload) =>
-      apiClient("/members", {
+      apiClient("/users", {
         method: "POST",
         body: JSON.stringify(payload),
       }),
   });
 
 /* ================= UPDATE ================= */
-export const useUpdateMember = () =>
+export const useUpdateUser = () =>
   useMutation({
     mutationFn: ({ id, payload }) =>
-      apiClient(`/members/${id}`, {
+      apiClient(`/users/${id}`, {
         method: "PUT",
         body: payload, // FormData
       }),
   });
 
 /* ================= ASSIGN PERMISSIONS ================= */
-export const useAssignMemberPermissions = () =>
+export const useAssignUserPermissions = () =>
   useMutation({
-    mutationFn: ({ memberId, payload }) =>
-      apiClient(`/members/${memberId}/permissions`, {
+    mutationFn: ({ userId, payload }) =>
+      apiClient(`/users/${userId}/permissions`, {
         method: "POST",
         body: JSON.stringify(payload),
       }),

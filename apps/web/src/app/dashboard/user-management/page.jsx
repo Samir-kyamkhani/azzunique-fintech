@@ -14,8 +14,8 @@ export default function Page() {
     if (!perms) return;
 
     const routes = [
-      { path: "employees", perm: PERMISSIONS.EMPLOYEE.READ },
-      { path: "departments", perm: PERMISSIONS.DEPARTMENT.READ },
+      { path: "users", perm: PERMISSIONS.USER.READ },
+      { path: "roles", perm: PERMISSIONS.ROLE.READ },
     ];
 
     const allowed = routes.find((r) =>
@@ -23,7 +23,7 @@ export default function Page() {
     );
 
     router.replace(
-      allowed ? `/dashboard/employee-management/${allowed.path}` : "/dashboard",
+      allowed ? `/dashboard/user-management/${allowed.path}` : "/dashboard",
     );
   }, [perms, router]);
 

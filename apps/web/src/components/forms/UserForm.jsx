@@ -11,7 +11,7 @@ import SelectField from "@/components/ui/SelectField";
 import { onlyDigits } from "@/lib/utils";
 import TextareaField from "../ui/TextareaField";
 
-export default function MemberForm({
+export default function UserForm({
   initialData = null,
   isPending,
   onSubmit,
@@ -243,7 +243,7 @@ export default function MemberForm({
           />
         )}
         <Button type="submit" loading={isPending} className="w-full">
-          Save Member
+          Save User
         </Button>
       </form>
     </>
