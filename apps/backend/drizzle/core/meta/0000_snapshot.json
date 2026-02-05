@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "e6aac55e-84e3-46cf-a1f6-9167692a4de0",
+  "id": "2617e566-4e50-47c1-84bc-e81bd156ac9f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "audit_log": {
@@ -3710,7 +3710,8 @@
         "uniq_platform_service_provider": {
           "name": "uniq_platform_service_provider",
           "columns": [
-            "platform_service_id"
+            "platform_service_id",
+            "is_active"
           ],
           "isUnique": true
         }
@@ -4367,7 +4368,7 @@
           "name": "transaction_id",
           "type": "varchar(36)",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "tenant_id": {

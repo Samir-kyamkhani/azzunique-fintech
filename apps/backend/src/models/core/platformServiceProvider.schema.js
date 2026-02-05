@@ -44,7 +44,6 @@ export const platformServiceProviderTable = mysqlTable(
 
     uniqPlatformServiceProvider: uniqueIndex(
       'uniq_platform_service_provider',
-    ).on(table.platformServiceId),
-    // 🔒 One active provider per service (important)
+    ).on(table.platformServiceId, table.isActive),
   }),
 );

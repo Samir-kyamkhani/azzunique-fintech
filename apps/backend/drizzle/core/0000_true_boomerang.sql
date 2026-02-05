@@ -429,7 +429,7 @@ CREATE TABLE `platform_service_providers` (
 	`created_at` timestamp NOT NULL DEFAULT (now()),
 	`updated_at` timestamp NOT NULL DEFAULT (now()),
 	CONSTRAINT `platform_service_providers_id` PRIMARY KEY(`id`),
-	CONSTRAINT `uniq_platform_service_provider` UNIQUE(`platform_service_id`)
+	CONSTRAINT `uniq_platform_service_provider` UNIQUE(`platform_service_id`,`is_active`)
 );
 --> statement-breakpoint
 CREATE TABLE `service_providers` (
@@ -498,7 +498,7 @@ CREATE TABLE `ledgers` (
 --> statement-breakpoint
 CREATE TABLE `refunds` (
 	`id` varchar(36) NOT NULL DEFAULT (UUID()),
-	`transaction_id` varchar(36),
+	`transaction_id` varchar(36) NOT NULL,
 	`tenant_id` varchar(36) NOT NULL,
 	`amount` int NOT NULL DEFAULT 0,
 	`status` varchar(20) NOT NULL DEFAULT 'PENDING',
