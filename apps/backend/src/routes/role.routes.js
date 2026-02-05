@@ -26,11 +26,16 @@ router.use(AuthMiddleware);
 
 router.post(
   '/',
+  PermissionMiddleware(PermissionsRegistry.ROLE.CREATE),
   validate({ body: createRoleSchema }),
   asyncHandler(createRole),
 );
 
-router.get('/', asyncHandler(findAllRoles));
+router.get(
+  '/',
+  PermissionMiddleware(PermissionsRegistry.ROLE.READ),
+  asyncHandler(findAllRoles),
+);
 
 router.get(
   '/:id',
@@ -40,18 +45,21 @@ router.get(
 
 router.put(
   '/:id',
+  PermissionMiddleware(PermissionsRegistry.ROLE.UPDATE),
   validate({ params: roleIdParamSchema, body: updateRoleSchema }),
   asyncHandler(updateRole),
 );
 
 router.delete(
   '/:id',
+  PermissionMiddleware(PermissionsRegistry.ROLE.DELETE),
   validate({ params: roleIdParamSchema }),
   asyncHandler(deleteRole),
 );
 
 router.post(
   '/:id/permissions',
+  PermissionMiddleware(PermissionsRegistry.ROLE.ASSIGN_PERMISSIONS),
   validate({
     params: roleIdParamSchema,
     body: assignRolePermissionsSchema,
