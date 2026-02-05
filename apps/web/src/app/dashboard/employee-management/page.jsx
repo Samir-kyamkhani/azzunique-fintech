@@ -1,5 +1,31 @@
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
+import { PERMISSIONS } from "@/lib/permissionKeys";
+import { canServer } from "@/lib/serverPermission";
 
 export default function Page() {
-  redirect("/dashboard/employee-management/employees");
+  const router = useRouter();
+  const perms = useSelector((s) => s.auth.user?.permissions);
+
+  useEffect(() => {
+    if (!perms) return;
+
+    const routes = [
+      { path: "employees", perm: PERMISSIONS.EMPLOYEE.READ },
+      { path: "departments", perm: PERMISSIONS.DEPARTMENT.READ },
+    ];
+
+    const allowed = routes.find((r) =>
+      canServer(perms, r.perm.resource, r.perm.action),
+    );
+
+    router.replace(
+      allowed ? `/dashboard/employee-management/${allowed.path}` : "/dashboard",
+    );
+  }, [perms, router]);
+
+  return null;
 }
