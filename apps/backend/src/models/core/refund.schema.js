@@ -18,7 +18,7 @@ export const refundTable = mysqlTable(
       .primaryKey()
       .default(sql`(UUID())`),
 
-    transactionId: varchar('transaction_id', { length: 36 }),
+    transactionId: varchar('transaction_id', { length: 36 }).notNull(),
 
     tenantId: varchar('tenant_id', { length: 36 }).notNull(),
 
