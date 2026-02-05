@@ -19,9 +19,15 @@ export const usePermissionChecker = () => {
     [user?.permissions],
   );
 
+  console.log(user);
+
   const can = (resource, action) => {
     if (!user) return false;
-    if (user.type === "ROOT") return true;
+    if (
+      user.permissions?.role.includes("*") ||
+      user.permissions?.user.includes("*")
+    )
+      return true;
     return permMap.get(`${resource}.${action}`) === true;
   };
 
