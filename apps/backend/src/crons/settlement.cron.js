@@ -37,12 +37,14 @@ export async function runSettlement({ tenantId }) {
       await WalletService.debitWallet({
         walletId: wallet.id,
         amount,
+        reference: `SETTLEMENT:${settlementWallet.id}:${wallet.id}`,
       });
 
       // Credit to settlement wallet
       await WalletService.creditWallet({
         walletId: settlementWallet.id,
         amount,
+        reference: `SETTLEMENT:${wallet.id}:${settlementWallet.id}`,
       });
     });
   }

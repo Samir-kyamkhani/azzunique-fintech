@@ -83,6 +83,7 @@ class WalletService {
     amount, // paise
     transactionId = null,
     refundId = null,
+    reference = null,
   }) {
     if (amount <= 0) {
       throw ApiError.badRequest('Invalid credit amount');
@@ -116,6 +117,7 @@ class WalletService {
         walletId,
         transactionId,
         refundId,
+        reference: reference || crypto.randomUUID(),
         entryType: 'CREDIT',
         amount,
         balanceAfter: newBalance,
@@ -132,6 +134,7 @@ class WalletService {
     walletId,
     amount, // paise
     transactionId = null,
+    reference = null,
   }) {
     if (amount <= 0) {
       throw ApiError.badRequest('Invalid debit amount');
@@ -172,6 +175,7 @@ class WalletService {
         id: crypto.randomUUID(),
         walletId,
         transactionId,
+        reference: reference || crypto.randomUUID(),
         entryType: 'DEBIT',
         amount,
         balanceAfter: newBalance,
@@ -183,38 +187,8 @@ class WalletService {
     return true;
   }
 
-  // 6️⃣ COMMISSION → MAIN TRANSFER
-  static async transferCommissionToMain({ userId, tenantId, amount }) {
-    if (amount <= 0) {
-      throw ApiError.badRequest('Invalid amount');
-    }
-
-    const wallets = await this.getUserWallets(userId, tenantId);
-
-    const commissionWallet = wallets.find((w) => w.walletType === 'COMMISSION');
-    const mainWallet = wallets.find((w) => w.walletType === 'MAIN');
-
-    if (!commissionWallet || !mainWallet) {
-      throw ApiError.notFound('Required wallets not found');
-    }
-
-    await db.transaction(async () => {
-      await this.debitWallet({
-        walletId: commissionWallet.id,
-        amount,
-      });
-
-      await this.creditWallet({
-        walletId: mainWallet.id,
-        amount,
-      });
-    });
-
-    return true;
-  }
-
-  // 7️⃣ BLOCK AMOUNT (NO BALANCE CHANGE)
-  static async blockAmount({ walletId, amount, transactionId }) {
+  // 6️⃣ BLOCK AMOUNT (NO BALANCE CHANGE)
+  static async blockAmount({ walletId, amount, transactionId, reference = null }) {
     if (amount <= 0) {
       throw ApiError.badRequest('Invalid block amount');
     }
@@ -252,6 +226,7 @@ class WalletService {
         id: crypto.randomUUID(),
         walletId,
         transactionId,
+        reference: reference || crypto.randomUUID(),
         entryType: 'BLOCK',
         amount,
         balanceAfter: wallet.balance, // balance unchanged
@@ -261,8 +236,8 @@ class WalletService {
     });
   }
 
-  // 8️⃣ RELEASE BLOCKED AMOUNT (FAIL / TIMEOUT)
-  static async releaseBlockedAmount({ walletId, amount, transactionId }) {
+  // 7️⃣ RELEASE BLOCKED AMOUNT (FAIL / TIMEOUT)
+  static async releaseBlockedAmount({ walletId, amount, transactionId, reference = null }) {
     if (amount <= 0) return;
 
     await db.transaction(async (tx) => {
@@ -294,6 +269,7 @@ class WalletService {
         id: crypto.randomUUID(),
         walletId,
         transactionId,
+        reference: reference || crypto.randomUUID(),
         entryType: 'UNBLOCK',
         amount,
         balanceAfter: wallet.balance,
@@ -303,8 +279,8 @@ class WalletService {
     });
   }
 
-  // 9️⃣ DEBIT BLOCKED AMOUNT (SUCCESS CASE ONLY)
-  static async debitBlockedAmount({ walletId, amount, transactionId }) {
+  // 8️⃣ DEBIT BLOCKED AMOUNT (SUCCESS CASE ONLY)
+  static async debitBlockedAmount({ walletId, amount, transactionId, reference = null }) {
     if (amount <= 0) {
       throw ApiError.badRequest('Invalid debit amount');
     }
@@ -348,6 +324,7 @@ class WalletService {
         id: crypto.randomUUID(),
         walletId,
         transactionId,
+        reference: reference || crypto.randomUUID(),
         entryType: 'DEBIT',
         amount,
         balanceAfter: newBalance,
@@ -355,28 +332,6 @@ class WalletService {
         updatedAt: new Date(),
       });
     });
-  }
-
-  // 🔟 FETCH COMMISSION WALLET
-  static async getCommissionWallet(userId, tenantId) {
-    const [wallet] = await db
-      .select()
-      .from(walletTable)
-      .where(
-        and(
-          eq(walletTable.ownerId, userId),
-          eq(walletTable.ownerType, 'USER'),
-          eq(walletTable.walletType, 'COMMISSION'),
-          eq(walletTable.tenantId, tenantId),
-        ),
-      )
-      .limit(1);
-
-    if (!wallet) {
-      throw ApiError.notFound('Commission wallet not found');
-    }
-
-    return wallet;
   }
 }
 

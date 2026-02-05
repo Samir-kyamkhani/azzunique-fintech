@@ -22,13 +22,14 @@ export const rechargeTransactionTable = mysqlTable(
     idempotencyKey: varchar('idempotency_key', { length: 64 }).notNull(),
 
     amount: int('amount').notNull(), // paise
+    blockedAmount: int('blocked_amount').notNull(),
 
     walletId: varchar('wallet_id', { length: 36 }).notNull(),
 
     platformServiceId: varchar('platform_service_id', { length: 36 }).notNull(),
     platformServiceFeatureId: varchar('platform_service_feature_id', {
       length: 36,
-    }).notNull(),
+    }),
 
     providerCode: varchar('provider_code', { length: 40 }).notNull(),
     providerId: varchar('provider_id', { length: 36 }).notNull(),

@@ -18,6 +18,7 @@ class CommissionReversalService {
         walletId: e.walletId,
         amount: e.netAmount,
         transactionId,
+        reference: `COMMISSION_REVERSAL:${transactionId}:${e.userId}`,
       });
 
       //  Remove commission record

@@ -3,11 +3,15 @@ import { rechargeTransactionTable } from '../../models/recharge/index.js';
 import { eq } from 'drizzle-orm';
 import WalletService from '../wallet.service.js';
 import CommissionReversalService from '../commission-reversal.service.js';
-import { RECHARGE_SERVICE_CODE } from '../../config/constant.js';
+import { getRechargePlugin } from '../../plugin_registry/pluginRegistry.js';
+import { ApiError } from '../../lib/ApiError.js';
 
 class RechargeStatusService {
+  /**
+   * CRON ENTRY
+   * Called every X minutes
+   */
   async processPendingTransactions() {
-    // 1️⃣ Pending transactions (safe limit)
     const pendingTxns = await db
       .select()
       .from(rechargeTransactionTable)
@@ -15,65 +19,124 @@ class RechargeStatusService {
       .limit(50);
 
     for (const txn of pendingTxns) {
-      await this.checkAndResolve(txn);
+      try {
+        await this.checkAndResolve(txn);
+      } catch (err) {
+        console.error(
+          '[RechargeStatusService] check failed',
+          txn.id,
+          err.message,
+        );
+      }
     }
   }
 
+  // Resolve single transaction status from provider
   async checkAndResolve(txn) {
-    // 1️⃣ Resolve provider
-    const { provider } = await RechargeRuntimeService.resolve({
-      tenantChain: [txn.tenantId],
-      platformServiceCode: RECHARGE_SERVICE_CODE,
-    });
-
-    const plugin = getRechargePlugin(
-      provider.serviceProviderId,
-      provider.config,
-    );
-
-    // 2️⃣ Call provider status API
-    const statusResp = await plugin.checkStatus({
-      transId: txn.id,
-    });
-
-    // Provider response: SUCCESS | FAIL | PENDING
-    if (statusResp.status === 'PENDING') {
-      return; // ⏳ wait for next cron
+    // SAFETY: provider must be frozen on transaction
+    if (!txn.providerId || !txn.providerCode) {
+      throw ApiError.internal(`Provider not bound to transaction ${txn.id}`);
     }
 
-    if (statusResp.status === 'SUCCESS') {
-      await db
-        .update(rechargeTransactionTable)
-        .set({
-          status: 'SUCCESS',
-          providerTxnId: statusResp.optransid,
-          updatedAt: new Date(),
-        })
-        .where(eq(rechargeTransactionTable.id, txn.id));
+    // Provider plugin (FROZEN)
+    const plugin = getRechargePlugin(txn.providerCode, txn.providerConfig);
 
+    if (typeof plugin.checkStatus !== 'function') {
+      // Provider does not support polling
       return;
     }
 
-    if (statusResp.status === 'FAIL') {
-      // 3️⃣ Refund wallet
-      await WalletService.creditWallet({
-        walletId: txn.walletId,
-        amount: txn.amount,
-        transactionId: txn.id,
-      });
+    // Call provider status API
+    const statusResp = await plugin.checkStatus({
+      transId: txn.id,
+      providerTxnId: txn.providerTxnId,
+    });
 
-      // 4️⃣ Reverse commission if any
-      await CommissionReversalService.reverseByTransaction(txn.id);
+    const providerStatus = String(statusResp?.status ?? '')
+      .trim()
+      .toUpperCase();
 
-      await db
-        .update(rechargeTransactionTable)
-        .set({
-          status: 'FAILED',
-          failureReason: statusResp.message || 'Recharge failed',
-          updatedAt: new Date(),
-        })
-        .where(eq(rechargeTransactionTable.id, txn.id));
+    // Still pending → wait for callback / next cron
+    if (['FAIL', 'FAILED', 'FAILURE', 'ERROR'].includes(providerStatus)) {
+      return;
     }
+
+    // Lock transaction before mutating
+    await db.transaction(async (tx) => {
+      const [lockedTxn] = await tx
+        .select()
+        .from(rechargeTransactionTable)
+        .where(eq(rechargeTransactionTable.id, txn.id))
+        .forUpdate()
+        .limit(1);
+
+      if (!lockedTxn || lockedTxn.status !== 'PENDING') {
+        return;
+      }
+
+      // 🟢 SUCCESS
+      if (providerStatus === 'SUCCESS') {
+        /**
+         * IMPORTANT:
+         * - Wallet debit
+         * - Commission credit
+         * handled ONLY via callback
+         *
+         * Cron only finalizes status
+         */
+        await tx
+          .update(rechargeTransactionTable)
+          .set({
+            status: 'SUCCESS',
+            providerTxnId: lockedTxn.providerTxnId || statusResp.optransid,
+            referenceId: lockedTxn.referenceId || statusResp.referenceid,
+            updatedAt: new Date(),
+          })
+          .where(eq(rechargeTransactionTable.id, lockedTxn.id));
+
+        // Wallet settlement handled only via callback
+
+        return;
+      }
+
+      // FAIL
+      if (providerStatus === 'FAIL' || providerStatus === 'FAILED') {
+        // 🔒 DEFENSIVE GUARD
+        if (!lockedTxn.blockedAmount || lockedTxn.blockedAmount <= 0) {
+          console.warn('[RechargeCron] Blocked amount missing', lockedTxn.id);
+          return;
+        }
+
+        // Refund blocked amount
+        await WalletService.releaseBlockedAmount({
+          walletId: lockedTxn.walletId,
+          amount: lockedTxn.amount,
+          transactionId: lockedTxn.id,
+          reference: `RECHARGE_FAILURE:${lockedTxn.id}`,
+        });
+
+        // Reverse commission if any (safe even if none)
+        await CommissionReversalService.reverseByTransaction(lockedTxn.id);
+
+        await tx
+          .update(rechargeTransactionTable)
+          .set({
+            status: 'FAILED',
+            failureReason: statusResp.message || 'Recharge failed (cron)',
+            updatedAt: new Date(),
+          })
+          .where(eq(rechargeTransactionTable.id, lockedTxn.id));
+
+        return;
+      }
+
+      // Unknown status - log and skip
+      console.warn(
+        '[RechargeStatusService] Unknown provider status',
+        txn.id,
+        statusResp,
+      );
+    });
   }
 }
 

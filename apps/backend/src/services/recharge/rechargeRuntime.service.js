@@ -1,29 +1,31 @@
 import { db } from '../../database/core/core-db.js';
+import { rechargeDb } from '../../database/recharge/recharge-db.js';
 import { eq, and } from 'drizzle-orm';
+
 import {
   tenantServiceTable,
   platformServiceProviderTable,
   platformServiceTable,
   serviceProviderTable,
 } from '../../models/core/index.js';
-import { ApiError } from '../../lib/ApiError.js';
 
-import { rechargeDb } from '../../database/recharge/recharge-db.js';
 import { rechargeTransactionTable } from '../../models/recharge/index.js';
 
+import { ApiError } from '../../lib/ApiError.js';
 import { getRechargePlugin } from '../../plugin_registry/pluginRegistry.js';
 import OperatorMapService from '../recharge-admin/operatorMap.service.js';
 import CircleMapService from '../recharge-admin/circleMap.service.js';
 
-// RULE: User → WL → Reseller → AZZUNIQUE (sab ke liye service enabled honi chahiye)
-
-/*
- * RechargeRuntimeService.resolve() ka sirf ek kaam hai:
- * Runtime pe ye decide karna:
- * Recharge service allowed hai ya nahi (hierarchy ke har level pe)
- * Kaunsa provider use hoga (WL / Reseller / AZZUNIQUE)
+/**
+ * RechargeRuntimeService
+ *
+ * Responsibilities:
+ * 1. Resolve service + provider (INITIATE FLOW)
+ * 2. Execute recharge again (RETRY / CRON FLOW)
+ *
+ * ❗ Wallet handling is NOT done here
+ * ❗ Finalization always happens via CALLBACK or STATUS CRON
  */
-
 class RechargeRuntimeService {
   static async resolve({ tenantChain, platformServiceCode }) {
     // 1️⃣ Platform service
@@ -41,7 +43,7 @@ class RechargeRuntimeService {
       throw ApiError.notFound('Recharge service not configured');
     }
 
-    // 2️⃣ Hierarchy enable check
+    // 2️⃣ Hierarchy enable check (BOTTOM → TOP)
     for (const tenantId of tenantChain) {
       const [enabled] = await db
         .select()
@@ -62,11 +64,11 @@ class RechargeRuntimeService {
       }
     }
 
-    // 3️⃣ Provider resolve WITH CODE
+    // 3️⃣ Provider resolve (TOP MOST ACTIVE)
     const [row] = await db
       .select({
-        providerId: platformServiceProviderTable.serviceProviderId,
-        providerCode: serviceProviderTable.code, // ✅ IMPORTANT
+        providerId: platformServiceProviderTable.id,
+        providerCode: serviceProviderTable.code,
         config: platformServiceProviderTable.config,
       })
       .from(platformServiceProviderTable)
@@ -94,71 +96,84 @@ class RechargeRuntimeService {
       provider: {
         providerId: row.providerId,
         code: row.providerCode, // ✅ IMPORTANT
-        config: row.config,
+        config: row.config, // 🔐 snapshot this
       },
     };
   }
 
   static async execute({ transactionId, isRetry = false }) {
-    // 1️⃣ Load transaction
-    const [txn] = await rechargeDb
-      .select()
-      .from(rechargeTransactionTable)
-      .where(eq(rechargeTransactionTable.id, transactionId))
-      .limit(1);
+    return rechargeDb.transaction(async (tx) => {
+      // 1️⃣ Lock transaction (RACE SAFE)
+      const [txn] = await tx
+        .select()
+        .from(rechargeTransactionTable)
+        .where(eq(rechargeTransactionTable.id, transactionId))
+        .forUpdate()
+        .limit(1);
 
-    if (!txn) {
-      throw ApiError.notFound('Recharge transaction not found');
-    }
+      if (!txn) {
+        throw ApiError.notFound('Recharge transaction not found');
+      }
 
-    // 2️⃣ Only retry-safe states
-    if (!['FAILED', 'PENDING'].includes(txn.status)) {
-      throw ApiError.badRequest('Transaction not retryable');
-    }
+      // Retry only PENDING
+      if (txn.status !== 'PENDING') {
+        throw ApiError.badRequest('Transaction not retryable');
+      }
 
-    // 3️⃣ Resolve provider plugin (FROZEN PROVIDER)
-    const plugin = getRechargePlugin(
-      txn.providerCode,
-      txn.providerConfig, // 👉 recommended: store providerConfig snapshot
-    );
+      // 3️⃣ Retry limit guard
+      if (txn.retryCount >= 3) {
+        throw ApiError.badRequest('Retry limit exceeded');
+      }
 
-    // 4️⃣ Operator / circle mapping
-    const providerOperatorCode = await OperatorMapService.resolve({
-      internalOperatorCode: txn.operatorCode,
-      platformServiceId: txn.platformServiceId,
-      providerCode: txn.providerCode,
-    });
+      // 4️⃣ Provider must be frozen
+      if (!txn.providerCode || !txn.providerConfig) {
+        throw ApiError.internal('Frozen provider data missing');
+      }
 
-    const providerCircleCode = txn.circleCode
-      ? await CircleMapService.resolve({
-          internalCircleCode: txn.circleCode,
-          providerCode: txn.providerCode,
+      // 5️⃣ Provider plugin (SNAPSHOT CONFIG)
+      const plugin = getRechargePlugin(txn.providerCode, txn.providerConfig);
+
+      // 6️⃣ Operator / Circle mapping
+      const providerOperatorCode = await OperatorMapService.resolve({
+        internalOperatorCode: txn.operatorCode,
+        platformServiceId: txn.platformServiceId,
+        providerCode: txn.providerCode,
+      });
+
+      const providerCircleCode = txn.circleCode
+        ? await CircleMapService.resolve({
+            internalCircleCode: txn.circleCode,
+            providerCode: txn.providerCode,
+          })
+        : null;
+
+      // 7️⃣ Provider call (NO WALLET TOUCH)
+      await plugin.recharge({
+        opcode: providerOperatorCode,
+        number: txn.mobileNumber,
+        amount: txn.amount,
+        transid: txn.id, // SAME TXN ID
+        circle: providerCircleCode,
+        isRetry,
+      });
+
+      // 8️⃣ Update retry metadata
+      await tx
+        .update(rechargeTransactionTable)
+        .set({
+          retryCount: txn.retryCount + 1,
+          lastRetryAt: new Date(),
+          status: 'PENDING',
+          updatedAt: new Date(),
         })
-      : null;
+        .where(eq(rechargeTransactionTable.id, txn.id));
 
-    // 5️⃣ Call provider (NO WALLET TOUCH)
-    const response = await plugin.recharge({
-      opcode: providerOperatorCode,
-      number: txn.mobileNumber,
-      amount: txn.amount,
-      transid: txn.id, // SAME TXN ID
-      circle: providerCircleCode,
-      isRetry,
+      return {
+        success: true,
+        transactionId: txn.id,
+        retryCount: txn.retryCount + 1,
+      };
     });
-
-    // 6️⃣ Update status → PENDING (callback will finalize)
-    await rechargeDb
-      .update(rechargeTransactionTable)
-      .set({
-        status: 'PENDING',
-        updatedAt: new Date(),
-      })
-      .where(eq(rechargeTransactionTable.id, txn.id));
-
-    return {
-      status: 'RETRIED',
-      providerResponse: response,
-    };
   }
 }
 

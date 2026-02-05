@@ -2,6 +2,7 @@ import { db } from '../../database/core/core-db.js';
 import { rechargeOperatorMapTable } from '../../models/recharge/index.js';
 import { ApiError } from '../../lib/ApiError.js';
 import crypto from 'crypto';
+import { and, eq } from 'drizzle-orm';
 
 class OperatorMapService {
   async upsert(data, actor) {
@@ -9,10 +10,28 @@ class OperatorMapService {
       throw ApiError.forbidden('Only AZZUNIQUE allowed');
     }
 
+    /**
+     * Expected data:
+     * {
+     *   platformServiceId,
+     *   providerCode,
+     *   internalOperatorCode,
+     *   providerOperatorCode
+     * }
+     */
+
     await db
       .insert(rechargeOperatorMapTable)
-      .values({ id: crypto.randomUUID(), ...data })
-      .onDuplicateKeyUpdate({ set: data });
+      .values({
+        id: crypto.randomUUID(),
+        ...data,
+      })
+      .onDuplicateKeyUpdate({
+        set: {
+          providerOperatorCode: data.providerOperatorCode,
+          updatedAt: new Date(),
+        },
+      });
 
     return { success: true };
   }
@@ -32,31 +51,18 @@ class OperatorMapService {
             internalOperatorCode,
           ),
           eq(rechargeOperatorMapTable.platformServiceId, platformServiceId),
+          eq(rechargeOperatorMapTable.providerCode, providerCode),
         ),
       )
       .limit(1);
 
     if (!row) {
       throw ApiError.badRequest(
-        `Operator mapping not found for ${internalOperatorCode}`,
+        `Operator mapping not found for ${internalOperatorCode} (${providerCode})`,
       );
     }
 
-    if (providerCode === 'MPLAN') {
-      if (!row.mplanOperatorCode) {
-        throw ApiError.badRequest('MPLAN operator code missing');
-      }
-      return row.mplanOperatorCode;
-    }
-
-    if (providerCode === 'RECHARGE_EXCHANGE') {
-      if (!row.rechargeExchangeOperatorCode) {
-        throw ApiError.badRequest('RechargeExchange operator code missing');
-      }
-      return row.rechargeExchangeOperatorCode;
-    }
-
-    throw ApiError.internal('Unsupported provider');
+    return row.providerOperatorCode;
   }
 }
 

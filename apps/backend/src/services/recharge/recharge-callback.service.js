@@ -10,6 +10,7 @@ import {
 import {
   platformServiceProviderTable,
   serviceProviderTable,
+  usersTable,
 } from '../../models/core/index.js';
 
 import WalletService from '../wallet.service.js';
@@ -23,9 +24,9 @@ class RechargeCallbackService {
     const { status, yourtransid, opid, txnid, message } = query;
 
     const finalStatus = status?.toUpperCase();
-    if (!['SUCCESS', 'FAIL'].includes(finalStatus)) return;
+    if (!['SUCCESS', 'FAIL', 'FAILED'].includes(finalStatus)) return;
 
-    const normalizedStatus = finalStatus === 'FAIL' ? 'FAILED' : 'SUCCESS';
+    const normalizedStatus = finalStatus === 'SUCCESS' ? 'SUCCESS' : 'FAILED';
 
     // 1️⃣ Find transaction
     const [txn] = await db
@@ -140,7 +141,16 @@ class RechargeCallbackService {
         .forUpdate()
         .limit(1);
 
-      if (lockedTxn.status !== 'PENDING') return;
+      // 🔐 IDENTITY + STATE GUARD
+      if (!lockedTxn || lockedTxn.status !== 'PENDING') return;
+
+      if (!lockedTxn.blockedAmount || lockedTxn.blockedAmount <= 0) {
+        console.warn(
+          '[RechargeCallback] Blocked amount missing on SUCCESS',
+          lockedTxn.id,
+        );
+        return;
+      }
 
       await tx
         .update(rechargeTransactionTable)
@@ -152,6 +162,19 @@ class RechargeCallbackService {
         })
         .where(eq(rechargeTransactionTable.id, txn.id));
 
+      // 🔹 Fetch roleId if missing in txn
+      let roleId = lockedTxn.roleId;
+      if (!roleId) {
+        const [userRow] = await db
+          .select({ roleId: usersTable.roleId })
+          .from(usersTable)
+          .where(eq(usersTable.id, lockedTxn.userId))
+          .limit(1);
+
+        roleId = userRow?.roleId || null;
+      }
+
+      // CommissionEngine call with complete user object
       await CommissionEngine.calculateAndCredit({
         transaction: {
           id: txn.id,
@@ -160,13 +183,31 @@ class RechargeCallbackService {
           platformServiceFeatureId: txn.platformServiceFeatureId,
           amount: txn.amount,
         },
-        user: { id: txn.userId, tenantId: txn.tenantId },
+        user: {
+          id: txn.userId,
+          tenantId: txn.tenantId,
+          roleId, // ✅ added
+        },
       });
 
       await MultiLevelCommission.process({
         transaction: txn,
-        user: { id: txn.userId, tenantId: txn.tenantId },
+        user: {
+          id: txn.userId,
+          tenantId: txn.tenantId,
+          roleId, // ✅ added
+        },
       });
+
+      // Debit blocked amount if exists
+      if (lockedTxn.blockedAmount > 0) {
+        await WalletService.debitBlockedAmount({
+          walletId: lockedTxn.walletId,
+          amount: lockedTxn.amount,
+          transactionId: lockedTxn.id,
+          reference: `RECHARGE_SUCCESS:${lockedTxn.id}`,
+        });
+      }
     });
   }
 
@@ -181,6 +222,14 @@ class RechargeCallbackService {
 
       if (!lockedTxn || lockedTxn.status !== 'PENDING') return;
 
+      if (!lockedTxn.blockedAmount || lockedTxn.blockedAmount <= 0) {
+        console.warn(
+          '[RechargeCallback] Blocked amount missing on FAILURE',
+          lockedTxn.id,
+        );
+        return;
+      }
+
       await tx
         .update(rechargeTransactionTable)
         .set({
@@ -194,6 +243,7 @@ class RechargeCallbackService {
         walletId: lockedTxn.walletId,
         amount: lockedTxn.amount,
         transactionId: lockedTxn.id,
+        reference: `RECHARGE_FAILURE:${lockedTxn.id}`,
       });
     });
   }

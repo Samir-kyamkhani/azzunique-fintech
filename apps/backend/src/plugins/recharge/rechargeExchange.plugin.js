@@ -62,7 +62,9 @@ class RechargeExchangePlugin extends RechargeExchangePluginInterface {
       throw ApiError.badRequest('Unable to fetch provider balance');
     }
 
-    return res.data;
+    return {
+      balance: Number(res.data.balance),
+    };
   }
 
   async complain({ referenceId, remark }) {

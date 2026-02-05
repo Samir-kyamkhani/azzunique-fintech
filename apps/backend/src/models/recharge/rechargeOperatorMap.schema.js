@@ -1,19 +1,30 @@
-import { mysqlTable, timestamp, varchar } from 'drizzle-orm/mysql-core';
+import { mysqlTable, timestamp, varchar, unique } from 'drizzle-orm/mysql-core';
 
-export const rechargeOperatorMapTable = mysqlTable('recharge_operator_map', {
-  id: varchar('id', { length: 36 }).primaryKey(),
+export const rechargeOperatorMapTable = mysqlTable(
+  'recharge_operator_map',
+  {
+    id: varchar('id', { length: 36 }).primaryKey(),
 
-  platformServiceId: varchar('platform_service_id', { length: 36 }).notNull(),
+    platformServiceId: varchar('platform_service_id', { length: 36 }).notNull(),
 
-  internalOperatorCode: varchar('internal_operator_code', {
-    length: 20,
-  }).notNull(),
+    providerCode: varchar('provider_code', { length: 30 }).notNull(), // ✅ NEW
 
-  mplanOperatorCode: varchar('mplan_operator_code', { length: 10 }),
-  rechargeExchangeOperatorCode: varchar('recharge_exchange_operator_code', {
-    length: 10,
+    internalOperatorCode: varchar('internal_operator_code', {
+      length: 20,
+    }).notNull(),
+
+    providerOperatorCode: varchar('provider_operator_code', {
+      length: 20,
+    }).notNull(), // ✅ SINGLE SOURCE
+
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+  },
+  (table) => ({
+    uniq: unique().on(
+      table.internalOperatorCode,
+      table.platformServiceId,
+      table.providerCode,
+    ),
   }),
-
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
+);

@@ -5,6 +5,7 @@ import {
   foreignKey,
   int,
   index,
+  uniqueIndex,
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 
@@ -22,10 +23,13 @@ export const ledgerTable = mysqlTable(
     transactionId: varchar('transaction_id', { length: 36 }),
     refundId: varchar('refund_id', { length: 36 }),
 
-    entryType: varchar('entry_type', { length: 10 }).notNull(), // DEBIT | CREDIT
+    // 🔑 NEW: unique reference for idempotency
+    reference: varchar('reference', { length: 100 }).notNull(),
 
-    amount: int('amount').notNull().default(0), // paise
-    balanceAfter: int('balance_after').notNull().default(0), // paise
+    entryType: varchar('entry_type', { length: 10 }).notNull(), // DEBIT | CREDIT | BLOCK | UNBLOCK
+
+    amount: int('amount').notNull().default(0),
+    balanceAfter: int('balance_after').notNull().default(0),
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -49,6 +53,11 @@ export const ledgerTable = mysqlTable(
       columns: [table.refundId],
       foreignColumns: [refundTable.id],
     }),
+
+    // 🔐 UNIQUE REFERENCE INDEX
+    uniqLedgerReference: uniqueIndex('uniq_ledger_reference').on(
+      table.reference,
+    ),
 
     idxLedgerWalletCreated: index('idx_ledger_wallet_created').on(
       table.walletId,

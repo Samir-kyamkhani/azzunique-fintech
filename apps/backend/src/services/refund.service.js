@@ -112,6 +112,7 @@ class RefundService {
         id: crypto.randomUUID(),
         walletId: wallet.id,
         refundId: refund.id,
+        reference: `REFUND:${refund.id}:${wallet.id}`,
         entryType: 'DEBIT',
         amount: refund.amount,
         balanceAfter: newBalance,

@@ -9,8 +9,6 @@ import RechargeRuntimeService from './rechargeRuntime.service.js';
 import { getRechargePlugin } from '../../plugin_registry/pluginRegistry.js';
 
 import WalletService from '../wallet.service.js';
-import CommissionEngine from '../../lib/commission.engine.js';
-import MultiLevelCommission from '../../lib/multilevel-commission.engine.js';
 
 import OperatorMapService from '../recharge-admin/operatorMap.service.js';
 import CircleMapService from '../recharge-admin/circleMap.service.js';
@@ -68,6 +66,7 @@ class RechargeTransactionService {
       walletId: mainWallet.id,
       amount,
       transactionId,
+      reference: `RECHARGE:${transactionId}:${actor.id}`,
     });
 
     // 6️⃣ Insert INITIATED transaction
@@ -83,12 +82,14 @@ class RechargeTransactionService {
       circleCode,
 
       amount,
+      blockedAmount: amount,
       platformServiceId: service.id,
       platformServiceFeatureId: null, // recharge has single feature
       providerCode: provider.code,
       providerId: provider.providerId,
+      providerConfig: provider.config,
 
-      status: 'INITIATED',
+      status: 'PENDING',
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -116,12 +117,13 @@ class RechargeTransactionService {
       if (typeof plugin.fetchBalance === 'function') {
         const providerBalance = await plugin.fetchBalance();
 
-        if (providerBalance < amount) {
+        if (providerBalance.balance < amount) {
           // unblock user money BEFORE failing
           await WalletService.releaseBlockedAmount({
             walletId: mainWallet.id,
             amount,
             transactionId,
+            reference: `RECHARGE_FAILURE:${transactionId}`,
           });
 
           throw ApiError.badRequest('Provider balance insufficient');
@@ -163,61 +165,32 @@ class RechargeTransactionService {
     transactionId,
     providerResponse,
     walletId,
-    actor,
-    service,
     amount,
   }) {
-    const status = providerResponse.status;
+    const status = String(providerResponse.status).toUpperCase();
 
-    // SUCCESS
+    /**
+     * RULE:
+     * - Immediate SUCCESS is NOT FINAL
+     * - Wallet + commission ONLY via callback / cron
+     */
+
+    // ✅ SUCCESS → WAIT FOR CALLBACK
     if (status === 'SUCCESS') {
-      await db.transaction(async () => {
-        // 1️⃣ Final debit
-        await WalletService.debitBlockedAmount({
-          walletId,
-          amount,
-          transactionId,
-        });
+      await db
+        .update(rechargeTransactionTable)
+        .set({
+          status: 'PENDING', // 👈 IMPORTANT
+          providerTxnId: providerResponse.optransid,
+          referenceId: providerResponse.referenceid,
+          updatedAt: new Date(),
+        })
+        .where(eq(rechargeTransactionTable.id, transactionId));
 
-        // 2️⃣ Update recharge txn
-        await db
-          .update(rechargeTransactionTable)
-          .set({
-            status: 'SUCCESS',
-            providerTxnId: providerResponse.optransid,
-            referenceId: providerResponse.referenceid,
-            updatedAt: new Date(),
-          })
-          .where(eq(rechargeTransactionTable.id, transactionId));
-
-        // 3️⃣ Commission (same TX)
-        await CommissionEngine.calculateAndCredit({
-          transaction: {
-            id: transactionId,
-            tenantId: actor.tenantId,
-            platformServiceId: service.id,
-            platformServiceFeatureId: null,
-            amount,
-          },
-          user: actor,
-        });
-
-        await MultiLevelCommission.process({
-          transaction: {
-            id: transactionId,
-            tenantId: actor.tenantId,
-            platformServiceId: service.id,
-            platformServiceFeatureId: null,
-            amount,
-          },
-          user: actor,
-        });
-      });
-
-      return { status: 'SUCCESS', transactionId };
+      return { status: 'PENDING', transactionId };
     }
 
-    // FAIL
+    //  FAIL → FINAL (refund immediately)
     if (status === 'FAIL') {
       await this._failAndRefund({
         transactionId,
@@ -229,7 +202,7 @@ class RechargeTransactionService {
       return { status: 'FAILED', transactionId };
     }
 
-    // PENDING
+    //  PENDING / UNKNOWN → KEEP WAITING
     await db
       .update(rechargeTransactionTable)
       .set({
@@ -261,6 +234,7 @@ class RechargeTransactionService {
         walletId,
         amount,
         transactionId,
+        reference: `RECHARGE_FAILURE:${transactionId}`,
       });
     });
   }

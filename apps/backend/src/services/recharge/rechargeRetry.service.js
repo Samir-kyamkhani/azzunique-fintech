@@ -21,7 +21,8 @@ class RechargeRetryService {
       }
 
       // 2️⃣ Ownership check
-      if (txn.userId !== actor.id) {
+      // Allow system / cron retry
+      if (actor.roleLevel !== 0 && txn.userId !== actor.id) {
         throw ApiError.forbidden('Not your transaction');
       }
 
@@ -30,17 +31,7 @@ class RechargeRetryService {
         throw ApiError.badRequest('Retry not allowed for this transaction');
       }
 
-      // 4️⃣ Increment retry count
-      await tx
-        .update(rechargeTransactionTable)
-        .set({
-          retryCount: txn.retryCount + 1,
-          lastRetryAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .where(eq(rechargeTransactionTable.id, txn.id));
-
-      // 5️⃣ Trigger recharge again (SAFE)
+      // 4️⃣ Trigger recharge again (SAFE)
       await RechargeRuntimeService.execute({
         transactionId: txn.id,
         isRetry: true,

@@ -26,7 +26,7 @@ class CommissionEngine {
 
       if (!rule) return;
 
-      // 2️⃣ Commission calculation (PERCENTAGE OUT OF 100)
+      // ---- calculation SAME AS YOUR CODE ---- out of 100
       const commissionAmount =
         rule.commissionType === 'FLAT'
           ? rule.commissionValue
@@ -60,7 +60,6 @@ class CommissionEngine {
       let finalAmount = netAmount;
 
       if (
-        rule.maxCommissionValue &&
         rule.maxCommissionValue > 0 &&
         finalAmount > rule.maxCommissionValue
       ) {
@@ -83,38 +82,46 @@ class CommissionEngine {
 
       if (!commissionWallet) return;
 
-      // 5️⃣ Credit wallet
+      // 🔐 STEP 1: INSERT COMMISSION (IDEMPOTENCY LOCK)
+      try {
+        await db.insert(commissionEarningTable).values({
+          id: crypto.randomUUID(),
+          userId: user.id,
+          tenantId,
+          walletId: commissionWallet.id,
+          transactionId,
+          platformServiceId,
+          platformServiceFeatureId,
+
+          commissionType: rule.commissionType,
+          commissionValue: rule.commissionValue,
+          commissionAmount,
+
+          surchargeType: rule.surchargeType,
+          surchargeValue: rule.surchargeValue,
+          surchargeAmount,
+
+          grossAmount,
+          gstAmount,
+          netAmount,
+          finalAmount,
+
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      } catch (err) {
+        // ✅ DUPLICATE = already processed
+        if (err?.code === 'ER_DUP_ENTRY') {
+          return;
+        }
+        throw err;
+      }
+
+      // 💰 STEP 2: CREDIT WALLET (SAFE NOW)
       await WalletService.creditWallet({
         walletId: commissionWallet.id,
         amount: finalAmount,
-        transactionId,
-      });
-
-      // 6️⃣ Persist earning
-      await db.insert(commissionEarningTable).values({
-        id: crypto.randomUUID(),
-        userId: user.id,
-        tenantId,
-        walletId: commissionWallet.id,
-        transactionId,
-        platformServiceId,
-        platformServiceFeatureId,
-
-        commissionType: rule.commissionType,
-        commissionValue: rule.commissionValue,
-        commissionAmount,
-
-        surchargeType: rule.surchargeType,
-        surchargeValue: rule.surchargeValue,
-        surchargeAmount,
-
-        grossAmount,
-        gstAmount,
-        netAmount, // calculated net
-        finalAmount, // actually credited (after cap)
-
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        reference: `COMMISSION:${transactionId}:${user.id}`,
       });
     });
   }
