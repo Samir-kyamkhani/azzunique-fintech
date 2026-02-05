@@ -19,8 +19,6 @@ export const usePermissionChecker = () => {
     [user?.permissions],
   );
 
-  console.log(user);
-
   const can = (resource, action) => {
     if (!user) return false;
     if (
