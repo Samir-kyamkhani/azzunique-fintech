@@ -21,6 +21,10 @@ import { formatDateTime } from "@/lib/utils";
 import { useMe } from "@/hooks/useAuth";
 import { loginSuccess } from "@/store/authSlice";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useSelector } from "react-redux";
+import { permissionChecker } from "@/lib/permissionCheker";
+import { PERMISSIONS } from "@/lib/permissionKeys";
+import { toast } from "@/lib/toast";
 
 /* ================= SCHEMA ALIGNED ================= */
 
@@ -64,6 +68,15 @@ const buildUpdatePayload = (formData, initialData) => {
 export default function TenantsClient() {
   const dispatch = useDispatch();
   const router = useRouter();
+
+  /* ================= PERMISSIONS ================= */
+  const perms = useSelector((s) => s.auth.user?.permissions);
+
+  const can = (perm) => permissionChecker(perms, perm?.resource, perm?.action);
+
+  const canCreateTenant = can(PERMISSIONS.TENANT.CREATE);
+  const canEditTenant = can(PERMISSIONS.TENANT.UPDATE);
+  const canViewTenant = can(PERMISSIONS.TENANT.READ);
 
   /* ================= UI STATE ================= */
   const [search, setSearch] = useState("");
@@ -143,11 +156,13 @@ export default function TenantsClient() {
   /* ================= ACTIONS ================= */
 
   const handleAddTenant = () => {
+    if (!canCreateTenant) return toast.error("No permission");
     setEditingTenant(null);
     setOpenModal(true);
   };
 
   const handleEditTenant = (tenant) => {
+    if (!canEditTenant) return toast.error("No permission");
     if (!tenant?.id) return;
     setEditingTenant(tenant);
     setOpenModal(true);
@@ -200,6 +215,7 @@ export default function TenantsClient() {
   };
 
   const handleViewTenant = (tenant) => {
+    if (!canViewTenant || !tenant?.id) return;
     dispatch(setTenant(tenant));
     router.push(`/dashboard/tenants/${tenant.id}`);
   };
@@ -240,9 +256,9 @@ export default function TenantsClient() {
           setStatusFilter(v);
           setPage(1);
         }}
-        onAddTenant={handleAddTenant}
-        onViewTenant={handleViewTenant}
-        onEditTenant={handleEditTenant}
+        onAddTenant={canCreateTenant ? handleAddTenant : undefined}
+        onViewTenant={canViewTenant ? handleViewTenant : undefined}
+        onEditTenant={canEditTenant ? handleEditTenant : undefined}
         loading={isLoading}
       />
 

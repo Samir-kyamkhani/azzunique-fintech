@@ -6,4 +6,6 @@ export const usePermissions = () =>
     queryKey: ["permissions"],
     queryFn: () => apiClient("/permissions"),
     retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });

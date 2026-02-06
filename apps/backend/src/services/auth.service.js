@@ -31,10 +31,10 @@ class AuthService {
       .where(eq(usersTable.userNumber, data.identifier))
       .limit(1);
 
-    // DOMAIN → TENANT LOGIN CHECK (CORRECT PLACE)
-    if (context?.tenant && user.tenantId !== context.tenant.id) {
-      throw ApiError.forbidden('This account does not belong to this domain');
-    }
+    // // DOMAIN → TENANT LOGIN CHECK (CORRECT PLACE)
+    // if (context?.tenant && user.tenantId !== context.tenant.id) {
+    //   throw ApiError.forbidden('This account does not belong to this domain');
+    // }
 
     if (!user) {
       throw ApiError.unauthorized('Invalid credentials');
@@ -249,9 +249,9 @@ class AuthService {
     let rolePermissions = [];
     let userPermissions = [];
 
-    if (user.isSystem) {
-      rolePermissions = ['*'];
-    } else {
+    const isSuperAdmin = user.isSystem === true;
+
+    if (!isSuperAdmin) {
       rolePermissions = await this.getRolePermissions(user.roleId);
       userPermissions = await this.getUserPermissions(user.id);
     }
@@ -286,6 +286,7 @@ class AuthService {
       wallet: { balance: user.balance ?? 0 },
 
       permissions: {
+        isSuperAdmin,
         role: rolePermissions,
         user: userPermissions,
       },

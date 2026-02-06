@@ -14,7 +14,7 @@ class PermissionService {
     const [role] = await db
       .select({ roleCode: roleTable.roleCode })
       .from(roleTable)
-      .where(and(eq(roleTable.id, roleId), eq(roleTable.tenantId, tenantId)))
+      .where(and(eq(roleTable.id, roleId)))
       .limit(1);
 
     if (!role) {

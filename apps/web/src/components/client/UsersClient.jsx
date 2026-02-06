@@ -27,6 +27,9 @@ import UserPermissionModal from "../modals/UserPermissionModal";
 import { usePermissions } from "@/hooks/usePermission";
 import { Shield } from "lucide-react";
 import { setPermissions } from "@/store/permissionSlice";
+import { PERMISSIONS } from "@/lib/permissionKeys";
+import { useSelector } from "react-redux";
+import { permissionChecker } from "@/lib/permissionCheker";
 
 export default function UserClient() {
   /* ================= UI STATE ================= */
@@ -43,32 +46,33 @@ export default function UserClient() {
   const [permOpen, setPermOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
-  const openPermissionModal = (user) => {
-    setSelectedUser(user);
-    setPermOpen(true);
-  };
-
-  const extraActions = [
-    {
-      icon: Shield,
-      label: "Permissions",
-      onClick: openPermissionModal,
-    },
-  ];
-
   const perPage = 10;
   const isEditing = Boolean(editingUser);
 
   const dispatch = useDispatch();
   const router = useRouter();
 
+  /* ================= PERMISSIONS ================= */
+  const perms = useSelector((s) => s.auth.user?.permissions);
+
+  const can = (perm) => permissionChecker(perms, perm?.resource, perm?.action);
+
+  const canCreateUser = can(PERMISSIONS.USER.CREATE);
+  const canEditUser = can(PERMISSIONS.USER.UPDATE);
+  const canViewUser = can(PERMISSIONS.USER.READ);
+  const canAssignUserPerms = can(PERMISSIONS.USER.ASSIGN_PERMISSIONS);
+
   /* ================= API ================= */
-  const { data, isLoading, refetch } = useUsers({
+  const { data, isLoading, refetch, error } = useUsers({
     page,
     limit: perPage,
     search,
     status: statusFilter === "ALL" ? undefined : statusFilter,
   });
+
+  useEffect(() => {
+    if (error) toast.error(error?.message || "Something went wrong");
+  }, [error]);
 
   const [tenantSearch, setTenantSearch] = useState("");
   const debouncedTenantSearch = useDebounce(tenantSearch, 400);
@@ -115,6 +119,19 @@ export default function UserClient() {
       },
     );
   };
+
+  const openPermissionModal = (user) => {
+    if (!canAssignUserPerms) {
+      toast.error("No permission to assign permissions");
+      return;
+    }
+    setSelectedUser(user);
+    setPermOpen(true);
+  };
+
+  const extraActions = canAssignUserPerms
+    ? [{ icon: Shield, label: "Permissions", onClick: openPermissionModal }]
+    : [];
 
   /* ================= NORMALIZE ================= */
   const users =
@@ -204,22 +221,27 @@ export default function UserClient() {
   };
 
   const handleAdd = () => {
+    if (!canCreateUser) return toast.error("No permission");
     setEditingUser(null);
     setOpenModal(true);
   };
 
   const handleEdit = (user) => {
+    if (!canEditUser) return toast.error("No permission");
     setEditingUser(user);
     setOpenModal(true);
   };
 
   const handleView = (user) => {
-    if (!user?.id) return;
+    if (!canViewUser || !user?.id) return;
     dispatch(setUser(user));
     router.push(`/dashboard/users/${user.id}`);
   };
 
   const handleSubmit = (formData, setError) => {
+    if (isEditing && !canEditUser) return toast.error("No permission");
+    if (!isEditing && !canCreateUser) return toast.error("No permission");
+
     const action = isEditing ? updateUser : createUser;
     const args = isEditing
       ? { id: editingUser.id, payload: formData }
@@ -276,9 +298,9 @@ export default function UserClient() {
           setStatusFilter(v);
           setPage(1);
         }}
-        onAddUser={handleAdd}
-        onEdit={handleEdit}
-        onView={handleView}
+        onAddUser={canCreateUser ? handleAdd : undefined}
+        onEdit={canEditUser ? handleEdit : undefined}
+        onView={canViewUser ? handleView : undefined}
         loading={isLoading}
         onImagePreview={handleImagePreview}
         extraActions={extraActions}
