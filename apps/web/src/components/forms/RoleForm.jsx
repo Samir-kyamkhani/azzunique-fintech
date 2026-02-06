@@ -14,8 +14,6 @@ export default function RoleForm({ initialData = null, isPending, onSubmit }) {
   const actorRoleCode = useSelector((s) => s.auth.user?.role?.roleCode);
   const allowedRoles = ROLE_FLOW[actorRoleCode] || [];
 
-  console.log(initialData);
-
   const roleOptions = [
     ...new Map(
       [initialData?.roleCode, ...allowedRoles]
@@ -23,8 +21,6 @@ export default function RoleForm({ initialData = null, isPending, onSubmit }) {
         .map((r) => [r, { label: r.replaceAll("_", " "), value: r }]),
     ).values(),
   ];
-
-  console.log(roleOptions);
 
   const {
     register,

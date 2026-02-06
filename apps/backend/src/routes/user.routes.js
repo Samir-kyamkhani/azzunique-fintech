@@ -36,6 +36,7 @@ router.post(
 
 router.get(
   '/',
+  PermissionMiddleware(PermissionsRegistry.USER.READ),
   validate({ query: listUsersQuerySchema }),
   asyncHandler(findAllUsers),
 );
@@ -49,6 +50,7 @@ router.get(
 
 router.put(
   '/:id',
+  PermissionMiddleware(PermissionsRegistry.USER.UPDATE),
   upload.single('profilePicture'),
   validate({ body: updateUserSchema, params: userIdParamSchema }),
   asyncHandler(updateUser),

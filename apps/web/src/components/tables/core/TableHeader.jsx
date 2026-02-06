@@ -41,9 +41,11 @@ export default function TableHeader({
             options={filterOptions}
           />
 
-          <Button variant="default" icon={addIcon} onClick={onAdd}>
-            {addLabel}
-          </Button>
+          {onAdd && (
+            <Button variant="default" icon={addIcon} onClick={onAdd}>
+              {addLabel}
+            </Button>
+          )}
 
           {onExport && (
             <Button variant="outline" icon={exportIcon} onClick={onExport}>
