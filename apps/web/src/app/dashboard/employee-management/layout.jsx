@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import { useEffect } from "react";
 import TabsNav from "@/components/details/TabsNav";
 import { PERMISSIONS } from "@/lib/permissionKeys";
-import { canServer } from "@/lib/permissionCheker";
+import { permissionChecker } from "@/lib/permissionCheker";
 import { Building2, Users } from "lucide-react";
 
 export default function EmployeeManagementLayout({ children }) {
@@ -13,7 +13,7 @@ export default function EmployeeManagementLayout({ children }) {
   const router = useRouter();
   const perms = useSelector((s) => s.auth.user?.permissions);
 
-  const can = (perm) => canServer(perms, perm.resource, perm.action);
+  const can = (perm) => permissionChecker(perms, perm.resource, perm.action);
 
   const allTabs = [
     {

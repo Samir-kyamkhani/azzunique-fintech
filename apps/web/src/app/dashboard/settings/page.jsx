@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { PERMISSIONS } from "@/lib/permissionKeys";
-import { canServer } from "@/lib/permissionCheker";
+import { permissionChecker } from "@/lib/permissionCheker";
 
 export default function Page() {
   const router = useRouter();
@@ -20,7 +20,7 @@ export default function Page() {
     ];
 
     const allowed = routes.find((r) =>
-      canServer(perms, r.perm.resource, r.perm.action),
+      permissionChecker(perms, r.perm.resource, r.perm.action),
     );
 
     router.replace(

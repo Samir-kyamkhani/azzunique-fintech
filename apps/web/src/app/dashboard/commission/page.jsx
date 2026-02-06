@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { PERMISSIONS } from "@/lib/permissionKeys";
-import { canServer } from "@/lib/permissionCheker";
+import { permissionChecker } from "@/lib/permissionCheker";
 import CommisionClient from "@/components/client/CommissionClient";
 
 export const metadata = {
@@ -18,7 +18,7 @@ export default function Page() {
   useEffect(() => {
     if (!perms) return;
 
-    const allowed = canServer(
+    const allowed = permissionChecker(
       perms,
       PERMISSIONS.COMMISSION.READ.resource,
       PERMISSIONS.COMMISSION.READ.action,

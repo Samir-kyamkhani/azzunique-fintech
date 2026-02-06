@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import TabsNav from "@/components/details/TabsNav";
 import { Settings, Server, Globe, Mail } from "lucide-react";
 import { PERMISSIONS } from "@/lib/permissionKeys";
-import { canServer } from "@/lib/permissionCheker";
+import { permissionChecker } from "@/lib/permissionCheker";
 import { useEffect } from "react";
 
 export default function SettingsLayout({ children }) {
@@ -13,7 +13,7 @@ export default function SettingsLayout({ children }) {
   const router = useRouter();
   const perms = useSelector((s) => s.auth.user?.permissions);
 
-  const can = (perm) => canServer(perms, perm.resource, perm.action);
+  const can = (perm) => permissionChecker(perms, perm.resource, perm.action);
 
   const allTabs = [
     {

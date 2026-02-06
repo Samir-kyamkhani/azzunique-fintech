@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { PERMISSIONS } from "@/lib/permissionKeys";
-import { canServer } from "@/lib/permissionCheker";
+import { permissionChecker } from "@/lib/permissionCheker";
 import TenantsClient from "@/components/client/TenantsClient";
 
 export default function Page() {
@@ -14,7 +14,7 @@ export default function Page() {
   useEffect(() => {
     if (!perms) return;
 
-    const allowed = canServer(
+    const allowed = permissionChecker(
       perms,
       PERMISSIONS.TENANT.READ.resource,
       PERMISSIONS.TENANT.READ.action,
