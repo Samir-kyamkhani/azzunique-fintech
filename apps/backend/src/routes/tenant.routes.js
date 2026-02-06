@@ -14,6 +14,8 @@ import {
 } from '../validators/tenant.schema.js';
 import asyncHandler from '../lib/AsyncHandler.js';
 import { AuthMiddleware } from '../middleware/auth.middleware.js';
+import { PermissionsRegistry } from '../lib/PermissionsRegistry.js';
+import { PermissionMiddleware } from '../middleware/permission.middleware.js';
 
 const router = Router();
 
@@ -21,20 +23,27 @@ router.use(AuthMiddleware);
 
 router.post(
   '/',
+  PermissionMiddleware(PermissionsRegistry.TENANT.CREATE),
   validate({ body: createTenantSchema }),
   asyncHandler(createTenant),
 );
 
-router.get('/', asyncHandler(findAllTenants));
+router.get(
+  '/',
+  PermissionMiddleware(PermissionsRegistry.TENANT.READ),
+  asyncHandler(findAllTenants),
+);
 
 router.get(
   '/:id',
+  PermissionMiddleware(PermissionsRegistry.TENANT.READ),
   validate({ params: idParamSchema }),
   asyncHandler(findTenant),
 );
 
 router.put(
   '/:id',
+  PermissionMiddleware(PermissionsRegistry.TENANT.UPDATE),
   validate({ params: idParamSchema, body: updateTenantSchema }),
   asyncHandler(updateTenant),
 );

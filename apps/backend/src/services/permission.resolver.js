@@ -28,7 +28,7 @@ export async function resolvePermissions(actor) {
       .where(
         and(
           eq(roleTable.id, actor.roleId),
-          eq(roleTable.tenantId, actor.tenantId),
+          // eq(roleTable.tenantId, actor.tenantId),
         ),
       )
       .limit(1);

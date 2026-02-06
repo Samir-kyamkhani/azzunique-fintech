@@ -44,6 +44,7 @@ export const PERMISSIONS = {
   },
   TENANT: {
     READ: { resource: RESOURCES.TENANT, action: ACTIONS.READ },
+    CREATE: { resource: RESOURCES.TENANT, action: ACTIONS.READ },
     UPDATE: { resource: RESOURCES.TENANT, action: ACTIONS.UPDATE },
   },
   DASHBOARD: {
