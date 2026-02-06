@@ -25,5 +25,7 @@ export async function reconcileWallets() {
     }
   }
 
-  return mismatches;
+  if (mismatches.length) {
+    console.warn('[CRON] Ledger mismatch detected', mismatches);
+  }
 }

@@ -5,8 +5,8 @@ import crypto from 'crypto';
 export async function takeDailyWalletSnapshot() {
   const wallets = await db.select().from(walletTable);
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const snapshotDate = new Date();
+  snapshotDate.setHours(0, 0, 0, 0);
 
   for (const w of wallets) {
     await db.insert(walletSnapshotTable).values({
@@ -14,7 +14,9 @@ export async function takeDailyWalletSnapshot() {
       walletId: w.id,
       balance: w.balance,
       blockedAmount: w.blockedAmount,
-      snapshotDate: today,
+      snapshotDate,
     });
   }
+
+  console.log('[CRON] Wallet snapshot completed');
 }

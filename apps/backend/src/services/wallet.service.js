@@ -25,7 +25,7 @@ class WalletService {
       )
       .limit(1);
 
-    if (existing) return existing;
+    if (existing) return { id: existing.id };
 
     const walletId = crypto.randomUUID();
 
@@ -188,7 +188,12 @@ class WalletService {
   }
 
   // 6️⃣ BLOCK AMOUNT (NO BALANCE CHANGE)
-  static async blockAmount({ walletId, amount, transactionId, reference = null }) {
+  static async blockAmount({
+    walletId,
+    amount,
+    transactionId,
+    reference = null,
+  }) {
     if (amount <= 0) {
       throw ApiError.badRequest('Invalid block amount');
     }
@@ -237,7 +242,12 @@ class WalletService {
   }
 
   // 7️⃣ RELEASE BLOCKED AMOUNT (FAIL / TIMEOUT)
-  static async releaseBlockedAmount({ walletId, amount, transactionId, reference = null }) {
+  static async releaseBlockedAmount({
+    walletId,
+    amount,
+    transactionId,
+    reference = null,
+  }) {
     if (amount <= 0) return;
 
     await db.transaction(async (tx) => {
@@ -252,8 +262,15 @@ class WalletService {
         throw ApiError.notFound('Wallet not found');
       }
 
-      if (wallet.blockedAmount < amount) return;
-
+      if (wallet.blockedAmount < amount) {
+        console.warn(
+          '[WalletService] releaseBlockedAmount skipped',
+          wallet.id,
+          wallet.blockedAmount,
+          amount,
+        );
+        return;
+      }
       const newBlocked = wallet.blockedAmount - amount;
 
       await tx
@@ -280,7 +297,12 @@ class WalletService {
   }
 
   // 8️⃣ DEBIT BLOCKED AMOUNT (SUCCESS CASE ONLY)
-  static async debitBlockedAmount({ walletId, amount, transactionId, reference = null }) {
+  static async debitBlockedAmount({
+    walletId,
+    amount,
+    transactionId,
+    reference = null,
+  }) {
     if (amount <= 0) {
       throw ApiError.badRequest('Invalid debit amount');
     }

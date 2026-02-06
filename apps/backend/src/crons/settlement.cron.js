@@ -1,7 +1,19 @@
 import { db } from '../database/core/core-db.js';
-import { walletTable } from '../models/core/index.js';
+import { walletTable, tenantsTable } from '../models/core/index.js';
 import { eq } from 'drizzle-orm';
 import WalletService from '../services/wallet.service.js';
+
+export async function runMonthlySettlement() {
+  const tenants = await db.select().from(tenantsTable);
+
+  for (const tenant of tenants) {
+    try {
+      await runSettlement({ tenantId: tenant.id });
+    } catch (e) {
+      console.error('[CRON] Settlement failed', tenant.id, e.message);
+    }
+  }
+}
 
 export async function runSettlement({ tenantId }) {
   const commissionWallets = await db
@@ -32,19 +44,30 @@ export async function runSettlement({ tenantId }) {
 
     const amount = wallet.balance;
 
-    await db.transaction(async () => {
-      // Debit from commission wallet
+    await db.transaction(async (tx) => {
+      const [lockedWallet] = await tx
+        .select()
+        .from(walletTable)
+        .where(eq(walletTable.id, wallet.id))
+        .forUpdate()
+        .limit(1);
+
+      if (!lockedWallet || lockedWallet.balance <= 0) return;
+
+      const amount = lockedWallet.balance;
+
+      // Debit commission wallet and credit settlement wallet
       await WalletService.debitWallet({
-        walletId: wallet.id,
+        walletId: lockedWallet.id,
         amount,
-        reference: `SETTLEMENT:${settlementWallet.id}:${wallet.id}`,
+        reference: `SETTLEMENT:${settlementWallet.id}:${lockedWallet.id}`,
       });
 
-      // Credit to settlement wallet
+      // Credit settlement wallet
       await WalletService.creditWallet({
         walletId: settlementWallet.id,
         amount,
-        reference: `SETTLEMENT:${wallet.id}:${settlementWallet.id}`,
+        reference: `SETTLEMENT:${lockedWallet.id}:${settlementWallet.id}`,
       });
     });
   }

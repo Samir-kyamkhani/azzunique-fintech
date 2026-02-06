@@ -7,7 +7,7 @@ if (process.env.NODE_ENV !== 'production') {
 import app from './app.js';
 import { corePool } from './database/core/mysql.js';
 import './events/index.js';
-import { startRechargeStatusCron } from './crons/rechargeStatus.cron.js';
+import { startAllCrons } from './crons/index.js';
 
 let server;
 
@@ -26,7 +26,7 @@ async function bootstrap() {
     });
 
     // Start cron AFTER server is ready
-    startRechargeStatusCron();
+    startAllCrons();
   } catch (error) {
     console.error('❌ Startup error:', error);
     process.exit(1);

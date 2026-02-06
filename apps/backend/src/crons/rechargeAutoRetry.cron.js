@@ -1,8 +1,7 @@
-// jobs/rechargeAutoRetry.cron.js
 import RechargeRetryService from '../services/recharge/rechargeRetry.service.js';
 import { rechargeDb as db } from '../database/recharge/recharge-db.js';
 import { rechargeTransactionTable } from '../models/recharge/index.js';
-import { lt, eq } from 'drizzle-orm';
+import { and, eq, lt } from 'drizzle-orm';
 
 export async function autoRetryPendingRecharges() {
   const stuckTxns = await db
@@ -11,8 +10,11 @@ export async function autoRetryPendingRecharges() {
     .where(
       and(
         eq(rechargeTransactionTable.status, 'PENDING'),
-        lt(rechargeTransactionTable.updatedAt, new Date(Date.now() - 5 * 60 * 1000))
-      )
+        lt(
+          rechargeTransactionTable.updatedAt,
+          new Date(Date.now() - 5 * 60 * 1000),
+        ),
+      ),
     )
     .limit(50);
 
@@ -20,10 +22,10 @@ export async function autoRetryPendingRecharges() {
     try {
       await RechargeRetryService.retry(txn.id, {
         id: txn.userId,
-        roleLevel: 0, // system
+        roleLevel: 0, // system actor
       });
     } catch (e) {
-      console.error('Auto retry failed', txn.id, e.message);
+      console.error('[CRON] Auto retry failed', txn.id, e.message);
     }
   }
 }
