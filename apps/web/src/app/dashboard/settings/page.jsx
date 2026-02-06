@@ -17,6 +17,7 @@ export default function Page() {
       { path: "server", perm: PERMISSIONS.SERVER.READ },
       { path: "domain", perm: PERMISSIONS.DOMAIN.READ },
       { path: "smtp", perm: PERMISSIONS.SMTP.READ },
+      { path: "platform", perm: PERMISSIONS.PLATFORM.READ },
     ];
 
     const allowed = routes.find((r) =>

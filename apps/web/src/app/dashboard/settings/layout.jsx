@@ -7,6 +7,7 @@ import { Settings, Server, Globe, Mail } from "lucide-react";
 import { PERMISSIONS } from "@/lib/permissionKeys";
 import { permissionChecker } from "@/lib/permissionCheker";
 import { useEffect } from "react";
+import { Cog } from "lucide-react";
 
 export default function SettingsLayout({ children }) {
   const pathname = usePathname();
@@ -39,6 +40,12 @@ export default function SettingsLayout({ children }) {
       value: "smtp",
       icon: Mail,
       permission: PERMISSIONS.SMTP.READ,
+    },
+    {
+      label: "PLATFORM",
+      value: "platform",
+      icon: Cog,
+      permission: PERMISSIONS.PLATFORM.READ,
     },
   ];
 
