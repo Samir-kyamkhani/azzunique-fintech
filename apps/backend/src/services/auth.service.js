@@ -154,11 +154,11 @@ class AuthService {
     }
 
     return actor.type === 'EMPLOYEE'
-      ? this.#getEmployee(actor.id)
-      : this.#getUser(actor.id);
+      ? this.getEmployee(actor.id)
+      : this.getUser(actor.id);
   }
 
-  async #getEmployee(userId) {
+  async getEmployee(userId) {
     const [employee] = await db
       .select({
         id: employeesTable.id,
@@ -198,11 +198,11 @@ class AuthService {
         email: employee.email,
         departmentId: employee.departmentId,
       },
-      tenant: this.#tenantShape(employee),
+      tenant: this.tenantShape(employee),
     };
   }
 
-  async #getUser(userId) {
+  async getUser(userId) {
     const [user] = await db
       .select({
         id: usersTable.id,
@@ -252,8 +252,8 @@ class AuthService {
     const isSuperAdmin = user.isSystem === true;
 
     if (!isSuperAdmin) {
-      rolePermissions = await this.#getRolePermissions(user.roleId);
-      userPermissions = await this.#getUserPermissions(user.id);
+      rolePermissions = await this.getRolePermissions(user.roleId);
+      userPermissions = await this.getUserPermissions(user.id);
     }
 
     return {
@@ -281,7 +281,7 @@ class AuthService {
         isSystem: user.isSystem,
       },
 
-      tenant: this.#tenantShape(user),
+      tenant: this.tenantShape(user),
 
       wallet: { balance: user.balance ?? 0 },
 
@@ -293,7 +293,7 @@ class AuthService {
     };
   }
 
-  async #tenantShape(row) {
+  async tenantShape(row) {
     return {
       id: row.tenantId,
       tenantName: row.tenantName,
@@ -307,7 +307,7 @@ class AuthService {
     };
   }
 
-  async #getUserPermissions(userId) {
+  async getUserPermissions(userId) {
     const rows = await db
       .select({
         id: permissionTable.id,
@@ -331,7 +331,7 @@ class AuthService {
     }));
   }
 
-  async #getRolePermissions(roleId) {
+  async getRolePermissions(roleId) {
     const rows = await db
       .select({
         id: permissionTable.id,
