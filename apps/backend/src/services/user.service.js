@@ -174,6 +174,15 @@ class UserService {
       updatedAt: new Date(),
     };
 
+    await db.transaction(async (tx) => {
+      await tx.insert(usersTable).values(payload);
+
+      await WalletService.createDefaultUserWallets({
+        id: userId,
+        tenantId: resolvedTenantId,
+      });
+    });
+
     const sent = eventBus.emit(EVENTS.USER_CREATED, {
       userId,
       userNumber: payload.userNumber,
@@ -186,13 +195,6 @@ class UserService {
     if (!sent) {
       throw ApiError.internal('Failed to send credentials');
     }
-
-    await db.insert(usersTable).values(payload);
-
-    await WalletService.createDefaultUserWallets({
-      id: userId,
-      tenantId: resolvedTenantId,
-    });
 
     return this.findOne(userId, actor);
   }
