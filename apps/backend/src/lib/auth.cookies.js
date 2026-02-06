@@ -6,7 +6,7 @@ export const accessCookieOptions = (req) => ({
   sameSite: isProd ? 'none' : 'lax',
   path: '/',
   domain: getCookieDomain(req.hostname), // 🔥 THIS LINE FIXES EVERYTHING
-  maxAge: 24 * 60 * 60 * 1000,
+  maxAge: 24 * 60 * 60 * 1000, // 1 day
 });
 
 export const refreshCookieOptions = (req) => ({
@@ -15,7 +15,7 @@ export const refreshCookieOptions = (req) => ({
   sameSite: isProd ? 'none' : 'lax',
   path: '/',
   domain: getCookieDomain(req.hostname),
-  maxAge: 7 * 24 * 60 * 60 * 1000,
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 });
 
 const getCookieDomain = (hostname) => {

@@ -20,7 +20,7 @@ export async function tenantContextMiddleware(req, _, next) {
       .limit(1);
 
     if (!domain) {
-      return next(ApiError.notFound('Tenant not found'));
+      return next(ApiError.notFound('Tenant domain not found'));
     }
 
     const [tenant] = await db

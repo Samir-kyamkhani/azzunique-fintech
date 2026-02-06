@@ -1,6 +1,10 @@
 import jwt from 'jsonwebtoken';
 import { ApiError } from '../lib/ApiError.js';
 import { deriveTenantOwnership } from '../lib/actor.utils.js';
+import {
+  accessCookieOptions,
+  refreshCookieOptions,
+} from '../lib/auth.cookies.js';
 
 export const AuthMiddleware = async (req, res, next) => {
   try {
@@ -19,7 +23,7 @@ export const AuthMiddleware = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
- 
+
     if (!decoded?.sub || !decoded?.tenantId || !decoded?.type) {
       throw ApiError.unauthorized('Invalid token payload');
     }
@@ -28,7 +32,7 @@ export const AuthMiddleware = async (req, res, next) => {
       id: decoded.sub,
       tenantId: decoded.tenantId,
       type: decoded.type,
-      
+
       roleLevel: decoded.roleLevel,
       roleId: decoded.type === 'USER' ? decoded.roleId : null,
       departmentId: decoded.type === 'EMPLOYEE' ? decoded.departmentId : null,
@@ -40,12 +44,24 @@ export const AuthMiddleware = async (req, res, next) => {
 
     next();
   } catch (err) {
+    // 🔥 CRITICAL FIX: CLEAR COOKIES HERE
+    res
+      .clearCookie('accessToken', accessCookieOptions(req))
+      .clearCookie('refreshToken', refreshCookieOptions(req));
+
+    // Send response directly (DO NOT call next)
     if (err.name === 'TokenExpiredError') {
-      next(ApiError.unauthorized('Token expired'));
-    } else if (err.name === 'JsonWebTokenError') {
-      next(ApiError.unauthorized('Invalid token'));
-    } else {
-      next(err);
+      return res.status(401).json({ message: 'Token expired' });
     }
+
+    if (err.name === 'JsonWebTokenError') {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+
+    if (err instanceof ApiError) {
+      return res.status(err.statusCode).json({ message: err.message });
+    }
+
+    return res.status(401).json({ message: 'Unauthorized' });
   }
 };
