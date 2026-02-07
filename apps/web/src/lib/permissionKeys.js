@@ -13,6 +13,7 @@ export const RESOURCES = Object.freeze({
   DOMAIN: "DOMAIN",
   SOCIAL_MEDIA: "SOCIAL_MEDIA",
   PERMISSION: "PERMISSION",
+  PLATFORM: "PLATFORM",
 });
 
 export const ACTIONS = Object.freeze({
@@ -103,5 +104,21 @@ export const PERMISSIONS = {
   PERMISSION: {
     READ: { resource: RESOURCES.PERMISSION, action: ACTIONS.READ },
     UPDATE: { resource: RESOURCES.PERMISSION, action: ACTIONS.UPDATE },
+  },
+  PLATFORM: {
+    SERVICES: {
+      READ: { resource: RESOURCES.PLATFORM, action: ACTIONS.READ },
+      UPDATE: { resource: RESOURCES.PLATFORM, action: ACTIONS.UPDATE },
+    },
+
+    PROVIDERS: {
+      READ: { resource: RESOURCES.PLATFORM, action: ACTIONS.READ },
+      UPDATE: { resource: RESOURCES.PLATFORM, action: ACTIONS.UPDATE },
+    },
+
+    TENANTS: {
+      READ: { resource: RESOURCES.PLATFORM, action: ACTIONS.READ },
+      UPDATE: { resource: RESOURCES.PLATFORM, action: ACTIONS.UPDATE },
+    },
   },
 };
