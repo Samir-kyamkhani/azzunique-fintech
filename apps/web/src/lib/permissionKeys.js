@@ -88,7 +88,19 @@ export const PERMISSIONS = {
     UPDATE: { resource: RESOURCES.PERMISSION, action: ACTIONS.UPDATE },
   },
   PLATFORM: {
-    READ: { resource: RESOURCES.PLATFORM, action: ACTIONS.READ },
-    UPDATE: { resource: RESOURCES.PLATFORM, action: ACTIONS.UPDATE },
+    SERVICES: {
+      READ: { resource: RESOURCES.PLATFORM, action: ACTIONS.READ },
+      UPDATE: { resource: RESOURCES.PLATFORM, action: ACTIONS.UPDATE },
+    },
+
+    PROVIDERS: {
+      READ: { resource: RESOURCES.PLATFORM, action: ACTIONS.READ },
+      UPDATE: { resource: RESOURCES.PLATFORM, action: ACTIONS.UPDATE },
+    },
+
+    TENANTS: {
+      READ: { resource: RESOURCES.PLATFORM, action: ACTIONS.READ },
+      UPDATE: { resource: RESOURCES.PLATFORM, action: ACTIONS.UPDATE },
+    },
   },
 };
