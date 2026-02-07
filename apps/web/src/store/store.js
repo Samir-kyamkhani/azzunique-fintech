@@ -11,6 +11,9 @@ import departmentReducer from "./departmentSlice";
 import employeeReducer from "./employeeSlice";
 import permissionReducer from "./permissionSlice";
 import roleReducer from "./roleSlice";
+import platformServiceReducer from "./platformServiceSlice";
+import serviceProviderReducer from "./serviceProviderSlice";
+import tenantServiceReducer from "./tenantServiceSlice";
 
 export const store = configureStore({
   reducer: {
@@ -26,5 +29,8 @@ export const store = configureStore({
     employee: employeeReducer,
     permission: permissionReducer,
     role: roleReducer,
+    platformService: platformServiceReducer,
+    serviceProvider: serviceProviderReducer,
+    tenantService: tenantServiceReducer,
   },
 });
