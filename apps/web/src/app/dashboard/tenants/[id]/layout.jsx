@@ -20,6 +20,7 @@ import PageSkeleton from "@/components/details/PageSkeleton";
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { clearTenant, setTenant } from "@/store/tenantSlice";
+import { PERMISSIONS } from "@/lib/permissionKeys";
 
 export default function TenantLayout({ children }) {
   const router = useRouter();

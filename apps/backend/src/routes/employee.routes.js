@@ -15,6 +15,8 @@ import {
 import asyncHandler from '../lib/AsyncHandler.js';
 import { AuthMiddleware } from '../middleware/auth.middleware.js';
 import upload from '../middleware/multer.middleware.js';
+import { PermissionMiddleware } from '../middleware/permission.middleware.js';
+import { PermissionsRegistry } from '../lib/PermissionsRegistry.js';
 
 const router = Router();
 
@@ -22,20 +24,27 @@ router.use(AuthMiddleware);
 
 router.post(
   '/',
+  PermissionMiddleware(PermissionsRegistry.EMPLOYEE.CREATE),
   validate({ body: createEmployeeSchema }),
   asyncHandler(createEmployee),
 );
 
-router.get('/', asyncHandler(findAllEmployees));
+router.get(
+  '/',
+  PermissionMiddleware(PermissionsRegistry.EMPLOYEE.READ),
+  asyncHandler(findAllEmployees),
+);
 
 router.get(
   '/:id',
+  PermissionMiddleware(PermissionsRegistry.EMPLOYEE.READ),
   validate({ params: idParamSchema }),
   asyncHandler(findEmployee),
 );
 
 router.put(
   '/:id',
+  PermissionMiddleware(PermissionsRegistry.EMPLOYEE.UPDATE),
   upload.single('profilePicture'),
   validate({ params: idParamSchema, body: updateEmployeeSchema }),
   asyncHandler(updateEmployee),
@@ -43,6 +52,7 @@ router.put(
 
 router.delete(
   '/:id',
+  PermissionMiddleware(PermissionsRegistry.EMPLOYEE.DELETE),
   validate({ params: idParamSchema }),
   asyncHandler(deleteEmployee),
 );

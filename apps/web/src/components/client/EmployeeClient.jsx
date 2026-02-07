@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { RefreshCw, Users, CheckCircle, Ban, UserX } from "lucide-react";
 
 import {
@@ -23,6 +23,9 @@ import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { setEmployee } from "@/store/employeeSlice";
 import ImagePreviewModal from "../ImagePreviewModal";
+import { useSelector } from "react-redux";
+import { permissionChecker } from "@/lib/permissionCheker";
+import { PERMISSIONS } from "@/lib/permissionKeys";
 
 export default function EmployeeClient() {
   /* ================= UI STATE ================= */
@@ -45,13 +48,28 @@ export default function EmployeeClient() {
   const dispatch = useDispatch();
   const router = useRouter();
 
+  /* ================= PERMISSIONS ================= */
+  const perms = useSelector((s) => s.auth.user?.permissions);
+
+  const can = (perm) => permissionChecker(perms, perm?.resource, perm?.action);
+
+  const canCreateEmployee = can(PERMISSIONS.EMPLOYEE.CREATE);
+  const canEditEmployee = can(PERMISSIONS.EMPLOYEE.UPDATE);
+  const canViewEmployee = can(PERMISSIONS.EMPLOYEE.READ);
+  const canDeleteEmployee = can(PERMISSIONS.EMPLOYEE.DELETE);
+  const canAssignEmployeePerms = can(PERMISSIONS.EMPLOYEE.ASSIGN_PERMISSIONS);
+
   /* ================= API ================= */
-  const { data, isLoading, refetch } = useEmployees({
+  const { data, isLoading, refetch, error } = useEmployees({
     page,
     limit: perPage,
     search,
     status: statusFilter === "all" ? undefined : statusFilter,
   });
+
+  useEffect(() => {
+    if (error) toast.error(error?.message || "Something went wrong");
+  }, [error]);
 
   const { data: deptRes } = useDepartments();
 
@@ -146,7 +164,7 @@ export default function EmployeeClient() {
       onError: (err) => {
         if (err?.type === "FIELD") {
           err.errors.forEach(({ field, message }) =>
-            setError(field, { message })
+            setError(field, { message }),
           );
           return;
         }
@@ -177,14 +195,16 @@ export default function EmployeeClient() {
   return (
     <>
       <div className="mb-6 flex justify-end">
-        <Button
-          onClick={refetch}
-          variant="outline"
-          icon={RefreshCw}
-          loading={isLoading}
-        >
-          Refresh
-        </Button>
+        {canViewEmployee && (
+          <Button
+            onClick={refetch}
+            variant="outline"
+            icon={RefreshCw}
+            loading={isLoading}
+          >
+            Refresh
+          </Button>
+        )}
       </div>
 
       <QuickStats stats={stats} />
@@ -205,10 +225,10 @@ export default function EmployeeClient() {
           setStatusFilter(v);
           setPage(1);
         }}
-        onAddEmployee={handleAdd}
-        onEdit={handleEdit}
-        onView={handleView}
-        onDelete={askDelete}
+        onAddEmployee={canCreateEmployee ? handleAdd : undefined}
+        onEdit={canEditEmployee ? handleEdit : undefined}
+        onView={canViewEmployee ? handleView : undefined}
+        onDelete={canDeleteEmployee ? candeaskDelete : undefined}
         loading={isLoading}
         onImagePreview={handleImagePreview}
       />

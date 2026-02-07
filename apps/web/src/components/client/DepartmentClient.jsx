@@ -28,6 +28,8 @@ import { cn } from "@/lib/utils";
 import RowActions from "../tables/core/RowActions";
 import { Shield } from "lucide-react";
 import ConfirmDialog from "../ConfirmDialog";
+import { PERMISSIONS } from "@/lib/permissionKeys";
+import { permissionChecker } from "@/lib/permissionCheker";
 
 export default function DepartmentClient() {
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -39,14 +41,31 @@ export default function DepartmentClient() {
 
   const [openModal, setOpenModal] = useState(false);
 
-  const { data, isLoading, refetch } = useDepartments();
+  const { data, isLoading, refetch, error } = useDepartments();
   const { mutate: createMutate, isPending: creating } = useCreateDepartment();
   const { mutate: updateMutate, isPending: updating } = useUpdateDepartment();
   const { mutate: deleteMutate, isPending: deleting } = useDeleteDepartment();
 
+  /* ================= PERMISSIONS ================= */
+  const perms = useSelector((s) => s.auth.user?.permissions);
+
+  const can = (perm) => permissionChecker(perms, perm?.resource, perm?.action);
+
+  const canCreateDepartment = can(PERMISSIONS.DEPARTMENT.CREATE);
+  const canEditDepartment = can(PERMISSIONS.DEPARTMENT.UPDATE);
+  const canViewDepartment = can(PERMISSIONS.DEPARTMENT.READ);
+  const canDeleteDepartment = can(PERMISSIONS.DEPARTMENT.DELETE);
+  const canAssignDepartmentPerms = can(
+    PERMISSIONS.DEPARTMENT.ASSIGN_PERMISSIONS,
+  );
+
   useEffect(() => {
     dispatch(setDepartments(data?.data || []));
   }, [data, dispatch]);
+
+  useEffect(() => {
+    if (error) toast.error(error?.message || "Something went wrong");
+  }, [error]);
 
   const handleSubmit = (payload, setError) => {
     const action = current ? updateMutate : createMutate;
@@ -109,15 +128,17 @@ export default function DepartmentClient() {
           </p>
         </div>
 
-        <Button
-          icon={Plus}
-          onClick={() => {
-            dispatch(clearDepartment());
-            setOpenModal(true);
-          }}
-        >
-          Add Department
-        </Button>
+        {canCreateDepartment && (
+          <Button
+            icon={Plus}
+            onClick={() => {
+              dispatch(clearDepartment());
+              setOpenModal(true);
+            }}
+          >
+            Add Department
+          </Button>
+        )}
       </div>
 
       {/* LIST */}
@@ -128,24 +149,32 @@ export default function DepartmentClient() {
               key={dept.id}
               className={cn(
                 "group relative rounded-xl border bg-card p-5",
-                "transition-all hover:shadow-md hover:border-primary/40"
+                "transition-all hover:shadow-md hover:border-primary/40",
               )}
             >
               <div className="absolute right-3 top-3  transition">
                 <RowActions
-                  onEdit={() => {
-                    dispatch(setDepartment(dept));
-                    setOpenModal(true);
-                  }}
-                  onDelete={() => askDelete(dept)}
+                  onEdit={
+                    canEditDepartment
+                      ? () => {
+                          dispatch(setDepartment(dept));
+                          setOpenModal(true);
+                        }
+                      : undefined
+                  }
+                  onDelete={
+                    canDeleteDepartment ? () => askDelete(dept) : undefined
+                  }
                   extraActions={[
-                    {
-                      icon: Shield,
-                      label: "Permissions",
-                      onClick: () => {
-                        console.log("Department ID:", dept.id);
-                      },
-                    },
+                    canAssignDepartmentPerms
+                      ? {
+                          icon: Shield,
+                          label: "Permissions",
+                          onClick: () => {
+                            console.log("Department ID:", dept.id);
+                          },
+                        }
+                      : undefined,
                   ]}
                 />
               </div>
@@ -184,9 +213,11 @@ export default function DepartmentClient() {
           emptyTitle="No departments yet"
           emptyDescription="Create departments to manage teams and permissions"
           emptyAction={
-            <Button icon={Building2} onClick={() => setOpenModal(true)}>
-              Create Department
-            </Button>
+            canCreateDepartment && (
+              <Button icon={Building2} onClick={() => setOpenModal(true)}>
+                Create Department
+              </Button>
+            )
           }
         />
       )}

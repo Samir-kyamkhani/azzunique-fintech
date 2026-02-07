@@ -10,6 +10,8 @@ import {
 } from '../validators/tenantDomain.schema.js';
 import asyncHandler from '../lib/AsyncHandler.js';
 import { AuthMiddleware } from '../middleware/auth.middleware.js';
+import { PermissionMiddleware } from '../middleware/permission.middleware.js';
+import { PermissionsRegistry } from '../lib/PermissionsRegistry.js';
 
 const router = Router();
 
@@ -18,6 +20,7 @@ router.use(AuthMiddleware);
 // CREATE
 router.post(
   '/',
+  PermissionMiddleware(PermissionsRegistry.DOMAIN.CREATE),
   validate({ body: createTenantDomainSchema }),
   asyncHandler(createTenantDomain),
 );
@@ -25,6 +28,7 @@ router.post(
 // Get by tenant id
 router.get(
   '/:tenantId',
+  PermissionMiddleware(PermissionsRegistry.DOMAIN.READ),
   validate({ params: idParamSchema }),
   asyncHandler(getByTenantId),
 );

@@ -4,7 +4,7 @@ import TabsNav from "@/components/details/TabsNav";
 import { Building2 } from "lucide-react";
 import { Users } from "lucide-react";
 
-export default function EmployeeManagementLayout({ children }) {
+export default function UserManagementLayout({ children }) {
   return (
     <div className="space-y-6">
       {/* Header */}

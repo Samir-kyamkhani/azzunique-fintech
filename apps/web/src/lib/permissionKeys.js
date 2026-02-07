@@ -27,6 +27,7 @@ export const ACTIONS = Object.freeze({
 export const PERMISSIONS = {
   USER: {
     READ: { resource: RESOURCES.USER, action: ACTIONS.READ },
+    CREATE: { resource: RESOURCES.USER, action: ACTIONS.CREATE },
     UPDATE: { resource: RESOURCES.USER, action: ACTIONS.UPDATE },
     ASSIGN_PERMISSIONS: {
       resource: RESOURCES.USER,
@@ -56,30 +57,47 @@ export const PERMISSIONS = {
   },
   EMPLOYEE: {
     READ: { resource: RESOURCES.EMPLOYEE, action: ACTIONS.READ },
+    CREATE: { resource: RESOURCES.EMPLOYEE, action: ACTIONS.CREATE },
     UPDATE: { resource: RESOURCES.EMPLOYEE, action: ACTIONS.UPDATE },
+    DELETE: { resource: RESOURCES.EMPLOYEE, action: ACTIONS.DELETE },
+    ASSIGN_PERMISSIONS: {
+      resource: RESOURCES.EMPLOYEE,
+      action: ACTIONS.ASSIGN_PERMISSIONS,
+    },
   },
   DEPARTMENT: {
     READ: { resource: RESOURCES.DEPARTMENT, action: ACTIONS.READ },
+    CREATE: { resource: RESOURCES.DEPARTMENT, action: ACTIONS.CREATE },
     UPDATE: { resource: RESOURCES.DEPARTMENT, action: ACTIONS.UPDATE },
+    DELETE: { resource: RESOURCES.DEPARTMENT, action: ACTIONS.DELETE },
+    ASSIGN_PERMISSIONS: {
+      resource: RESOURCES.DEPARTMENT,
+      action: ACTIONS.ASSIGN_PERMISSIONS,
+    },
   },
   SERVER: {
     READ: { resource: RESOURCES.SERVER, action: ACTIONS.READ },
+    CREATE: { resource: RESOURCES.SERVER, action: ACTIONS.CREATE },
     UPDATE: { resource: RESOURCES.SERVER, action: ACTIONS.UPDATE },
   },
   SMTP: {
     READ: { resource: RESOURCES.SMTP, action: ACTIONS.READ },
+    CREATE: { resource: RESOURCES.SMTP, action: ACTIONS.CREATE },
     UPDATE: { resource: RESOURCES.SMTP, action: ACTIONS.UPDATE },
   },
   DOMAIN: {
     READ: { resource: RESOURCES.DOMAIN, action: ACTIONS.READ },
+    CREATE: { resource: RESOURCES.DOMAIN, action: ACTIONS.CREATE },
     UPDATE: { resource: RESOURCES.DOMAIN, action: ACTIONS.UPDATE },
   },
   WEBSITE: {
     READ: { resource: RESOURCES.WEBSITE, action: ACTIONS.READ },
+    CREATE: { resource: RESOURCES.WEBSITE, action: ACTIONS.CREATE },
     UPDATE: { resource: RESOURCES.WEBSITE, action: ACTIONS.UPDATE },
   },
   SOCIAL_MEDIA: {
     READ: { resource: RESOURCES.SOCIAL_MEDIA, action: ACTIONS.READ },
+    CREATE: { resource: RESOURCES.SOCIAL_MEDIA, action: ACTIONS.CREATE },
     UPDATE: { resource: RESOURCES.SOCIAL_MEDIA, action: ACTIONS.UPDATE },
   },
   PERMISSION: {

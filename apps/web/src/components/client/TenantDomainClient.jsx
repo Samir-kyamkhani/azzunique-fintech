@@ -23,6 +23,8 @@ import { formatDateTime, statusColor } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import { useMe } from "@/hooks/useAuth";
 import { loginSuccess } from "@/store/authSlice";
+import { permissionChecker } from "@/lib/permissionCheker";
+import { PERMISSIONS } from "@/lib/permissionKeys";
 
 const FIELDS = [
   "domainName",
@@ -62,6 +64,15 @@ export default function TenantDomainClient() {
   const { mutate: upsertTenantDomain, isPending } = useUpsertTenantDomain();
 
   const { data: meRes, isLoading: meLoading } = useMe();
+
+  /* ================= PERMISSIONS ================= */
+  const perms = useSelector((s) => s.auth.user?.permissions);
+
+  const can = (perm) => permissionChecker(perms, perm?.resource, perm?.action);
+
+  const canCreateDomain = can(PERMISSIONS.DOMAIN.CREATE);
+  const canEditDomain = can(PERMISSIONS.DOMAIN.UPDATE);
+  const canViewDomain = can(PERMISSIONS.DOMAIN.READ);
 
   useEffect(() => {
     if (meRes?.data) {
@@ -131,21 +142,26 @@ export default function TenantDomainClient() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            icon={RefreshCw}
-            loading={refreshing}
-            onClick={handleRefresh}
-          >
-            Refresh
-          </Button>
+          {canViewDomain && (
+            <Button
+              variant="outline"
+              icon={RefreshCw}
+              loading={refreshing}
+              onClick={handleRefresh}
+            >
+              Refresh
+            </Button>
+          )}
 
-          <Button
-            icon={tenantDomain ? Edit : Globe}
-            onClick={() => setOpenModal(true)}
-          >
-            {tenantDomain ? "Edit Domain" : "Add Domain"}
-          </Button>
+          {(!tenantDomain && canCreateDomain) ||
+            (tenantDomain && canEditDomain && (
+              <Button
+                icon={tenantDomain ? Edit : Globe}
+                onClick={() => setOpenModal(true)}
+              >
+                {tenantDomain ? "Edit Domain" : "Add Domain"}
+              </Button>
+            ))}
         </div>
       </div>
 
@@ -270,9 +286,11 @@ export default function TenantDomainClient() {
           emptyTitle="No domain configured"
           emptyDescription="Add a domain to map it with server configuration."
           emptyAction={
-            <Button icon={Globe} onClick={() => setOpenModal(true)}>
-              Add Domain
-            </Button>
+            canCreateDomain && (
+              <Button icon={Globe} onClick={() => setOpenModal(true)}>
+                Add Domain
+              </Button>
+            )
           }
         />
       )}
