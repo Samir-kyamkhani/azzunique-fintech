@@ -23,21 +23,21 @@ router.use(AuthMiddleware);
 
 // ================= PLATFORM SERVICES =================
 router.post(
-  '/services',
+  '/',
   validate({ body: createPlatformServiceSchema }),
   PSC.createPlatformService,
 );
 
-router.get('/services', PSC.listPlatformServices);
+router.get('/', PSC.listPlatformServices);
 
 router.get(
-  '/services/:id',
+  '/:id',
   validate({ params: platformServiceIdParamSchema }),
   PSC.getPlatformService,
 );
 
 router.patch(
-  '/services/:id',
+  '/:id',
   validate({
     params: platformServiceIdParamSchema,
     body: updatePlatformServiceSchema,
@@ -46,22 +46,22 @@ router.patch(
 );
 
 router.delete(
-  '/services/:id',
+  '/:id',
   validate({ params: platformServiceIdParamSchema }),
   PSC.deletePlatformService,
 );
 
 // ================= PLATFORM SERVICE FEATURES =================
 router.post(
-  '/services/features',
+  '/features',
   validate({ body: createPlatformServiceFeatureSchema }),
   PSF.createPlatformServiceFeature,
 );
 
-router.get('/services/:serviceId/features', PSF.listPlatformServiceFeatures);
+router.get('/:serviceId/features', PSF.listPlatformServiceFeatures);
 
 router.patch(
-  '/services/features/:id',
+  '/features/:id',
   validate({
     params: platformServiceFeatureIdParamSchema,
     body: updatePlatformServiceFeatureSchema,
@@ -70,7 +70,7 @@ router.patch(
 );
 
 router.delete(
-  '/services/features/:id',
+  '/features/:id',
   validate({ params: platformServiceFeatureIdParamSchema }),
   PSF.deletePlatformServiceFeature,
 );
@@ -78,14 +78,11 @@ router.delete(
 // ================= PLATFORM SERVICE PROVIDERS (AZZUNIQUE ONLY) =================
 
 router.post(
-  '/services/providers',
+  '/providers',
   validate({ body: assignPlatformServiceProviderSchema }),
   PSP.assignPlatformServiceProvider,
 );
 
-router.delete(
-  '/services/:serviceId/providers',
-  PSP.disablePlatformServiceProvider,
-);
+router.delete('/:serviceId/providers', PSP.disablePlatformServiceProvider);
 
 export default router;

@@ -20,37 +20,37 @@ router.use(AuthMiddleware);
 
 // PROVIDERS
 router.post(
-  '/providers',
+  '/',
   validate({ body: createServiceProviderSchema }),
   SP.createServiceProvider,
 );
 
-router.get('/services/:serviceId/providers', SP.listServiceProviders);
+router.get('/services/:serviceId', SP.listServiceProviders);
 
 router.patch(
-  '/providers/:id',
+  '/:id',
   validate({ params: serviceProviderIdParamSchema }),
   validate({ body: updateServiceProviderSchema }),
   SP.updateServiceProvider,
 );
 
 router.delete(
-  '/providers/:id',
+  '/:id',
   validate({ params: serviceProviderIdParamSchema }),
   SP.deleteServiceProvider,
 );
 
 // PROVIDER FEATURES (MAPPING)
 router.post(
-  '/providers/features',
+  '/features',
   validate({ body: mapServiceProviderFeatureSchema }),
   SPF.mapServiceProviderFeature,
 );
 
-router.get('/providers/:providerId/features', SPF.listServiceProviderFeatures);
+router.get('/:providerId/features', SPF.listServiceProviderFeatures);
 
 router.delete(
-  '/providers/features/:id',
+  '/features/:id',
   validate({ params: serviceProviderFeatureIdParamSchema }),
   SPF.unmapServiceProviderFeature,
 );

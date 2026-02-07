@@ -6,13 +6,13 @@ import { apiClient } from "@/lib/apiClient";
 export const usePlatformServices = () =>
   useQuery({
     queryKey: ["platform-services"],
-    queryFn: () => apiClient("/platform/services"),
+    queryFn: () => apiClient("/platform-services"),
   });
 
 export const usePlatformService = (id) =>
   useQuery({
     queryKey: ["platform-service", id],
-    queryFn: () => apiClient(`/platform/services/${id}`),
+    queryFn: () => apiClient(`/platform-services/${id}`),
     enabled: !!id,
   });
 
@@ -20,7 +20,7 @@ export const useCreatePlatformService = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload) =>
-      apiClient("/platform/services", {
+      apiClient("/platform-services", {
         method: "POST",
         body: JSON.stringify(payload),
       }),
@@ -32,7 +32,7 @@ export const useUpdatePlatformService = (id) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload) =>
-      apiClient(`/platform/services/${id}`, {
+      apiClient(`/platform-services/${id}`, {
         method: "PATCH",
         body: JSON.stringify(payload),
       }),
@@ -44,7 +44,7 @@ export const useDeletePlatformService = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id) =>
-      apiClient(`/platform/services/${id}`, { method: "DELETE" }),
+      apiClient(`/platform-services/${id}`, { method: "DELETE" }),
     onSuccess: () => qc.invalidateQueries(["platform-services"]),
   });
 };
@@ -54,14 +54,14 @@ export const useDeletePlatformService = () => {
 export const usePlatformServiceFeatures = (serviceId) =>
   useQuery({
     queryKey: ["platform-service-features", serviceId],
-    queryFn: () => apiClient(`/platform/services/${serviceId}/features`),
+    queryFn: () => apiClient(`/platform-services/${serviceId}/features`),
     enabled: !!serviceId,
   });
 
 export const useCreatePlatformServiceFeature = () =>
   useMutation({
     mutationFn: (payload) =>
-      apiClient("/platform/services/features", {
+      apiClient("/platform-services/features", {
         method: "POST",
         body: JSON.stringify(payload),
       }),
@@ -70,7 +70,7 @@ export const useCreatePlatformServiceFeature = () =>
 export const useUpdatePlatformServiceFeature = (id) =>
   useMutation({
     mutationFn: (payload) =>
-      apiClient(`/platform/services/features/${id}`, {
+      apiClient(`/platform-services/features/${id}`, {
         method: "PATCH",
         body: JSON.stringify(payload),
       }),
@@ -79,7 +79,7 @@ export const useUpdatePlatformServiceFeature = (id) =>
 export const useDeletePlatformServiceFeature = () =>
   useMutation({
     mutationFn: (id) =>
-      apiClient(`/platform/services/features/${id}`, {
+      apiClient(`/platform-services/features/${id}`, {
         method: "DELETE",
       }),
   });
@@ -89,7 +89,7 @@ export const useDeletePlatformServiceFeature = () =>
 export const useAssignPlatformServiceProvider = () =>
   useMutation({
     mutationFn: (payload) =>
-      apiClient("/platform/services/providers", {
+      apiClient("/platform-services/providers", {
         method: "POST",
         body: JSON.stringify(payload),
       }),
@@ -98,7 +98,7 @@ export const useAssignPlatformServiceProvider = () =>
 export const useDisablePlatformServiceProvider = () =>
   useMutation({
     mutationFn: ({ serviceId }) =>
-      apiClient(`/platform/services/${serviceId}/providers`, {
+      apiClient(`/platform-services/${serviceId}/providers`, {
         method: "DELETE",
       }),
   });

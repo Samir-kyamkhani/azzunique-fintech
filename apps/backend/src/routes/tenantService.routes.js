@@ -10,11 +10,11 @@ const router = Router();
 router.use(AuthMiddleware);
 
 router.post(
-  '/tenants/:tenantId/services',
+  '/:tenantId/services',
   validate({ body: enableTenantServiceSchema }),
   TS.enableTenantService,
 );
 
-router.get('/tenants/:tenantId/services', TS.listTenantServices);
+router.get('/:tenantId/services', TS.listTenantServices);
 
 export default router;

@@ -6,14 +6,14 @@ import { apiClient } from "@/lib/apiClient";
 export const useTenantServices = (tenantId) =>
   useQuery({
     queryKey: ["tenant-services", tenantId],
-    queryFn: () => apiClient(`/platform/tenants/${tenantId}/services`),
+    queryFn: () => apiClient(`/platform-tenants/${tenantId}/services`),
     enabled: !!tenantId,
   });
 
 export const useEnableTenantService = (tenantId) =>
   useMutation({
     mutationFn: (payload) =>
-      apiClient(`/platform/tenants/${tenantId}/services`, {
+      apiClient(`/platform-tenants/${tenantId}/services`, {
         method: "POST",
         body: JSON.stringify(payload),
       }),
