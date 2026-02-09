@@ -18,6 +18,7 @@ export const RESOURCES = Object.freeze({
 
 export const ACTIONS = Object.freeze({
   CREATE: "CREATE",
+  UPSERT: "UPSERT",
   READ: "READ",
   UPDATE: "UPDATE",
   ASSIGN_PERMISSIONS: "ASSIGN_PERMISSIONS",
@@ -78,8 +79,7 @@ export const PERMISSIONS = {
   },
   SERVER: {
     READ: { resource: RESOURCES.SERVER, action: ACTIONS.READ },
-    CREATE: { resource: RESOURCES.SERVER, action: ACTIONS.CREATE },
-    UPDATE: { resource: RESOURCES.SERVER, action: ACTIONS.UPDATE },
+    CREATE: { resource: RESOURCES.SERVER, action: ACTIONS.UPSERT },
   },
   SMTP: {
     READ: { resource: RESOURCES.SMTP, action: ACTIONS.READ },

@@ -31,14 +31,22 @@ import {
 } from "@/store/tenantSocialMediaSlice";
 
 import { toast } from "@/lib/toast";
+import { PERMISSIONS } from "@/lib/permissionKeys";
+import { permissionChecker } from "@/lib/permissionCheker";
 
 export default function TenantSocialMediaClient() {
   const dispatch = useDispatch();
   const social = useSelector(
-    (state) => state.tenantSocialMedia.currentSocialMedia
+    (state) => state.tenantSocialMedia.currentSocialMedia,
   );
 
   const [openModal, setOpenModal] = useState(false);
+
+  const perms = useSelector((s) => s.auth.user?.permissions);
+  const can = (perm) => permissionChecker(perms, perm?.resource, perm?.action);
+
+  const canCreateSocial = can(PERMISSIONS.SOCIAL_MEDIA.CREATE);
+  const canUpdateSocial = can(PERMISSIONS.SOCIAL_MEDIA.UPDATE);
 
   const { data, isLoading, refetch } = useTenantSocialMedia();
   const { mutate, isPending } = useUpsertTenantSocialMedia();
@@ -76,9 +84,11 @@ export default function TenantSocialMediaClient() {
           </p>
         </div>
 
-        <Button icon={Edit} onClick={() => setOpenModal(true)}>
-          {social ? "Edit Links" : "Add Links"}
-        </Button>
+        {((!social && canCreateSocial) || (social && canUpdateSocial)) && (
+          <Button icon={Edit} onClick={openSocialModal}>
+            {social ? "Edit Links" : "Add Links"}
+          </Button>
+        )}
       </div>
 
       {social ? (
@@ -136,9 +146,11 @@ export default function TenantSocialMediaClient() {
           emptyTitle="No social media links"
           emptyDescription="Add social links to show on tenant pages"
           emptyAction={
-            <Button icon={Share2} onClick={() => setOpenModal(true)}>
-              Add Social Links
-            </Button>
+            canCreateSocial && (
+              <Button icon={Share2} onClick={openSocialModal}>
+                Add Social Links
+              </Button>
+            )
           }
         />
       )}

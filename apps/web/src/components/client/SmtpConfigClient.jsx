@@ -30,6 +30,8 @@ import {
 import { setSmtpConfig, clearSmtpConfig } from "@/store/smtpConfigSlice";
 import { formatDateTime } from "@/lib/utils";
 import { toast } from "@/lib/toast";
+import { permissionChecker } from "@/lib/permissionCheker";
+import { PERMISSIONS } from "@/lib/permissionKeys";
 
 /* ================= COMPONENT ================= */
 
@@ -41,12 +43,20 @@ export default function SmtpConfigClient({ smtpConfigId }) {
   const [openModal, setOpenModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
+  /* ================= PERMISSIONS ================= */
+  const perms = useSelector((s) => s.auth.user?.permissions);
+
+  const can = (perm) => permissionChecker(perms, perm?.resource, perm?.action);
+
+  const canCreateSmtp = can(PERMISSIONS.SMTP.CREATE);
+  const canUpdateSmtp = can(PERMISSIONS.SMTP.UPDATE);
+
   /* ================= API ================= */
 
   const { data, isLoading, refetch } = useSmtpConfigById(smtpConfigId);
   const { mutate: createSmtp, isPending: creating } = useCreateSmtpConfig();
   const { mutate: updateSmtp, isPending: updating } = useUpdateSmtpConfig(
-    smtpConfig?.id
+    smtpConfig?.id,
   );
 
   const isPending = creating || updating;
@@ -111,21 +121,26 @@ export default function SmtpConfigClient({ smtpConfigId }) {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            icon={RefreshCw}
-            loading={refreshing}
-            onClick={handleRefresh}
-          >
-            Refresh
-          </Button>
+          {
+            <Button
+              variant="outline"
+              icon={RefreshCw}
+              loading={refreshing}
+              onClick={handleRefresh}
+            >
+              Refresh
+            </Button>
+          }
 
-          <Button
-            icon={smtpConfig ? Edit : Mail}
-            onClick={() => setOpenModal(true)}
-          >
-            {smtpConfig ? "Edit Configuration" : "Create Configuration"}
-          </Button>
+          {((!smtpConfig && canCreateSmtp) ||
+            (smtpConfig && canUpdateSmtp)) && (
+            <Button
+              icon={smtpConfig ? Edit : Mail}
+              onClick={() => setOpenModal(true)}
+            >
+              {smtpConfig ? "Edit Configuration" : "Create Configuration"}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -233,14 +248,16 @@ export default function SmtpConfigClient({ smtpConfigId }) {
                   Copy Username
                 </Button>
 
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  icon={Edit}
-                  onClick={() => setOpenModal(true)}
-                >
-                  Edit Configuration
-                </Button>
+                {canUpdateSmtp && (
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    icon={Edit}
+                    onClick={() => setOpenModal(true)}
+                  >
+                    Edit Configuration
+                  </Button>
+                )}
               </div>
             </InfoCard>
           </div>
@@ -251,9 +268,11 @@ export default function SmtpConfigClient({ smtpConfigId }) {
           emptyTitle="No SMTP configuration found"
           emptyDescription="Create SMTP credentials to enable email sending."
           emptyAction={
-            <Button icon={Mail} onClick={() => setOpenModal(true)}>
-              Create SMTP Configuration
-            </Button>
+            canCreateSmtp && (
+              <Button icon={Mail} onClick={() => setOpenModal(true)}>
+                Create SMTP Configuration
+              </Button>
+            )
           }
         />
       )}

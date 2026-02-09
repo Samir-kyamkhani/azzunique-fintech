@@ -1,13 +1,31 @@
 "use client";
 
 import TabsNav from "@/components/details/TabsNav";
+import { permissionChecker } from "@/lib/permissionCheker";
+import { PERMISSIONS } from "@/lib/permissionKeys";
 import { Building2 } from "lucide-react";
 import { Users } from "lucide-react";
 import { useSelector } from "react-redux";
 
 export default function EmployeeManagementLayout({ children }) {
-  const permissions = useSelector((s) => s.auth.user?.permissions);
-  // console.log(permissions);
+  const perms = useSelector((s) => s.auth.user?.permissions);
+  const can = (perm) => permissionChecker(perms, perm?.resource, perm?.action);
+
+  const canEmployees = can(PERMISSIONS.EMPLOYEE.READ);
+  const canDepartments = can(PERMISSIONS.DEPARTMENT.READ);
+
+  const tabs = [
+    canEmployees && {
+      label: "Employees",
+      value: "employees",
+      icon: Users,
+    },
+    canDepartments && {
+      label: "Departments",
+      value: "departments",
+      icon: Building2,
+    },
+  ].filter(Boolean);
 
   return (
     <div className="space-y-6">
@@ -19,21 +37,7 @@ export default function EmployeeManagementLayout({ children }) {
         </p>
       </div>
 
-      <TabsNav
-        tabs={[
-          {
-            label: "Employees",
-            value: "employees",
-            icon: Users,
-          },
-          {
-            label: "Departments ",
-            value: "departments",
-            icon: Building2,
-          },
-        ]}
-        basePath="/dashboard/employee-management"
-      />
+      <TabsNav tabs={tabs} basePath="/dashboard/employee-management" />
 
       {/* Content */}
       <div>{children}</div>

@@ -25,6 +25,8 @@ import {
 import Image from "next/image";
 import ImagePreviewModal from "../ImagePreviewModal";
 import { toast } from "@/lib/toast";
+import { PERMISSIONS } from "@/lib/permissionKeys";
+import { permissionChecker } from "@/lib/permissionCheker";
 
 export default function TenantWebsiteClient() {
   const dispatch = useDispatch();
@@ -37,6 +39,13 @@ export default function TenantWebsiteClient() {
 
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
+
+  const perms = useSelector((s) => s.auth.user?.permissions);
+  const can = (perm) => permissionChecker(perms, perm?.resource, perm?.action);
+
+  const canViewBranding = can(PERMISSIONS.WEBSITE.READ);
+  const canEditBranding = can(PERMISSIONS.WEBSITE.UPDATE);
+  const canCreateBranding = can(PERMISSIONS.WEBSITE.CREATE);
 
   const handleImagePreview = (url) => {
     setPreviewImage(url);
@@ -82,9 +91,11 @@ export default function TenantWebsiteClient() {
           </p>
         </div>
 
-        <Button icon={Edit} onClick={() => setOpenModal(true)}>
-          {website ? "Edit Branding" : "Setup Branding"}
-        </Button>
+        {((!website && canCreateBranding) || (website && canEditBranding)) && (
+          <Button icon={Edit} onClick={() => setOpenModal(true)}>
+            {website ? "Edit Branding" : "Setup Branding"}
+          </Button>
+        )}
       </div>
 
       {/* ===== LOGO + FAVICON SECTION ===== */}
@@ -207,9 +218,11 @@ export default function TenantWebsiteClient() {
           emptyTitle="Branding not configured"
           emptyDescription="Set up your brand identity, logo and support details"
           emptyAction={
-            <Button icon={Palette} onClick={() => setOpenModal(true)}>
-              Setup Branding
-            </Button>
+            canCreateBranding && (
+              <Button icon={Palette} onClick={() => setOpenModal(true)}>
+                Setup Branding
+              </Button>
+            )
           }
         />
       )}

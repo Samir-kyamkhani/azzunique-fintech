@@ -57,4 +57,15 @@ export const PermissionsRegistry = {
     SET_USER_RULE: 'COMMISSION.SET_USER_RULE',
     SET_ROLE_RULE: 'COMMISSION.SET_ROLE_RULE',
   },
+
+  SERVER: {
+    UPSERT: 'SERVER.UPSERT',
+    READ: 'SERVER.READ',
+  },
+
+  SMTP: {
+    CREATE: 'SMTP.CREATE',
+    UPDATE: 'SMTP.UPDATE',
+    READ: 'SMTP.READ',
+  },
 };

@@ -29,6 +29,8 @@ import { formatDateTime, statusColor } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import InfoItem from "../details/InfoItem";
 import InfoCard from "../details/InfoCard";
+import { permissionChecker } from "@/lib/permissionCheker";
+import { PERMISSIONS } from "@/lib/permissionKeys";
 
 /* ================= HELPERS ================= */
 
@@ -57,6 +59,14 @@ export default function ServerDetailClient() {
 
   const { data, isLoading, isFetching, isError, refetch } = useServerDetail();
   const { mutate: upsertServerDetail, isPending } = useUpsertServerDetail();
+
+  /* ================= PERMISSIONS ================= */
+  const perms = useSelector((s) => s.auth.user?.permissions);
+
+  const can = (perm) => permissionChecker(perms, perm?.resource, perm?.action);
+
+  const canUpsertServerDetail = can(PERMISSIONS.SERVER.UPSERT);
+  const canViewServerDetail = can(PERMISSIONS.SERVER.READ);
 
   /* ================= SYNC DATA ================= */
 
@@ -111,7 +121,7 @@ export default function ServerDetailClient() {
       {isLoading && <PageSkeleton />}
 
       {/* EMPTY STATE */}
-      {!isLoading && isError && !serverDetail && (
+      {canUpsertServerDetail && !isLoading && isError && !serverDetail && (
         <DataTableSearchEmpty
           isEmpty
           emptyTitle="No server configuration found"
@@ -137,18 +147,21 @@ export default function ServerDetailClient() {
             </div>
 
             <div className="flex gap-3">
-              <Button
-                variant="outline"
-                icon={RefreshCw}
-                loading={isFetching}
-                onClick={refetch}
-              >
-                Refresh
-              </Button>
-
-              <Button icon={Edit} onClick={() => setOpenModal(true)}>
-                Edit Configuration
-              </Button>
+              {canViewServerDetail && (
+                <Button
+                  variant="outline"
+                  icon={RefreshCw}
+                  loading={isFetching}
+                  onClick={refetch}
+                >
+                  Refresh
+                </Button>
+              )}
+              {canUpsertServerDetail && (
+                <Button icon={Edit} onClick={() => setOpenModal(true)}>
+                  Edit Configuration
+                </Button>
+              )}
             </div>
           </div>
 

@@ -21,11 +21,19 @@ import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { clearTenant, setTenant } from "@/store/tenantSlice";
 import { PERMISSIONS } from "@/lib/permissionKeys";
+import { useSelector } from "react-redux";
+import { permissionChecker } from "@/lib/permissionCheker";
 
 export default function TenantLayout({ children }) {
   const router = useRouter();
   const { id } = useParams();
   const dispatch = useDispatch();
+
+  const perms = useSelector((s) => s.auth.user?.permissions);
+  const can = (perm) => permissionChecker(perms, perm?.resource, perm?.action);
+
+  const canOverview = can(PERMISSIONS.TENANT.READ);
+  const canDomain = can(PERMISSIONS.DOMAIN.READ);
 
   const { data, isLoading } = useTenantById(id);
   const tenant = data?.data;
@@ -45,6 +53,19 @@ export default function TenantLayout({ children }) {
   if (!id || isLoading || !tenant) {
     return <PageSkeleton />;
   }
+
+  const tabs = [
+    canOverview && {
+      label: "Overview",
+      value: "overview",
+      icon: LayoutDashboard,
+    },
+    canDomain && {
+      label: "Domain",
+      value: "domain",
+      icon: Globe,
+    },
+  ].filter(Boolean);
 
   return (
     <div className="bg-background space-y-6">
@@ -66,31 +87,7 @@ export default function TenantLayout({ children }) {
         ]}
       />
 
-      <TabsNav
-        tabs={[
-          {
-            label: "Overview",
-            value: "overview",
-            icon: LayoutDashboard,
-          },
-          {
-            label: "Domain",
-            value: "domain",
-            icon: Globe,
-          },
-          {
-            label: "Activity",
-            value: "activity",
-            icon: Activity,
-          },
-          {
-            label: "Settings",
-            value: "settings",
-            icon: Settings,
-          },
-        ]}
-        basePath={`/dashboard/tenants/${id}`}
-      />
+      <TabsNav tabs={tabs} basePath={`/dashboard/tenants/${id}`} />
       {children}
     </div>
   );
