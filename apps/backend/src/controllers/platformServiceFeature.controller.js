@@ -6,6 +6,12 @@ export const createPlatformServiceFeature = async (req, res) => {
   res.status(201).json(result);
 };
 
+export const listPlatformServicesFeatures = async (req, res) => {
+  const features = await PlatformServiceFeatureService.listAllFeatures();
+
+  res.json(features);
+};
+
 export const listPlatformServiceFeatures = async (req, res) => {
   const { serviceId } = req.params;
 
