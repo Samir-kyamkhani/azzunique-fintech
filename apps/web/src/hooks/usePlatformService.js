@@ -6,13 +6,19 @@ import { apiClient } from "@/lib/apiClient";
 export const usePlatformServices = () =>
   useQuery({
     queryKey: ["platform-services"],
-    queryFn: () => apiClient("/platform-services"),
+    queryFn: async () => {
+      const res = await apiClient("/platform-services");
+      return res.data;
+    },
   });
 
 export const usePlatformService = (id) =>
   useQuery({
     queryKey: ["platform-service", id],
-    queryFn: () => apiClient(`/platform-services/${id}`),
+    queryFn: async () => {
+      const res = await apiClient(`/platform-services/${id}`);
+      return res.data;
+    },
     enabled: !!id,
   });
 
@@ -24,7 +30,7 @@ export const useCreatePlatformService = () => {
         method: "POST",
         body: JSON.stringify(payload),
       }),
-    onSuccess: () => qc.invalidateQueries(["platform-services"]),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["platform-services"] }),
   });
 };
 
@@ -36,7 +42,7 @@ export const useUpdatePlatformService = (id) => {
         method: "PATCH",
         body: JSON.stringify(payload),
       }),
-    onSuccess: () => qc.invalidateQueries(["platform-services"]),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["platform-services"] }),
   });
 };
 
@@ -45,7 +51,7 @@ export const useDeletePlatformService = () => {
   return useMutation({
     mutationFn: (id) =>
       apiClient(`/platform-services/${id}`, { method: "DELETE" }),
-    onSuccess: () => qc.invalidateQueries(["platform-services"]),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["platform-services"] }),
   });
 };
 
@@ -53,8 +59,11 @@ export const useDeletePlatformService = () => {
 
 export const usePlatformServiceFeatures = (serviceId) =>
   useQuery({
-    queryKey: ["platform-service-features", serviceId],
-    queryFn: () => apiClient(`/platform-services/${serviceId}/features`),
+    queryKey: ["platform-service/features", serviceId],
+    queryFn: async () => {
+      const res = await apiClient(`/platform-services/${serviceId}/features`);
+      return res.data;
+    },
     enabled: !!serviceId,
   });
 
@@ -76,13 +85,20 @@ export const useUpdatePlatformServiceFeature = (id) =>
       }),
   });
 
-export const useDeletePlatformServiceFeature = () =>
-  useMutation({
+export const useDeletePlatformServiceFeature = () => {
+  const qc = useQueryClient();
+
+  return useMutation({
     mutationFn: (id) =>
       apiClient(`/platform-services/features/${id}`, {
         method: "DELETE",
       }),
+
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["platform-service-features"] });
+    },
   });
+};
 
 /* ================= PLATFORM SERVICE PROVIDERS ================= */
 
@@ -102,5 +118,3 @@ export const useDisablePlatformServiceProvider = () =>
         method: "DELETE",
       }),
   });
-
-
