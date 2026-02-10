@@ -59,7 +59,7 @@ export default function TenantDomainClient() {
   const [refreshing, setRefreshing] = useState(false);
 
   const { data, refetch, isLoading } = useTenantDomainByTenantId(
-    tenant?.id ?? currentUser?.tenantId,
+    tenant?.id ?? currentUser?.tenant.id,
   );
   const { mutate: upsertTenantDomain, isPending } = useUpsertTenantDomain();
 
@@ -285,13 +285,13 @@ export default function TenantDomainClient() {
           isEmpty
           emptyTitle="No domain configured"
           emptyDescription="Add a domain to map it with server configuration."
-          emptyAction={
-            canCreateDomain && (
-              <Button icon={Globe} onClick={() => setOpenModal(true)}>
-                Add Domain
-              </Button>
-            )
-          }
+          // emptyAction={
+          //   canCreateDomain && (
+          //     <Button icon={Globe} onClick={() => setOpenModal(true)}>
+          //       Add Domain
+          //     </Button>
+          //   )
+          // }
         />
       )}
 

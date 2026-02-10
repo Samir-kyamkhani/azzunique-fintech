@@ -222,7 +222,7 @@ class AuthService {
         roleCode: employee.departmentCode,
       },
 
-      tenant: this.tenantShape(employee),
+      tenant: await this.tenantShape(employee),
 
       permissions: {
         role: departmentPermissions,
@@ -310,7 +310,7 @@ class AuthService {
         isSystem: user.isSystem,
       },
 
-      tenant: this.tenantShape(user),
+      tenant: await this.tenantShape(user),
 
       wallet: { balance: user.balance ?? 0 },
 

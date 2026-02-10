@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 
@@ -18,8 +18,6 @@ import Button from "@/components/ui/Button";
 
 import { Building2, UserX, CheckCircle, Ban, RefreshCw } from "lucide-react";
 import { formatDateTime } from "@/lib/utils";
-import { useMe } from "@/hooks/useAuth";
-import { loginSuccess } from "@/store/authSlice";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useSelector } from "react-redux";
 import { permissionChecker } from "@/lib/permissionCheker";
@@ -101,15 +99,6 @@ export default function TenantsClient() {
 
   const { mutate: createTenant, isPending: isCreating } = useCreateTenant();
   const { mutate: updateTenant, isPending: isUpdating } = useUpdateTenant();
-  const { data: meRes, isLoading: meLoading } = useMe();
-
-  useEffect(() => {
-    if (meRes?.data) {
-      dispatch(loginSuccess(meRes?.data));
-    }
-  }, [meRes?.data, dispatch]);
-
-  if (meLoading) return null;
 
   /* ================= NORMALIZE ================= */
   const tenants =
