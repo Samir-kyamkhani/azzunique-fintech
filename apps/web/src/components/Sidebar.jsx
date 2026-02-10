@@ -24,6 +24,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { PERMISSIONS } from "@/lib/permissionKeys";
 import { permissionChecker } from "@/lib/permissionCheker";
+import { Cog } from "lucide-react";
 
 const Sidebar = () => {
   const queryClient = useQueryClient();
@@ -125,6 +126,17 @@ const Sidebar = () => {
     {
       title: "System",
       items: [
+        {
+          id: "platform",
+          label: "platform",
+          icon: Cog,
+          path: "/dashboard/platform",
+          permissionGroup: [
+            PERMISSIONS.PLATFORM.SERVICES.READ,
+            PERMISSIONS.PLATFORM.PROVIDERS.READ,
+            PERMISSIONS.PLATFORM.TENANTS.READ,
+          ],
+        },
         {
           id: "settings",
           label: "Settings",

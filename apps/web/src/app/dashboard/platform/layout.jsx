@@ -9,9 +9,10 @@ export default function PlatformLayout({ children }) {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-xl font-semibold">Platform Management</h1>
+        <h1 className="text-xl font-semibold">Platform Control Center</h1>
+
         <p className="text-sm text-muted-foreground">
-          Manage services, providers and tenants assignement
+          Manage services, providers, and tenant assignments.
         </p>
       </div>
 
