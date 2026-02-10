@@ -10,6 +10,7 @@ import {
   serviceProviderIdParamSchema,
   updateServiceProviderSchema,
 } from '../validators/serviceProvider.schema.js';
+
 import {
   mapServiceProviderFeatureSchema,
   serviceProviderFeatureIdParamSchema,
@@ -18,15 +19,17 @@ import {
 const router = Router();
 router.use(AuthMiddleware);
 
-// PROVIDERS
+// Create
 router.post(
   '/',
   validate({ body: createServiceProviderSchema }),
   SP.createServiceProvider,
 );
 
-router.get('/services/:serviceId', SP.listServiceProviders);
+// List by Platform Service (if needed)
+router.get('/by-service/:serviceId', SP.listServiceProviders);
 
+// Update
 router.patch(
   '/:id',
   validate({ params: serviceProviderIdParamSchema }),
@@ -34,23 +37,26 @@ router.patch(
   SP.updateServiceProvider,
 );
 
+// Delete
 router.delete(
   '/:id',
   validate({ params: serviceProviderIdParamSchema }),
   SP.deleteServiceProvider,
 );
 
-// PROVIDER FEATURES (MAPPING)
+// Map feature to provider
 router.post(
-  '/features',
+  '/:providerId/features',
   validate({ body: mapServiceProviderFeatureSchema }),
   SPF.mapServiceProviderFeature,
 );
 
+// List provider features
 router.get('/:providerId/features', SPF.listServiceProviderFeatures);
 
+// Unmap feature
 router.delete(
-  '/features/:id',
+  '/:providerId/features/:id',
   validate({ params: serviceProviderFeatureIdParamSchema }),
   SPF.unmapServiceProviderFeature,
 );

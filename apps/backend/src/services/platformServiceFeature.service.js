@@ -61,10 +61,6 @@ class PlatformServiceFeatureService {
       );
   }
 
-  async listAllFeatures() {
-    return db.select().from(platformServiceFeatureTable);
-  }
-
   async update(id, data, actor) {
     this.assertAzzunique(actor);
 
