@@ -76,8 +76,8 @@ export default function PermissionForm({
   const onFormSubmit = () => {
     const selected = getValues("permissions") || [];
 
-    if (mode === "role") {
-      const permissionIds = selected?.map((p) => p?.permissionId);
+    if (mode === "role" || mode === "department") {
+      const permissionIds = selected.map((p) => p.permissionId);
       onSubmit({ permissionIds }, setError);
     } else {
       onSubmit({ permissions: selected }, setError);

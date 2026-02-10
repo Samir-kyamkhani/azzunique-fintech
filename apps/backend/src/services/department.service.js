@@ -47,10 +47,55 @@ class DepartmentService {
   }
 
   async findAll(actor) {
-    return db
-      .select()
+    if (!actor?.tenantId) {
+      throw ApiError.badRequest('Tenant context missing');
+    }
+
+    const rows = await db
+      .select({
+        departmentId: departmentTable.id,
+        departmentCode: departmentTable.departmentCode,
+        departmentName: departmentTable.departmentName,
+        departmentDescription: departmentTable.departmentDescription,
+
+        permissionId: permissionTable.id,
+        resource: permissionTable.resource,
+        action: permissionTable.action,
+      })
       .from(departmentTable)
+      .leftJoin(
+        departmentPermissionTable,
+        eq(departmentPermissionTable.departmentId, departmentTable.id),
+      )
+      .leftJoin(
+        permissionTable,
+        eq(permissionTable.id, departmentPermissionTable.permissionId),
+      )
       .where(eq(departmentTable.tenantId, actor.tenantId));
+
+    const deptMap = new Map();
+
+    for (const r of rows) {
+      if (!deptMap.has(r.departmentId)) {
+        deptMap.set(r.departmentId, {
+          id: r.departmentId,
+          departmentCode: r.departmentCode,
+          departmentName: r.departmentName,
+          departmentDescription: r.departmentDescription,
+          permissions: [],
+        });
+      }
+
+      if (r.permissionId) {
+        deptMap.get(r.departmentId).permissions.push({
+          id: r.permissionId,
+          resource: r.resource,
+          action: r.action,
+        });
+      }
+    }
+
+    return [...deptMap.values()];
   }
 
   async findOne(id, actor) {
