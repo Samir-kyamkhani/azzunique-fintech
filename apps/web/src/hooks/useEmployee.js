@@ -54,3 +54,13 @@ export const useDeleteEmployee = () =>
         method: "DELETE",
       }),
   });
+
+/* ================= ASSIGN PERMISSIONS ================= */
+export const useAssignEmployeePermissions = () =>
+  useMutation({
+    mutationFn: ({ employeeId, payload }) =>
+      apiClient(`/employees/${employeeId}/permissions`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+  });

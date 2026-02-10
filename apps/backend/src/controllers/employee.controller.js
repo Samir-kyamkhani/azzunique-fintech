@@ -29,3 +29,12 @@ export const deleteEmployee = async (req, res, next) => {
   const employee = await EmployeeService.delete(req.params.id, req.user);
   res.json(employee);
 };
+
+export const assignEmployeePermissions = async (req, res) => {
+  await EmployeeService.assignPermissions(
+    req.params.id,
+    req.body.permissions,
+    req.user,
+  );
+  res.json({ success: true });
+};

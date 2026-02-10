@@ -31,15 +31,22 @@ import ConfirmDialog from "../ConfirmDialog";
 import { PERMISSIONS } from "@/lib/permissionKeys";
 import { permissionChecker } from "@/lib/permissionCheker";
 
+import DepartmentPermissionModal from "../modals/DepartmentPermissionModal";
+import { useAssignDepartmentPermissions } from "@/hooks/useDepartment";
+import { usePermissions } from "@/hooks/usePermission";
+import { setPermissions } from "@/store/permissionSlice";
+
 export default function DepartmentClient() {
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [selectedDept, setSelectedDept] = useState(null);
 
   const dispatch = useDispatch();
   const departments = useSelector((s) => s.department.list);
   const current = useSelector((s) => s.department.current);
 
   const [openModal, setOpenModal] = useState(false);
+
+  const [permOpen, setPermOpen] = useState(false);
+  const [selectedDept, setSelectedDept] = useState(null);
 
   const { data, isLoading, refetch, error } = useDepartments();
   const { mutate: createMutate, isPending: creating } = useCreateDepartment();
@@ -53,7 +60,6 @@ export default function DepartmentClient() {
 
   const canCreateDepartment = can(PERMISSIONS.DEPARTMENT.CREATE);
   const canEditDepartment = can(PERMISSIONS.DEPARTMENT.UPDATE);
-  const canViewDepartment = can(PERMISSIONS.DEPARTMENT.READ);
   const canDeleteDepartment = can(PERMISSIONS.DEPARTMENT.DELETE);
   const canAssignDepartmentPerms = can(
     PERMISSIONS.DEPARTMENT.ASSIGN_PERMISSIONS,
@@ -66,6 +72,35 @@ export default function DepartmentClient() {
   useEffect(() => {
     if (error) toast.error(error?.message || "Something went wrong");
   }, [error]);
+
+  const { data: permissionList } = usePermissions();
+
+  const { mutate: assignDeptPerms, isPending: permSaving } =
+    useAssignDepartmentPermissions();
+
+  useEffect(() => {
+    if (permissionList) {
+      dispatch(setPermissions(permissionList));
+    }
+  }, [permissionList, dispatch]);
+
+  const handleDepartmentPermissionSubmit = (data, setError) => {
+    assignDeptPerms(
+      {
+        id: selectedDept?.id,
+        permissionIds: data.permissionIds,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Department permissions updated");
+          setPermOpen(false);
+        },
+        onError: (err) => {
+          setError("root", { message: err?.message });
+        },
+      },
+    );
+  };
 
   const handleSubmit = (payload, setError) => {
     const action = current ? updateMutate : createMutate;
@@ -171,7 +206,8 @@ export default function DepartmentClient() {
                           icon: Shield,
                           label: "Permissions",
                           onClick: () => {
-                            console.log("Department ID:", dept.id);
+                            setSelectedDept(dept);
+                            setPermOpen(true);
                           },
                         }
                       : undefined,
@@ -245,6 +281,13 @@ export default function DepartmentClient() {
           loading={deleting}
         />
       )}
+      <DepartmentPermissionModal
+        open={permOpen}
+        onClose={() => setPermOpen(false)}
+        department={selectedDept}
+        onSubmit={handleDepartmentPermissionSubmit}
+        isPending={permSaving}
+      />
     </>
   );
 }

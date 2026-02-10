@@ -43,3 +43,14 @@ export const updateEmployeeSchema = z
 export const idParamSchema = z.object({
   id: z.string().uuid('Invalid id'),
 });
+
+export const assignEmployeePermissionsSchema = z.object({
+  permissions: z
+    .array(
+      z.object({
+        permissionId: z.string().uuid('Invalid permission id'),
+        effect: z.enum(['ALLOW', 'DENY']),
+      }),
+    )
+    .min(1, 'At least one permission is required'),
+});

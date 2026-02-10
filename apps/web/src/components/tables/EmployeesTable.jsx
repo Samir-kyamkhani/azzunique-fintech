@@ -16,18 +16,6 @@ const options = [
   { label: "Suspended", value: "SUSPENDED" },
 ];
 
-/* ---------------- EXTRA ACTIONS ---------------- */
-const extraActions = [
-  {
-    icon: Shield,
-    label: "Permissions",
-    onClick: (employee) => {
-      console.log("Employee ID:", employee.id);
-      console.log("Department ID:", employee.departmentId);
-    },
-  },
-];
-
 /* ===================== COLUMNS ===================== */
 const getColumns = (onImagePreview) => [
   {
@@ -73,6 +61,7 @@ export default function EmployeesTable({
   onEdit,
   onView,
   onDelete,
+  extraActions,
   onImagePreview,
 }) {
   const columns = getColumns(onImagePreview);
