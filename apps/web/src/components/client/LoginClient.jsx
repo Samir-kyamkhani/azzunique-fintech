@@ -1,8 +1,9 @@
 "use client";
 
-import { useLogin } from "@/hooks/useAuth";
+import { useEffect } from "react";
+import { useLogin, useMe } from "@/hooks/useAuth";
 import { useDispatch } from "react-redux";
-import { loginSuccess } from "@/store/authSlice";
+import { loginSuccess, setUserFromMe } from "@/store/authSlice";
 import { useRouter } from "next/navigation";
 import LoginForm from "../forms/LoginForm";
 
@@ -11,11 +12,20 @@ export default function LoginClient() {
   const router = useRouter();
   const { mutate, isPending } = useLogin();
 
+  const { data: meRes, refetch } = useMe();
+
+  useEffect(() => {
+    if (meRes?.data) {
+      dispatch(setUserFromMe(meRes.data));
+      router.push("/dashboard");
+    }
+  }, [meRes, dispatch, router]);
+
   const login = (data, setError) => {
     mutate(data, {
       onSuccess: (res) => {
         dispatch(loginSuccess(res));
-        router.push("/dashboard");
+        refetch();
       },
       onError: (err) => {
         if (err.type === "FIELD") {
@@ -23,7 +33,7 @@ export default function LoginClient() {
             setError(field, { message });
           });
           return;
-        }   
+        }
 
         setError("root", { message: err.message });
       },

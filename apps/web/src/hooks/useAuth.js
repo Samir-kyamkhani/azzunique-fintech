@@ -14,11 +14,8 @@ export const useMe = () =>
   useQuery({
     queryKey: ["me"],
     queryFn: () => apiClient("/auth/me"),
-    staleTime: 24 * 60 * 60 * 1000, // 1 day
-    retry: false, // 🔥 important
-    onError: () => {
-      store.dispatch(logout()); // 🔥 sync redux
-    },
+    staleTime: 24 * 60 * 60 * 1000,
+    retry: false,
   });
 
 export const useLogout = () =>
