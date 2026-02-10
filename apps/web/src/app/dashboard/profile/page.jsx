@@ -111,25 +111,27 @@ export default function Page() {
       {/* RIGHT SIDE */}
       <div className="space-y-6">
         {/* WALLET */}
-        <InfoCard icon={Wallet} title="Wallet">
-          <div className="space-y-3">
-            <InfoItem
-              label="Balance"
-              value={`₹ ${me.wallet.balance}`}
-              icon={Wallet}
-            />
-            <InfoItem
-              label="Blocked Amount"
-              value={`₹ ${me.wallet.blockedAmount}`}
-              icon={Wallet}
-            />
-            <InfoItem
-              label="Wallet Status"
-              value={me.wallet.status}
-              icon={Settings}
-            />
-          </div>
-        </InfoCard>
+        {me.type !== "EMPLOYEE" && (
+          <InfoCard icon={Wallet} title="Wallet">
+            <div className="space-y-3">
+              <InfoItem
+                label="Balance"
+                value={`₹ ${me.wallet.balance}`}
+                icon={Wallet}
+              />
+              <InfoItem
+                label="Blocked Amount"
+                value={`₹ ${me.wallet.blockedAmount}`}
+                icon={Wallet}
+              />
+              <InfoItem
+                label="Wallet Status"
+                value={me.wallet.status}
+                icon={Settings}
+              />
+            </div>
+          </InfoCard>
+        )}
 
         {/* SYSTEM */}
         <InfoCard icon={Settings} title="System">
