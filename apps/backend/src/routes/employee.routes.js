@@ -5,12 +5,14 @@ import {
   findEmployee,
   findAllEmployees,
   deleteEmployee,
+  assignEmployeePermissions,
 } from '../controllers/employee.controller.js';
 import { validate } from '../middleware/zod-validate.js';
 import {
   createEmployeeSchema,
   updateEmployeeSchema,
   idParamSchema,
+  assignEmployeePermissionsSchema,
 } from '../validators/employee.schema.js';
 import asyncHandler from '../lib/AsyncHandler.js';
 import { AuthMiddleware } from '../middleware/auth.middleware.js';
@@ -55,6 +57,16 @@ router.delete(
   PermissionMiddleware(PermissionsRegistry.EMPLOYEE.DELETE),
   validate({ params: idParamSchema }),
   asyncHandler(deleteEmployee),
+);
+
+router.post(
+  '/:id/permissions',
+  PermissionMiddleware(PermissionsRegistry.EMPLOYEE.ASSIGN_PERMISSIONS),
+  validate({
+    params: idParamSchema,
+    body: assignEmployeePermissionsSchema,
+  }),
+  asyncHandler(assignEmployeePermissions),
 );
 
 export default router;

@@ -53,7 +53,6 @@ export default function DepartmentClient() {
 
   const canCreateDepartment = can(PERMISSIONS.DEPARTMENT.CREATE);
   const canEditDepartment = can(PERMISSIONS.DEPARTMENT.UPDATE);
-  const canViewDepartment = can(PERMISSIONS.DEPARTMENT.READ);
   const canDeleteDepartment = can(PERMISSIONS.DEPARTMENT.DELETE);
   const canAssignDepartmentPerms = can(
     PERMISSIONS.DEPARTMENT.ASSIGN_PERMISSIONS,

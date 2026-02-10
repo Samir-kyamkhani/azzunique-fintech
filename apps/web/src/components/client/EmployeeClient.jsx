@@ -8,6 +8,7 @@ import {
   useCreateEmployee,
   useUpdateEmployee,
   useDeleteEmployee,
+  useAssignEmployeePermissions,
 } from "@/hooks/useEmployee";
 import { useDepartments } from "@/hooks/useDepartment";
 
@@ -26,6 +27,10 @@ import ImagePreviewModal from "../ImagePreviewModal";
 import { useSelector } from "react-redux";
 import { permissionChecker } from "@/lib/permissionCheker";
 import { PERMISSIONS } from "@/lib/permissionKeys";
+import EmployeePermissionModal from "../modals/EmployeePermissionModal";
+import { Shield } from "lucide-react";
+import { usePermissions } from "@/hooks/usePermission";
+import { setPermissions } from "@/store/permissionSlice";
 
 export default function EmployeeClient() {
   /* ================= UI STATE ================= */
@@ -48,6 +53,9 @@ export default function EmployeeClient() {
   const dispatch = useDispatch();
   const router = useRouter();
 
+  const [permOpen, setPermOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+
   /* ================= PERMISSIONS ================= */
   const perms = useSelector((s) => s.auth.user?.permissions);
 
@@ -58,6 +66,14 @@ export default function EmployeeClient() {
   const canViewEmployee = can(PERMISSIONS.EMPLOYEE.READ);
   const canDeleteEmployee = can(PERMISSIONS.EMPLOYEE.DELETE);
   const canAssignEmployeePerms = can(PERMISSIONS.EMPLOYEE.ASSIGN_PERMISSIONS);
+
+  const { data: permissionList } = usePermissions();
+
+  useEffect(() => {
+    if (permissionList) {
+      dispatch(setPermissions(permissionList));
+    }
+  }, [permissionList, dispatch]);
 
   /* ================= API ================= */
   const { data, isLoading, refetch, error } = useEmployees({
@@ -76,6 +92,8 @@ export default function EmployeeClient() {
   const { mutate: createEmployee, isPending: creating } = useCreateEmployee();
   const { mutate: updateEmployee, isPending: updating } = useUpdateEmployee();
   const { mutate: deleteEmployee, isPending: deleting } = useDeleteEmployee();
+  const { mutate: assignEmployeePerms, isPending: permSaving } =
+    useAssignEmployeePermissions();
 
   /* ================= NORMALIZE ================= */
   const employees =
@@ -126,6 +144,39 @@ export default function EmployeeClient() {
   ];
 
   /* ================= ACTIONS ================= */
+  const handlePermissionSubmit = (data, setError) => {
+    assignEmployeePerms(
+      { employeeId: selectedEmployee?.id, payload: data },
+      {
+        onSuccess: () => {
+          toast.success("Permissions updated");
+          setPermOpen(false);
+        },
+        onError: (err) => {
+          if (err?.type === "FIELD") {
+            err.errors.forEach(({ field, message }) =>
+              setError(field, { message }),
+            );
+            return;
+          }
+          setError("root", { message: err?.message || "Update failed" });
+        },
+      },
+    );
+  };
+
+  const openPermissionModal = (emp) => {
+    if (!canAssignEmployeePerms) {
+      toast.error("No permission to assign permissions");
+      return;
+    }
+    setSelectedEmployee(emp);
+    setPermOpen(true);
+  };
+
+  const extraActions = canAssignEmployeePerms
+    ? [{ icon: Shield, label: "Permissions", onClick: openPermissionModal }]
+    : [];
 
   const handleImagePreview = (imageUrl) => {
     setPreviewImage(imageUrl);
@@ -228,8 +279,9 @@ export default function EmployeeClient() {
         onAddEmployee={canCreateEmployee ? handleAdd : undefined}
         onEdit={canEditEmployee ? handleEdit : undefined}
         onView={canViewEmployee ? handleView : undefined}
-        onDelete={canDeleteEmployee ? candeaskDelete : undefined}
+        onDelete={canDeleteEmployee ? askDelete : undefined}
         loading={isLoading}
+        extraActions={extraActions}
         onImagePreview={handleImagePreview}
       />
 
@@ -262,6 +314,14 @@ export default function EmployeeClient() {
         open={previewOpen}
         image={previewImage}
         onClose={() => setPreviewOpen(false)}
+      />
+
+      <EmployeePermissionModal
+        open={permOpen}
+        onClose={() => setPermOpen(false)}
+        employee={selectedEmployee}
+        onSubmit={handlePermissionSubmit}
+        isPending={permSaving}
       />
     </>
   );

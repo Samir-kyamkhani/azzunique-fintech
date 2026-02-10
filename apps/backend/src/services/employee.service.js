@@ -21,6 +21,7 @@ import {
   departmentTable,
   tenantsTable,
   smtpConfigTable,
+  departmentPermissionTable,
 } from '../models/core/index.js';
 
 class EmployeeService {
@@ -171,16 +172,14 @@ class EmployeeService {
       throw ApiError.badRequest('Tenant context missing');
     }
 
-    let { search = '', status = 'all', limit = 20, page = 1 } = query;
-    limit = Number(limit);
-    page = Number(page);
-
+    const page = query.page ? parseInt(query.page, 10) : 1;
+    const limit = query.limit ? parseInt(query.limit, 10) : 20;
     const offset = (page - 1) * limit;
 
     const conditions = [eq(employeesTable.tenantId, actor.tenantId)];
 
-    if (search) {
-      const term = `%${search}%`;
+    if (query.search) {
+      const term = `%${query.search}%`;
       conditions.push(
         or(
           like(employeesTable.firstName, term),
@@ -191,11 +190,28 @@ class EmployeeService {
       );
     }
 
-    if (status !== 'all') {
-      conditions.push(eq(employeesTable.employeeStatus, status));
+    if (query.status && query.status !== 'all') {
+      conditions.push(eq(employeesTable.employeeStatus, query.status));
     }
 
-    const data = await db
+    const [{ total }] = await db
+      .select({ total: sql`COUNT(*)`.mapWith(Number) })
+      .from(employeesTable)
+      .where(and(...conditions));
+
+    const statsRows = await db
+      .select({
+        status: employeesTable.employeeStatus,
+        count: sql`COUNT(*)`.mapWith(Number),
+      })
+      .from(employeesTable)
+      .where(and(...conditions))
+      .groupBy(employeesTable.employeeStatus);
+
+    const stats = { ACTIVE: 0, INACTIVE: 0, SUSPENDED: 0 };
+    statsRows.forEach((r) => (stats[r.status] = r.count));
+
+    const rows = await db
       .select()
       .from(employeesTable)
       .where(and(...conditions))
@@ -203,22 +219,77 @@ class EmployeeService {
       .limit(limit)
       .offset(offset);
 
-    const [{ total }] = await db
-      .select({ total: sql`COUNT(*)`.mapWith(Number) })
-      .from(employeesTable)
-      .where(and(...conditions));
+    const employeeIds = rows.map((e) => e.id);
+    const departmentIds = [...new Set(rows.map((e) => e.departmentId))];
+
+    const departmentPermissions = await db
+      .select({
+        departmentId: departmentPermissionTable.departmentId,
+        permissionId: permissionTable.id,
+        resource: permissionTable.resource,
+        action: permissionTable.action,
+      })
+      .from(departmentPermissionTable)
+      .leftJoin(
+        permissionTable,
+        eq(permissionTable.id, departmentPermissionTable.permissionId),
+      )
+      .where(inArray(departmentPermissionTable.departmentId, departmentIds));
+
+    const employeePermissions = await db
+      .select({
+        employeeId: employeePermissionTable.employeeId,
+        permissionId: permissionTable.id,
+        resource: permissionTable.resource,
+        action: permissionTable.action,
+        effect: employeePermissionTable.effect,
+      })
+      .from(employeePermissionTable)
+      .leftJoin(
+        permissionTable,
+        eq(permissionTable.id, employeePermissionTable.permissionId),
+      )
+      .where(inArray(employeePermissionTable.employeeId, employeeIds));
+
+    const deptPermMap = new Map();
+    departmentPermissions.forEach((p) => {
+      if (!deptPermMap.has(p.departmentId)) deptPermMap.set(p.departmentId, []);
+      deptPermMap.get(p.departmentId).push({
+        id: p.permissionId,
+        resource: p.resource,
+        action: p.action,
+        source: 'DEPARTMENT',
+      });
+    });
+
+    const empPermMap = new Map();
+    employeePermissions.forEach((p) => {
+      if (!empPermMap.has(p.employeeId)) empPermMap.set(p.employeeId, []);
+      empPermMap.get(p.employeeId).push({
+        id: p.permissionId,
+        resource: p.resource,
+        action: p.action,
+        effect: p.effect,
+        source: 'EMPLOYEE',
+      });
+    });
+
+    const data = rows.map((e) => ({
+      ...e,
+      profilePictureUrl: e.profilePicture
+        ? s3Service.buildS3Url(e.profilePicture)
+        : null,
+      departmentPermissions: deptPermMap.get(e.departmentId) || [],
+      employeePermissions: empPermMap.get(e.id) || [],
+    }));
 
     return {
-      data: data.map((e) => ({
-        ...e,
-        profilePictureUrl: e.profilePicture
-          ? s3Service.buildS3Url(e.profilePicture)
-          : null,
-      })),
+      data,
       meta: {
+        total,
         page,
         limit,
-        total,
+        stats,
         totalPages: Math.ceil(total / limit),
       },
     };
@@ -370,9 +441,8 @@ class EmployeeService {
     return true;
   }
 
-  //  ASSIGN PERMISSIONS (TRANSACTION SAFE)
   static async assignPermissions(employeeId, permissions, actor) {
-    if (!actor?.tenantId || !actor?.id) {
+    if (!actor?.tenantId || !actor?.id || !actor?.type) {
       throw ApiError.unauthorized('Invalid actor context');
     }
 
@@ -380,22 +450,21 @@ class EmployeeService {
       throw ApiError.badRequest('Permissions array is required');
     }
 
-    const [employee] = await db
+    const [target] = await db
       .select({
         id: employeesTable.id,
         tenantId: employeesTable.tenantId,
       })
       .from(employeesTable)
-      .where(
-        and(
-          eq(employeesTable.id, employeeId),
-          eq(employeesTable.tenantId, actor.tenantId),
-        ),
-      )
+      .where(eq(employeesTable.id, employeeId))
       .limit(1);
 
-    if (!employee) {
-      throw ApiError.notFound('Employee not found');
+    if (!target) throw ApiError.notFound('Employee not found');
+
+    if (target.tenantId !== actor.tenantId) {
+      throw ApiError.forbidden(
+        'Cross-tenant permission modification not allowed',
+      );
     }
 
     if (actor.type === 'EMPLOYEE' && actor.id === employeeId) {
@@ -403,6 +472,10 @@ class EmployeeService {
     }
 
     const permissionIds = permissions.map((p) => p.permissionId);
+
+    if (permissionIds.some((id) => !id)) {
+      throw ApiError.badRequest('Invalid permission payload');
+    }
 
     const existingPermissions = await db
       .select({ id: permissionTable.id })
@@ -434,7 +507,6 @@ class EmployeeService {
 
       await tx.insert(employeePermissionTable).values(
         permissions.map((p) => ({
-          id: randomUUID(),
           employeeId,
           permissionId: p.permissionId,
           effect: p.effect ?? 'ALLOW',
