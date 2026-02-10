@@ -308,8 +308,22 @@ class RoleService {
       );
     }
 
+    const permissionKeys = await db
+      .select({
+        id: permissionTable.id,
+        key: sql`CONCAT(${permissionTable.resource}, '.', ${permissionTable.action})`,
+      })
+      .from(permissionTable)
+      .where(inArray(permissionTable.id, existingIds));
+
+    const idToKeyMap = new Map(permissionKeys.map((p) => [p.id, p.key]));
+
     if (!actorPerms.includes('*')) {
-      const forbidden = existingIds.filter((pid) => !actorPerms.includes(pid));
+      const forbidden = existingIds.filter((pid) => {
+        const key = idToKeyMap.get(pid);
+        return !actorPerms.includes(key);
+      });
+
       if (forbidden.length) {
         throw ApiError.forbidden(
           'You cannot assign permissions you do not have',
@@ -317,19 +331,21 @@ class RoleService {
       }
     }
 
-    await db
-      .delete(rolePermissionTable)
-      .where(eq(rolePermissionTable.roleId, roleId));
+    await db.transaction(async (trx) => {
+      await trx
+        .delete(rolePermissionTable)
+        .where(eq(rolePermissionTable.roleId, roleId));
 
-    if (!existingIds.length) return;
+      if (!existingIds.length) return;
 
-    await db.insert(rolePermissionTable).values(
-      existingIds.map((pid) => ({
-        id: crypto.randomUUID(),
-        roleId,
-        permissionId: pid,
-      })),
-    );
+      await trx.insert(rolePermissionTable).values(
+        existingIds.map((pid) => ({
+          id: crypto.randomUUID(),
+          roleId,
+          permissionId: pid,
+        })),
+      );
+    });
   }
 }
 
