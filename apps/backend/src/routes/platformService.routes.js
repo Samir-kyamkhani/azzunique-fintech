@@ -29,9 +29,7 @@ router.post(
   '/features',
   validate({ body: createPlatformServiceFeatureSchema }),
   PSF.createPlatformServiceFeature,
-);
-
-router.get('/features', PSF.listPlatformServicesFeatures);
+); //done
 
 router.patch(
   '/features/:id',
@@ -40,23 +38,23 @@ router.patch(
     body: updatePlatformServiceFeatureSchema,
   }),
   PSF.updatePlatformServiceFeature,
-);
+); //done
 
 router.delete(
   '/features/:id',
   validate({ params: platformServiceFeatureIdParamSchema }),
   PSF.deletePlatformServiceFeature,
-);
+); //done
 
 // ================= PLATFORM SERVICE PROVIDERS =================
 router.post(
   '/providers',
   validate({ body: assignPlatformServiceProviderSchema }),
   PSP.assignPlatformServiceProvider,
-);
+); //done
 
 // ================= NESTED SERVICE ROUTES =================
-router.get('/:serviceId/features', PSF.listPlatformServiceFeatures);
+router.get('/:serviceId/features', PSF.listPlatformServiceFeatures); //done
 
 router.delete('/:serviceId/providers', PSP.disablePlatformServiceProvider);
 
@@ -65,15 +63,15 @@ router.post(
   '/',
   validate({ body: createPlatformServiceSchema }),
   PSC.createPlatformService,
-);
+); //done
 
-router.get('/', PSC.listPlatformServices);
+router.get('/', PSC.listPlatformServices); //done
 
 router.get(
   '/:id',
   validate({ params: platformServiceIdParamSchema }),
   PSC.getPlatformService,
-);
+); //done
 
 router.patch(
   '/:id',
@@ -82,12 +80,12 @@ router.patch(
     body: updatePlatformServiceSchema,
   }),
   PSC.updatePlatformService,
-);
+); //done
 
 router.delete(
   '/:id',
   validate({ params: platformServiceIdParamSchema }),
   PSC.deletePlatformService,
-);
+); //done
 
 export default router;

@@ -1,62 +1,133 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/apiClient";
 
 /* ================= PROVIDERS ================= */
 
+// ✅ List Providers by Platform Service
 export const useServiceProviders = (serviceId) =>
   useQuery({
     queryKey: ["service-providers", serviceId],
-    queryFn: () =>
-      apiClient(`/platform-providers/services/${serviceId}`),
+    queryFn: async () => {
+      const res = await apiClient(
+        `/platform-providers/by-service/${serviceId}`,
+      );
+      return res.data;
+    },
     enabled: !!serviceId,
   });
 
-export const useCreateServiceProvider = () =>
-  useMutation({
-    mutationFn: (payload) =>
-      apiClient("/platform-providers", {
+// ✅ Create Provider
+export const useCreateServiceProvider = () => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload) => {
+      const res = await apiClient("/platform-providers", {
         method: "POST",
         body: JSON.stringify(payload),
-      }),
-  });
+      });
+      return res.data;
+    },
 
-export const useUpdateServiceProvider = (id) =>
-  useMutation({
-    mutationFn: (payload) =>
-      apiClient(`/platform-providers/${id}`, {
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["service-providers"] });
+    },
+  });
+};
+
+// ✅ Update Provider
+export const useUpdateServiceProvider = () => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, payload }) => {
+      const res = await apiClient(`/platform-providers/${id}`, {
         method: "PATCH",
         body: JSON.stringify(payload),
-      }),
+      });
+      return res.data;
+    },
+
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["service-providers"] });
+    },
   });
+};
 
-export const useDeleteServiceProvider = () =>
-  useMutation({
-    mutationFn: (id) =>
-      apiClient(`/platform-providers/${id}`, { method: "DELETE" }),
+// ✅ Delete Provider
+export const useDeleteServiceProvider = () => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id) => {
+      const res = await apiClient(`/platform-providers/${id}`, {
+        method: "DELETE",
+      });
+      return res.data;
+    },
+
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["service-providers"] });
+    },
   });
+};
 
-/* ================= PROVIDER FEATURES ================= */
+/* ================= PROVIDERS FEATURES ================= */
 
-export const useMapServiceProviderFeature = () =>
-  useMutation({
-    mutationFn: (payload) =>
-      apiClient("/platform-providers/features", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      }),
+// ✅ Map Feature To Provider
+export const useMapServiceProviderFeature = () => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ providerId, payload }) => {
+      const res = await apiClient(
+        `/platform-providers/${providerId}/features`,
+        {
+          method: "POST",
+          body: JSON.stringify(payload),
+        },
+      );
+      return res.data;
+    },
+
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({
+        queryKey: ["provider-features", variables.providerId],
+      });
+    },
   });
+};
 
+// ✅ List Provider Features
 export const useServiceProviderFeatures = (providerId) =>
   useQuery({
     queryKey: ["provider-features", providerId],
-    queryFn: () => apiClient(`/platform-providers/${providerId}/features`),
+    queryFn: async () => {
+      const res = await apiClient(`/platform-providers/${providerId}/features`);
+      return res.data;
+    },
     enabled: !!providerId,
   });
 
-export const useUnmapServiceProviderFeature = () =>
-  useMutation({
-    mutationFn: (id) =>
-      apiClient(`/platform-providers/features/${id}`, {
-        method: "DELETE",
-      }),
+// ✅ Unmap Feature
+export const useUnmapServiceProviderFeature = () => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ providerId, id }) => {
+      const res = await apiClient(
+        `/platform-providers/${providerId}/features/${id}`,
+        {
+          method: "DELETE",
+        },
+      );
+      return res.data;
+    },
+
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({
+        queryKey: ["provider-features", variables.providerId],
+      });
+    },
   });
+};

@@ -15,12 +15,17 @@ import {
   useUpdatePlatformService,
   useDeletePlatformService,
   useCreatePlatformServiceFeature,
-  useUpdatePlatformServiceFeature,
+  useAssignPlatformServiceProvider,
+  useDisablePlatformServiceProvider,
 } from "@/hooks/usePlatformService";
 
 import { setPlatformServices } from "@/store/platformServiceSlice";
 import { toast } from "@/lib/toast";
 import { useRouter } from "next/navigation";
+import AssignPlatformServiceProviderModal from "../modals/AssignPlatformServiceProviderModal";
+import { useServiceProviders } from "@/hooks/useServiceProvider";
+import { Ban } from "lucide-react";
+import { Link } from "lucide-react";
 
 export default function PlatformServicesClient() {
   const dispatch = useDispatch();
@@ -29,6 +34,8 @@ export default function PlatformServicesClient() {
   const [openModal, setOpenModal] = useState(false);
   const [editingData, setEditingData] = useState(null);
   const [forcedType, setForcedType] = useState(null);
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
+  const [selectedServiceId, setSelectedServiceId] = useState(null);
 
   /* ================= SERVICES ================= */
 
@@ -55,8 +62,18 @@ export default function PlatformServicesClient() {
   const { mutate: createFeature, isPending: creatingFeature } =
     useCreatePlatformServiceFeature();
 
-  const { mutate: updateFeature, isPending: updatingFeature } =
-    useUpdatePlatformServiceFeature();
+  /* ================= PLATFORM SERVICE PROVIDERS ================= */
+
+  const { mutate: assignProvider, isPending: assigningProvider } =
+    useAssignPlatformServiceProvider();
+
+  const { mutate: disableProvider, isPending: disablingProvider } =
+    useDisablePlatformServiceProvider();
+
+  /* ================= PROVIDERS LIST ================= */
+
+  const { data: providers = [], isLoading: providersLoading } =
+    useServiceProviders(selectedServiceId);
 
   /* ================= HANDLERS ================= */
 
@@ -77,14 +94,26 @@ export default function PlatformServicesClient() {
   };
 
   const handleFeatureSubmit = (payload, setError) => {
-    const action = editingData ? updateFeature : createFeature;
+    const action = createFeature;
 
-    action(editingData ? { id: editingData.id, payload } : payload, {
+    action(payload, {
       onSuccess: () => {
-        toast.success(editingData ? "Feature Updated" : "Feature Created");
+        toast.success("Feature Created");
         setOpenModal(false);
-        setEditingData(null);
         setForcedType(null);
+      },
+      onError: (err) => {
+        setError("root", { message: err.message });
+      },
+    });
+  };
+
+  const handleAssignProvider = (payload, setError) => {
+    assignProvider(payload, {
+      onSuccess: () => {
+        toast.success("Provider Assigned");
+        setAssignModalOpen(false);
+        setSelectedServiceId(null);
       },
       onError: (err) => {
         setError("root", { message: err.message });
@@ -135,15 +164,29 @@ export default function PlatformServicesClient() {
             onSuccess: () => toast.success("Service Deleted"),
           })
         }
-        // extraActions={[
-        //   {
-        //     label: "Features",
-        //     icon: Layers,
-        //     onClick: (row) => {
-        //       router.push(`/dashboard/platform/services/${row.id}`);
-        //     },
-        //   },
-        // ]}
+        extraActions={[
+          {
+            label: "Assign Provider",
+            icon: Link,
+            onClick: (row) => {
+              setSelectedServiceId(row.id);
+              setAssignModalOpen(true);
+            },
+          },
+          {
+            label: "Disable Provider",
+            icon: Ban,
+            onClick: (row) => {
+              disableProvider(
+                { serviceId: row.id },
+                {
+                  onSuccess: () => toast.success("Provider Disabled"),
+                  onError: (err) => toast.error(err.message),
+                },
+              );
+            },
+          },
+        ]}
       />
 
       <UnifiedPlatformServiceModal
@@ -158,7 +201,16 @@ export default function PlatformServicesClient() {
         services={data}
         onSubmitService={handleServiceSubmit}
         onSubmitFeature={handleFeatureSubmit}
-        isPending={creating || updating || creatingFeature || updatingFeature}
+        isPending={creating || updating || creatingFeature}
+      />
+
+      <AssignPlatformServiceProviderModal
+        open={assignModalOpen}
+        onClose={() => setAssignModalOpen(false)}
+        serviceId={selectedServiceId}
+        providers={providers}
+        onSubmit={handleAssignProvider}
+        isPending={assigningProvider}
       />
     </>
   );
