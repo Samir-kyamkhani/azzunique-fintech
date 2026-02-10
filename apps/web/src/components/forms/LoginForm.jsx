@@ -14,6 +14,7 @@ export default function LoginForm({ login, isPending }) {
     register,
     handleSubmit,
     setError,
+    setValue,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -29,6 +30,7 @@ export default function LoginForm({ login, isPending }) {
 
   const handleTabClick = (tabValue) => {
     setActiveTab(tabValue);
+    setValue("type", tabValue);
   };
 
   return (

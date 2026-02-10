@@ -96,7 +96,7 @@ class EmployeeService {
     const passwordHash = encrypt(password);
 
     const employeeId = randomUUID();
-    const prefix = generatePrefix(department.departmentCode);
+    const prefix = generatePrefix('EMP');
 
     const employeePayload = {
       id: employeeId,

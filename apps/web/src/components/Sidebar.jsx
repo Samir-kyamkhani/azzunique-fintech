@@ -220,20 +220,21 @@ const Sidebar = () => {
           </div>
         </div>
       </div>
-
-      <div className="p-4">
-        <div className="bg-muted rounded-border p-3 border border-border">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">
-              Wallet Balance
-            </span>
-            <Wallet className="h-4 w-4 text-muted-foreground" />
+      {currentUser?.type !== "EMPLOYEE" && (
+        <div className="p-4">
+          <div className="bg-muted rounded-border p-3 border border-border">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">
+                Wallet Balance
+              </span>
+              <Wallet className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <p className="text-lg font-bold mt-1 text-primary">
+              ₹{currentUser?.wallet?.balance}
+            </p>
           </div>
-          <p className="text-lg font-bold mt-1 text-primary">
-            ₹{currentUser?.wallet?.balance}
-          </p>
         </div>
-      </div>
+      )}
 
       <div className="flex-1 px-4 pb-4 overflow-y-auto">
         {menuSections.map((section) => (

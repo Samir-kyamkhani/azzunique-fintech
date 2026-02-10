@@ -58,7 +58,7 @@ const DashboardNavbar = () => {
     email: currentUser?.user.email,
     role: "Business Admin",
     avatar: "",
-    balance: currentUser?.wallet.balance,
+    balance: currentUser?.type !== "EMPLOYEE" && currentUser?.wallet.balance,
   };
 
   const quickLinks = [
@@ -151,17 +151,19 @@ const DashboardNavbar = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="mt-4 p-3 bg-accent rounded-border">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">
-                          Wallet Balance
-                        </span>
-                        <Wallet className="h-4 w-4 text-muted-foreground" />
+                    {currentUser?.type !== "EMPLOYEE" && (
+                      <div className="mt-4 p-3 bg-accent rounded-border">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">
+                            Wallet Balance
+                          </span>
+                          <Wallet className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <p className="text-lg font-bold text-popover-foreground mt-1">
+                          ₹{userData?.balance?.toLocaleString()}
+                        </p>
                       </div>
-                      <p className="text-lg font-bold text-popover-foreground mt-1">
-                        ₹{userData?.balance?.toLocaleString()}
-                      </p>
-                    </div>
+                    )}
                   </div>
 
                   {/* Quick Actions */}

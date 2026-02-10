@@ -8,6 +8,9 @@ import {
   permissionTable,
   userPermissionTable,
   rolePermissionTable,
+  departmentPermissionTable,
+  employeePermissionTable,
+  departmentTable,
 } from '../models/core/index.js';
 import { and, eq } from 'drizzle-orm';
 import { generateTokens, hashToken, verifyPassword } from '../lib/lib.js';
@@ -170,6 +173,9 @@ class AuthService {
         employeeStatus: employeesTable.employeeStatus,
         tenantId: employeesTable.tenantId,
 
+        departmentName: departmentTable.departmentName,
+        departmentCode: departmentTable.departmentCode,
+
         tenantName: tenantsTable.tenantName,
         tenantNumber: tenantsTable.tenantNumber,
         tenantEmail: tenantsTable.tenantEmail,
@@ -181,6 +187,10 @@ class AuthService {
       })
       .from(employeesTable)
       .leftJoin(tenantsTable, eq(employeesTable.tenantId, tenantsTable.id))
+      .leftJoin(
+        departmentTable,
+        eq(employeesTable.departmentId, departmentTable.id),
+      )
       .where(eq(employeesTable.id, userId))
       .limit(1);
 
@@ -188,9 +198,16 @@ class AuthService {
       throw ApiError.unauthorized('Session expired');
     }
 
+    const departmentPermissions = await this.getDepartmentPermissions(
+      employee.departmentId,
+    );
+
+    const employeePermissions = await this.getEmployeePermissions(employee.id);
+
     return {
       type: 'EMPLOYEE',
-      employee: {
+
+      user: {
         id: employee.id,
         employeeNumber: employee.employeeNumber,
         firstName: employee.firstName,
@@ -198,7 +215,19 @@ class AuthService {
         email: employee.email,
         departmentId: employee.departmentId,
       },
+
+      role: {
+        id: employee.departmentId,
+        roleName: employee.departmentName,
+        roleCode: employee.departmentCode,
+      },
+
       tenant: this.tenantShape(employee),
+
+      permissions: {
+        role: departmentPermissions,
+        user: employeePermissions,
+      },
     };
   }
 
@@ -350,6 +379,52 @@ class AuthService {
       resource: p.resource,
       action: p.action,
       source: 'ROLE',
+    }));
+  }
+
+  async getDepartmentPermissions(departmentId) {
+    const rows = await db
+      .select({
+        id: permissionTable.id,
+        resource: permissionTable.resource,
+        action: permissionTable.action,
+      })
+      .from(departmentPermissionTable)
+      .leftJoin(
+        permissionTable,
+        eq(permissionTable.id, departmentPermissionTable.permissionId),
+      )
+      .where(eq(departmentPermissionTable.departmentId, departmentId));
+
+    return rows.map((p) => ({
+      id: p.id,
+      resource: p.resource,
+      action: p.action,
+      source: 'DEPARTMENT',
+    }));
+  }
+
+  async getEmployeePermissions(employeeId) {
+    const rows = await db
+      .select({
+        id: permissionTable.id,
+        resource: permissionTable.resource,
+        action: permissionTable.action,
+        effect: employeePermissionTable.effect,
+      })
+      .from(employeePermissionTable)
+      .leftJoin(
+        permissionTable,
+        eq(permissionTable.id, employeePermissionTable.permissionId),
+      )
+      .where(eq(employeePermissionTable.employeeId, employeeId));
+
+    return rows.map((p) => ({
+      id: p.id,
+      resource: p.resource,
+      action: p.action,
+      effect: p.effect,
+      source: 'EMPLOYEE',
     }));
   }
 
