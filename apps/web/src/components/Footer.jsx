@@ -13,7 +13,6 @@ import {
 import Button from "@/components/ui/Button";
 import { useWebsite } from "@/hooks/useTenantWebsite";
 
-/* ================= DEFAULT FALLBACK PAGES ================= */
 const DEFAULT_FOOTER_PAGES = {
   company: [
     { title: "About", slug: "about-us" },
@@ -33,12 +32,9 @@ const DEFAULT_FOOTER_PAGES = {
 
 export default function Footer() {
   const website = useWebsite();
-
   if (!website) return null;
 
-  /* ================= SOCIAL ================= */
   const social = website.socialLinks || {};
-
   const socialItems = [
     { icon: Instagram, href: social.instagram, label: "Instagram" },
     { icon: Facebook, href: social.facebook, label: "Facebook" },
@@ -47,35 +43,34 @@ export default function Footer() {
     { icon: Youtube, href: social.youtube, label: "YouTube" },
   ].filter((s) => s.href);
 
-  /* ================= PAGE MERGE SYSTEM ================= */
   const tenantPages = website.footerPages || {};
-
   const companyPages = tenantPages.company || DEFAULT_FOOTER_PAGES.company;
   const resourcePages = tenantPages.resources || DEFAULT_FOOTER_PAGES.resources;
   const legalPages = tenantPages.legal || DEFAULT_FOOTER_PAGES.legal;
 
   return (
-    <footer className="bg-card text-card-foreground border-t border-border">
-      <div className="px-8">
-        <div className="py-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+    <footer className="bg-card border-t border-border text-card-foreground">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* TOP SECTION */}
+        <div className="py-12 sm:py-16 grid gap-10 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
-          <div className="space-y-4 flex flex-col">
-            <h2 className="text-2xl font-bold text-foreground">
+          <div className="space-y-4">
+            <h2 className="text-xl sm:text-2xl font-bold">
               {website.brandName}
             </h2>
             <p className="text-muted-foreground text-sm leading-relaxed">
               {website.tagLine}
             </p>
 
-            <div className="space-y-2 text-sm">
+            <div className="space-y-2 text-sm text-muted-foreground">
               {website.supportPhone && (
-                <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="flex items-center gap-2">
                   <Phone className="h-4 w-4" />
                   {website.supportPhone}
                 </div>
               )}
               {website.supportEmail && (
-                <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4" />
                   {website.supportEmail}
                 </div>
@@ -84,43 +79,16 @@ export default function Footer() {
           </div>
 
           {/* Company */}
-          <div className="space-y-4 flex flex-col justify-start items-start">
-            <h3 className="font-semibold text-foreground pl-3">Company</h3>
-            <div className="flex flex-col items-start text-sm">
-              {companyPages.map((page) => (
-                <Button
-                  key={page.slug}
-                  href={`/${page.slug}`}
-                  variant="link"
-                  className="p-0 h-auto text-muted-foreground"
-                >
-                  {page.title}
-                </Button>
-              ))}
-            </div>
-          </div>
+          <FooterColumn title="Company" pages={companyPages} />
 
           {/* Resources */}
-          <div className="space-y-4 flex flex-col justify-start items-start">
-            <h3 className="font-semibold text-foreground pl-3">Resources</h3>
-            <div className="flex flex-col items-start text-sm">
-              {resourcePages.map((page) => (
-                <Button
-                  key={page.slug}
-                  href={`/${page.slug}`}
-                  variant="link"
-                  className="-p-3 h-auto text-muted-foreground"
-                >
-                  {page.title}
-                </Button>
-              ))}
-            </div>
-          </div>
+          <FooterColumn title="Resources" pages={resourcePages} />
 
           {/* Social */}
-          <div className="space-y-4 flex flex-col items-start lg:items-end">
-            <h3 className="font-semibold text-foreground">Connect</h3>
-            <div className="flex gap-3">
+          <div className="space-y-4 sm:col-span-2 lg:col-span-1">
+            <h3 className="font-semibold">Connect</h3>
+
+            <div className="flex flex-wrap gap-3">
               {socialItems.map((s) => (
                 <Button
                   key={s.label}
@@ -135,7 +103,7 @@ export default function Footer() {
             </div>
 
             {website.brandName?.toLowerCase().includes("azzunique") && (
-              <div className="flex items-center gap-2 text-muted-foreground text-sm lg:justify-end">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm">
                 <Globe className="h-4 w-4" />
                 Multi-tenant SaaS Platform
               </div>
@@ -143,10 +111,11 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Bottom Legal */}
-        <div className="py-8 border-t border-border text-center text-muted-foreground text-sm flex flex-col items-center gap-4">
-          © 2026 {website.brandName}. All rights reserved.
-          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs">
+        {/* BOTTOM LEGAL */}
+        <div className="border-t border-border py-6 text-center text-muted-foreground text-xs sm:text-sm space-y-3">
+          <p>© 2026 {website.brandName}. All rights reserved.</p>
+
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
             {legalPages.map((page) => (
               <Button
                 key={page.slug}
@@ -161,5 +130,26 @@ export default function Footer() {
         </div>
       </div>
     </footer>
+  );
+}
+
+/* Reusable column */
+function FooterColumn({ title, pages }) {
+  return (
+    <div className="space-y-4">
+      <h3 className="font-semibold">{title}</h3>
+      <div className="flex flex-col gap-2 text-sm">
+        {pages.map((page) => (
+          <Button
+            key={page.slug}
+            href={`/${page.slug}`}
+            variant="link"
+            className="p-0 h-auto text-muted-foreground"
+          >
+            {page.title}
+          </Button>
+        ))}
+      </div>
+    </div>
   );
 }

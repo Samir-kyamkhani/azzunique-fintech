@@ -25,53 +25,54 @@ const testimonials = [
 export default function TestimonialSection() {
   const [index, setIndex] = useState(0);
 
-  const next = () => setIndex((prev) => (prev + 1) % testimonials.length);
+  const next = () => setIndex((p) => (p + 1) % testimonials.length);
   const prev = () =>
-    setIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+    setIndex((p) => (p - 1 + testimonials.length) % testimonials.length);
 
   const t = testimonials[index];
 
   return (
-    <section className="py-28 text-foreground">
-      <div className="container mx-auto px-6 text-center">
+    <section className="py-16 sm:py-20 lg:py-28 text-foreground">
+      <div className="container mx-auto px-4 sm:px-6 text-center">
         <motion.h2
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-5xl font-bold mb-16"
+          className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-12 lg:mb-16"
         >
           Client testimonials and success stories
         </motion.h2>
 
-        <div className="rounded-2xl shadow-lg-border p-12 flex flex-col lg:flex-row items-center gap-10 relative border border-border">
+        <div className="relative rounded-2xl border border-border bg-card p-6 sm:p-8 lg:p-12 shadow-lg-border flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
           {/* IMAGE */}
           <motion.div
             key={t.image}
             initial={{ opacity: 0, x: -40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4 }}
+            className="shrink-0"
           >
             <Image
               width={200}
               height={200}
               alt="client"
               src={t.image}
-              className="w-48 h-48 object-cover rounded-xl shadow-md-border"
+              className="w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48 object-cover rounded-xl shadow-md-border"
             />
           </motion.div>
 
           {/* TEXT */}
-          <div className="text-left flex-1">
+          <div className="flex-1 text-center lg:text-left">
             <motion.h4
               key={t.name}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-xl font-semibold"
+              className="text-lg sm:text-xl font-semibold"
             >
               {t.name}
             </motion.h4>
 
-            <p className="text-foreground/70 text-sm mb-6">{t.role}</p>
+            <p className="text-foreground/70 text-sm mb-4">{t.role}</p>
 
             <AnimatePresence mode="wait">
               <motion.p
@@ -80,7 +81,7 @@ export default function TestimonialSection() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
-                className="text-2xl leading-relaxed"
+                className="text-base sm:text-lg lg:text-2xl leading-relaxed"
               >
                 {t.text}
               </motion.p>
@@ -88,7 +89,7 @@ export default function TestimonialSection() {
           </div>
 
           {/* NAVIGATION */}
-          <div className="absolute top-6 right-6 flex gap-3">
+          <div className="flex lg:flex-col gap-3 lg:absolute lg:right-6 lg:top-1/2 lg:-translate-y-1/2 mt-4 lg:mt-0">
             <button
               onClick={prev}
               className="bg-[#083b44] text-white p-3 rounded-lg hover:scale-110 transition"
