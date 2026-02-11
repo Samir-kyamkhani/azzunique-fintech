@@ -50,7 +50,7 @@ export default function Footer() {
 
   return (
     <footer className="bg-card border-t border-border text-card-foreground">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="mx-32 px-4 sm:px-6 lg:px-8">
         {/* TOP SECTION */}
         <div className="py-12 sm:py-16 grid gap-10 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
@@ -136,9 +136,9 @@ export default function Footer() {
 /* Reusable column */
 function FooterColumn({ title, pages }) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 flex flex-col">
       <h3 className="font-semibold">{title}</h3>
-      <div className="flex flex-col gap-2 text-sm">
+      <div className="flex flex-col gap-2 text-sm -ml-60">
         {pages.map((page) => (
           <Button
             key={page.slug}

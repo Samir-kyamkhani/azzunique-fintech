@@ -43,7 +43,9 @@ export default function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-gradient-theme ">
+    <header
+      className={`sticky top-0 z-50  sm:mx-32 mt-6 ${"bg-white"} rounded-2xl`}
+    >
       <div className="px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center">
