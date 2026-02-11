@@ -46,6 +46,10 @@ export default function TenantBootstrap({ children }) {
     if (website.secondaryColor) {
       root.style.setProperty("--secondary", website.secondaryColor);
     }
+
+    if (!document.cookie.includes("tenantWebsite=1")) {
+      document.cookie = "tenantWebsite=1; path=/; max-age=86400; samesite=lax";
+    }
   }, [website, dispatch]);
 
   if (isLoading) return null;
