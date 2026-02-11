@@ -95,7 +95,7 @@ export default function Header() {
             </>
           ) : (
             <Button
-              href="/register"
+              href="/login"
               className="bg-primary-foreground text-primary hover:bg-primary-foreground/90"
             >
               Get Started
@@ -161,7 +161,7 @@ export default function Header() {
                 </>
               ) : (
                 <Button
-                  href="/register"
+                  href="/login"
                   className="w-full"
                   onClick={() => setMobileOpen(false)}
                 >

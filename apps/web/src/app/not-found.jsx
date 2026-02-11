@@ -2,8 +2,10 @@
 
 import Button from "@/components/ui/Button";
 import { AlertTriangle, Home, ArrowLeft } from "lucide-react";
+import { useSelector } from "react-redux";
 
 export default function NotFound() {
+  const { isAuthenticated } = useSelector((s) => s.auth);
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-primary px-4">
       <div className="relative glass rounded-lg-border shadow-lg-border p-10 max-w-md w-full text-center border border-border/60">
@@ -34,16 +36,17 @@ export default function NotFound() {
 
         {/* Actions - Using Button Component */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Button
-            href="/dashboard"
-            variant="default"
-            icon={Home}
-            iconPosition="left"
-            size="default"
-          >
-            Go to Dashboard
-          </Button>
-
+          {isAuthenticated && (
+            <Button
+              href="/dashboard"
+              variant="default"
+              icon={Home}
+              iconPosition="left"
+              size="default"
+            >
+              Go to Dashboard
+            </Button>
+          )}
           <Button
             href="/"
             variant="secondary"
