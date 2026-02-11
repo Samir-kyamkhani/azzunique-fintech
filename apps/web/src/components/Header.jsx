@@ -17,7 +17,7 @@ export default function Header() {
     { ssr: false },
   );
 
-  const { mutate: logoutMutate, } = useLogout();
+  const { mutate: logoutMutate } = useLogout();
   const dispatch = useDispatch();
   const router = useRouter();
 
@@ -108,15 +108,15 @@ export default function Header() {
               </>
             ) : (
               <div className="flex items-center space-x-3">
-                <Button
+                {/* <Button
                   href="/login"
                   variant="secondary"
                   className="text-primary-foreground border border-primary-foreground/30 hover:bg-primary-foreground/10"
                 >
                   Sign In
-                </Button>
+                </Button> */}
                 <Button
-                  href="/register"
+                  href="/login"
                   className="bg-primary-foreground text-primary hover:bg-primary-foreground/90"
                 >
                   Get Started

@@ -9,14 +9,17 @@ export function proxy(request) {
   const isLogin = pathname.startsWith("/login");
   const isDashboard = pathname.startsWith("/dashboard");
 
-  // No website exists
+  // 🔒 Protect dashboard ALWAYS
+  if (isDashboard && !token) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  // No website setup yet
   if (!website) {
-    // Not logged → login page
     if (!token && !isLogin) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
 
-    // Logged in → dashboard (setup area)
     if (token && !isDashboard) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
@@ -24,8 +27,7 @@ export function proxy(request) {
     return NextResponse.next();
   }
 
-  // Website exists → allow normal app flow
-  // Only block login page if user already logged in
+  // Website exists
   if (website && token && isLogin) {
     return NextResponse.redirect(new URL("/", request.url));
   }
