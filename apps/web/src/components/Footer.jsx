@@ -16,19 +16,17 @@ import { useWebsite } from "@/hooks/useTenantWebsite";
 /* ================= DEFAULT FALLBACK PAGES ================= */
 const DEFAULT_FOOTER_PAGES = {
   company: [
-    { title: "About", slug: "about" },
+    { title: "About", slug: "about-us" },
     { title: "Contact", slug: "contact" },
   ],
   resources: [
-    { title: "Help Center", slug: "help" },
+    { title: "Help Center", slug: "help-center" },
     { title: "Security", slug: "security" },
-    { title: "System Status", slug: "status" },
   ],
   legal: [
-    { title: "Privacy Policy", slug: "privacy" },
+    { title: "Privacy Policy", slug: "privacy-policy" },
     { title: "Terms", slug: "terms" },
     { title: "Refund Policy", slug: "refund-policy" },
-    { title: "AML Policy", slug: "aml-policy" },
     { title: "KYC Policy", slug: "kyc-policy" },
   ],
 };

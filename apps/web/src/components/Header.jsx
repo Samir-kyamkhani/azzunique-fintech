@@ -1,15 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import {
-  Bell,
-  User,
-  LogOut,
-  Home,
-  Users,
-  Building,
-  Wallet,
-} from "lucide-react";
+import { Home, Users, Building } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { logout as logoutAction } from "@/store/authSlice";
 import { useRouter } from "next/navigation";
@@ -19,7 +10,6 @@ import { useLogout } from "@/hooks/useAuth";
 import dynamic from "next/dynamic";
 import { useWebsite } from "@/hooks/useTenantWebsite";
 import Image from "next/image";
-import { cn } from "@/lib/utils";
 
 export default function Header() {
   const ThemeToggle = dynamic(
@@ -27,12 +17,11 @@ export default function Header() {
     { ssr: false },
   );
 
-  const { mutate: logoutMutate, isPending } = useLogout();
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const { mutate: logoutMutate, } = useLogout();
   const dispatch = useDispatch();
   const router = useRouter();
 
-  const { isAuthenticated, user } = useSelector((state) => state.auth || {});
+  const { isAuthenticated } = useSelector((state) => state.auth || {});
 
   const handleLogout = () => {
     logoutMutate(undefined, {

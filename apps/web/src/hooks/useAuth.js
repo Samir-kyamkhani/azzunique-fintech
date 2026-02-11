@@ -16,6 +16,8 @@ export const useMe = () =>
     queryFn: () => apiClient("/auth/me"),
     staleTime: 24 * 60 * 60 * 1000,
     retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
 export const useLogout = () =>
