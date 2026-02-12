@@ -1,13 +1,18 @@
 import { eventBus } from './events.js';
 import { EVENTS } from './events.constants.js';
-import { sendMail } from '../email/mail.service.js';
+import { db } from '../database/core/core-db.js';
+import { randomUUID } from 'crypto';
+import { mailQueueTable } from '../models/core/index.js';
 
 eventBus.on(EVENTS.MAIL_SEND, async (payload) => {
-  try {
-    console.log('📨 MAIL_SEND received', payload.to);
-    await sendMail(payload);
-    console.log('✅ Mail sent to:', payload.to);
-  } catch (err) {
-    console.error('❌ Mail failed:', err.message);
-  }
+  await db.insert(mailQueueTable).values({
+    id: randomUUID(),
+    tenantId: payload.tenantId,
+    to: payload.to,
+    subject: payload.subject,
+    html: payload.html,
+    status: 'PENDING',
+    attempts: 0,
+    nextAttemptAt: new Date(),
+  });
 });

@@ -100,10 +100,15 @@ export default function TenantDomainClient() {
         setOpenModal(false);
         toast.success("Domain configuration saved");
       },
-      onError: (err) =>
-        setError("root", {
-          message: err.message || "Failed to save domain",
-        }),
+      onError: (err) => {
+        if (err?.type === "FIELD") {
+          err.errors.forEach(({ field, message }) =>
+            setError(field, { message }),
+          );
+          return;
+        }
+        setError("root", { message: err?.message });
+      },
     });
   };
 
@@ -152,16 +157,17 @@ export default function TenantDomainClient() {
               Refresh
             </Button>
           )}
+          {!tenantDomain && canCreateDomain && (
+            <Button icon={Globe} onClick={() => setOpenModal(true)}>
+              Add Domain
+            </Button>
+          )}
 
-          {(!tenantDomain && canCreateDomain) ||
-            (tenantDomain && canEditDomain && (
-              <Button
-                icon={tenantDomain ? Edit : Globe}
-                onClick={() => setOpenModal(true)}
-              >
-                {tenantDomain ? "Edit Domain" : "Add Domain"}
-              </Button>
-            ))}
+          {tenantDomain && canEditDomain && (
+            <Button icon={Edit} onClick={() => setOpenModal(true)}>
+              Edit Domain
+            </Button>
+          )}
         </div>
       </div>
 

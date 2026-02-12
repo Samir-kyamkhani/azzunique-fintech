@@ -46,19 +46,17 @@ export default function TenantBootstrap({ children }) {
     if (website.secondaryColor) {
       root.style.setProperty("--secondary", website.secondaryColor);
     }
-
-    if (!document.cookie.includes("tenantWebsite=1")) {
-      document.cookie = "tenantWebsite=1; path=/; max-age=86400; samesite=lax";
-    }
   }, [website, dispatch]);
+
+  useEffect(() => {
+    if (!website?.brandName) return;
+
+    const pageName = document.title.split("|")[0]?.trim();
+
+    document.title = `${pageName} ${pageName && "|"} ${website.brandName}`;
+  }, [website]);
 
   if (isLoading) return null;
 
-  return (
-    <>
-      {website?.favIconUrl && <link rel="icon" href={website.favIconUrl} />}
-      <title>{website?.brandName ?? "Website"}</title>
-      {children}
-    </>
-  );
+  return <>{children}</>;
 }

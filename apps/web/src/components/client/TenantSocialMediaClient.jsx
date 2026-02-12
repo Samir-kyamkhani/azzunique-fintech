@@ -50,7 +50,9 @@ export default function TenantSocialMediaClient() {
 
   const { data, isLoading, refetch } = useTenantSocialMedia();
   const { mutate, isPending } = useUpsertTenantSocialMedia();
-
+  const openSocialModal = () => {
+    setOpenModal(true);
+  };
   useEffect(() => {
     if (data?.data) dispatch(setTenantSocialMedia(data.data));
     else dispatch(clearTenantSocialMedia());
@@ -85,7 +87,7 @@ export default function TenantSocialMediaClient() {
         </div>
 
         {((!social && canCreateSocial) || (social && canUpdateSocial)) && (
-          <Button icon={Edit} onClick={openSocialModal}>
+          <Button icon={Edit} onClick={() => setOpenModal(true)}>
             {social ? "Edit Links" : "Add Links"}
           </Button>
         )}

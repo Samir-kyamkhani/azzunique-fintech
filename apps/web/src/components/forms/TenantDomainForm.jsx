@@ -81,17 +81,10 @@ export default function TenantDomainForm({
   return (
     <>
       {errors?.root && (
-        <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-4 mb-6">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-4 w-4 text-destructive mt-0.5" />
-            <div>
-              <h4 className="text-sm font-semibold text-destructive">
-                Submission failed
-              </h4>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {errors.root.message}
-              </p>
-            </div>
+        <div className="mb-6 rounded-lg border border-destructive/20 bg-destructive/10 p-4">
+          <div className="flex gap-2">
+            <AlertCircle className="h-4 w-4 text-destructive" />
+            <p className="text-sm">{errors.root.message}</p>
           </div>
         </div>
       )}

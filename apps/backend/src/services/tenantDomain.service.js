@@ -7,6 +7,7 @@ import {
   usersTable,
   employeesTable,
   serverDetailTable,
+  smtpConfigTable,
 } from '../models/core/index.js';
 import { db } from '../database/core/core-db.js';
 import { ApiError } from '../lib/ApiError.js';
@@ -40,6 +41,16 @@ class TenantDomainService {
 
     if (!serverDetail) {
       throw ApiError.badRequest('Server detail must be configured first');
+    }
+
+    const [smtp] = await db
+      .select({ id: smtpConfigTable.id })
+      .from(smtpConfigTable)
+      .where(eq(smtpConfigTable.tenantId, actor.tenantId))
+      .limit(1);
+
+    if (!smtp) {
+      throw ApiError.badRequest('SMTP must be configured first');
     }
 
     const now = new Date();
