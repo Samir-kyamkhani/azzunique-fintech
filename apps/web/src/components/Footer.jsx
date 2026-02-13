@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { useWebsite } from "@/hooks/useTenantWebsite";
+import Link from "next/link";
 
 const DEFAULT_FOOTER_PAGES = {
   company: [
@@ -138,16 +139,15 @@ function FooterColumn({ title, pages }) {
   return (
     <div className="space-y-4 flex flex-col">
       <h3 className="font-semibold">{title}</h3>
-      <div className="flex flex-col gap-2 text-sm -ml-60">
+      <div className="flex flex-col gap-2 text-sm">
         {pages.map((page) => (
-          <Button
+          <Link
             key={page.slug}
             href={`/${page.slug}`}
-            variant="link"
-            className="p-0 h-auto text-muted-foreground"
+            className="p-0 h-auto text-muted-foreground w-fit"
           >
             {page.title}
-          </Button>
+          </Link>
         ))}
       </div>
     </div>
