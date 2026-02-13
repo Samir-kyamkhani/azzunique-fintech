@@ -155,6 +155,8 @@ export const PERMISSIONS = {
     PROVIDERS: {
       READ: { resource: RESOURCES.PLATFORM, action: ACTIONS.READ },
       UPDATE: { resource: RESOURCES.PLATFORM, action: ACTIONS.UPDATE },
+      CREATE: { resource: RESOURCES.PLATFORM, action: ACTIONS.CREATE },
+      DELETE: { resource: RESOURCES.PLATFORM, action: ACTIONS.DELETE },
     },
 
     TENANTS: {

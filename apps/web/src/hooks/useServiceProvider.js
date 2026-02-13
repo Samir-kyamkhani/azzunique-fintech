@@ -28,7 +28,6 @@ export const useCreateServiceProvider = () => {
       });
       return res.data;
     },
-
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["service-providers"] });
     },
@@ -47,7 +46,6 @@ export const useUpdateServiceProvider = () => {
       });
       return res.data;
     },
-
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["service-providers"] });
     },
@@ -65,7 +63,6 @@ export const useDeleteServiceProvider = () => {
       });
       return res.data;
     },
-
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["service-providers"] });
     },
