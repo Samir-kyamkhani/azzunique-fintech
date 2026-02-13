@@ -26,6 +26,9 @@ import AssignPlatformServiceProviderModal from "../modals/AssignPlatformServiceP
 import { useServiceProviders } from "@/hooks/useServiceProvider";
 import { Ban } from "lucide-react";
 import { Link } from "lucide-react";
+import { permissionChecker } from "@/lib/permissionCheker";
+import { PERMISSIONS } from "@/lib/permissionKeys";
+import { useSelector } from "react-redux";
 
 export default function PlatformServicesClient() {
   const dispatch = useDispatch();
@@ -74,6 +77,24 @@ export default function PlatformServicesClient() {
 
   const { data: providers = [], isLoading: providersLoading } =
     useServiceProviders(selectedServiceId);
+
+  /* ================= PERMISSIONS ================= */
+
+  const perms = useSelector((s) => s.auth.user?.permissions);
+
+  const can = (perm) => permissionChecker(perms, perm?.resource, perm?.action);
+
+  const canCreatePlatformService = can(PERMISSIONS.PLATFORM.SERVICES.CREATE);
+  const canEditPlatformService = can(PERMISSIONS.PLATFORM.SERVICES.UPDATE);
+  const canViewPlatformService = can(PERMISSIONS.PLATFORM.SERVICES.READ);
+  const canDeletePlatformService = can(PERMISSIONS.PLATFORM.SERVICES.DELETE);
+  const canCreateFeature = can(PERMISSIONS.PLATFORM.SERVICE_FEATURES.CREATE);
+  const canAssignPlatformServiceProvider = can(
+    PERMISSIONS.PLATFORM.SERVICES.ASSIGN_PROVIDER,
+  );
+  const canDisablePlatformServiceProvider = can(
+    PERMISSIONS.PLATFORM.SERVICES.DISABLE_PROVIDER,
+  );
 
   /* ================= HANDLERS ================= */
 
@@ -146,46 +167,65 @@ export default function PlatformServicesClient() {
       <PlatformServicesTable
         data={data}
         loading={isLoading}
-        onAdd={() => {
-          setEditingData(null);
-          setForcedType(null);
-          setOpenModal(true);
-        }}
+        onAdd={
+          canCreatePlatformService
+            ? () => {
+                setEditingData(null);
+                setForcedType(null);
+                setOpenModal(true);
+              }
+            : undefined
+        }
         onView={(row) => {
           router.push(`/dashboard/platform/services/${row.id}`);
         }}
-        onEdit={(row) => {
-          setEditingData(row);
-          setForcedType("service");
-          setOpenModal(true);
-        }}
-        onDelete={(row) =>
-          deleteService(row.id, {
-            onSuccess: () => toast.success("Service Deleted"),
-          })
+        onEdit={
+          canEditPlatformService
+            ? (row) => {
+                setEditingData(row);
+                setForcedType("service");
+                setOpenModal(true);
+              }
+            : undefined
+        }
+        onDelete={
+          canDeletePlatformService
+            ? (row) =>
+                deleteService(row.id, {
+                  onSuccess: () => toast.success("Service Deleted"),
+                })
+            : undefined
         }
         extraActions={[
-          {
-            label: "Assign Provider",
-            icon: Link,
-            onClick: (row) => {
-              setSelectedServiceId(row.id);
-              setAssignModalOpen(true);
-            },
-          },
-          {
-            label: "Disable Provider",
-            icon: Ban,
-            onClick: (row) => {
-              disableProvider(
-                { serviceId: row.id },
+          ...(canAssignPlatformServiceProvider
+            ? [
                 {
-                  onSuccess: () => toast.success("Provider Disabled"),
-                  onError: (err) => toast.error(err.message),
+                  label: "Assign Provider",
+                  icon: Link,
+                  onClick: (row) => {
+                    setSelectedServiceId(row.id);
+                    setAssignModalOpen(true);
+                  },
                 },
-              );
-            },
-          },
+              ]
+            : []),
+
+          ...(canDisablePlatformServiceProvider
+            ? [
+                {
+                  label: "Disable Provider",
+                  icon: Ban,
+                  onClick: (row) => {
+                    disableProvider(
+                      { serviceId: row.id },
+                      {
+                        onSuccess: () => toast.success("Provider Disabled"),
+                      },
+                    );
+                  },
+                },
+              ]
+            : []),
         ]}
       />
 
@@ -202,6 +242,8 @@ export default function PlatformServicesClient() {
         onSubmitService={handleServiceSubmit}
         onSubmitFeature={handleFeatureSubmit}
         isPending={creating || updating || creatingFeature}
+        canCreateService={canCreatePlatformService}
+        canCreateFeature={canCreateFeature}
       />
 
       <AssignPlatformServiceProviderModal

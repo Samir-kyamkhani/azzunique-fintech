@@ -23,6 +23,9 @@ import {
   useUpdatePlatformService,
   useDeletePlatformServiceFeature,
 } from "@/hooks/usePlatformService";
+import { useSelector } from "react-redux";
+import { permissionChecker } from "@/lib/permissionCheker";
+import { PERMISSIONS } from "@/lib/permissionKeys";
 
 export default function PlatformServiceDetailsPage() {
   const router = useRouter();
@@ -53,6 +56,15 @@ export default function PlatformServiceDetailsPage() {
     useDeletePlatformServiceFeature();
 
   const service = serviceRes?.data || serviceRes;
+
+  /* ================= PERMISSIONS ================= */
+  const can = (perm) => permissionChecker(perms, perm?.resource, perm?.action);
+
+  const perms = useSelector((s) => s.auth.user?.permissions);
+
+  const canUpdateService = can(PERMISSIONS.PLATFORM.SERVICES.UPDATE);
+  const canUpdateFeature = can(PERMISSIONS.PLATFORM.SERVICE_FEATURES.UPDATE);
+  const canDeleteFeature = can(PERMISSIONS.PLATFORM.SERVICE_FEATURES.DELETE);
 
   /* ================= REDIRECT ================= */
 
@@ -192,27 +204,29 @@ export default function PlatformServiceDetailsPage() {
                       </span>
 
                       {/* EDIT */}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setEditingFeature(f);
-                          setModalType("feature");
-                          setOpenModal(true);
-                        }}
-                      >
-                        Edit
-                      </Button>
+                      {canUpdateFeature && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setEditingFeature(f);
+                            setModalType("feature");
+                            setOpenModal(true);
+                          }}
+                        >
+                          Edit
+                        </Button>
+                      )}
 
-                      {/* DELETE */}
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        loading={deletingFeature}
-                        onClick={() => handleDeleteFeature(f)}
-                      >
-                        Delete
-                      </Button>
+                      {canDeleteFeature && (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDeleteFeature(f)}
+                        >
+                          Delete
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -248,15 +262,20 @@ export default function PlatformServiceDetailsPage() {
           <QuickActionsCard
             title="Quick Actions"
             actions={[
-              {
-                label: "Edit Service",
-                icon: Settings,
-                onClick: () => {
-                  setEditingService(service);
-                  setModalType("service");
-                  setOpenModal(true);
-                },
-              },
+              ...(canUpdateService
+                ? [
+                    {
+                      label: "Edit Service",
+                      icon: Settings,
+                      onClick: () => {
+                        setEditingService(service);
+                        setModalType("service");
+                        setOpenModal(true);
+                      },
+                    },
+                  ]
+                : []),
+
               {
                 label: "Copy Service ID",
                 icon: Key,

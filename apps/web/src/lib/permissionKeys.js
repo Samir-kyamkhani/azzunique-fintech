@@ -107,8 +107,49 @@ export const PERMISSIONS = {
   },
   PLATFORM: {
     SERVICES: {
-      READ: { resource: RESOURCES.PLATFORM, action: ACTIONS.READ },
-      UPDATE: { resource: RESOURCES.PLATFORM, action: ACTIONS.UPDATE },
+      READ: {
+        resource: RESOURCES.PLATFORM_SERVICE,
+        action: ACTIONS.READ,
+      },
+      CREATE: {
+        resource: RESOURCES.PLATFORM_SERVICE,
+        action: ACTIONS.CREATE,
+      },
+      UPDATE: {
+        resource: RESOURCES.PLATFORM_SERVICE,
+        action: ACTIONS.UPDATE,
+      },
+      DELETE: {
+        resource: RESOURCES.PLATFORM_SERVICE,
+        action: ACTIONS.DELETE,
+      },
+      ASSIGN_PROVIDER: {
+        resource: RESOURCES.PLATFORM_SERVICE,
+        action: ACTIONS.ASSIGN_PERMISSIONS,
+      },
+      DISABLE_PROVIDER: {
+        resource: RESOURCES.PLATFORM_SERVICE,
+        action: ACTIONS.DISABLE_PROVIDER,
+      },
+    },
+
+    SERVICE_FEATURES: {
+      READ: {
+        resource: RESOURCES.PLATFORM_SERVICE_FEATURE,
+        action: ACTIONS.READ,
+      },
+      CREATE: {
+        resource: RESOURCES.PLATFORM_SERVICE_FEATURE,
+        action: ACTIONS.CREATE,
+      },
+      UPDATE: {
+        resource: RESOURCES.PLATFORM_SERVICE_FEATURE,
+        action: ACTIONS.UPDATE,
+      },
+      DELETE: {
+        resource: RESOURCES.PLATFORM_SERVICE_FEATURE,
+        action: ACTIONS.DELETE,
+      },
     },
 
     PROVIDERS: {

@@ -16,6 +16,8 @@ export default function UnifiedPlatformServiceModal({
   services = [],
   isPending,
   forcedType,
+  canCreateService,
+  canCreateFeature,
 }) {
   // ⭐ USER SELECTED TYPE
   const [selectedType, setSelectedType] = useState(null);
@@ -63,22 +65,26 @@ export default function UnifiedPlatformServiceModal({
           {/* TYPE SELECT */}
           {!type && (
             <div className="grid grid-cols-2 gap-4">
-              <Button
-                className="h-20 text-lg"
-                onClick={() => setSelectedType("service")}
-              >
-                <Layers className="mr-2" />
-                Service
-              </Button>
+              {canCreateService && (
+                <Button
+                  className="h-20 text-lg"
+                  onClick={() => setSelectedType("service")}
+                >
+                  <Layers className="mr-2" />
+                  Service
+                </Button>
+              )}
 
-              <Button
-                variant="outline"
-                className="h-20 text-lg"
-                onClick={() => setSelectedType("feature")}
-              >
-                <Settings className="mr-2" />
-                Feature
-              </Button>
+              {canCreateFeature && (
+                <Button
+                  variant="outline"
+                  className="h-20 text-lg"
+                  onClick={() => setSelectedType("feature")}
+                >
+                  <Settings className="mr-2" />
+                  Feature
+                </Button>
+              )}
             </div>
           )}
 
