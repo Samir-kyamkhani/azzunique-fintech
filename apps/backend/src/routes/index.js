@@ -41,6 +41,5 @@ router.use('/commission', commisionRoutes);
 router.use('/recharge', rechargeRoutes);
 router.use('/recharge-admin', rechargeAdminRoutes);
 router.use('/reports', reportsRoutes);
-
 router.use('/permissions', permissionRoutes);
 export default router;
