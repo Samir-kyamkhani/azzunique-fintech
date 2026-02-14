@@ -5,6 +5,5 @@ export const serviceProviderFeatureIdParamSchema = z.object({
 });
 
 export const mapServiceProviderFeatureSchema = z.object({
-  serviceProviderId: z.string().uuid(),
   platformServiceFeatureId: z.string().uuid(),
 });

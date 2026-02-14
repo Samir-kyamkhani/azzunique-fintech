@@ -52,6 +52,10 @@ class ServiceProviderService {
     return { success: true };
   }
 
+  async listAll() {
+    return db.select().from(serviceProviderTable);
+  }
+
   async listByService(platformServiceId) {
     return db
       .select()

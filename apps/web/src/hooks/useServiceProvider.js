@@ -3,6 +3,16 @@ import { apiClient } from "@/lib/apiClient";
 
 /* ================= PROVIDERS ================= */
 
+// ✅ List All Providers
+export const useAllServiceProviders = () =>
+  useQuery({
+    queryKey: ["service-providers", "all"],
+    queryFn: async () => {
+      const res = await apiClient("/platform-providers");
+      return res.data;
+    },
+  });
+
 // ✅ List Providers by Platform Service
 export const useServiceProviders = (serviceId) =>
   useQuery({

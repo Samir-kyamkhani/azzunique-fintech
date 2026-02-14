@@ -10,25 +10,35 @@ import PlatformProvidersTable from "@/components/tables/PlatformProvidersTable";
 import UnifiedServiceProviderModal from "@/components/modals/UnifiedServiceProviderModal";
 
 import {
-  useServiceProviders,
   useCreateServiceProvider,
   useUpdateServiceProvider,
   useDeleteServiceProvider,
+  useAllServiceProviders,
+  useMapServiceProviderFeature,
+  useUnmapServiceProviderFeature,
+  useServiceProviderFeatures,
 } from "@/hooks/useServiceProvider";
 
 import { setServiceProviders } from "@/store/serviceProviderSlice";
 import { permissionChecker } from "@/lib/permissionCheker";
 import { PERMISSIONS } from "@/lib/permissionKeys";
 import { toast } from "@/lib/toast";
-import { usePlatformServices } from "@/hooks/usePlatformService";
+import {
+  usePlatformServiceFeatures,
+  usePlatformServices,
+} from "@/hooks/usePlatformService";
+import { Link } from "lucide-react";
+import MapServiceProviderFeatureModal from "../modals/MapServiceProviderFeatureModal";
 
 export default function PlatformProvidersClient() {
   const dispatch = useDispatch();
 
   const [openModal, setOpenModal] = useState(false);
   const [editingData, setEditingData] = useState(null);
+  const [mapModalOpen, setMapModalOpen] = useState(false);
+  const [selectedProviderId, setSelectedProviderId] = useState(null);
 
-  const { data = [], isLoading, error } = useServiceProviders(); // 🔥 global list version
+  const { data = [], isLoading, error } = useAllServiceProviders(); // 🔥 global list version
 
   const { mutate: createProvider, isPending: creating } =
     useCreateServiceProvider();
@@ -39,6 +49,12 @@ export default function PlatformProvidersClient() {
   const { mutate: deleteProvider } = useDeleteServiceProvider();
 
   const { data: services = [] } = usePlatformServices();
+
+  const { mutate: mapFeature } = useMapServiceProviderFeature();
+  const { mutate: unmapFeature } = useUnmapServiceProviderFeature();
+
+  const { data: mappedFeatures = [] } =
+    useServiceProviderFeatures(selectedProviderId);
 
   useEffect(() => {
     dispatch(setServiceProviders(data));
@@ -67,6 +83,31 @@ export default function PlatformProvidersClient() {
       onError: (err) => setError("root", { message: err.message }),
     });
   };
+
+  const handleMapFeature = (payload, setError) => {
+    mapFeature(
+      {
+        providerId: payload.serviceProviderId,
+        payload: {
+          platformServiceFeatureId: payload.platformServiceFeatureId,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success("Feature Mapped");
+          setMapModalOpen(false);
+          setSelectedProviderId(null);
+        },
+        onError: (err) => setError("root", { message: err.message }),
+      },
+    );
+  };
+
+  const selectedProvider = data.find((p) => p.id === selectedProviderId);
+  const selectedServiceId = selectedProvider?.platformServiceId;
+  const { data: features = [] } = usePlatformServiceFeatures(
+    mapModalOpen ? selectedServiceId : null,
+  );
 
   return (
     <>
@@ -106,7 +147,6 @@ export default function PlatformProvidersClient() {
               }
             : undefined
         }
-        onView={(row) => router.push(`/platform-providers/${row.id}`)}
         onDelete={
           canDelete
             ? (row) =>
@@ -115,6 +155,16 @@ export default function PlatformProvidersClient() {
                 })
             : undefined
         }
+        extraActions={[
+          {
+            label: "Map Feature",
+            icon: Link,
+            onClick: (row) => {
+              setSelectedProviderId(row.id);
+              setMapModalOpen(true);
+            },
+          },
+        ]}
       />
 
       <UnifiedServiceProviderModal
@@ -127,6 +177,25 @@ export default function PlatformProvidersClient() {
         services={services} // 🔥 pass services for select options
         onSubmit={handleSubmit}
         isPending={creating || updating}
+      />
+
+      <MapServiceProviderFeatureModal
+        open={mapModalOpen}
+        onClose={() => setMapModalOpen(false)}
+        providerId={selectedProviderId}
+        features={features}
+        mappedFeatures={mappedFeatures}
+        onSubmit={handleMapFeature}
+        onUnmap={(id) => {
+          unmapFeature(
+            { providerId: selectedProviderId, id },
+            {
+              onSuccess: () => toast.success("Feature Unmapped"),
+              onError: (err) => toast.error(err.message),
+            },
+          );
+        }}
+        isPending={false}
       />
     </>
   );

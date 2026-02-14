@@ -29,6 +29,7 @@ import { Link } from "lucide-react";
 import { permissionChecker } from "@/lib/permissionCheker";
 import { PERMISSIONS } from "@/lib/permissionKeys";
 import { useSelector } from "react-redux";
+import { Eye } from "lucide-react";
 
 export default function PlatformServicesClient() {
   const dispatch = useDispatch();
@@ -87,6 +88,9 @@ export default function PlatformServicesClient() {
   const canCreatePlatformService = can(PERMISSIONS.PLATFORM.SERVICES.CREATE);
   const canEditPlatformService = can(PERMISSIONS.PLATFORM.SERVICES.UPDATE);
   const canViewPlatformService = can(PERMISSIONS.PLATFORM.SERVICES.READ);
+  const canViewServiceProvider = can(
+    PERMISSIONS.PLATFORM.PROVIDERS.VIEW_PROVIDER,
+  );
   const canDeletePlatformService = can(PERMISSIONS.PLATFORM.SERVICES.DELETE);
   const canCreateFeature = can(PERMISSIONS.PLATFORM.SERVICE_FEATURES.CREATE);
   const canAssignPlatformServiceProvider = can(
@@ -221,6 +225,20 @@ export default function PlatformServicesClient() {
                       {
                         onSuccess: () => toast.success("Provider Disabled"),
                       },
+                    );
+                  },
+                },
+              ]
+            : []),
+
+          ...(canViewServiceProvider
+            ? [
+                {
+                  label: "View Provider",
+                  icon: Eye,
+                  onClick: (row) => {
+                    router.push(
+                      `/dashboard/platform/providers/${row.id}`,
                     );
                   },
                 },
