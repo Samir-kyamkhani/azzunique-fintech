@@ -3,6 +3,16 @@ import { apiClient } from "@/lib/apiClient";
 
 /* ================= PROVIDERS ================= */
 
+// ✅ List All Providers
+export const useAllServiceProviders = () =>
+  useQuery({
+    queryKey: ["service-providers", "all"],
+    queryFn: async () => {
+      const res = await apiClient("/platform-providers");
+      return res.data;
+    },
+  });
+
 // ✅ List Providers by Platform Service
 export const useServiceProviders = (serviceId) =>
   useQuery({
@@ -28,7 +38,6 @@ export const useCreateServiceProvider = () => {
       });
       return res.data;
     },
-
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["service-providers"] });
     },
@@ -47,7 +56,6 @@ export const useUpdateServiceProvider = () => {
       });
       return res.data;
     },
-
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["service-providers"] });
     },
@@ -65,7 +73,6 @@ export const useDeleteServiceProvider = () => {
       });
       return res.data;
     },
-
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["service-providers"] });
     },

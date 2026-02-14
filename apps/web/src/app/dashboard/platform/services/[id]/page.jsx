@@ -193,6 +193,7 @@ export default function PlatformServiceDetailsPage() {
                   >
                     <div>
                       <div className="font-medium">{f.name}</div>
+                      <div className="text-xs">{f.id}</div>
                       <div className="text-xs text-muted-foreground">
                         {f.code}
                       </div>

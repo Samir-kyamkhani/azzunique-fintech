@@ -1,5 +1,5 @@
 import RechargeRuntimeService from '../../services/recharge/rechargeRuntime.service.js';
-import { getRechargePlugin } from '../../plugin_registry/pluginRegistry.js';
+import { getRechargePlugin } from '../../plugin_registry/recharge/pluginRegistry.js';
 import { buildTenantChain } from '../../lib/tenantHierarchy.util.js';
 import { RECHARGE_SERVICE_CODE } from '../../config/constant.js';
 

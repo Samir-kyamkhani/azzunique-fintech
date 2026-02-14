@@ -12,7 +12,7 @@ import {
 import { rechargeTransactionTable } from '../../models/recharge/index.js';
 
 import { ApiError } from '../../lib/ApiError.js';
-import { getRechargePlugin } from '../../plugin_registry/pluginRegistry.js';
+import { getRechargePlugin } from '../../plugin_registry/recharge/pluginRegistry.js';
 import OperatorMapService from '../recharge-admin/operatorMap.service.js';
 import CircleMapService from '../recharge-admin/circleMap.service.js';
 

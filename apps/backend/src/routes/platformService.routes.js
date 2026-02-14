@@ -56,7 +56,7 @@ router.post(
 // ================= NESTED SERVICE ROUTES =================
 router.get('/:serviceId/features', PSF.listPlatformServiceFeatures); //done
 
-router.delete('/:serviceId/providers', PSP.disablePlatformServiceProvider);
+router.delete('/:serviceId/providers', PSP.disablePlatformServiceProvider); //done
 
 // ================= PLATFORM SERVICES =================
 router.post(

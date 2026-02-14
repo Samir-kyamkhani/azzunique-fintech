@@ -3,7 +3,7 @@ import { rechargeTransactionTable } from '../../models/recharge/index.js';
 import { eq } from 'drizzle-orm';
 import WalletService from '../wallet.service.js';
 import CommissionReversalService from '../commission-reversal.service.js';
-import { getRechargePlugin } from '../../plugin_registry/pluginRegistry.js';
+import { getRechargePlugin } from '../../plugin_registry/recharge/pluginRegistry.js';
 import { ApiError } from '../../lib/ApiError.js';
 
 class RechargeStatusService {

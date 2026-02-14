@@ -26,6 +26,8 @@ router.post(
   SP.createServiceProvider,
 );
 
+router.get('/', SP.listAllServiceProviders);
+
 // List by Platform Service (if needed)
 router.get('/by-service/:serviceId', SP.listServiceProviders);
 
@@ -44,10 +46,13 @@ router.delete(
   SP.deleteServiceProvider,
 );
 
-// Map feature to provider
+// Map feature to provider - providerId in params, featureId in body
 router.post(
-  '/:providerId/features',
-  validate({ body: mapServiceProviderFeatureSchema }),
+  '/:id/features',
+  validate({
+    params: serviceProviderIdParamSchema,
+    body: mapServiceProviderFeatureSchema,
+  }),
   SPF.mapServiceProviderFeature,
 );
 

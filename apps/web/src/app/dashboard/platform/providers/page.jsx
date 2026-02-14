@@ -1,10 +1,15 @@
-import SettingsAccordion from "@/components/SettingsAccordion";
+import PlatformProvidersClient from "@/components/client/PlatformProvidersClient";
+import ClientGuard from "@/components/ClientGuard";
+import { PERMISSIONS } from "@/lib/permissionKeys";
 
 export const metadata = {
-  title: "Setting General",
-  description: "Sign in to your account",
+  title: "Platform Providers",
 };
 
-export default async function Page() {
-  return <SettingsAccordion />
+export default function PlatformProvidersPage() {
+  return (
+    <ClientGuard anyOf={[PERMISSIONS.PLATFORM.PROVIDERS.READ]}>
+      <PlatformProvidersClient />
+    </ClientGuard>
+  );
 }

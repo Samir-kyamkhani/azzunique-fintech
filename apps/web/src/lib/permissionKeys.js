@@ -109,46 +109,46 @@ export const PERMISSIONS = {
   PLATFORM: {
     SERVICES: {
       READ: {
-        resource: RESOURCES.PLATFORM_SERVICE,
+        resource: RESOURCES.PLATFORM,
         action: ACTIONS.READ,
       },
       CREATE: {
-        resource: RESOURCES.PLATFORM_SERVICE,
+        resource: RESOURCES.PLATFORM,
         action: ACTIONS.CREATE,
       },
       UPDATE: {
-        resource: RESOURCES.PLATFORM_SERVICE,
+        resource: RESOURCES.PLATFORM,
         action: ACTIONS.UPDATE,
       },
       DELETE: {
-        resource: RESOURCES.PLATFORM_SERVICE,
+        resource: RESOURCES.PLATFORM,
         action: ACTIONS.DELETE,
       },
       ASSIGN_PROVIDER: {
-        resource: RESOURCES.PLATFORM_SERVICE,
+        resource: RESOURCES.PLATFORM,
         action: ACTIONS.ASSIGN_PERMISSIONS,
       },
       DISABLE_PROVIDER: {
-        resource: RESOURCES.PLATFORM_SERVICE,
+        resource: RESOURCES.PLATFORM,
         action: ACTIONS.DISABLE_PROVIDER,
       },
     },
 
     SERVICE_FEATURES: {
       READ: {
-        resource: RESOURCES.PLATFORM_SERVICE_FEATURE,
+        resource: RESOURCES.PLATFORM_FEATURE,
         action: ACTIONS.READ,
       },
       CREATE: {
-        resource: RESOURCES.PLATFORM_SERVICE_FEATURE,
+        resource: RESOURCES.PLATFORM_FEATURE,
         action: ACTIONS.CREATE,
       },
       UPDATE: {
-        resource: RESOURCES.PLATFORM_SERVICE_FEATURE,
+        resource: RESOURCES.PLATFORM_FEATURE,
         action: ACTIONS.UPDATE,
       },
       DELETE: {
-        resource: RESOURCES.PLATFORM_SERVICE_FEATURE,
+        resource: RESOURCES.PLATFORM_FEATURE,
         action: ACTIONS.DELETE,
       },
     },
@@ -156,6 +156,13 @@ export const PERMISSIONS = {
     PROVIDERS: {
       READ: { resource: RESOURCES.PLATFORM, action: ACTIONS.READ },
       UPDATE: { resource: RESOURCES.PLATFORM, action: ACTIONS.UPDATE },
+      CREATE: { resource: RESOURCES.PLATFORM, action: ACTIONS.CREATE },
+      DELETE: { resource: RESOURCES.PLATFORM, action: ACTIONS.DELETE },
+
+      VIEW_PROVIDER: {
+        resource: RESOURCES.PLATFORM,
+        action: ACTIONS.VIEW_PROVIDER,
+      },
     },
 
     TENANTS: {
