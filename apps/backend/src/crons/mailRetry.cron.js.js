@@ -52,4 +52,5 @@ export async function autoRetryPendingMails() {
       console.error('❌ Mail retry failed:', mail.to, err.message);
     }
   }
+  console.log('✅ Mail Retry status cron started');
 }

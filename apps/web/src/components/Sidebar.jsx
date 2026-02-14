@@ -15,7 +15,12 @@ import {
   BadgeIndianRupee,
   FileCode,
   Building2,
+  ChevronRight,
+  Cog,
+  FileCog,
 } from "lucide-react";
+
+import { useState, useEffect } from "react";
 import { useLogout } from "@/hooks/useAuth";
 import Button from "./ui/Button";
 import { useDispatch, useSelector } from "react-redux";
@@ -24,7 +29,6 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { PERMISSIONS } from "@/lib/permissionKeys";
 import { permissionChecker } from "@/lib/permissionCheker";
-import { Cog } from "lucide-react";
 
 const Sidebar = () => {
   const queryClient = useQueryClient();
@@ -39,6 +43,22 @@ const Sidebar = () => {
   const perms = currentUser?.permissions;
 
   const can = (resource, action) => permissionChecker(perms, resource, action);
+
+  const [openMenus, setOpenMenus] = useState({});
+
+  // auto open parent when child route active
+  useEffect(() => {
+    if (pathname.startsWith("/dashboard/admin-services")) {
+      setOpenMenus((prev) => ({ ...prev, "admin-services": true }));
+    }
+  }, [pathname]);
+
+  const toggleMenu = (id) => {
+    setOpenMenus((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
 
   const handleLogout = () => {
     logoutMutate(undefined, {
@@ -128,7 +148,7 @@ const Sidebar = () => {
       items: [
         {
           id: "platform",
-          label: "platform",
+          label: "Platform",
           icon: Cog,
           path: "/dashboard/platform",
           permissionGroup: [
@@ -136,6 +156,24 @@ const Sidebar = () => {
             PERMISSIONS.PLATFORM.PROVIDERS.READ,
             PERMISSIONS.PLATFORM.TENANTS.READ,
           ],
+        },
+        {
+          id: "admin-services",
+          label: "Admin Services",
+          icon: FileCog,
+          children: [
+            {
+              id: "operator-map",
+              label: "Operator Map",
+              path: "/dashboard/admin-services/operator-map",
+            },
+            {
+              id: "circle-map",
+              label: "Circle Map",
+              path: "/dashboard/admin-services/circle-map",
+            },
+          ],
+          permissionGroup: [PERMISSIONS.ADMIN_SERVICES.RECHARGE.READ],
         },
         {
           id: "settings",
@@ -157,51 +195,78 @@ const Sidebar = () => {
 
   const MenuItem = ({ item }) => {
     const Icon = item.icon;
-    const isActive = pathname === item.path;
+    const isActive = item.path && pathname.startsWith(item.path);
+
+    // parent with children
+    if (item.children) {
+      const isOpen = openMenus[item.id];
+
+      return (
+        <div>
+          <button
+            onClick={() => toggleMenu(item.id)}
+            className="w-full flex items-center justify-between px-3 py-2.5 rounded-border text-sm font-medium hover:bg-(--sidebar-hover)"
+          >
+            <div className="flex items-center">
+              <Icon className="h-5 w-5 mr-3" />
+              {item.label}
+            </div>
+
+            <ChevronRight
+              className={`h-4 w-4 transition-transform ${
+                isOpen ? "rotate-90" : ""
+              }`}
+            />
+          </button>
+
+          {isOpen && (
+            <div className="ml-6 mt-1 space-y-1">
+              {item.children.map((child) => (
+                <Link
+                  key={child.id}
+                  href={child.path}
+                  className={`block px-3 py-2 rounded-border text-sm ${
+                    pathname === child.path
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-(--sidebar-hover)"
+                  }`}
+                >
+                  {child.label}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
 
     return (
       <Link
         href={item.path}
-        className={`group flex items-center px-3 py-2.5 rounded-border text-sm font-medium transition-all ${
-          isActive
-            ? "bg-primary/10 border border-primary/20 shadow-sm"
-            : "hover:bg-(--sidebar-hover)"
+        className={`flex items-center px-3 py-2.5 rounded-border text-sm font-medium ${
+          isActive ? "bg-primary/10 text-primary" : "hover:bg-(--sidebar-hover)"
         }`}
       >
-        <Icon
-          className={`h-5 w-5 mr-3 ${
-            isActive
-              ? "text-primary"
-              : "text-muted-foreground group-hover:text-foreground"
-          }`}
-        />
-        <span
-          className={
-            isActive ? "text-primary font-semibold" : "text-muted-foreground"
-          }
-        >
-          {item.label}
-        </span>
+        <Icon className="h-5 w-5 mr-3" />
+        {item.label}
       </Link>
     );
   };
 
   const MenuSection = ({ title, items }) => {
     const visibleItems = items.filter((item) => {
-      if (item.permission) {
+      if (item.permission)
         return can(item.permission.resource, item.permission.action);
-      }
 
-      if (item.permissionGroup) {
+      if (item.permissionGroup)
         return item.permissionGroup.some((perm) =>
           can(perm.resource, perm.action),
         );
-      }
 
       return true;
     });
 
-    if (visibleItems.length === 0) return null;
+    if (!visibleItems.length) return null;
 
     return (
       <div className="mb-6">
@@ -221,7 +286,7 @@ const Sidebar = () => {
 
   return (
     <div className="w-64 h-full flex flex-col border-r border-border bg-sidebar">
-      <div className="px-6 py-2.5 bg-gradient-secondry border-b border-border shadow-border">
+      <div className="px-6 py-2.5 bg-gradient-secondry border-b border-border">
         <div className="flex items-center gap-3">
           <Play className="h-6 w-6 text-primary" />
           <div>
@@ -232,6 +297,7 @@ const Sidebar = () => {
           </div>
         </div>
       </div>
+
       {currentUser?.type !== "EMPLOYEE" && (
         <div className="p-4">
           <div className="bg-muted rounded-border p-3 border border-border">
@@ -250,11 +316,7 @@ const Sidebar = () => {
 
       <div className="flex-1 px-4 pb-4 overflow-y-auto">
         {menuSections.map((section) => (
-          <MenuSection
-            key={section.title}
-            title={section.title}
-            items={section.items}
-          />
+          <MenuSection key={section.title} {...section} />
         ))}
       </div>
 
