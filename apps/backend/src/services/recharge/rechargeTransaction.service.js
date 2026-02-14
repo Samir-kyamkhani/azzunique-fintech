@@ -6,7 +6,7 @@ import { rechargeTransactionTable } from '../../models/recharge/index.js';
 
 import { ApiError } from '../../lib/ApiError.js';
 import RechargeRuntimeService from './rechargeRuntime.service.js';
-import { getRechargePlugin } from '../../plugin_registry/pluginRegistry.js';
+import { getRechargePlugin } from '../../plugin_registry/recharge/pluginRegistry.js';
 
 import WalletService from '../wallet.service.js';
 

@@ -13,7 +13,7 @@ export default function AssignPlatformServiceProviderForm({
   isPending,
 }) {
   const providerOptions = providers.map((p) => ({
-    label: `${p.code} - ${p.name}`,
+    label: `${p.code} - ${p.providerName}`,
     value: p.id,
   }));
 
