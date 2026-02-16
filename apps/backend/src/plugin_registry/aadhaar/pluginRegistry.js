@@ -3,7 +3,7 @@ import BulkpeAadhaarPlugin from '../../plugins/aadhaar-verification/bulkpe.plugi
 // import InstantpayAadhaarPlugin from '../../plugins/kyc/instantpay.aadhaar.plugin.js';
 
 // Central KYC plugin resolver
-export function getAadhaarKycPlugin(providerCode, config) {
+export function getAadhaarPlugin(providerCode, config) {
   switch (providerCode) {
     case 'BULKPE':
       return new BulkpeAadhaarPlugin(config);

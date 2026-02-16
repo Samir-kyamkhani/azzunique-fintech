@@ -4,12 +4,18 @@ import { eq, and } from 'drizzle-orm';
 import { aadhaarDb as db } from '../../database/aadhaar/aadhaar-db.js';
 import { aadhaarSessionTable } from '../../models/aadhaar/index.js';
 
-import { usersKycTable } from '../../models/core/usersKyc.schema.js';
-import { kycDocumentTable } from '../../models/core/kycDocument.schema.js';
+import {
+  usersKycTable,
+  kycDocumentTable,
+} from '../../models/core/index.js';
 
 import { ApiError } from '../../lib/ApiError.js';
-import { getKycPlugin } from '../../plugin_registry/kyc/pluginRegistry.js';
+import { getAadhaarPlugin } from '../../plugin_registry/aadhaar/pluginRegistry.js';
 import { encrypt } from '../../lib/lib.js';
+import { buildTenantChain } from '../../lib/tenantHierarchy.util.js';
+import { AADHAAR_SERVICE_CODE } from '../../config/constant.js';
+import AadhaarRuntimeService from './aadhaarRuntime.service.js';
+import WalletService from '../wallet.service.js';
 
 class AadhaarService {
   /**
@@ -17,6 +23,14 @@ class AadhaarService {
    */
   static async sendOtp({ payload, actor }) {
     const { aadhaarNumber, idempotencyKey } = payload;
+
+    const tenantChain = await buildTenantChain(actor.tenantId);
+
+    // 2️⃣ Resolve service + provider
+    const { service, provider } = await AadhaarRuntimeService.resolve({
+      tenantChain,
+      platformServiceCode: AADHAAR_SERVICE_CODE,
+    });
 
     // Idempotency check
     const existing = await db
@@ -40,12 +54,29 @@ class AadhaarService {
 
     const sessionId = crypto.randomUUID();
 
+    // 4️⃣ Fetch MAIN wallet
+    const [mainWallet] = await WalletService.getUserWallets(
+      actor.id,
+      actor.tenantId,
+    ).then((w) => w.filter((x) => x.walletType === 'MAIN'));
+
+    if (!mainWallet) {
+      throw ApiError.notFound('Main wallet not found');
+    }
+
+    // 5️⃣ Debit wallet (BLOCKED FLOW)
+    await WalletService.blockAmount({
+      walletId: mainWallet.id,
+      amount,
+      transactionId,
+      reference: `AADHAAR:${sessionId}:${actor.id}`,
+    });
+
     const encrypted = encrypt(aadhaarNumber);
 
     const masked = `XXXX-XXXX-${aadhaarNumber.slice(-4)}`;
 
-    // TODO: Resolve provider properly from runtime service
-    const plugin = getKycPlugin('AADHAAR', 'BULKPE', {});
+    const plugin = getAadhaarPlugin(provider.code, provider.config);
 
     const otpResponse = await plugin.sendOtp({ aadhaarNumber });
 
@@ -56,10 +87,10 @@ class AadhaarService {
       aadhaarNumberEncrypted: encrypted,
       maskedAadhaar: masked,
       idempotencyKey,
-      platformServiceId: 'AADHAAR_SERVICE',
-      providerCode: 'BULKPE',
-      providerId: 'STATIC_PROVIDER',
-      providerConfig: {},
+      platformServiceId: service.id,
+      providerCode: provider.code,
+      providerId: provider.providerId,
+      providerConfig: provider.config,
       referenceId: otpResponse.referenceId,
       status: 'OTP_SENT',
       consentGivenAt: new Date(),
@@ -91,8 +122,7 @@ class AadhaarService {
       throw ApiError.badRequest('Invalid session state');
     }
 
-    const plugin = getKycPlugin(
-      'AADHAAR',
+    const plugin = getAadhaarPlugin(
       session.providerCode,
       session.providerConfig,
     );

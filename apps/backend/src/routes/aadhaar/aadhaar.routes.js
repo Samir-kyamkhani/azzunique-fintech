@@ -6,7 +6,7 @@ import { rawQueryMiddleware } from '../../middleware/rawQuery.middleware.js';
 
 import { aadhaarCallback } from '../../controllers/aadhaar/aadhaarCallback.controller.js';
 import { validate } from '../../middleware/zod-validate.js';
-import { sendOtpSchema } from '../../validators/aadhaar/aadhaar.schema.js';
+import { sendOtpSchema, verifyOtpSchema } from '../../validators/aadhaar/aadhaar.schema.js';
 import {
   sendOtp,
   verifyOtp,

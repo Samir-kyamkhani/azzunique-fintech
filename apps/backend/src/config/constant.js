@@ -1,2 +1,2 @@
 export const RECHARGE_SERVICE_CODE = 'RECHARGE';
-export const KYC_SERVICE_CODE = 'AADHAR';
+export const AADHAAR_SERVICE_CODE = 'AADHAAR';
