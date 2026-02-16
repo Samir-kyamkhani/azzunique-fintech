@@ -7,7 +7,7 @@
  * - OTP Verify mandatory
  */
 
-export default class AadhaarKycPluginInterface {
+export default class AadhaarPluginInterface {
   constructor(config) {
     this.config = config;
   }

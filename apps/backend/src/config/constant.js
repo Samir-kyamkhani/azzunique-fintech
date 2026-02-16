@@ -1,2 +1,3 @@
 export const RECHARGE_SERVICE_CODE = 'RECHARGE';
 export const AADHAAR_SERVICE_CODE = 'AADHAAR';
+export const PANCARD_SERVICE_CODE = 'PANCARD';
