@@ -19,6 +19,8 @@ import tenantServiceRoutes from './tenantService.routes.js';
 import commisionRoutes from './commission.routes.js';
 import permissionRoutes from './permission.routes.js';
 import reportsRoutes from './reports/reports.routes.js';
+import aadhaarRoutes from './aadhaar/aadhaar.routes.js';
+import pancardRoutes from './pancard/pancard.routes.js';
 
 const router = Router();
 
@@ -41,6 +43,7 @@ router.use('/commission', commisionRoutes);
 router.use('/recharge', rechargeRoutes);
 router.use('/recharge-admin', rechargeAdminRoutes);
 router.use('/reports', reportsRoutes);
-
 router.use('/permissions', permissionRoutes);
+router.use('/aadhaar', aadhaarRoutes);
+router.use('/pancard', pancardRoutes);
 export default router;

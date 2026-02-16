@@ -14,6 +14,7 @@ export const RESOURCES = Object.freeze({
   SOCIAL_MEDIA: "SOCIAL_MEDIA",
   PERMISSION: "PERMISSION",
   PLATFORM: "PLATFORM",
+  ADMIN_SERVICES_RECHARGE: "ADMIN_SERVICES_RECHARGE",
 });
 
 export const ACTIONS = Object.freeze({
@@ -167,6 +168,19 @@ export const PERMISSIONS = {
     TENANTS: {
       READ: { resource: RESOURCES.PLATFORM, action: ACTIONS.READ },
       UPDATE: { resource: RESOURCES.PLATFORM, action: ACTIONS.UPDATE },
+    },
+  },
+
+  ADMIN_SERVICES: {
+    RECHARGE: {
+      READ: {
+        resource: RESOURCES.ADMIN_SERVICES_RECHARGE,
+        action: ACTIONS.READ,
+      },
+      UPDATE: {
+        resource: RESOURCES.ADMIN_SERVICES_RECHARGE,
+        action: ACTIONS.UPDATE,
+      },
     },
   },
 };
