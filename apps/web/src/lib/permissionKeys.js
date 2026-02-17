@@ -110,6 +110,7 @@ export const PERMISSIONS = {
     READ: { resource: RESOURCES.PERMISSION, action: ACTIONS.READ },
     UPDATE: { resource: RESOURCES.PERMISSION, action: ACTIONS.UPDATE },
   },
+  
   PLATFORM: {
     SERVICES: {
       READ: {
@@ -157,14 +158,26 @@ export const PERMISSIONS = {
       },
     },
 
-    PROVIDERS: {
-      READ: { resource: RESOURCES.PLATFORM, action: ACTIONS.READ },
-      UPDATE: { resource: RESOURCES.PLATFORM, action: ACTIONS.UPDATE },
-      CREATE: { resource: RESOURCES.PLATFORM, action: ACTIONS.CREATE },
-      DELETE: { resource: RESOURCES.PLATFORM, action: ACTIONS.DELETE },
+    SERVICE_PROVIDERS: {
+      READ: {
+        resource: RESOURCES.PLATFORM_SERVICE_PROVIDER,
+        action: ACTIONS.READ,
+      },
+      UPDATE: {
+        resource: RESOURCES.PLATFORM_SERVICE_PROVIDER,
+        action: ACTIONS.UPDATE,
+      },
+      CREATE: {
+        resource: RESOURCES.PLATFORM_SERVICE_PROVIDER,
+        action: ACTIONS.CREATE,
+      },
+      DELETE: {
+        resource: RESOURCES.PLATFORM_SERVICE_PROVIDER,
+        action: ACTIONS.DELETE,
+      },
 
       VIEW_PROVIDER: {
-        resource: RESOURCES.PLATFORM,
+        resource: RESOURCES.PLATFORM_SERVICE_PROVIDER,
         action: ACTIONS.VIEW_PROVIDER,
       },
     },

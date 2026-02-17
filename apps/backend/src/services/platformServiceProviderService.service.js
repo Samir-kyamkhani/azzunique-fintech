@@ -1,45 +1,23 @@
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { db } from '../database/core/core-db.js';
 import { ApiError } from '../lib/ApiError.js';
 import {
+  platformServiceFeatureTable,
   platformServiceProviderTable,
-  platformServiceTable,
+  serviceProviderFeatureTable,
   serviceProviderTable,
 } from '../models/core/index.js';
 
 class PlatformServiceProviderService {
-  assertAzzunique(actor) {
+  assertAdmin(actor) {
     if (actor.roleLevel !== 0) {
-      throw ApiError.forbidden('Only AZZUNIQUE allowed');
+      throw ApiError.forbidden('Only admin allowed');
     }
   }
 
   async assign(data, actor) {
-    this.assertAzzunique(actor);
+    this.assertAdmin(actor);
 
-    // 🔒 platform service must exist
-    const service = await db
-      .select()
-      .from(platformServiceTable)
-      .where(eq(platformServiceTable.id, data.platformServiceId))
-      .limit(1);
-
-    if (!service.length) {
-      throw ApiError.badRequest('Platform service does not exist');
-    }
-
-    // 🔒 provider must exist
-    const provider = await db
-      .select()
-      .from(serviceProviderTable)
-      .where(eq(serviceProviderTable.id, data.serviceProviderId))
-      .limit(1);
-
-    if (!provider.length) {
-      throw ApiError.badRequest('Service provider does not exist');
-    }
-
-    // UPSERT (1 provider per service)
     await db
       .insert(platformServiceProviderTable)
       .values({
@@ -50,7 +28,6 @@ class PlatformServiceProviderService {
       })
       .onDuplicateKeyUpdate({
         set: {
-          serviceProviderId: data.serviceProviderId,
           config: data.config,
           isActive: true,
           updatedAt: new Date(),
@@ -60,19 +37,110 @@ class PlatformServiceProviderService {
     return { success: true };
   }
 
-  async disable(platformServiceId, actor) {
-    this.assertAzzunique(actor);
+  async listByService(serviceId) {
+    const rows = await db
+      .select({
+        providerId: serviceProviderTable.id,
+        code: serviceProviderTable.code,
+        providerName: serviceProviderTable.providerName,
+        handler: serviceProviderTable.handler,
+        config: platformServiceProviderTable.config,
 
-    const result = await db
+        featureId: platformServiceFeatureTable.id,
+        featureName: platformServiceFeatureTable.name,
+      })
+      .from(platformServiceProviderTable)
+      .innerJoin(
+        serviceProviderTable,
+        eq(
+          platformServiceProviderTable.serviceProviderId,
+          serviceProviderTable.id,
+        ),
+      )
+      .leftJoin(
+        serviceProviderFeatureTable,
+        eq(
+          serviceProviderFeatureTable.serviceProviderId,
+          serviceProviderTable.id,
+        ),
+      )
+      .leftJoin(
+        platformServiceFeatureTable,
+        eq(
+          platformServiceFeatureTable.id,
+          serviceProviderFeatureTable.platformServiceFeatureId,
+        ),
+      )
+      .where(
+        and(
+          eq(platformServiceProviderTable.platformServiceId, serviceId),
+          eq(platformServiceProviderTable.isActive, true),
+        ),
+      );
+
+    // 🔥 Grouping logic
+    const grouped = {};
+
+    for (const row of rows) {
+      if (!grouped[row.providerId]) {
+        grouped[row.providerId] = {
+          id: row.providerId,
+          code: row.code,
+          providerName: row.providerName,
+          handler: row.handler,
+          config: row.config,
+          features: [],
+        };
+      }
+
+      if (row.featureId) {
+        const alreadyExists = grouped[row.providerId].features.some(
+          (f) => f.id === row.featureId,
+        );
+
+        if (!alreadyExists) {
+          grouped[row.providerId].features.push({
+            id: row.featureId,
+            name: row.featureName,
+          });
+        }
+      }
+    }
+
+    return Object.values(grouped);
+  } /// Other methods like disable and updateConfig would go here
+
+  async disable(serviceId, providerId, actor) {
+    this.assertAdmin(actor);
+
+    await db
       .update(platformServiceProviderTable)
       .set({ isActive: false })
       .where(
-        eq(platformServiceProviderTable.platformServiceId, platformServiceId),
+        and(
+          eq(platformServiceProviderTable.platformServiceId, serviceId),
+          eq(platformServiceProviderTable.serviceProviderId, providerId),
+        ),
       );
 
-    if (!result.rowsAffected) {
-      throw ApiError.notFound('No provider assigned for this service');
-    }
+    return { success: true };
+  }
+
+  async updateConfig(serviceId, providerId, config, actor) {
+    this.assertAdmin(actor);
+
+    await db
+      .update(platformServiceProviderTable)
+      .set({
+        config,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(platformServiceProviderTable.platformServiceId, serviceId),
+          eq(platformServiceProviderTable.serviceProviderId, providerId),
+        ),
+      );
 
     return { success: true };
   }

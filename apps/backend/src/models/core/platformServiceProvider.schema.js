@@ -19,6 +19,7 @@ export const platformServiceProviderTable = mysqlTable(
       .default(sql`(UUID())`),
 
     platformServiceId: varchar('platform_service_id', { length: 36 }).notNull(),
+
     serviceProviderId: varchar('service_provider_id', { length: 36 }).notNull(),
 
     config: json('config').notNull(),
@@ -44,6 +45,6 @@ export const platformServiceProviderTable = mysqlTable(
 
     uniqPlatformServiceProvider: uniqueIndex(
       'uniq_platform_service_provider',
-    ).on(table.platformServiceId, table.isActive),
+    ).on(table.platformServiceId, table.serviceProviderId),
   }),
 );

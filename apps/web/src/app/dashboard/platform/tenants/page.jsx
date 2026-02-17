@@ -1,9 +1,7 @@
-import ServerDetailClient from "@/components/client/ServerDetailClient";
+import React from 'react'
 
-export default function Page() {
+export default function page() {
   return (
-    <div>
-      <ServerDetailClient />
-    </div>
-  );
+    <div>page</div>
+  )
 }

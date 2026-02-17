@@ -1,23 +1,25 @@
 "use client";
 
-import { X, Link } from "lucide-react";
+import { X, Settings } from "lucide-react";
 import Button from "../ui/Button";
 import AssignPlatformServiceProviderForm from "../forms/AssignPlatformServiceProviderForm";
 
 export default function AssignPlatformServiceProviderModal({
   open,
   onClose,
-  serviceId,
-  providers,
   onSubmit,
+  initialData,
   isPending,
+  allProviders = [],
 }) {
   if (!open) return null;
 
+  const isEditMode = Boolean(initialData?.id);
+
   return (
-    <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 p-4">
-      <div className="bg-card border rounded-lg w-full max-w-lg overflow-hidden">
-        <div className="bg-gradient-theme px-6 py-6 relative text-primary-foreground">
+    <div className="fixed inset-0 bg-black/40 flex justify-center items-center p-4 z-50">
+      <div className="bg-card border rounded-lg w-full max-w-xl overflow-hidden">
+        <div className="bg-gradient-theme px-6 py-6 relative">
           <Button
             size="icon"
             variant="ghost"
@@ -27,16 +29,18 @@ export default function AssignPlatformServiceProviderModal({
             <X />
           </Button>
 
-          <div className="flex gap-2 items-center">
-            <Link />
-            <h2 className="text-xl font-bold">Assign Provider</h2>
+          <div className="flex gap-3 text-primary-foreground">
+            <Settings />
+            <h2 className="text-xl font-bold">
+              {isEditMode ? "Update Provider Config" : "Assign Provider"}
+            </h2>
           </div>
         </div>
 
         <div className="p-6">
           <AssignPlatformServiceProviderForm
-            serviceId={serviceId}
-            providers={providers}
+            initialData={initialData}
+            allProviders={allProviders}
             onSubmit={onSubmit}
             isPending={isPending}
           />

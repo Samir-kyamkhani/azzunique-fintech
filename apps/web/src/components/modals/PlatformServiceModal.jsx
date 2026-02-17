@@ -7,15 +7,18 @@ import PlatformServiceForm from "../forms/PlatformServiceForm";
 export default function PlatformServiceModal({
   open,
   onClose,
-  onSubmit,
+  onSubmitService,
   initialData,
   isPending,
 }) {
   if (!open) return null;
 
+  const isEditMode = Boolean(initialData?.id);
+
   return (
     <div className="fixed inset-0 bg-black/40 flex justify-center items-center p-4 z-50">
       <div className="bg-card border rounded-lg w-full max-w-xl overflow-hidden">
+        {/* HEADER */}
         <div className="bg-gradient-theme px-6 py-6 relative">
           <Button
             size="icon"
@@ -29,15 +32,16 @@ export default function PlatformServiceModal({
           <div className="flex gap-3 text-primary-foreground">
             <Layers />
             <h2 className="text-xl font-bold">
-              {initialData ? "Update Service" : "Create Service"}
+              {isEditMode ? "Update Service" : "Create Service"}
             </h2>
           </div>
         </div>
 
+        {/* BODY */}
         <div className="p-6">
           <PlatformServiceForm
             initialData={initialData}
-            onSubmit={onSubmit}
+            onSubmit={onSubmitService}
             isPending={isPending}
           />
         </div>

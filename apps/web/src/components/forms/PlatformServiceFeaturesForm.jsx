@@ -8,16 +8,11 @@ import { AlertCircle } from "lucide-react";
 
 export default function PlatformServiceFeatureForm({
   initialData,
-  services = [], // 🔥 ALL SERVICES LIST
+  serviceId,
   onSubmit,
   isPending,
 }) {
   const isEditMode = Boolean(initialData?.id);
-
-  const serviceOptions = services.map((s) => ({
-    label: `${s.code} - ${s.name}`, // 🔥 SEARCH BY CODE
-    value: s.id,
-  }));
 
   const {
     register,
@@ -27,7 +22,7 @@ export default function PlatformServiceFeatureForm({
     formState: { errors },
   } = useForm({
     defaultValues: {
-      platformServiceId: initialData?.platformServiceId || "",
+      platformServiceId: initialData?.platformServiceId || serviceId,
       code: initialData?.code || "",
       name: initialData?.name || "",
       isActive:
@@ -36,18 +31,13 @@ export default function PlatformServiceFeatureForm({
   });
 
   const submitHandler = (data) => {
-    if (isEditMode) {
-      return onSubmit(
-        {
-          platformServiceId: data.platformServiceId,
-          name: data.name,
-          isActive: data.isActive,
-        },
-        setError,
-      );
-    }
-
-    return onSubmit(data, setError);
+    return onSubmit(
+      {
+        ...data,
+        platformServiceId: serviceId, // 🔥 force correct id
+      },
+      setError,
+    );
   };
 
   return (
@@ -62,40 +52,17 @@ export default function PlatformServiceFeatureForm({
       )}
 
       <form onSubmit={handleSubmit(submitHandler)} className="space-y-4">
-        {/* 🔥 PLATFORM SERVICE SELECT */}
-        <div className="space-y-1.5">
-          <label className="block text-sm font-medium">
-            Platform Service *
-          </label>
+        {/* 🔥 NO SERVICE DROPDOWN ANYMORE */}
 
-          <Controller
-            name="platformServiceId"
-            control={control}
-            rules={{ required: "Platform Service is required" }}
-            render={({ field }) => (
-              <SelectField
-                value={field.value}
-                onChange={field.onChange}
-                options={serviceOptions}
-                placeholder="Select Service"
-                searchable
-                error={errors.platformServiceId}
-              />
-            )}
-          />
-        </div>
-
-        {/* CODE */}
         <InputField
           label="Code"
           name="code"
           register={register}
           required={!isEditMode}
-          disabled={isEditMode} // 🔥 Code immutable update me
+          disabled={isEditMode}
           error={errors.code}
         />
 
-        {/* NAME */}
         <InputField
           label="Name"
           name="name"
@@ -104,7 +71,6 @@ export default function PlatformServiceFeatureForm({
           error={errors.name}
         />
 
-        {/* STATUS */}
         <div className="space-y-1.5">
           <label className="block text-sm font-medium">Status</label>
 

@@ -53,7 +53,7 @@ export default function MapServiceProviderFeatureModal({
                     className="flex justify-between items-center border rounded px-3 py-2"
                   >
                     <span className="text-sm font-medium">
-                      {mf.featureName || mf.platformServiceFeatureId}
+                      {mf.name || mf.id}
                     </span>
 
                     <Button

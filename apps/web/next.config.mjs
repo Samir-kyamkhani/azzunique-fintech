@@ -14,6 +14,11 @@ const nextConfig = {
         hostname: "framerusercontent.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "api.qrserver.com",
+        pathname: "/**",
+      },
     ],
   },
 };

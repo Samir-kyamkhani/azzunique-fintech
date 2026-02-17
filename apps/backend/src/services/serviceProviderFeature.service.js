@@ -4,14 +4,14 @@ import { ApiError } from '../lib/ApiError.js';
 import { serviceProviderFeatureTable } from '../models/core/index.js';
 
 class ServiceProviderFeatureService {
-  assertAzzunique(actor) {
+  assertAdmin(actor) {
     if (actor.roleLevel !== 0) {
-      throw ApiError.forbidden('Only AZZUNIQUE allowed');
+      throw ApiError.forbidden('Only admin allowed');
     }
   }
 
   async map(data, actor) {
-    this.assertAzzunique(actor);
+    this.assertAdmin(actor);
 
     const existing = await db
       .select()
@@ -31,7 +31,7 @@ class ServiceProviderFeatureService {
       .limit(1);
 
     if (existing.length) {
-      throw ApiError.conflict('Feature already mapped to provider');
+      throw ApiError.conflict('Feature already mapped');
     }
 
     await db.insert(serviceProviderFeatureTable).values(data);
@@ -39,21 +39,17 @@ class ServiceProviderFeatureService {
     return { success: true };
   }
 
-  async listByProvider(serviceProviderId) {
-    return db
-      .select()
-      .from(serviceProviderFeatureTable)
-      .where(
-        eq(serviceProviderFeatureTable.serviceProviderId, serviceProviderId),
-      );
-  }
-
-  async unmap(id, actor) {
-    this.assertAzzunique(actor);
+  async unmap(serviceProviderId, featureId, actor) {
+    this.assertAdmin(actor);
 
     await db
       .delete(serviceProviderFeatureTable)
-      .where(eq(serviceProviderFeatureTable.id, id));
+      .where(
+        and(
+          eq(serviceProviderFeatureTable.serviceProviderId, serviceProviderId),
+          eq(serviceProviderFeatureTable.platformServiceFeatureId, featureId),
+        ),
+      );
 
     return { success: true };
   }
