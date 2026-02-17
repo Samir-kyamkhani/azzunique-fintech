@@ -1,0 +1,23 @@
+CREATE TABLE `fund_transactions` (
+	`id` varchar(36) NOT NULL,
+	`tenant_id` varchar(36) NOT NULL,
+	`user_id` varchar(36) NOT NULL,
+	`idempotency_key` varchar(64) NOT NULL,
+	`amount` int NOT NULL,
+	`wallet_id` varchar(36) NOT NULL,
+	`platform_service_id` varchar(36) NOT NULL,
+	`platform_service_feature_id` varchar(36),
+	`provider_code` varchar(40) NOT NULL,
+	`provider_id` varchar(36) NOT NULL,
+	`provider_config` json NOT NULL,
+	`status` varchar(20) NOT NULL,
+	`provider_txn_id` varchar(100),
+	`reference_id` varchar(100),
+	`failure_reason` varchar(255),
+	`retry_count` int DEFAULT 0,
+	`last_retry_at` timestamp,
+	`created_at` timestamp DEFAULT (now()),
+	`updated_at` timestamp DEFAULT (now()),
+	CONSTRAINT `fund_transactions_id` PRIMARY KEY(`id`),
+	CONSTRAINT `uniq_recharge_idempotency` UNIQUE(`tenant_id`,`idempotency_key`)
+);

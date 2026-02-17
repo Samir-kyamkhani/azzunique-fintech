@@ -19,6 +19,7 @@ import permissionRoutes from './permission.routes.js';
 import reportsRoutes from './reports/reports.routes.js';
 import aadhaarRoutes from './aadhaar/aadhaar.routes.js';
 import pancardRoutes from './pancard/pancard.routes.js';
+import fundRequestRoutes from './fund-request/fundTransaction.routes.js';
 import adminServiceRoutes from './adminService.routes.js';
 
 const router = Router();
@@ -44,4 +45,5 @@ router.use('/reports', reportsRoutes);
 router.use('/permissions', permissionRoutes);
 router.use('/aadhaar', aadhaarRoutes);
 router.use('/pancard', pancardRoutes);
+router.use('/fund-request', fundRequestRoutes);
 export default router;

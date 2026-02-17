@@ -84,10 +84,10 @@ const Sidebar = () => {
           permission: PERMISSIONS.DASHBOARD.READ,
         },
         {
-          id: "add-fund",
-          label: "Add Fund",
+          id: "fund-request",
+          label: "Fund Request",
           icon: BadgeIndianRupee,
-          path: "/dashboard/request-fund",
+          path: "/dashboard/fund-request",
         },
         {
           id: "tenants",

@@ -14,6 +14,10 @@ export const RESOURCES = Object.freeze({
   SOCIAL_MEDIA: "SOCIAL_MEDIA",
   PERMISSION: "PERMISSION",
   PLATFORM: "PLATFORM",
+  FUND_REQUEST: "FUND_REQUEST",
+  RECHARGE: "RECHARGE",
+  AADHAAR: "AADHAAR",
+  PANCARD: "PANCARD",
   ADMIN_SERVICES_RECHARGE: "ADMIN_SERVICES_RECHARGE",
 });
 
@@ -192,6 +196,65 @@ export const PERMISSIONS = {
       },
       UPDATE: {
         resource: RESOURCES.ADMIN_SERVICES_RECHARGE,
+        action: ACTIONS.UPDATE,
+      },
+    },
+  },
+
+  TRANSACTIONS: {
+    FUND_REQUEST: {
+      READ: {
+        resource: RESOURCES.FUND_REQUEST,
+        action: ACTIONS.READ,
+      },
+      CREATE: {
+        resource: RESOURCES.FUND_REQUEST,
+        action: ACTIONS.CREATE,
+      },
+      UPDATE: {
+        resource: RESOURCES.FUND_REQUEST,
+        action: ACTIONS.UPDATE,
+      },
+    },
+    RECHARGE: {
+      READ: {
+        resource: RESOURCES.RECHARGE,
+        action: ACTIONS.READ,
+      },
+      CREATE: {
+        resource: RESOURCES.RECHARGE,
+        action: ACTIONS.CREATE,
+      },
+      UPDATE: {
+        resource: RESOURCES.RECHARGE,
+        action: ACTIONS.UPDATE,
+      },
+    },
+    PANCARD: {
+      READ: {
+        resource: RESOURCES.PANCARD,
+        action: ACTIONS.READ,
+      },
+      CREATE: {
+        resource: RESOURCES.PANCARD,
+        action: ACTIONS.CREATE,
+      },
+      UPDATE: {
+        resource: RESOURCES.PANCARD,
+        action: ACTIONS.UPDATE,
+      },
+    },
+    AADHAAR: {
+      READ: {
+        resource: RESOURCES.AADHAAR,
+        action: ACTIONS.READ,
+      },
+      CREATE: {
+        resource: RESOURCES.AADHAAR,
+        action: ACTIONS.CREATE,
+      },
+      UPDATE: {
+        resource: RESOURCES.AADHAAR,
         action: ACTIONS.UPDATE,
       },
     },

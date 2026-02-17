@@ -267,7 +267,13 @@ class AuthService {
       .from(usersTable)
       .leftJoin(roleTable, eq(usersTable.roleId, roleTable.id))
       .leftJoin(tenantsTable, eq(usersTable.tenantId, tenantsTable.id))
-      .leftJoin(walletTable, eq(walletTable.ownerId, usersTable.id))
+      .leftJoin(
+        walletTable,
+        and(
+          eq(walletTable.ownerId, usersTable.id),
+          eq(walletTable.walletType, 'MAIN'),
+        ),
+      )
       .where(eq(usersTable.id, userId))
       .limit(1);
 

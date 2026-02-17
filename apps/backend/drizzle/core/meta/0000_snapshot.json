@@ -1,7 +1,11 @@
 {
   "version": "5",
   "dialect": "mysql",
+<<<<<<< HEAD
+  "id": "d4098140-9a0c-4108-a75a-25f43ddd8f56",
+=======
   "id": "aa3dc44a-7365-4b3e-8333-e06b87e5b71c",
+>>>>>>> 3b825bfe9834d8a5fbf0e7d2ad439edfbbdeeb37
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "audit_log": {
