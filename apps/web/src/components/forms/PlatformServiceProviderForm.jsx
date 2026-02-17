@@ -6,9 +6,8 @@ import SelectField from "../ui/SelectField";
 import Button from "../ui/Button";
 import { AlertCircle } from "lucide-react";
 
-export default function PlatformServiceFeatureForm({
+export default function PlatformServiceProviderForm({
   initialData,
-  serviceId,
   onSubmit,
   isPending,
 }) {
@@ -22,26 +21,21 @@ export default function PlatformServiceFeatureForm({
     formState: { errors },
   } = useForm({
     defaultValues: {
-      platformServiceId: initialData?.platformServiceId || serviceId,
       code: initialData?.code || "",
-      name: initialData?.name || "",
+      providerName: initialData?.providerName || "",
+      handler: initialData?.handler || "",
       isActive:
         initialData?.isActive !== undefined ? initialData.isActive : true,
     },
   });
 
   const submitHandler = (data) => {
-    return onSubmit(
-      {
-        ...data,
-        platformServiceId: serviceId, // 🔥 force correct id
-      },
-      setError,
-    );
+    return onSubmit(data, setError);
   };
 
   return (
     <>
+      {/* ROOT ERROR */}
       {errors?.root && (
         <div className="mb-6 rounded-lg border border-destructive/20 bg-destructive/10 p-4">
           <div className="flex gap-2">
@@ -52,25 +46,35 @@ export default function PlatformServiceFeatureForm({
       )}
 
       <form onSubmit={handleSubmit(submitHandler)} className="space-y-4">
-        {/* 🔥 NO SERVICE DROPDOWN ANYMORE */}
-
+        {/* CODE */}
         <InputField
-          label="Code"
+          label="Provider Code"
           name="code"
           register={register}
-          required={!isEditMode}
-          disabled={isEditMode}
+          required
+          disabled={isEditMode} // code should not change after create
           error={errors.code}
         />
 
+        {/* NAME */}
         <InputField
-          label="Name"
-          name="name"
+          label="Provider Name"
+          name="providerName"
           register={register}
           required
-          error={errors.name}
+          error={errors.providerName}
         />
 
+        {/* HANDLER */}
+        <InputField
+          label="Handler Class"
+          name="handler"
+          register={register}
+          required
+          error={errors.handler}
+        />
+
+        {/* STATUS */}
         <div className="space-y-1.5">
           <label className="block text-sm font-medium">Status</label>
 
@@ -91,7 +95,7 @@ export default function PlatformServiceFeatureForm({
         </div>
 
         <Button type="submit" loading={isPending} className="w-full">
-          {isEditMode ? "Update Feature" : "Create Feature"}
+          {isEditMode ? "Update Provider" : "Create Provider"}
         </Button>
       </form>
     </>

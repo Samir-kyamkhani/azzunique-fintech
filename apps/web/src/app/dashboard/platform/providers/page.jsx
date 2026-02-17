@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function PlatformProvidersPage() {
   return (
-    <ClientGuard anyOf={[PERMISSIONS.PLATFORM.PROVIDERS.READ]}>
+    <ClientGuard anyOf={[PERMISSIONS.PLATFORM.SERVICE_PROVIDERS.READ]}>
       <PlatformProvidersClient />
     </ClientGuard>
   );

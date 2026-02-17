@@ -7,14 +7,14 @@ import {
 } from '../models/core/index.js';
 
 class PlatformServiceFeatureService {
-  assertAzzunique(actor) {
+  assertAdmin(actor) {
     if (actor.roleLevel !== 0) {
-      throw ApiError.forbidden('Only AZZUNIQUE allowed');
+      throw ApiError.forbidden('Only admin allowed');
     }
   }
 
   async create(data, actor) {
-    this.assertAzzunique(actor);
+    this.assertAdmin(actor);
 
     const service = await db
       .select()
@@ -23,10 +23,10 @@ class PlatformServiceFeatureService {
       .limit(1);
 
     if (!service.length) {
-      throw ApiError.badRequest('Platform service not found');
+      throw ApiError.badRequest('Service not found');
     }
 
-    const exists = await db
+    const existing = await db
       .select()
       .from(platformServiceFeatureTable)
       .where(
@@ -40,7 +40,7 @@ class PlatformServiceFeatureService {
       )
       .limit(1);
 
-    if (exists.length) {
+    if (existing.length) {
       throw ApiError.conflict('Feature already exists');
     }
 
@@ -52,17 +52,15 @@ class PlatformServiceFeatureService {
     return { success: true };
   }
 
-  async listByService(platformServiceId) {
+  async listByService(serviceId) {
     return db
       .select()
       .from(platformServiceFeatureTable)
-      .where(
-        eq(platformServiceFeatureTable.platformServiceId, platformServiceId),
-      );
+      .where(eq(platformServiceFeatureTable.platformServiceId, serviceId));
   }
 
   async update(id, data, actor) {
-    this.assertAzzunique(actor);
+    this.assertAdmin(actor);
 
     await db
       .update(platformServiceFeatureTable)
@@ -76,7 +74,7 @@ class PlatformServiceFeatureService {
   }
 
   async delete(id, actor) {
-    this.assertAzzunique(actor);
+    this.assertAdmin(actor);
 
     await db
       .update(platformServiceFeatureTable)

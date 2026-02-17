@@ -2,15 +2,15 @@
 
 import { X, Settings } from "lucide-react";
 import Button from "../ui/Button";
-import AssignPlatformServiceProviderForm from "../forms/AssignPlatformServiceProviderForm";
+import PlatformServiceFeatureForm from "../forms/PlatformServiceFeaturesForm";
 
-export default function AssignPlatformServiceProviderModal({
+export default function PlatformServiceFeatureModal({
   open,
   onClose,
-  onSubmit,
   initialData,
+  serviceId,
+  onSubmit,
   isPending,
-  allProviders = [],
 }) {
   if (!open) return null;
 
@@ -32,15 +32,15 @@ export default function AssignPlatformServiceProviderModal({
           <div className="flex gap-3 text-primary-foreground">
             <Settings />
             <h2 className="text-xl font-bold">
-              {isEditMode ? "Update Provider Config" : "Assign Provider"}
+              {isEditMode ? "Update Feature" : "Create Feature"}
             </h2>
           </div>
         </div>
 
         <div className="p-6">
-          <AssignPlatformServiceProviderForm
+          <PlatformServiceFeatureForm
             initialData={initialData}
-            allProviders={allProviders}
+            serviceId={serviceId} // 🔥 direct
             onSubmit={onSubmit}
             isPending={isPending}
           />

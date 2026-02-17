@@ -13,14 +13,13 @@ import tenantWebsiteRoutes from './tenantWebsite.routes.js';
 import tenantSocialMediaRoutes from './tenantSocialMedia.routes.js';
 import rechargeRoutes from './recharge/recharge.routes.js';
 import rechargeAdminRoutes from './recharge-admin/recharge-admin.routes.js';
-import platformServiceRoutes from './platformService.routes.js';
-import serviceProviderRoutes from './serviceProvider.routes.js';
 import tenantServiceRoutes from './tenantService.routes.js';
 import commisionRoutes from './commission.routes.js';
 import permissionRoutes from './permission.routes.js';
 import reportsRoutes from './reports/reports.routes.js';
 import aadhaarRoutes from './aadhaar/aadhaar.routes.js';
 import pancardRoutes from './pancard/pancard.routes.js';
+import adminServiceRoutes from './adminService.routes.js';
 
 const router = Router();
 
@@ -36,8 +35,7 @@ router.use('/departments', departmentRoutes);
 router.use('/employees', employeeRoutes);
 router.use('/website', tenantWebsiteRoutes);
 router.use('/social-media', tenantSocialMediaRoutes);
-router.use('/platform-services', platformServiceRoutes);
-router.use('/platform-providers', serviceProviderRoutes);
+router.use('/admin/services', adminServiceRoutes);
 router.use('/platform-tenants', tenantServiceRoutes);
 router.use('/commission', commisionRoutes);
 router.use('/recharge', rechargeRoutes);

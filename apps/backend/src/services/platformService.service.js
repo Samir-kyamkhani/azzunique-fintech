@@ -4,14 +4,14 @@ import { ApiError } from '../lib/ApiError.js';
 import { platformServiceTable } from '../models/core/index.js';
 
 class PlatformServiceService {
-  assertAzzunique(actor) {
+  assertAdmin(actor) {
     if (actor.roleLevel !== 0) {
-      throw ApiError.forbidden('Only AZZUNIQUE allowed');
+      throw ApiError.forbidden('Only admin allowed');
     }
   }
 
   async create(data, actor) {
-    this.assertAzzunique(actor);
+    this.assertAdmin(actor);
 
     const existing = await db
       .select()
@@ -20,7 +20,7 @@ class PlatformServiceService {
       .limit(1);
 
     if (existing.length) {
-      throw ApiError.conflict('Platform service already exists');
+      throw ApiError.conflict('Service already exists');
     }
 
     await db.insert(platformServiceTable).values({
@@ -43,14 +43,14 @@ class PlatformServiceService {
       .where(eq(platformServiceTable.id, id));
 
     if (!service) {
-      throw ApiError.notFound('Platform service not found');
+      throw ApiError.notFound('Service not found');
     }
 
     return service;
   }
 
   async update(id, data, actor) {
-    this.assertAzzunique(actor);
+    this.assertAdmin(actor);
 
     await this.getById(id);
 
@@ -66,11 +66,10 @@ class PlatformServiceService {
   }
 
   async delete(id, actor) {
-    this.assertAzzunique(actor);
+    this.assertAdmin(actor);
 
     await this.getById(id);
 
-    // Soft delete
     await db
       .update(platformServiceTable)
       .set({ isActive: false })
