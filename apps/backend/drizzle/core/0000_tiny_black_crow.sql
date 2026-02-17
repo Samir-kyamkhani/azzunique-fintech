@@ -350,10 +350,10 @@ CREATE TABLE `kyc_documents` (
 	`id` varchar(36) NOT NULL DEFAULT (UUID()),
 	`owner_type` varchar(10) NOT NULL,
 	`owner_id` varchar(36) NOT NULL,
-	`document_type` varchar(255) NOT NULL,
-	`document_side` varchar(10) NOT NULL DEFAULT 'SINGLE',
+	`document_type` varchar(50) NOT NULL,
 	`document_url` varchar(500) NOT NULL,
 	`document_number` varchar(255),
+	`row_response` json,
 	`created_at` timestamp NOT NULL DEFAULT (now()),
 	`updated_at` timestamp NOT NULL DEFAULT (now()),
 	CONSTRAINT `kyc_documents_id` PRIMARY KEY(`id`)
@@ -588,6 +588,21 @@ CREATE TABLE `wallet_snapshots` (
 	CONSTRAINT `wallet_snapshots_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
+CREATE TABLE `mail_queue` (
+	`id` varchar(36) NOT NULL DEFAULT (UUID()),
+	`tenant_id` varchar(36) NOT NULL,
+	`recipient_email` varchar(255) NOT NULL,
+	`subject` varchar(255) NOT NULL,
+	`html` text NOT NULL,
+	`status` varchar(20) NOT NULL DEFAULT 'PENDING',
+	`attempts` int NOT NULL DEFAULT 0,
+	`next_attempt_at` timestamp NOT NULL DEFAULT (now()),
+	`error_message` text,
+	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`updated_at` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `mail_queue_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
 ALTER TABLE `audit_log` ADD CONSTRAINT `audit_user_fk` FOREIGN KEY (`perform_by_user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `audit_log` ADD CONSTRAINT `audit_tenant_fk` FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `users` ADD CONSTRAINT `user_role_fk` FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -633,7 +648,6 @@ ALTER TABLE `tenants_kyc` ADD CONSTRAINT `tk_verified_by_user_fk` FOREIGN KEY (`
 ALTER TABLE `users_kyc` ADD CONSTRAINT `uk_user_fk` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `users_kyc` ADD CONSTRAINT `uk_submitted_by_user_fk` FOREIGN KEY (`submitted_by_user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `users_kyc` ADD CONSTRAINT `uk_verified_by_user_fk` FOREIGN KEY (`verified_by_user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `kyc_documents` ADD CONSTRAINT `kyc_owner_user_fk` FOREIGN KEY (`owner_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `pii_consent` ADD CONSTRAINT `pii_consent_user_fk` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `pii_consent` ADD CONSTRAINT `pii_consent_tenant_fk` FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `transactions` ADD CONSTRAINT `txn_initiated_by_user_fk` FOREIGN KEY (`initiated_by_user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -668,6 +682,7 @@ ALTER TABLE `user_commission_settings` ADD CONSTRAINT `ucs_platform_service_fk` 
 ALTER TABLE `user_commission_settings` ADD CONSTRAINT `ucs_platform_service_feature_fk` FOREIGN KEY (`platform_service_feature_id`) REFERENCES `platform_service_features`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `user_commission_settings` ADD CONSTRAINT `ucs_user_fk` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `wallet_snapshots` ADD CONSTRAINT `wallet_snapshots_wallet_id_wallets_id_fk` FOREIGN KEY (`wallet_id`) REFERENCES `wallets`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `mail_queue` ADD CONSTRAINT `mail_queue_tenant_fk` FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX `idx_user_tenant_status` ON `users` (`tenant_id`,`user_status`);--> statement-breakpoint
 CREATE INDEX `idx_user_owner` ON `users` (`owner_user_id`);--> statement-breakpoint
 CREATE INDEX `idx_tenant_parent` ON `tenants` (`parent_tenant_id`);--> statement-breakpoint
@@ -683,8 +698,8 @@ CREATE INDEX `idx_tenant_page_type` ON `tenants_pages` (`page_type`);--> stateme
 CREATE INDEX `idx_tenant_pages_status` ON `tenants_pages` (`status`);--> statement-breakpoint
 CREATE INDEX `idx_tenant_kyc_status` ON `tenants_kyc` (`status`);--> statement-breakpoint
 CREATE INDEX `idx_user_kyc_status` ON `users_kyc` (`verification_status`);--> statement-breakpoint
-CREATE INDEX `idx_kyc_owner` ON `kyc_documents` (`owner_type`,`owner_id`);--> statement-breakpoint
-CREATE INDEX `idx_kyc_document_type` ON `kyc_documents` (`document_type`);--> statement-breakpoint
+CREATE INDEX `idx_owner` ON `kyc_documents` (`owner_type`,`owner_id`);--> statement-breakpoint
+CREATE INDEX `idx_doc_type` ON `kyc_documents` (`document_type`);--> statement-breakpoint
 CREATE INDEX `idx_pii_consent_user` ON `pii_consent` (`user_id`);--> statement-breakpoint
 CREATE INDEX `idx_pii_consent_tenant` ON `pii_consent` (`tenant_id`);--> statement-breakpoint
 CREATE INDEX `idx_psf_service` ON `platform_service_features` (`platform_service_id`);--> statement-breakpoint
@@ -704,4 +719,5 @@ CREATE INDEX `idx_commission_transaction` ON `commission_earnings` (`transaction
 CREATE INDEX `idx_rcs_tenant` ON `role_commission_settings` (`tenant_id`);--> statement-breakpoint
 CREATE INDEX `idx_rcs_role` ON `role_commission_settings` (`role_id`);--> statement-breakpoint
 CREATE INDEX `idx_rcs_feature` ON `role_commission_settings` (`platform_service_feature_id`);--> statement-breakpoint
-CREATE INDEX `idx_wallet_snapshots_wallet` ON `wallet_snapshots` (`wallet_id`);
+CREATE INDEX `idx_wallet_snapshots_wallet` ON `wallet_snapshots` (`wallet_id`);--> statement-breakpoint
+CREATE INDEX `idx_mail_status_retry` ON `mail_queue` (`status`,`next_attempt_at`);

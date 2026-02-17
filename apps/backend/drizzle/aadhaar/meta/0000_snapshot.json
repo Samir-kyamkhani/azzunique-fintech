@@ -1,88 +1,11 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "9becad41-faff-4518-9e10-83f3321a922f",
+  "id": "ad2fce44-0d1f-4cfa-9bcf-ffb8cbf5b7de",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
-    "recharge_operator_map": {
-      "name": "recharge_operator_map",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "platform_service_id": {
-          "name": "platform_service_id",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "provider_code": {
-          "name": "provider_code",
-          "type": "varchar(30)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "internal_operator_code": {
-          "name": "internal_operator_code",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "provider_operator_code": {
-          "name": "provider_operator_code",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": "(now())"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": "(now())"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {
-        "recharge_operator_map_id": {
-          "name": "recharge_operator_map_id",
-          "columns": [
-            "id"
-          ]
-        }
-      },
-      "uniqueConstraints": {
-        "uq_rom_int_ps_prov": {
-          "name": "uq_rom_int_ps_prov",
-          "columns": [
-            "internal_operator_code",
-            "platform_service_id",
-            "provider_code"
-          ]
-        }
-      },
-      "checkConstraint": {}
-    },
-    "recharge_transactions": {
-      "name": "recharge_transactions",
+    "aadhaar_sessions": {
+      "name": "aadhaar_sessions",
       "columns": {
         "id": {
           "name": "id",
@@ -105,23 +28,16 @@
           "notNull": true,
           "autoincrement": false
         },
-        "mobile_number": {
-          "name": "mobile_number",
-          "type": "varchar(15)",
+        "aadhaar_number_encrypted": {
+          "name": "aadhaar_number_encrypted",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "operator_code": {
-          "name": "operator_code",
-          "type": "varchar(10)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "circle_code": {
-          "name": "circle_code",
-          "type": "varchar(10)",
+        "masked_aadhaar": {
+          "name": "masked_aadhaar",
+          "type": "varchar(20)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -133,39 +49,11 @@
           "notNull": true,
           "autoincrement": false
         },
-        "amount": {
-          "name": "amount",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "blocked_amount": {
-          "name": "blocked_amount",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "wallet_id": {
-          "name": "wallet_id",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "platform_service_id": {
           "name": "platform_service_id",
           "type": "varchar(36)",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
-        },
-        "platform_service_feature_id": {
-          "name": "platform_service_feature_id",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": false,
           "autoincrement": false
         },
         "provider_code": {
@@ -189,11 +77,11 @@
           "notNull": true,
           "autoincrement": false
         },
-        "status": {
-          "name": "status",
-          "type": "varchar(20)",
+        "reference_id": {
+          "name": "reference_id",
+          "type": "varchar(100)",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "provider_txn_id": {
@@ -203,9 +91,17 @@
           "notNull": false,
           "autoincrement": false
         },
-        "reference_id": {
-          "name": "reference_id",
-          "type": "varchar(100)",
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'INITIATED'"
+        },
+        "response_payload": {
+          "name": "response_payload",
+          "type": "json",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -217,17 +113,38 @@
           "notNull": false,
           "autoincrement": false
         },
-        "retry_count": {
-          "name": "retry_count",
+        "attempt_count": {
+          "name": "attempt_count",
           "type": "int",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
           "default": 0
         },
-        "last_retry_at": {
-          "name": "last_retry_at",
+        "last_attempt_at": {
+          "name": "last_attempt_at",
           "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "verified_at": {
+          "name": "verified_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "consent_given_at": {
+          "name": "consent_given_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "consent_ip": {
+          "name": "consent_ip",
+          "type": "varchar(45)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -250,19 +167,33 @@
         }
       },
       "indexes": {
-        "uniq_recharge_idempotency": {
-          "name": "uniq_recharge_idempotency",
+        "uniq_aadhaar_idempotency": {
+          "name": "uniq_aadhaar_idempotency",
           "columns": [
             "tenant_id",
             "idempotency_key"
           ],
           "isUnique": true
+        },
+        "idx_aadhaar_user": {
+          "name": "idx_aadhaar_user",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
+        },
+        "idx_aadhaar_status": {
+          "name": "idx_aadhaar_status",
+          "columns": [
+            "status"
+          ],
+          "isUnique": false
         }
       },
       "foreignKeys": {},
       "compositePrimaryKeys": {
-        "recharge_transactions_id": {
-          "name": "recharge_transactions_id",
+        "aadhaar_sessions_id": {
+          "name": "aadhaar_sessions_id",
           "columns": [
             "id"
           ]
@@ -271,8 +202,8 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
-    "recharge_callbacks": {
-      "name": "recharge_callbacks",
+    "aadhaar_callbacks": {
+      "name": "aadhaar_callbacks",
       "columns": {
         "id": {
           "name": "id",
@@ -281,8 +212,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "transaction_id": {
-          "name": "transaction_id",
+        "session_id": {
+          "name": "session_id",
           "type": "varchar(36)",
           "primaryKey": false,
           "notNull": true,
@@ -334,20 +265,27 @@
         }
       },
       "indexes": {
-        "uniq_recharge_callback": {
-          "name": "uniq_recharge_callback",
+        "uniq_aadhaar_callback": {
+          "name": "uniq_aadhaar_callback",
           "columns": [
-            "transaction_id",
+            "session_id",
             "provider_txn_id",
             "status"
           ],
           "isUnique": true
+        },
+        "idx_aadhaar_callback_session": {
+          "name": "idx_aadhaar_callback_session",
+          "columns": [
+            "session_id"
+          ],
+          "isUnique": false
         }
       },
       "foreignKeys": {},
       "compositePrimaryKeys": {
-        "recharge_callbacks_id": {
-          "name": "recharge_callbacks_id",
+        "aadhaar_callbacks_id": {
+          "name": "aadhaar_callbacks_id",
           "columns": [
             "id"
           ]
@@ -356,26 +294,62 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
-    "recharge_circle_map": {
-      "name": "recharge_circle_map",
+    "aadhaar_fee_transactions": {
+      "name": "aadhaar_fee_transactions",
       "columns": {
         "id": {
           "name": "id",
           "type": "varchar(36)",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false,
+          "default": "(UUID())"
+        },
+        "tenant_id": {
+          "name": "tenant_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
           "autoincrement": false
         },
-        "internal_circle_code": {
-          "name": "internal_circle_code",
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "session_id": {
+          "name": "session_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "wallet_id": {
+          "name": "wallet_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "amount": {
+          "name": "amount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
           "type": "varchar(20)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "mplan_circle_code": {
-          "name": "mplan_circle_code",
-          "type": "varchar(10)",
+        "reference": {
+          "name": "reference",
+          "type": "varchar(100)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -397,11 +371,26 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uniq_aadhaar_fee_session": {
+          "name": "uniq_aadhaar_fee_session",
+          "columns": [
+            "session_id"
+          ],
+          "isUnique": true
+        },
+        "idx_aadhaar_fee_status": {
+          "name": "idx_aadhaar_fee_status",
+          "columns": [
+            "status"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {
-        "recharge_circle_map_id": {
-          "name": "recharge_circle_map_id",
+        "aadhaar_fee_transactions_id": {
+          "name": "aadhaar_fee_transactions_id",
           "columns": [
             "id"
           ]
