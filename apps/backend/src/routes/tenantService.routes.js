@@ -3,18 +3,39 @@ import { validate } from '../middleware/zod-validate.js';
 import { AuthMiddleware } from '../middleware/auth.middleware.js';
 
 import * as TS from '../controllers/tenantService.controller.js';
-
-import { enableTenantServiceSchema } from '../validators/tenantService.schema.js';
+import {
+  tenantServiceParamsSchema,
+  tenantServiceWithPlatformParamsSchema,
+  enableTenantServiceSchema,
+} from '../validators/tenantService.schema.js';
 
 const router = Router();
 router.use(AuthMiddleware);
 
-router.post(
+// Enable Service
+router.put(
   '/:tenantId/services',
-  validate({ body: enableTenantServiceSchema }),
+  validate({
+    params: tenantServiceParamsSchema,
+    body: enableTenantServiceSchema,
+  }),
   TS.enableTenantService,
 );
 
-router.get('/:tenantId/services', TS.listTenantServices);
+// Disable Service
+router.delete(
+  '/:tenantId/services/:platformServiceId',
+  validate({
+    params: tenantServiceWithPlatformParamsSchema,
+  }),
+  TS.disableTenantService,
+);
+
+// List Services
+router.get(
+  '/:tenantId/services',
+  validate({ params: tenantServiceParamsSchema }),
+  TS.listTenantServices,
+);
 
 export default router;
