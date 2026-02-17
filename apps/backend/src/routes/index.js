@@ -19,11 +19,8 @@ import permissionRoutes from './permission.routes.js';
 import reportsRoutes from './reports/reports.routes.js';
 import aadhaarRoutes from './aadhaar/aadhaar.routes.js';
 import pancardRoutes from './pancard/pancard.routes.js';
-<<<<<<< HEAD
 import fundRequestRoutes from './fund-request/fundTransaction.routes.js';
-=======
 import adminServiceRoutes from './adminService.routes.js';
->>>>>>> 3b825bfe9834d8a5fbf0e7d2ad439edfbbdeeb37
 
 const router = Router();
 
