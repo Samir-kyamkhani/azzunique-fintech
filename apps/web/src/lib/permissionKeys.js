@@ -18,7 +18,6 @@ export const RESOURCES = Object.freeze({
   RECHARGE: "RECHARGE",
   AADHAAR: "AADHAAR",
   PANCARD: "PANCARD",
-  ADMIN_SERVICES_RECHARGE: "ADMIN_SERVICES_RECHARGE",
 });
 
 export const ACTIONS = Object.freeze({
@@ -198,19 +197,6 @@ export const PERMISSIONS = {
       CREATE: {
         resource: RESOURCES.PLATFORM_SERVICE_TENANT,
         action: ACTIONS.CREATE,
-      },
-    },
-  },
-
-  ADMIN_SERVICES: {
-    RECHARGE: {
-      READ: {
-        resource: RESOURCES.ADMIN_SERVICES_RECHARGE,
-        action: ACTIONS.READ,
-      },
-      UPDATE: {
-        resource: RESOURCES.ADMIN_SERVICES_RECHARGE,
-        action: ACTIONS.UPDATE,
       },
     },
   },
