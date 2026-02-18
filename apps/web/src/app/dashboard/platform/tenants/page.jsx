@@ -1,7 +1,15 @@
-import React from 'react'
+import TenantServicesClient from "@/components/client/TenantServicesClient";
+import ClientGuard from "@/components/ClientGuard";
+import { PERMISSIONS } from "@/lib/permissionKeys";
 
-export default function page() {
+export const metadata = {
+  title: "Tenant Services",
+};
+
+export default function TenantServicesPage() {
   return (
-    <div>page</div>
-  )
+    <ClientGuard anyOf={[PERMISSIONS.PLATFORM.SERVICE_TENANTS.READ]}>
+      <TenantServicesClient />
+    </ClientGuard>
+  );
 }

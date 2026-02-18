@@ -9,7 +9,7 @@ export default function Page() {
       anyOf={[
         PERMISSIONS.PLATFORM.SERVICES.READ,
         PERMISSIONS.PLATFORM.SERVICE_PROVIDERS.READ,
-        PERMISSIONS.PLATFORM.TENANTS.READ,
+        PERMISSIONS.PLATFORM.SERVICE_TENANTS.READ,
       ]}
       redirectMap={[
         {
@@ -22,7 +22,7 @@ export default function Page() {
         },
         {
           path: "/dashboard/platform/tenants",
-          perm: PERMISSIONS.PLATFORM.TENANTS.READ,
+          perm: PERMISSIONS.PLATFORM.SERVICE_TENANTS.READ,
         },
       ]}
     >

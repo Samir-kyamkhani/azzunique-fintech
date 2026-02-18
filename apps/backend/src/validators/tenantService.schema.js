@@ -10,5 +10,6 @@ export const tenantServiceWithPlatformParamsSchema = z.object({
 });
 
 export const enableTenantServiceSchema = z.object({
+  tenantId: z.string().uuid(),
   platformServiceId: z.string().uuid(),
 });

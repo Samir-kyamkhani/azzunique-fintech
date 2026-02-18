@@ -12,11 +12,13 @@ import {
 const router = Router();
 router.use(AuthMiddleware);
 
+// List All Services (Hierarchy based)
+router.get('/services/all', TS.listAllTenantServices);
+
 // Enable Service
 router.put(
-  '/:tenantId/services',
+  '/services',
   validate({
-    params: tenantServiceParamsSchema,
     body: enableTenantServiceSchema,
   }),
   TS.enableTenantService,
@@ -29,13 +31,6 @@ router.delete(
     params: tenantServiceWithPlatformParamsSchema,
   }),
   TS.disableTenantService,
-);
-
-// List Services
-router.get(
-  '/:tenantId/services',
-  validate({ params: tenantServiceParamsSchema }),
-  TS.listTenantServices,
 );
 
 export default router;

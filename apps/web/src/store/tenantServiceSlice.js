@@ -1,26 +1,61 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+const initialState = {
+  byTenant: {}, // { [tenantId]: services[] }
+  allServices: [], // listAll result
+  selectedTenantId: null,
+  loading: false,
+  error: null,
+};
+
 const tenantServiceSlice = createSlice({
   name: "tenantService",
-  initialState: {
-    tenantServices: [],
-    selectedTenantId: null,
-  },
+  initialState,
   reducers: {
-    setTenantServices(state, action) {
-      state.tenantServices = action.payload;
+    /* ================= Loading ================= */
+    setLoading(state, action) {
+      state.loading = action.payload;
     },
+
+    setError(state, action) {
+      state.error = action.payload;
+    },
+
+    clearError(state) {
+      state.error = null;
+    },
+
+    /* ================= Tenant Scoped ================= */
+    setTenantServices(state, action) {
+      const { tenantId, services } = action.payload;
+      state.byTenant[tenantId] = services;
+    },
+
+    /* ================= List All ================= */
+    setAllTenantServices(state, action) {
+      state.allServices = action.payload;
+    },
+
+    /* ================= Selection ================= */
     setSelectedTenant(state, action) {
       state.selectedTenantId = action.payload;
     },
+
+    /* ================= Reset ================= */
     clearTenantServices(state) {
-      state.tenantServices = [];
-      state.selectedTenantId = null;
+      return initialState;
     },
   },
 });
 
-export const { setTenantServices, setSelectedTenant, clearTenantServices } =
-  tenantServiceSlice.actions;
+export const {
+  setLoading,
+  setError,
+  clearError,
+  setTenantServices,
+  setAllTenantServices,
+  setSelectedTenant,
+  clearTenantServices,
+} = tenantServiceSlice.actions;
 
 export default tenantServiceSlice.reducer;
