@@ -13,7 +13,7 @@ import { useOperatorMaps, useUpsertOperatorMap } from "@/hooks/useRecharge";
 import { permissionChecker } from "@/lib/permissionCheker";
 import { PERMISSIONS } from "@/lib/permissionKeys";
 import { toast } from "@/lib/toast";
-import { useServices } from "@/hooks/useAdminServices";
+import { useProviders, useServices } from "@/hooks/useAdminServices";
 import OperatorMapModal from "../modals/OperatorMapModal";
 
 export default function OperatorMapsClient() {
@@ -21,6 +21,7 @@ export default function OperatorMapsClient() {
   const [editingData, setEditingData] = useState(null);
 
   const { data: services = [] } = useServices();
+  const { data: providers = [] } = useProviders();
 
   const { data = [], isLoading, refetch } = useOperatorMaps();
   const { mutate: upsertMap, isPending } = useUpsertOperatorMap();
@@ -95,6 +96,7 @@ export default function OperatorMapsClient() {
         onSubmit={handleSubmit}
         isPending={isPending}
         services={services}
+        providers={providers}
       />
     </>
   );

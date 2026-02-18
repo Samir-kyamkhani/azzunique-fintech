@@ -11,6 +11,7 @@ export default function OperatorMapModal({
   onSubmit,
   isPending,
   services,
+  providers,
 }) {
   if (!open) return null;
 
@@ -43,6 +44,7 @@ export default function OperatorMapModal({
             onSubmit={onSubmit}
             isPending={isPending}
             services={services}
+            providers={providers}
           />
         </div>
       </div>
