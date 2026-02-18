@@ -14,7 +14,7 @@ class OperatorMapService {
      * Expected data:
      * {
      *   platformServiceId,
-     *   providerCode,
+     *   serviceProviderId,
      *   internalOperatorCode,
      *   providerOperatorCode
      * }
@@ -37,10 +37,25 @@ class OperatorMapService {
   }
 
   async list() {
-    return db.select().from(rechargeOperatorMapTable);
+    return db
+      .select({
+        id: rechargeOperatorMapTable.id,
+        internalOperatorCode: rechargeOperatorMapTable.internalOperatorCode,
+        providerOperatorCode: rechargeOperatorMapTable.providerOperatorCode,
+        providerName: serviceProviderTable.providerName,
+      })
+      .from(rechargeOperatorMapTable)
+      .leftJoin(
+        serviceProviderTable,
+        eq(rechargeOperatorMapTable.serviceProviderId, serviceProviderTable.id),
+      );
   }
 
-  async resolve({ internalOperatorCode, platformServiceId, providerCode }) {
+  async resolve({
+    internalOperatorCode,
+    platformServiceId,
+    serviceProviderId,
+  }) {
     const [row] = await db
       .select()
       .from(rechargeOperatorMapTable)
@@ -51,14 +66,14 @@ class OperatorMapService {
             internalOperatorCode,
           ),
           eq(rechargeOperatorMapTable.platformServiceId, platformServiceId),
-          eq(rechargeOperatorMapTable.providerCode, providerCode),
+          eq(rechargeOperatorMapTable.serviceProviderId, serviceProviderId),
         ),
       )
       .limit(1);
 
     if (!row) {
       throw ApiError.badRequest(
-        `Operator mapping not found for ${internalOperatorCode} (${providerCode})`,
+        `Operator mapping not found for ${internalOperatorCode}`,
       );
     }
 

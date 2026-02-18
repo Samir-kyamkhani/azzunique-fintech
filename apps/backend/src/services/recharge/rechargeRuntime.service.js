@@ -137,7 +137,7 @@ class RechargeRuntimeService {
       const providerOperatorCode = await OperatorMapService.resolve({
         internalOperatorCode: txn.operatorCode,
         platformServiceId: txn.platformServiceId,
-        providerCode: txn.providerCode,
+        serviceProviderId: txn.providerId,
       });
 
       const providerCircleCode = txn.circleCode

@@ -7,7 +7,7 @@ export const rechargeOperatorMapTable = mysqlTable(
 
     platformServiceId: varchar('platform_service_id', { length: 36 }).notNull(),
 
-    providerCode: varchar('provider_code', { length: 30 }).notNull(),
+    serviceProviderId: varchar('service_provider_id', { length: 36 }).notNull(),
 
     internalOperatorCode: varchar('internal_operator_code', {
       length: 20,
@@ -24,7 +24,7 @@ export const rechargeOperatorMapTable = mysqlTable(
     uniq: unique('uq_rom_int_ps_prov').on(
       table.internalOperatorCode,
       table.platformServiceId,
-      table.providerCode,
+      table.serviceProviderId,
     ),
   }),
 );

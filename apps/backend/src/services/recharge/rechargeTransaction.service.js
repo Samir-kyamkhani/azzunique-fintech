@@ -103,7 +103,7 @@ class RechargeTransactionService {
       const providerOperatorCode = await OperatorMapService.resolve({
         internalOperatorCode: operatorCode,
         platformServiceId: service.id,
-        providerCode: provider.code,
+        serviceProviderId: provider.providerId,
       });
 
       const providerCircleCode = circleCode
