@@ -154,7 +154,7 @@ const Sidebar = () => {
           permissionGroup: [
             PERMISSIONS.PLATFORM.SERVICES.READ,
             PERMISSIONS.PLATFORM.SERVICE_PROVIDERS.READ,
-            PERMISSIONS.PLATFORM.TENANTS.READ,
+            PERMISSIONS.PLATFORM.SERVICE_TENANTS.READ,
           ],
         },
         {
