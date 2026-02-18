@@ -110,7 +110,7 @@ export const PERMISSIONS = {
     READ: { resource: RESOURCES.PERMISSION, action: ACTIONS.READ },
     UPDATE: { resource: RESOURCES.PERMISSION, action: ACTIONS.UPDATE },
   },
-  
+
   PLATFORM: {
     SERVICES: {
       READ: {
@@ -182,9 +182,15 @@ export const PERMISSIONS = {
       },
     },
 
-    TENANTS: {
-      READ: { resource: RESOURCES.PLATFORM, action: ACTIONS.READ },
-      UPDATE: { resource: RESOURCES.PLATFORM, action: ACTIONS.UPDATE },
+    SERVICE_TENANTS: {
+      READ: {
+        resource: RESOURCES.PLATFORM_SERVICE_TENANT,
+        action: ACTIONS.READ,
+      },
+      UPDATE: {
+        resource: RESOURCES.PLATFORM_SERVICE_TENANT,
+        action: ACTIONS.UPDATE,
+      },
     },
   },
 
