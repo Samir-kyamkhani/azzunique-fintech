@@ -20,7 +20,7 @@ import {
   FileCog,
 } from "lucide-react";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLogout } from "@/hooks/useAuth";
 import Button from "./ui/Button";
 import { useDispatch, useSelector } from "react-redux";
@@ -45,13 +45,6 @@ const Sidebar = () => {
   const can = (resource, action) => permissionChecker(perms, resource, action);
 
   const [openMenus, setOpenMenus] = useState({});
-
-  // auto open parent when child route active
-  useEffect(() => {
-    if (pathname.startsWith("/dashboard/admin-services")) {
-      setOpenMenus((prev) => ({ ...prev, "admin-services": true }));
-    }
-  }, [pathname]);
 
   const toggleMenu = (id) => {
     setOpenMenus((prev) => ({
@@ -140,7 +133,12 @@ const Sidebar = () => {
           icon: BarChart3,
           path: "/dashboard/reports",
         },
-        { id: "logs", label: "Logs", icon: FileCode, path: "/dashboard/logs" },
+        {
+          id: "logs",
+          label: "Logs",
+          icon: FileCode,
+          path: "/dashboard/logs",
+        },
       ],
     },
     {
@@ -157,24 +155,7 @@ const Sidebar = () => {
             PERMISSIONS.PLATFORM.SERVICE_TENANTS.READ,
           ],
         },
-        {
-          id: "admin-services",
-          label: "Admin Services",
-          icon: FileCog,
-          children: [
-            {
-              id: "operator-map",
-              label: "Operator Map",
-              path: "/dashboard/admin-services/operator-map",
-            },
-            {
-              id: "circle-map",
-              label: "Circle Map",
-              path: "/dashboard/admin-services/circle-map",
-            },
-          ],
-          permissionGroup: [PERMISSIONS.ADMIN_SERVICES.RECHARGE.READ],
-        },
+
         {
           id: "settings",
           label: "Settings",
@@ -195,11 +176,17 @@ const Sidebar = () => {
 
   const MenuItem = ({ item }) => {
     const Icon = item.icon;
+
     const isActive = item.path && pathname.startsWith(item.path);
 
-    // parent with children
+    // Parent with children
     if (item.children) {
-      const isOpen = openMenus[item.id];
+      // 🔥 Auto-open if any child route matches
+      const isAutoOpen = item.children.some((child) =>
+        pathname.startsWith(child.path),
+      );
+
+      const isOpen = openMenus[item.id] || isAutoOpen;
 
       return (
         <div>
@@ -240,6 +227,7 @@ const Sidebar = () => {
       );
     }
 
+    // Normal item
     return (
       <Link
         href={item.path}
@@ -285,7 +273,8 @@ const Sidebar = () => {
   // ================= UI =================
 
   return (
-    <div className="w-64 h-full flex flex-col border-r border-border bg-sidebar">
+    <div className="h-full flex flex-col border-r border-border bg-sidebar">
+      {/* Header */}
       <div className="px-6 py-2.5 bg-gradient-secondry border-b border-border">
         <div className="flex items-center gap-3">
           <Play className="h-6 w-6 text-primary" />
@@ -298,6 +287,7 @@ const Sidebar = () => {
         </div>
       </div>
 
+      {/* Wallet */}
       {currentUser?.type !== "EMPLOYEE" && (
         <div className="p-4">
           <div className="bg-muted rounded-border p-3 border border-border">
@@ -314,12 +304,14 @@ const Sidebar = () => {
         </div>
       )}
 
+      {/* Menu */}
       <div className="flex-1 px-4 pb-4 overflow-y-auto">
         {menuSections.map((section) => (
           <MenuSection key={section.title} {...section} />
         ))}
       </div>
 
+      {/* Logout */}
       <div className="p-4 border-t border-border">
         <Button
           variant="ghost"
