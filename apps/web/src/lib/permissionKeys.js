@@ -191,6 +191,14 @@ export const PERMISSIONS = {
         resource: RESOURCES.PLATFORM_SERVICE_TENANT,
         action: ACTIONS.UPDATE,
       },
+      DELETE: {
+        resource: RESOURCES.PLATFORM_SERVICE_TENANT,
+        action: ACTIONS.DELETE,
+      },
+      CREATE: {
+        resource: RESOURCES.PLATFORM_SERVICE_TENANT,
+        action: ACTIONS.CREATE,
+      },
     },
   },
 

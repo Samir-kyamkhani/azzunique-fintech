@@ -25,6 +25,7 @@ import { PowerOff } from "lucide-react";
 
 export default function TenantServicesClient() {
   const perms = useSelector((s) => s.auth.user?.permissions);
+  const can = (perm) => permissionChecker(perms, perm.resource, perm.action);
   const [openModal, setOpenModal] = useState(false);
 
   const {
@@ -52,11 +53,9 @@ export default function TenantServicesClient() {
     if (error) toast.error(error.message);
   }, [error]);
 
-  const canUpdate = permissionChecker(
-    perms,
-    PERMISSIONS.PLATFORM.SERVICE_TENANTS.UPDATE.resource,
-    PERMISSIONS.PLATFORM.SERVICE_TENANTS.UPDATE.action,
-  );
+  const canCreate = can(PERMISSIONS.PLATFORM.SERVICE_TENANTS.CREATE);
+  const canUpdate = can(PERMISSIONS.PLATFORM.SERVICE_TENANTS.UPDATE);
+  const canDelete = can(PERMISSIONS.PLATFORM.SERVICE_TENANTS.DELETE);
 
   const handleEnable = (payload, setError) => {
     enableService(payload, {
@@ -80,32 +79,39 @@ export default function TenantServicesClient() {
     );
   };
 
-  const extraActions = canUpdate
-    ? [
-        {
-          label: "Enable",
-          icon: Power,
-          onClick: (row) => {
-            handleEnable(
-              {
-                tenantId: row.tenantId,
-                platformServiceId: row.platformServiceId,
-              },
-              () => {},
-            );
+  const extraActions = [
+    ...(canUpdate
+      ? [
+          {
+            label: "Enable",
+            icon: Power,
+            onClick: (row) => {
+              handleEnable(
+                {
+                  tenantId: row.tenantId,
+                  platformServiceId: row.platformServiceId,
+                },
+                () => {},
+              );
+            },
+            show: (row) => !row.isEnabled,
           },
-          show: (row) => !row.isEnabled,
-        },
-        {
-          label: "Disable",
-          icon: PowerOff,
-          onClick: (row) => {
-            handleDisable(row);
+        ]
+      : []),
+
+    ...(canDelete
+      ? [
+          {
+            label: "Disable",
+            icon: PowerOff,
+            onClick: (row) => {
+              handleDisable(row);
+            },
+            show: (row) => row.isEnabled,
           },
-          show: (row) => row.isEnabled,
-        },
-      ]
-    : [];
+        ]
+      : []),
+  ];
 
   return (
     <>
@@ -133,7 +139,13 @@ export default function TenantServicesClient() {
       <TenantServicesTable
         data={services}
         loading={isLoading}
-        onAdd={canUpdate ? () => setOpenModal(true) : undefined}
+        onAdd={
+          canCreate
+            ? () => {
+                setOpenModal(true);
+              }
+            : undefined
+        }
         extraActions={extraActions}
       />
 

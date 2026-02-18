@@ -13,8 +13,6 @@ import {
   useCreateProvider,
   useUpdateProvider,
   useDeleteProvider,
-  useMapProviderFeature,
-  useUnmapProviderFeature,
 } from "@/hooks/useAdminServices";
 
 import { permissionChecker } from "@/lib/permissionCheker";
@@ -27,7 +25,6 @@ export default function PlatformProvidersClient() {
   const [openModal, setOpenModal] = useState(false);
   const [editingData, setEditingData] = useState(null);
 
-  // ✅ Correct Hooks
   const { data: data = [], isLoading } = useProviders();
 
   const { mutate: createProvider, isPending: creating } = useCreateProvider();
@@ -35,9 +32,6 @@ export default function PlatformProvidersClient() {
   const { mutate: updateProvider, isPending: updating } = useUpdateProvider();
 
   const { mutate: deleteProvider } = useDeleteProvider();
-
-  const { mutate: mapFeature } = useMapProviderFeature();
-  const { mutate: unmapFeature } = useUnmapProviderFeature();
 
   const perms = useSelector((s) => s.auth.user?.permissions);
   const can = (perm) => permissionChecker(perms, perm.resource, perm.action);
