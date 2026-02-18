@@ -40,7 +40,7 @@ router.use('/admin/services', adminServiceRoutes);
 router.use('/platform-tenants', tenantServiceRoutes);
 router.use('/commission', commisionRoutes);
 router.use('/recharge', rechargeRoutes);
-router.use('/recharge-admin', rechargeAdminRoutes);
+router.use('/admin/recharge', rechargeAdminRoutes);
 router.use('/reports', reportsRoutes);
 router.use('/permissions', permissionRoutes);
 router.use('/aadhaar', aadhaarRoutes);

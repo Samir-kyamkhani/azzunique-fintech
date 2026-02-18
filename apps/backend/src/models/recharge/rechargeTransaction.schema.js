@@ -38,6 +38,8 @@ export const rechargeTransactionTable = mysqlTable(
     status: varchar('status', { length: 20 }).notNull(),
     // INITIATED | SUCCESS | FAILED | PENDING | REFUNDED
 
+    providerResponse: json('provider_response').notNull(),
+
     providerTxnId: varchar('provider_txn_id', { length: 100 }),
     referenceId: varchar('reference_id', { length: 100 }),
 

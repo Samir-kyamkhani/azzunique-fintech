@@ -3,7 +3,10 @@ import { validate } from '../../middleware/zod-validate.js';
 import { AuthMiddleware } from '../../middleware/auth.middleware.js';
 import { fetchRechargePlans } from '../../controllers/recharge/rechargePlan.controller.js';
 import { fetchRechargeOffers } from '../../controllers/recharge/rechargeOffer.controller.js';
-import { initiateRecharge, retryRecharge } from '../../controllers/recharge/rechargeTransaction.controller.js';
+import {
+  initiateRecharge,
+  retryRecharge,
+} from '../../controllers/recharge/rechargeTransaction.controller.js';
 import { rechargeCallback } from '../../controllers/recharge/rechargeCallback.controller.js';
 import { rechargePlanSchema } from '../../validators/recharge/rechargePlan.schema.js';
 import { rechargeOfferSchema } from '../../validators/recharge/rechargeOffer.schema.js';
@@ -24,6 +27,13 @@ const rechargeLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 5, // limit each IP to 5 requests per windowMs
 });
+
+// RECHARGE HISTORY GET /api/recharge/history
+// router.get(
+//   '/history',
+//   validate({ query: rechargeHistoryQuerySchema }),
+//   fetchRechargeHistory,
+// );
 
 // MPLAN — FETCH PLANS GET /api/recharge/plans
 router.get(

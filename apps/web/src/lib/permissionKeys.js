@@ -259,4 +259,49 @@ export const PERMISSIONS = {
       },
     },
   },
+
+  RECHARGE: {
+    READ: { resource: RESOURCES.RECHARGE, action: ACTIONS.READ },
+    CREATE: { resource: RESOURCES.RECHARGE, action: ACTIONS.CREATE },
+    UPDATE: { resource: RESOURCES.RECHARGE, action: ACTIONS.UPDATE },
+    RETRY: { resource: RESOURCES.RECHARGE, action: ACTIONS.RETRY },
+    ADMIN: {
+      OPERATORS: {
+        READ: {
+          resource: RESOURCES.RECHARGE_OPERATORS,
+          action: ACTIONS.READ,
+        },
+        CREATE: {
+          resource: RESOURCES.RECHARGE_OPERATORS,
+          action: ACTIONS.CREATE,
+        },
+        UPDATE: {
+          resource: RESOURCES.RECHARGE_OPERATORS,
+          action: ACTIONS.UPDATE,
+        },
+        DELETE: {
+          resource: RESOURCES.RECHARGE_OPERATORS,
+          action: ACTIONS.DELETE,
+        },
+      },
+      CIRCLES: {
+        READ: {
+          resource: RESOURCES.RECHARGE_CIRCLES,
+          action: ACTIONS.READ,
+        },
+        CREATE: {
+          resource: RESOURCES.RECHARGE_CIRCLES,
+          action: ACTIONS.CREATE,
+        },
+        UPDATE: {
+          resource: RESOURCES.RECHARGE_CIRCLES,
+          action: ACTIONS.UPDATE,
+        },
+        DELETE: {
+          resource: RESOURCES.RECHARGE_CIRCLES,
+          action: ACTIONS.DELETE,
+        },
+      },
+    },
+  },
 };
