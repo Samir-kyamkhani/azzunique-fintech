@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "139a0e69-4a37-4385-bdfc-f34abb572561",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "82e7de3f-818e-44bf-bea8-03b3969baf6b",
+  "prevId": "139a0e69-4a37-4385-bdfc-f34abb572561",
   "tables": {
     "audit_log": {
       "name": "audit_log",
@@ -4248,13 +4248,6 @@
             "created_at"
           ],
           "isUnique": false
-        },
-        "idx_ledger_transaction": {
-          "name": "idx_ledger_transaction",
-          "columns": [
-            "transaction_id"
-          ],
-          "isUnique": false
         }
       },
       "foreignKeys": {
@@ -4264,19 +4257,6 @@
           "tableTo": "wallets",
           "columnsFrom": [
             "wallet_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "ledger_transaction_fk": {
-          "name": "ledger_transaction_fk",
-          "tableFrom": "ledgers",
-          "tableTo": "transactions",
-          "columnsFrom": [
-            "transaction_id"
           ],
           "columnsTo": [
             "id"

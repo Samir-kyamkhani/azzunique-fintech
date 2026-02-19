@@ -235,7 +235,7 @@ export default function UserClient() {
   const handleView = (user) => {
     if (!canViewUser || !user?.id) return;
     dispatch(setUser(user));
-    router.push(`/dashboard/users/${user.id}`);
+    router.push(`/dashboard/user-management/users/${user.id}`);
   };
 
   const handleSubmit = (formData, setError) => {

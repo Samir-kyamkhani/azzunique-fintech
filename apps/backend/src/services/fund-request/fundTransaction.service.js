@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { db } from '../../database/core/core-db.js';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, inArray, sql, count, or, like, desc } from 'drizzle-orm';
 
 import { fundTransactionTable } from '../../models/fund-request/index.js';
 import { ApiError } from '../../lib/ApiError.js';
@@ -13,11 +13,12 @@ import { getFundRequestPlugin } from '../../plugin_registry/fund-request/pluginR
 
 import WalletService from '../wallet.service.js';
 import { tenantsTable } from '../../models/core/index.js';
+import { generateNumber } from '../../lib/lib.js';
 
 class FundTransactionService {
   // MAIN ENTRY
   static async initiateFundRequest({ payload, actor }) {
-    const { amount, idempotencyKey, paymentMode } = payload;
+    const { amount, idempotencyKey, paymentMode, providerTxnId } = payload;
 
     if (!paymentMode) {
       throw ApiError.badRequest('Payment mode is required');
@@ -29,6 +30,12 @@ class FundTransactionService {
       tenantChain,
       platformServiceCode: FUNDREQUEST_SERVICE_CODE,
     });
+
+    if (provider.code === 'MANUAL' && !providerTxnId) {
+      throw ApiError.badRequest(
+        'Provider transaction ID/UTR No. is required for manual fund request',
+      );
+    }
 
     // 🔐 Idempotency check
     const existing = await db
@@ -67,7 +74,6 @@ class FundTransactionService {
     // 🧠 Create provider transaction
     const providerResponse = await plugin.createTransaction({
       amount,
-      transid: transactionId,
       paymentMode,
     });
 
@@ -79,6 +85,7 @@ class FundTransactionService {
       walletId: mainWallet.id,
       amount,
       paymentMode,
+      referenceId: generateNumber('REF', 8),
 
       platformServiceId: service.id,
       platformServiceFeatureId: null,
@@ -87,8 +94,13 @@ class FundTransactionService {
       providerId: provider.providerId,
       providerConfig: provider.config,
 
-      providerTxnId: providerResponse.providerTxnId,
+      providerTxnId:
+        provider.code === 'MANUAL'
+          ? providerTxnId
+          : providerResponse.providerTxnId,
       status: providerResponse.status,
+
+      providerResponse: provider.providerResponse && provider.providerResponse,
 
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -101,84 +113,89 @@ class FundTransactionService {
     };
   }
 
-  // PROVIDER RESPONSE HANDLER
-  static async _handleProviderResponse({ transactionId, providerResponse }) {
-    const status = String(providerResponse.status).toUpperCase();
-
-    // Manual fund → always pending
-    await db
-      .update(fundTransactionTable)
-      .set({
-        status: 'PENDING',
-        providerTxnId: providerResponse.providerTxnId,
-        updatedAt: new Date(),
-      })
-      .where(eq(fundTransactionTable.id, transactionId));
-
-    return {
-      status: 'PENDING',
-      transactionId,
-      instructions: providerResponse.instructions || null,
-    };
-  }
-
   // ADMIN APPROVE / REJECT
-  static async changeStatus({ transactionId, status, actor }) {
+  static async changeStatus(id, payload, actor) {
+    const { status, failureReason } = payload;
+
     if (!actor.isTenantOwner && actor.roleLevel !== 0) {
       throw ApiError.forbidden('Not allowed');
     }
 
-    await db.transaction(async (tx) => {
-      const [txn] = await tx
-        .select()
-        .from(fundTransactionTable)
-        .where(eq(fundTransactionTable.id, transactionId))
-        .forUpdate()
-        .limit(1);
+    if (!['SUCCESS', 'REJECTED'].includes(status)) {
+      throw ApiError.badRequest('Invalid status value');
+    }
 
-      if (!txn || txn.status !== 'PENDING') {
-        throw ApiError.badRequest('Invalid transaction');
+    const [txn] = await db
+      .select()
+      .from(fundTransactionTable)
+      .where(eq(fundTransactionTable.id, id));
+
+    if (!txn) {
+      throw ApiError.notFound('Transaction not found');
+    }
+
+    if (txn.providerCode !== 'MANUAL') {
+      throw ApiError.badRequest(
+        'Only MANUAL fund requests can be approved or rejected manually',
+      );
+    }
+
+    if (txn.status !== 'PENDING') {
+      throw ApiError.badRequest('Only pending transactions can be processed');
+    }
+
+    if (status === 'REJECTED' && !failureReason) {
+      throw ApiError.badRequest('Rejection reason is required');
+    }
+
+    if (status === 'SUCCESS' && !txn.providerTxnId) {
+      throw ApiError.badRequest(
+        'Provider transaction ID / UTR is required before approval',
+      );
+    }
+
+    if (status === 'SUCCESS') {
+      const wallets = await WalletService.getUserWallets(
+        actor.id,
+        actor.tenantId,
+      );
+
+      const payerWallet = wallets.find((w) => w.walletType === 'MAIN');
+
+      if (!payerWallet) {
+        throw ApiError.notFound('Approver wallet not found');
       }
 
-      if (status === 'SUCCESS') {
-        // 🔥 PAYER = approver
-        if (actor.roleLevel !== 0) {
-          const [payerWallet] = await WalletService.getUserWallets(
-            actor.id,
-            actor.tenantId,
-          ).then((w) => w.filter((x) => x.walletType === 'MAIN'));
-
-          if (!payerWallet) {
-            throw ApiError.notFound('Approver wallet not found');
-          }
-
-          if (payerWallet.balance < txn.amount) {
-            throw ApiError.badRequest('Insufficient balance to approve');
-          }
-
-          await WalletService.debitWallet({
-            walletId: payerWallet.id,
-            amount: txn.amount,
-            reference: `FUND_APPROVE_DEBIT:${txn.id}`,
-          });
-        }
-
-        // CREDIT requester
-        await WalletService.creditWallet({
-          walletId: txn.walletId,
-          amount: txn.amount,
-          reference: `FUND_APPROVE_CREDIT:${txn.id}`,
-        });
+      if (actor.roleLevel !== 0 && payerWallet.balance < txn.amount) {
+        throw ApiError.badRequest('Insufficient balance to approve');
       }
 
-      await tx
-        .update(fundTransactionTable)
-        .set({
-          status,
-          updatedAt: new Date(),
-        })
-        .where(eq(fundTransactionTable.id, transactionId));
-    });
+      await WalletService.debitWallet({
+        walletId: payerWallet.id,
+        amount: txn.amount,
+        transactionId: txn.id,
+        reference: `FUND_APPROVE_DEBIT:${txn.referenceId}`,
+        isSystem: actor.roleLevel === 0,
+      });
+
+      await WalletService.creditWallet({
+        walletId: txn.walletId,
+        amount: txn.amount,
+        transactionId: txn.id,
+        reference: `FUND_APPROVE_CREDIT:${txn.referenceId}`,
+      });
+    }
+
+    await db
+      .update(fundTransactionTable)
+      .set({
+        status,
+        failureReason: status === 'REJECTED' ? failureReason : null,
+        processedBy: actor.id,
+        processedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(fundTransactionTable.id, id));
 
     return { success: true };
   }
@@ -219,41 +236,112 @@ class FundTransactionService {
     return { success: true };
   }
 
-  // get all by tenant id
-
-  // FAIL HELPER
-  static async _fail({ transactionId, reason }) {
-    await db
-      .update(fundTransactionTable)
-      .set({
-        status: 'FAILED',
-        failureReason: reason,
-        updatedAt: new Date(),
-      })
-      .where(eq(fundTransactionTable.id, transactionId));
-  }
-
   // get all txn
-  static async getAll(actor) {
-    //  Get direct child tenants only
+  static async findAll(query = {}, actor) {
+    if (!actor?.tenantId) {
+      throw ApiError.badRequest('Tenant context missing');
+    }
+
+    const page = query.page ? parseInt(query.page, 10) : 1;
+    const limit = query.limit ? parseInt(query.limit, 10) : 20;
+    const offset = (page - 1) * limit;
+
+    // 🔹 Get direct children
     const children = await db
       .select({ id: tenantsTable.id })
       .from(tenantsTable)
-      .where(eq(tenantsTable.parentId, actor.tenantId));
+      .where(eq(tenantsTable.parentTenantId, actor.tenantId));
 
     if (!children.length) {
-      return [];
+      return {
+        data: [],
+        meta: {
+          total: 0,
+          page,
+          limit,
+          stats: {},
+          totalPages: 0,
+        },
+      };
     }
 
     const childTenantIds = children.map((c) => c.id);
 
-    //  Fetch transactions where tenantId belongs to direct children
-    const transactions = await db
-      .select()
-      .from(fundTransactionTable)
-      .where(inArray(fundTransactionTable.tenantId, childTenantIds));
+    const conditions = [inArray(fundTransactionTable.tenantId, childTenantIds)];
 
-    return transactions;
+    if (query.search) {
+      const term = `%${query.search}%`;
+
+      conditions.push(
+        or(
+          like(fundTransactionTable.providerTxnId, term),
+          like(fundTransactionTable.referenceId, term),
+          like(fundTransactionTable.providerCode, term),
+          like(tenantsTable.tenantNumber, term),
+          like(tenantsTable.tenantLegalName, term),
+        ),
+      );
+    }
+
+    if (query.status && query.status !== 'all') {
+      conditions.push(eq(fundTransactionTable.status, query.status));
+    }
+
+    const [{ total }] = await db
+      .select({ total: count().mapWith(Number) })
+      .from(fundTransactionTable)
+      .leftJoin(
+        tenantsTable,
+        eq(fundTransactionTable.tenantId, tenantsTable.id),
+      )
+      .where(and(...conditions));
+
+    const statsRows = await db
+      .select({
+        status: fundTransactionTable.status,
+        count: count().mapWith(Number),
+      })
+      .from(fundTransactionTable)
+      .where(inArray(fundTransactionTable.tenantId, childTenantIds))
+      .groupBy(fundTransactionTable.status);
+
+    const stats = {
+      SUCCESS: 0,
+      PENDING: 0,
+      FAILED: 0,
+      REJECTED: 0,
+    };
+
+    statsRows.forEach((r) => {
+      stats[r.status] = r.count;
+    });
+
+    const rows = await db
+      .select({
+        ...fundTransactionTable,
+        tenantName: tenantsTable.tenantLegalName,
+        tenantNumber: tenantsTable.tenantNumber,
+      })
+      .from(fundTransactionTable)
+      .leftJoin(
+        tenantsTable,
+        eq(fundTransactionTable.tenantId, tenantsTable.id),
+      )
+      .where(and(...conditions))
+      .orderBy(desc(fundTransactionTable.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    return {
+      data: rows,
+      meta: {
+        total,
+        page,
+        limit,
+        stats,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 }
 

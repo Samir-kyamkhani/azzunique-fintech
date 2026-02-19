@@ -8,6 +8,7 @@ import {
 } from '../models/core/index.js';
 import { db } from '../database/core/core-db.js';
 import { ApiError } from './ApiError.js';
+import tenantServiceEffective from './tenantService.effective.js';
 
 export async function platformServiceResolve({
   tenantChain,
@@ -28,25 +29,17 @@ export async function platformServiceResolve({
     throw ApiError.notFound(`${platformServiceCode} service not configured`);
   }
 
-  // 2️⃣ Hierarchy enable check (BOTTOM → TOP)
-  for (const tenantId of tenantChain) {
-    const [enabled] = await db
-      .select()
-      .from(tenantServiceTable)
-      .where(
-        and(
-          eq(tenantServiceTable.tenantId, tenantId),
-          eq(tenantServiceTable.platformServiceId, service.id),
-          eq(tenantServiceTable.isEnabled, true),
-        ),
-      )
-      .limit(1);
+  const enabled = await tenantServiceEffective.isServiceEffectivelyEnabled(
+    tenantChain[0],
+    service.id,
+  );
 
-    if (!enabled) {
-      throw ApiError.forbidden(
-        `${platformServiceCode} service disabled for this hierarchy`,
-      );
-    }
+  console.log(enabled);
+
+  if (!enabled) {
+    throw ApiError.forbidden(
+      `${platformServiceCode} service disabled for in this tenant hierachy`,
+    );
   }
 
   // 3️⃣ Provider resolve (TOP MOST ACTIVE)

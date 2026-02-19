@@ -81,6 +81,7 @@ const Sidebar = () => {
           label: "Fund Request",
           icon: BadgeIndianRupee,
           path: "/dashboard/fund-request",
+          hideForSuperAdmin: true,
         },
         {
           id: "tenants",
@@ -243,6 +244,10 @@ const Sidebar = () => {
 
   const MenuSection = ({ title, items }) => {
     const visibleItems = items.filter((item) => {
+      if (item.hideForSuperAdmin && currentUser?.role?.roleLevel === 0) {
+        return false;
+      }
+
       if (item.permission)
         return can(item.permission.resource, item.permission.action);
 

@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "e51e43ad-0948-4b28-bccd-f4be0ae37dec",
+  "id": "c802047d-e290-44d8-85c4-cda862172a5a",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "pan_sessions": {

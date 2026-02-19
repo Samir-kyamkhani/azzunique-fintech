@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { AlertCircle } from "lucide-react";
 import Image from "next/image";
@@ -7,7 +9,7 @@ import Button from "@/components/ui/Button";
 import InputField from "@/components/ui/InputField";
 import SelectField from "@/components/ui/SelectField";
 
-const MIN_AMOUNT = 1;
+const MIN_AMOUNT = 100;
 
 export default function FundRequestForm({ onSubmit, isPending }) {
   const {
@@ -20,9 +22,11 @@ export default function FundRequestForm({ onSubmit, isPending }) {
     defaultValues: {
       amount: "",
       paymentMode: "",
-      referenceNumber: "",
+      providerTxnId: "",
     },
   });
+
+  const [idempotencyKey] = useState(() => uuidv4());
 
   const paymentMode = useWatch({
     control,
@@ -34,11 +38,19 @@ export default function FundRequestForm({ onSubmit, isPending }) {
     name: "amount",
   });
 
-  const onFormSubmit = (data) => {
-    onSubmit(data, setError);
-  };
-
   const validAmount = Number(amount) >= MIN_AMOUNT;
+
+  const onFormSubmit = (data) => {
+    onSubmit(
+      {
+        ...data,
+        amount: Number(data.amount),
+        paymentMode: data.paymentMode.toUpperCase(),
+        idempotencyKey,
+      },
+      setError,
+    );
+  };
 
   return (
     <>
@@ -65,8 +77,6 @@ export default function FundRequestForm({ onSubmit, isPending }) {
               value: MIN_AMOUNT,
               message: `Minimum amount ₹${MIN_AMOUNT}`,
             },
-            validate: (value) =>
-              Number(value) > 0 || "Amount must be greater than 0",
           }}
           onWheel={(e) => e.target.blur()}
           error={errors.amount}
@@ -101,15 +111,10 @@ export default function FundRequestForm({ onSubmit, isPending }) {
           <div className="rounded-xl border bg-muted/40 p-5 space-y-5">
             {paymentMode === "UPI" && (
               <div className="grid md:grid-cols-2 gap-6 items-center">
-                {/* LEFT SIDE TEXT */}
                 <div className="space-y-3">
                   <h3 className="font-semibold text-base">
                     Scan & Pay via UPI
                   </h3>
-
-                  <p className="text-sm text-muted-foreground">
-                    Use any UPI app to complete payment.
-                  </p>
 
                   {validAmount && (
                     <div className="space-y-1 text-sm">
@@ -122,7 +127,6 @@ export default function FundRequestForm({ onSubmit, isPending }) {
                   )}
                 </div>
 
-                {/* RIGHT SIDE QR */}
                 <div className="flex justify-center">
                   {validAmount ? (
                     <div className="bg-white p-4 rounded-xl shadow-md border">
@@ -149,38 +153,21 @@ export default function FundRequestForm({ onSubmit, isPending }) {
                 <h3 className="font-semibold text-base text-center">
                   Bank Transfer Details
                 </h3>
-                <div className="grid md:grid-cols-2 gap-6 items-start">
-                  <div className=" border rounded-lg p-4 space-y-2 text-sm shadow-sm">
-                    <p>
-                      Account Name: <strong>Azzunique Pvt Ltd</strong>
-                    </p>
-                    <p>
-                      Account Number: <strong>1234567890</strong>
-                    </p>
-                    <p>
-                      IFSC Code: <strong>HDFC0001234</strong>
-                    </p>
-                    <p>
-                      Bank: <strong>HDFC Bank</strong>
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-center space-y-3">
-                    <div className="bg-white p-4 rounded-xl border shadow-md">
-                      <Image
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
-                          `Azzunique Pvt Ltd\nAcc: 1234567890\nIFSC: HDFC0001234\nBank: HDFC Bank`,
-                        )}`}
-                        alt="Bank QR"
-                        width={180}
-                        height={180}
-                      />
-                    </div>
-
-                    <p className="text-xs text-muted-foreground text-center">
-                      Scan to copy bank details
-                    </p>
-                  </div>
+                <div className="border rounded-lg p-4 space-y-2 text-sm shadow-sm">
+                  <p>
+                    Account Name: <strong>Azzunique Pvt Ltd</strong>
+                  </p>
+                  <p>
+                    Account Number: <strong>1234567890</strong>
+                  </p>
+                  <p>
+                    IFSC Code: <strong>HDFC0001234</strong>
+                  </p>
+                  <p>
+                    Bank: <strong>HDFC Bank</strong>
+                  </p>
                 </div>
+
                 {validAmount && (
                   <p className="text-xs text-center text-muted-foreground">
                     Transfer ₹{amount} and enter UTR below.
@@ -191,34 +178,25 @@ export default function FundRequestForm({ onSubmit, isPending }) {
           </div>
         )}
 
-        {/* ================= UTR SECTION ================= */}
-        <div className="space-y-2">
-          <InputField
-            label="Reference Number / UTR No."
-            name="referenceNumber"
-            register={register}
-            disabled={!paymentMode}
-            rules={{
-              required: paymentMode ? "Reference number is required" : false,
-              minLength: {
-                value: 8,
-                message: "Invalid UTR number",
-              },
-              pattern: {
-                value: /^[a-zA-Z0-9]+$/,
-                message: "Only alphanumeric characters allowed",
-              },
-            }}
-            error={errors.referenceNumber}
-          />
-
-          <p className="text-xs text-muted-foreground">
-            Enter the transaction ID shown in your UPI or bank app after
-            payment.
-          </p>
-        </div>
-
-        {/* ================= SUBMIT ================= */}
+        {/* ================= UTR ================= */}
+        <InputField
+          label="ProviderTxnId / UTR No."
+          name="providerTxnId"
+          register={register}
+          disabled={!paymentMode}
+          rules={{
+            required: paymentMode ? "Reference number is required" : false,
+            minLength: {
+              value: 8,
+              message: "Invalid UTR number",
+            },
+            pattern: {
+              value: /^[a-zA-Z0-9]+$/,
+              message: "Only alphanumeric characters allowed",
+            },
+          }}
+          error={errors.providerTxnId}
+        />
 
         <Button type="submit" loading={isPending} className="w-full mt-3">
           Submit Fund Request

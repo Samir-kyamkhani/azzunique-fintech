@@ -10,11 +10,11 @@ export const createFundTransaction = async (req, res) => {
 };
 
 export const changeFundStatus = async (req, res) => {
-  const result = await FundTransactionService.changeStatus({
-    transactionId: req.params.id,
-    status: req.body.status,
-    actor: req.user,
-  });
+  const result = await FundTransactionService.changeStatus(
+    req.params.id,
+    req.body,
+    req.user,
+  );
 
   res.json(result);
 };
@@ -29,6 +29,6 @@ export const refundFundTransaction = async (req, res) => {
 };
 
 export const listTransactions = async (req, res) => {
-  const result = await FundTransactionService.getAll(req.user);
+  const result = await FundTransactionService.findAll(req.query, req.user);
   res.json(result);
 };

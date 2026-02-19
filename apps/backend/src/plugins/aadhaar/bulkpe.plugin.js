@@ -16,58 +16,45 @@ class BulkpeAadhaarPlugin extends AadhaarPluginInterface {
     });
   }
 
-  /**
-   * Step 1: Send OTP
-   */
-  async sendOtp({ aadhaarNumber }) {
+  // Step 1: Send OTP
+  async verifyAadhar({ aadhaarNumber }) {
     try {
-      const res = await this.client.post('/aadhaar/send-otp', {
-        aadhaar_number: aadhaarNumber,
+      const response = await this.client.post('/verifyAadhar', {
+        aadhaar: aadhaarNumber,
       });
 
-      if (!res.data.success) {
-        throw ApiError.badRequest(res.data.message || 'Failed to send OTP');
+      const data = response.data;
+
+      if (!data.status) {
+        throw ApiError.badRequest(data.message || 'Failed to send OTP');
       }
 
-      return {
-        referenceId: res.data.data.reference_id,
-        message: 'OTP sent successfully',
-      };
+      return data;
     } catch (err) {
       throw ApiError.internal(
-        err.response?.data?.message || 'Aadhaar OTP error',
+        err.response?.data?.message || 'Aadhaar OTP request failed',
       );
     }
   }
 
-  /**
-   * Step 2: Verify OTP
-   */
-  async verifyOtp({ referenceId, otp }) {
+  // Step 2: Verify OTP
+  async verifyAadharOtp({ referenceId, otp }) {
     try {
-      const res = await this.client.post('/aadhaar/verify-otp', {
-        reference_id: referenceId,
+      const response = await this.client.post('/verifyAadharOtp', {
+        ref_id: referenceId,
         otp,
       });
 
-      if (!res.data.success) {
-        throw ApiError.badRequest(
-          res.data.message || 'OTP verification failed',
-        );
+      const data = response.data;
+
+      if (!data.status) {
+        throw ApiError.badRequest(data.message || 'OTP verification failed');
       }
 
-      return {
-        aadhaarNumber: res.data.data.aadhaar_number,
-        name: res.data.data.name,
-        dob: res.data.data.dob,
-        gender: res.data.data.gender,
-        address: res.data.data.address,
-        state: res.data.data.state,
-        pincode: res.data.data.pincode,
-      };
+      return data;
     } catch (err) {
       throw ApiError.internal(
-        err.response?.data?.message || 'Aadhaar verification error',
+        err.response?.data?.message || 'Aadhaar verification failed',
       );
     }
   }

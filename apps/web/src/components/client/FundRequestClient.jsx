@@ -1,258 +1,122 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { RefreshCw, CheckCircle } from "lucide-react";
+import {
+  RefreshCw,
+  BadgeIndianRupee,
+  CheckCircle,
+  ClipboardClock,
+  BanknoteX,
+} from "lucide-react";
 
-import UserModal from "@/components/modals/UserModal";
 import QuickStats from "@/components/QuickStats";
 import Button from "@/components/ui/Button";
-
-import { formatDateTime } from "@/lib/utils";
-import { toast } from "@/lib/toast";
-import { useDispatch } from "react-redux";
-import { useRouter } from "next/navigation";
-import { setUser } from "@/store/userSlice";
-import {
-  useAssignUserPermissions,
-  useCreateUser,
-  useUsers,
-  useUpdateUser,
-} from "@/hooks/useUser";
-import { useRoles } from "@/hooks/useRole";
-import { useTenants } from "@/hooks/useTenant";
-import { useDebounce } from "@/hooks/useDebounce";
-import { usePermissions } from "@/hooks/usePermission";
-import { Shield } from "lucide-react";
-import { setPermissions } from "@/store/permissionSlice";
-import { PERMISSIONS } from "@/lib/permissionKeys";
-import { useSelector } from "react-redux";
-import { permissionChecker } from "@/lib/permissionCheker";
-import { BadgeIndianRupee } from "lucide-react";
-import { ClipboardClock } from "lucide-react";
-import { BanknoteX } from "lucide-react";
 import FundRequestTable from "../tables/FundRequestTable";
-import UserPermissionModal from "../modals/UserPermissionModal";
+
+import { toast } from "@/lib/toast";
+import { useDebounce } from "@/hooks/useDebounce";
+import {
+  useFundTransactions,
+  useUpdateFundRequestStatus,
+} from "@/hooks/useFundRequest";
+import { formatDateTime } from "@/lib/utils";
+import FundStatusModal from "../modals/FundStatusModal";
 
 export default function FundRequestClient() {
   /* ================= UI STATE ================= */
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [statusFilter, setStatusFilter] = useState("all");
 
-  const [openModal, setOpenModal] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
-
-  const [permOpen, setPermOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [selectedTxn, setSelectedTxn] = useState(null);
 
   const perPage = 10;
-  const isEditing = Boolean(editingUser);
-
-  const dispatch = useDispatch();
-  const router = useRouter();
-
-  /* ================= PERMISSIONS ================= */
-  const perms = useSelector((s) => s.auth.user?.permissions);
-
-  const can = (perm) => permissionChecker(perms, perm?.resource, perm?.action);
-
-  const canCreateUser = can(PERMISSIONS.USER.CREATE);
-  const canEditUser = can(PERMISSIONS.USER.UPDATE);
-  const canViewUser = can(PERMISSIONS.USER.READ);
-  const canAssignUserPerms = can(PERMISSIONS.USER.ASSIGN_PERMISSIONS);
+  const debouncedSearch = useDebounce(search, 400);
 
   /* ================= API ================= */
-  const { data, isLoading, refetch, error } = useUsers({
+  const { data, isLoading, refetch, error } = useFundTransactions({
     page,
     limit: perPage,
-    search,
-    status: statusFilter === "ALL" ? undefined : statusFilter,
+    search: debouncedSearch,
+    status: statusFilter === "all" ? undefined : statusFilter,
   });
 
   useEffect(() => {
     if (error) toast.error(error?.message || "Something went wrong");
   }, [error]);
 
-  const [tenantSearch, setTenantSearch] = useState("");
-  const debouncedTenantSearch = useDebounce(tenantSearch, 400);
+  const { mutate: updateStatus, isPending: updating } =
+    useUpdateFundRequestStatus();
 
-  const { data: tenantRes } = useTenants({
-    page: 1,
-    limit: 10,
-    search: debouncedTenantSearch,
-    status: "all",
-  });
+  const handleChangeStatus = (txn) => {
+    setSelectedTxn(txn);
+    setStatusModalOpen(true);
+  };
 
-  const { data: roleRes } = useRoles();
-
-  const { mutate: createUser, isPending: creating } = useCreateUser();
-  const { mutate: updateUser, isPending: updating } = useUpdateUser();
-
-  const { mutate: assignPermissions, isPending: permSaving } =
-    useAssignUserPermissions();
-  const { data: permissionList } = usePermissions();
-
-  useEffect(() => {
-    if (permissionList) {
-      dispatch(setPermissions(permissionList));
-    }
-  }, [permissionList, dispatch]);
-
-  const handlePermissionSubmit = (data, setError) => {
-    assignPermissions(
-      { userId: selectedUser?.id, payload: data },
+  const handleStatusSubmit = (newStatus, failureReason = null) => {
+    updateStatus(
+      {
+        id: selectedTxn?.id,
+        payload: {
+          status: newStatus,
+          failureReason,
+        },
+      },
       {
         onSuccess: () => {
-          toast.success("Permissions updated");
-          setPermOpen(false);
+          toast.success("Status updated");
+          setStatusModalOpen(false);
+          setSelectedTxn(null);
+          refetch();
         },
         onError: (err) => {
-          if (err?.type === "FIELD") {
-            err.errors.forEach(({ field, message }) =>
-              setError(field, { message }),
-            );
-            return;
-          }
-          setError("root", { message: err?.message || "Update failed" });
+          toast.error(err?.message || "Update failed");
         },
       },
     );
   };
 
-  const openPermissionModal = (user) => {
-    if (!canAssignUserPerms) {
-      toast.error("No permission to assign permissions");
-      return;
-    }
-    setSelectedUser(user);
-    setPermOpen(true);
-  };
-
-  const extraActions = canAssignUserPerms
-    ? [{ icon: Shield, label: "Permissions", onClick: openPermissionModal }]
-    : [];
-
   /* ================= NORMALIZE ================= */
-  const users =
-    data?.data
-      ?.map((item) => {
-        const user = item.users?.[0];
-        const tenant = item.tenant;
-
-        if (!user) return null;
-
-        return {
-          id: user.id,
-          userNumber: user.userNumber,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          fullName: `${user.firstName} ${user.lastName}`,
-          email: user.email,
-          mobileNumber: user.mobileNumber,
-          roleId: user.roleId,
-          actionReason: user.actionReason,
-          profilePictureUrl: user.profilePictureUrl,
-          userStatus: user.userStatus,
-          createdAt: formatDateTime(user.createdAt),
-
-          // optional extras if needed
-          tenantName: tenant?.tenantName,
-          tenantNumber: tenant?.tenantNumber,
-          tenantId: tenant?.id,
-
-          userPermissions: user.userPermissions,
-          rolePermissions: user.rolePermissions,
-        };
-      })
-      .filter(Boolean) || [];
+  const transactions =
+    data?.data?.map((e) => ({
+      ...e,
+      createdAt: formatDateTime(e.createdAt),
+    })) || [];
 
   const meta = data?.meta || {};
-
-  const roles =
-    roleRes?.data?.map((d) => ({
-      label: d.roleCode,
-      value: d.id,
-    })) || [];
-
-  const tenants =
-    tenantRes?.data?.map((d) => ({
-      label: d.tenantName,
-      value: d.id,
-    })) || [];
 
   /* ================= STATS ================= */
   const stats = [
     {
-      title: "Total Amount",
+      title: "Total Transactions",
       value: meta.total ?? 0,
       icon: BadgeIndianRupee,
-      iconColor: "text-primary/50",
-      bgColor: "bg-primary",
+      iconColor: "text-primary",
+      bgColor: "bg-primary/10",
     },
     {
-      title: "Success Amount",
-      value: users.filter((m) => m.userStatus === "ACTIVE").length,
+      title: "Success",
+      value: meta.stats?.SUCCESS ?? 0,
       icon: CheckCircle,
-      iconColor: "text-success/50",
-      bgColor: "bg-success",
+      iconColor: "text-success",
+      bgColor: "bg-success/10",
     },
     {
-      title: "Pending Amount",
-      value: users.filter((m) => m.userStatus === "SUSPENDED").length,
+      title: "Pending",
+      value: meta.stats?.PENDING ?? 0,
       icon: ClipboardClock,
-      iconColor: "text-warning/50",
-      bgColor: "bg-warning",
+      iconColor: "text-warning",
+      bgColor: "bg-warning/10",
     },
     {
-      title: "Reject Amount",
-      value: users.filter((m) => m.userStatus === "INACTIVE").length,
+      title: "Rejected / Failed",
+      value: (meta.stats?.FAILED ?? 0) + (meta.stats?.REJECTED ?? 0),
       icon: BanknoteX,
-      iconColor: "text-error/50",
-      bgColor: "bg-error",
+      iconColor: "text-destructive",
+      bgColor: "bg-destructive/10",
     },
   ];
-
-  /* ================= ACTIONS ================= */
-
-  const handleEdit = (user) => {
-    if (!canEditUser) return toast.error("No permission");
-    setEditingUser(user);
-    setOpenModal(true);
-  };
-
-  const handleView = (user) => {
-    if (!canViewUser || !user?.id) return;
-    dispatch(setUser(user));
-    router.push(`/dashboard/users/${user.id}`);
-  };
-
-  const handleSubmit = (formData, setError) => {
-    if (isEditing && !canEditUser) return toast.error("No permission");
-    if (!isEditing && !canCreateUser) return toast.error("No permission");
-
-    const action = isEditing ? updateUser : createUser;
-    const args = isEditing
-      ? { id: editingUser.id, payload: formData }
-      : formData;
-
-    action(args, {
-      onSuccess: () => {
-        toast.success(isEditing ? "User updated" : "User created");
-        setOpenModal(false);
-        setEditingUser(null);
-        refetch();
-      },
-      onError: (err) => {
-        if (err?.type === "FIELD") {
-          err.errors.forEach(({ field, message }) =>
-            setError(field, { message }),
-          );
-          return;
-        }
-        setError("root", { message: err?.message });
-      },
-    });
-  };
 
   /* ================= RENDER ================= */
   return (
@@ -271,7 +135,7 @@ export default function FundRequestClient() {
       <QuickStats stats={stats} />
 
       <FundRequestTable
-        requestFundData={users}
+        requestFundData={transactions}
         total={meta.total ?? 0}
         page={page}
         perPage={perPage}
@@ -281,39 +145,20 @@ export default function FundRequestClient() {
           setSearch(v);
           setPage(1);
         }}
+        onEdit={handleChangeStatus}
         statusFilter={statusFilter}
         onStatusFilterChange={(v) => {
           setStatusFilter(v);
           setPage(1);
         }}
-        onEdit={canEditUser ? handleEdit : undefined}
-        onView={canViewUser ? handleView : undefined}
         loading={isLoading}
-        extraActions={extraActions}
       />
-
-      {openModal && (
-        <UserModal
-          open={openModal}
-          onClose={() => {
-            setOpenModal(false);
-            setEditingUser(null);
-          }}
-          onSubmit={handleSubmit}
-          isPending={creating || updating}
-          initialData={editingUser}
-          roles={roles}
-          tenants={tenants}
-          onTenantSearch={setTenantSearch}
-        />
-      )}
-
-      <UserPermissionModal
-        open={permOpen}
-        onClose={() => setPermOpen(false)}
-        user={selectedUser}
-        onSubmit={handlePermissionSubmit}
-        isPending={permSaving}
+      <FundStatusModal
+        open={statusModalOpen}
+        onClose={() => setStatusModalOpen(false)}
+        onSubmit={handleStatusSubmit}
+        isPending={updating}
+        txn={selectedTxn}
       />
     </>
   );

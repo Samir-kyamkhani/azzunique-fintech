@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "ad2fce44-0d1f-4cfa-9bcf-ffb8cbf5b7de",
+  "id": "d1e0f1cb-a03b-479d-97fd-e61e1276ac6d",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "aadhaar_sessions": {

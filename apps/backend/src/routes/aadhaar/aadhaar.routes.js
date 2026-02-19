@@ -4,9 +4,11 @@ import rateLimit from 'express-rate-limit';
 import { AuthMiddleware } from '../../middleware/auth.middleware.js';
 import { rawQueryMiddleware } from '../../middleware/rawQuery.middleware.js';
 
-import { aadhaarCallback } from '../../controllers/aadhaar/aadhaarCallback.controller.js';
 import { validate } from '../../middleware/zod-validate.js';
-import { sendOtpSchema, verifyOtpSchema } from '../../validators/aadhaar/aadhaar.schema.js';
+import {
+  sendOtpSchema,
+  verifyOtpSchema,
+} from '../../validators/aadhaar/aadhaar.schema.js';
 import {
   sendOtp,
   verifyOtp,
@@ -31,17 +33,5 @@ const callbackLimiter = rateLimit({
 router.post('/send-otp', validate({ body: sendOtpSchema }), sendOtp);
 
 router.post('/verify-otp', validate({ body: verifyOtpSchema }), verifyOtp);
-
-/**
- * 🌐 PUBLIC CALLBACK ROUTE
- * Provider hit karega
- * No Auth
- */
-router.post(
-  '/callback',
-  rawQueryMiddleware, // required for HMAC verification
-  callbackLimiter,
-  aadhaarCallback,
-);
 
 export default router;

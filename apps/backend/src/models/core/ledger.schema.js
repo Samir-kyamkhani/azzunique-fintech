@@ -42,12 +42,6 @@ export const ledgerTable = mysqlTable(
       foreignColumns: [walletTable.id],
     }),
 
-    ledgerTransactionFk: foreignKey({
-      name: 'ledger_transaction_fk',
-      columns: [table.transactionId],
-      foreignColumns: [transactionTable.id],
-    }),
-
     ledgerRefundFk: foreignKey({
       name: 'ledger_refund_fk',
       columns: [table.refundId],
@@ -64,8 +58,5 @@ export const ledgerTable = mysqlTable(
       table.createdAt,
     ),
 
-    idxLedgerTransaction: index('idx_ledger_transaction').on(
-      table.transactionId,
-    ),
   }),
 );

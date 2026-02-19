@@ -6,25 +6,26 @@ import TableShell from "./core/TableShell";
 import TableHeader from "./core/TableHeader";
 import TableBody from "./core/TableBody";
 import TablePagination from "./core/TablePagination";
-import { BanknoteArrowDown } from "lucide-react";
 
 /* ---------------- FILTER OPTIONS ---------------- */
 const options = [
   { label: "All", value: "all" },
-  { label: "Active", value: "ACTIVE" },
-  { label: "Inactive", value: "INACTIVE" },
-  { label: "Suspended", value: "SUSPENDED" },
+  { label: "Pending", value: "PENDING" },
+  { label: "Success", value: "SUCCESS" },
+  { label: "Failed", value: "FAILED" },
+  { label: "Rejected", value: "REJECTED" },
 ];
 
 /* ===================== COLUMNS ===================== */
-const getColumns = (onImagePreview) => [
-  { key: "userNumber", label: "User No" },
-  { key: "fullName", label: "Name" },
-  { key: "email", label: "Email" },
-  { key: "tenantNumber", label: "Tenant Number" },
+const getColumns = () => [
+  { key: "referenceId", label: "Reference No" },
+  { key: "tenantNumber", label: "Tenant No" },
   { key: "tenantName", label: "Tenant Name" },
-  { key: "mobileNumber", label: "Mobile" },
-  { key: "userStatus", label: "Status" },
+  { key: "providerTxnId", label: "Txn ID" },
+  { key: "providerCode", label: "Provider" },
+  { key: "paymentMode", label: "Payment Mode" },
+  { key: "amount", label: "Amount" },
+  { key: "status", label: "Status" },
   { key: "createdAt", label: "Created At" },
   { key: "actions", label: "Actions" },
 ];
@@ -38,43 +39,34 @@ export default function FundRequestTable({
   onPageChange,
   search,
   onSearch,
+  onEdit,
   statusFilter,
   onStatusFilterChange,
-  onAddUser,
-  onEdit,
-  onView,
-  onDelete,
-  onImagePreview,
-  extraActions,
+  loading,
 }) {
-  const columns = getColumns(onImagePreview);
+  const columns = getColumns();
 
   return (
     <TableShell>
       <TableHeader
-        title="Fund Request"
-        subtitle={`${total} Fund Request found`}
+        title="Fund Requests"
+        subtitle={`${total} fund request(s) found`}
         search={search}
         setSearch={onSearch}
-        searchPlaceholder="Search by name, email, user no. or mobile…"
+        searchPlaceholder="Search by txn id, tenant name, provider…"
         filterValue={statusFilter}
         onFilterChange={onStatusFilterChange}
         filterPlaceholder="Status"
         filterOptions={options}
-        onAdd={onAddUser}
-        addLabel="Add Fund"
-        addIcon={BanknoteArrowDown}
-        onExport={() => console.log("Export fund request  ")}
+        onExport={() => console.log("Export fund requests")}
         exportIcon={Download}
       />
 
       <TableBody
         columns={columns}
         data={requestFundData}
+        loading={loading}
         onEdit={onEdit}
-        onView={onView}
-        onDelete={onDelete}
-        onExtraActions={extraActions}
       />
 
       <TablePagination

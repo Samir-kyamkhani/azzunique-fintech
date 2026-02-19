@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import { eq, and } from 'drizzle-orm';
 
 import { aadhaarDb as db } from '../../database/aadhaar/aadhaar-db.js';
-import { aadhaarSessionTable } from '../../models/aadhaar/index.js';
+import { aadhaarTransactionTable } from '../../models/aadhaar/index.js';
 
 import {
   usersKycTable,
@@ -14,7 +14,6 @@ import { getAadhaarPlugin } from '../../plugin_registry/aadhaar/pluginRegistry.j
 import { encrypt } from '../../lib/lib.js';
 import { buildTenantChain } from '../../lib/tenantHierarchy.util.js';
 import { AADHAAR_SERVICE_CODE } from '../../config/constant.js';
-import AadhaarRuntimeService from './aadhaarRuntime.service.js';
 import WalletService from '../wallet.service.js';
 
 class AadhaarService {
@@ -35,11 +34,11 @@ class AadhaarService {
     // Idempotency check
     const existing = await db
       .select()
-      .from(aadhaarSessionTable)
+      .from(aadhaarTransactionTable)
       .where(
         and(
-          eq(aadhaarSessionTable.tenantId, actor.tenantId),
-          eq(aadhaarSessionTable.idempotencyKey, idempotencyKey),
+          eq(aadhaarTransactionTable.tenantId, actor.tenantId),
+          eq(aadhaarTransactionTable.idempotencyKey, idempotencyKey),
         ),
       )
       .limit(1);
@@ -80,7 +79,7 @@ class AadhaarService {
 
     const otpResponse = await plugin.sendOtp({ aadhaarNumber });
 
-    await db.insert(aadhaarSessionTable).values({
+    await db.insert(aadhaarTransactionTable).values({
       id: sessionId,
       tenantId: actor.tenantId,
       userId: actor.id,
@@ -110,8 +109,8 @@ class AadhaarService {
 
     const [session] = await db
       .select()
-      .from(aadhaarSessionTable)
-      .where(eq(aadhaarSessionTable.id, sessionId))
+      .from(aadhaarTransactionTable)
+      .where(eq(aadhaarTransactionTable.id, sessionId))
       .limit(1);
 
     if (!session) {
@@ -135,12 +134,12 @@ class AadhaarService {
     await db.transaction(async (tx) => {
       // Update session
       await tx
-        .update(aadhaarSessionTable)
+        .update(aadhaarTransactionTable)
         .set({
           status: 'PENDING', // final via callback
           updatedAt: new Date(),
         })
-        .where(eq(aadhaarSessionTable.id, sessionId));
+        .where(eq(aadhaarTransactionTable.id, sessionId));
 
       // Insert document
       await tx.insert(kycDocumentTable).values({

@@ -33,6 +33,7 @@ export const fundTransactionTable = mysqlTable(
     status: varchar('status', { length: 20 }).notNull(),
     // INITIATED | SUCCESS | FAILED | PENDING | REFUNDED
 
+    providerResponse: json('provider_response'),
     providerTxnId: varchar('provider_txn_id', { length: 100 }),
     referenceId: varchar('reference_id', { length: 100 }),
 
@@ -44,8 +45,11 @@ export const fundTransactionTable = mysqlTable(
     retryCount: int('retry_count').default(0),
     lastRetryAt: timestamp('last_retry_at'),
 
-    createdAt: timestamp('created_at').defaultNow(),
-    updatedAt: timestamp('updated_at').defaultNow(),
+    processedBy: varchar('processed_by', { length: 36 }),
+    processedAt: timestamp('processed_at'),
+
+    createdAt: timestamp('created_at'),
+    updatedAt: timestamp('updated_at'),
   },
   (table) => ({
     uniqRechargeIdempotency: uniqueIndex('uniq_recharge_idempotency').on(
