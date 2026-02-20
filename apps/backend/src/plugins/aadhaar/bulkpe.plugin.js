@@ -16,8 +16,8 @@ class BulkpeAadhaarPlugin extends AadhaarPluginInterface {
     });
   }
 
-  // Step 1: Send OTP
-  async verifyAadhar({ aadhaarNumber }) {
+  // STEP 1: SEND OTP
+  async sendOtp({ aadhaarNumber }) {
     try {
       const response = await this.client.post('/verifyAadhar', {
         aadhaar: aadhaarNumber,
@@ -29,7 +29,10 @@ class BulkpeAadhaarPlugin extends AadhaarPluginInterface {
         throw ApiError.badRequest(data.message || 'Failed to send OTP');
       }
 
-      return data;
+      return {
+        referenceId: data.data.ref_id,
+        raw: data,
+      };
     } catch (err) {
       throw ApiError.internal(
         err.response?.data?.message || 'Aadhaar OTP request failed',
@@ -37,8 +40,8 @@ class BulkpeAadhaarPlugin extends AadhaarPluginInterface {
     }
   }
 
-  // Step 2: Verify OTP
-  async verifyAadharOtp({ referenceId, otp }) {
+  // STEP 2: VERIFY OTP
+  async verifyOtp({ referenceId, otp }) {
     try {
       const response = await this.client.post('/verifyAadharOtp', {
         ref_id: referenceId,
@@ -51,7 +54,20 @@ class BulkpeAadhaarPlugin extends AadhaarPluginInterface {
         throw ApiError.badRequest(data.message || 'OTP verification failed');
       }
 
-      return data;
+      const aadhaarData = data.data;
+
+      return {
+        verificationStatus: 'VERIFIED',
+        aadhaarData: {
+          name: aadhaarData.name,
+          dob: aadhaarData.dob,
+          gender: aadhaarData.gender,
+          address: aadhaarData.address,
+          yearOfBirth: aadhaarData.year_of_birth,
+          mobileHash: aadhaarData.mobile_hash,
+        },
+        raw: data,
+      };
     } catch (err) {
       throw ApiError.internal(
         err.response?.data?.message || 'Aadhaar verification failed',

@@ -32,6 +32,8 @@ export const aadhaarTransactionTable = mysqlTable(
     referenceId: varchar('reference_id', { length: 100 }),
     providerTxnId: varchar('provider_txn_id', { length: 100 }),
 
+    providerConfig: json('provider_config'),
+
     providerCode: varchar('provider_code', { length: 40 }).notNull(),
     providerResponse: json('provider_response'),
 

@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "dda7f5f3-3214-4415-8a46-9a1bc0bca206",
+  "id": "110a8996-a1d9-44e7-a49e-25ef9a9a4a03",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "fund_transactions": {

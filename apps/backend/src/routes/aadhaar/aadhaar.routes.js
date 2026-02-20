@@ -1,37 +1,29 @@
 import { Router } from 'express';
-import rateLimit from 'express-rate-limit';
-
 import { AuthMiddleware } from '../../middleware/auth.middleware.js';
-import { rawQueryMiddleware } from '../../middleware/rawQuery.middleware.js';
-
 import { validate } from '../../middleware/zod-validate.js';
+
+import {
+  sendOtp,
+  verifyAadhaar,
+} from '../../controllers/aadhaar/aadhaar.controller.js';
+
 import {
   sendOtpSchema,
   verifyOtpSchema,
 } from '../../validators/aadhaar/aadhaar.schema.js';
-import {
-  sendOtp,
-  verifyOtp,
-} from '../../controllers/aadhaar/aadhaar.controller.js';
 
 const router = Router();
 
-/**
- * 🔐 Auth Required Routes (OTP Send / Verify)
- * Callback route PUBLIC hoga
- */
-router.use('/secure', AuthMiddleware);
+router.use(AuthMiddleware);
 
 /**
- * 🚦 Callback rate limiter
+ * SEND OTP OR INITIATE MANUAL FLOW
  */
-const callbackLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 50, // Aadhaar providers thoda zyada retry karte hain
-});
-
 router.post('/send-otp', validate({ body: sendOtpSchema }), sendOtp);
 
-router.post('/verify-otp', validate({ body: verifyOtpSchema }), verifyOtp);
+/**
+ * VERIFY (OTP or Manual Submit)
+ */
+router.post('/verify', validate({ body: verifyOtpSchema }), verifyAadhaar);
 
 export default router;

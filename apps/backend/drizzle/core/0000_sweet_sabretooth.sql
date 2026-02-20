@@ -334,7 +334,10 @@ CREATE TABLE `tenants_kyc` (
 CREATE TABLE `users_kyc` (
 	`id` varchar(36) NOT NULL DEFAULT (UUID()),
 	`user_id` varchar(36) NOT NULL,
-	`verification_status` varchar(20) NOT NULL DEFAULT 'PENDING',
+	`verification_status` varchar(30) NOT NULL DEFAULT 'PENDING',
+	`aadhaar_status` varchar(20) DEFAULT 'PENDING',
+	`pan_status` varchar(20) DEFAULT 'PENDING',
+	`kyc_mode` varchar(20),
 	`submitted_by_user_id` varchar(36),
 	`verified_by_user_id` varchar(36),
 	`verified_by_employee_id` varchar(36),
@@ -351,6 +354,7 @@ CREATE TABLE `kyc_documents` (
 	`owner_type` varchar(10) NOT NULL,
 	`owner_id` varchar(36) NOT NULL,
 	`document_type` varchar(50) NOT NULL,
+	`platform_code` varchar(20),
 	`document_url` varchar(500) NOT NULL,
 	`document_number` varchar(255),
 	`row_response` json,
@@ -660,7 +664,6 @@ ALTER TABLE `tenant_services` ADD CONSTRAINT `ts_tenant_fk` FOREIGN KEY (`tenant
 ALTER TABLE `tenant_services` ADD CONSTRAINT `ts_platform_service_fk` FOREIGN KEY (`platform_service_id`) REFERENCES `platform_services`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `wallets` ADD CONSTRAINT `wallets_tenant_id_tenants_id_fk` FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `ledgers` ADD CONSTRAINT `ledger_wallet_fk` FOREIGN KEY (`wallet_id`) REFERENCES `wallets`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `ledgers` ADD CONSTRAINT `ledger_transaction_fk` FOREIGN KEY (`transaction_id`) REFERENCES `transactions`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `ledgers` ADD CONSTRAINT `ledger_refund_fk` FOREIGN KEY (`refund_id`) REFERENCES `refunds`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `refunds` ADD CONSTRAINT `refund_tenant_fk` FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `refunds` ADD CONSTRAINT `refund_transaction_fk` FOREIGN KEY (`transaction_id`) REFERENCES `transactions`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -707,7 +710,6 @@ CREATE INDEX `idx_tenant_service_tenant` ON `tenant_services` (`tenant_id`);--> 
 CREATE INDEX `idx_tenant_service_enabled` ON `tenant_services` (`is_enabled`);--> statement-breakpoint
 CREATE INDEX `idx_wallet_tenant` ON `wallets` (`tenant_id`);--> statement-breakpoint
 CREATE INDEX `idx_ledger_wallet_created` ON `ledgers` (`wallet_id`,`created_at`);--> statement-breakpoint
-CREATE INDEX `idx_ledger_transaction` ON `ledgers` (`transaction_id`);--> statement-breakpoint
 CREATE INDEX `idx_refund_tenant_status` ON `refunds` (`tenant_id`,`status`);--> statement-breakpoint
 CREATE INDEX `idx_refund_transaction` ON `refunds` (`transaction_id`);--> statement-breakpoint
 CREATE INDEX `idx_commission_tenant` ON `commission_earnings` (`tenant_id`);--> statement-breakpoint
