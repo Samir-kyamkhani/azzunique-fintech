@@ -80,6 +80,21 @@ class OperatorMapService {
 
     return row.providerOperatorCode;
   }
+
+  // List operator mappings for a given service and provider. Used in recharge flow to show operator options.
+  async listForRecharge({ platformServiceId, serviceProviderId }) {
+    return db
+      .select({
+        internalOperatorCode: rechargeOperatorMapTable.internalOperatorCode,
+      })
+      .from(rechargeOperatorMapTable)
+      .where(
+        and(
+          eq(rechargeOperatorMapTable.platformServiceId, platformServiceId),
+          eq(rechargeOperatorMapTable.serviceProviderId, serviceProviderId),
+        ),
+      );
+  }
 }
 
 export default new OperatorMapService();

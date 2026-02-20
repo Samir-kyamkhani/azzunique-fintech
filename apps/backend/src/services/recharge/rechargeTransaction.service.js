@@ -2,7 +2,10 @@ import crypto from 'node:crypto';
 import { rechargeDb as db } from '../../database/recharge/recharge-db.js';
 import { eq } from 'drizzle-orm';
 
-import { rechargeTransactionTable } from '../../models/recharge/index.js';
+import {
+  rechargeOperatorMapTable,
+  rechargeTransactionTable,
+} from '../../models/recharge/index.js';
 
 import { ApiError } from '../../lib/ApiError.js';
 import RechargeRuntimeService from './rechargeRuntime.service.js';

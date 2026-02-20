@@ -14,7 +14,6 @@ export default function RechargeForm({
   plans = [],
   offers = [],
   operatorMaps = [],
-  circleMaps = [],
   onFieldChange,
 }) {
   const {
@@ -34,13 +33,9 @@ export default function RechargeForm({
   });
 
   const operatorOptions = operatorMaps.map((o) => ({
-    label: `${o.operatorName} (${o.operatorCode})`,
-    value: o.operatorCode,
-  }));
-
-  const circleOptions = circleMaps.map((c) => ({
-    label: `${c.circleName} (${c.circleCode})`,
-    value: c.circleCode,
+    label: `${o.internalOperatorCode} (${o.providerName})`,
+    value: o.providerOperatorCode,
+    key: o.id,
   }));
 
   const handleFieldChange = (field, value) => {
@@ -108,38 +103,6 @@ export default function RechargeForm({
           {errors.operatorCode && (
             <p className="text-sm text-destructive mt-1">
               {errors.operatorCode.message}
-            </p>
-          )}
-        </div>
-
-        {/* CIRCLE */}
-
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            Select Circle
-          </label>
-
-          <Controller
-            name="circleCode"
-            control={control}
-            rules={{ required: "Circle is required" }}
-            render={({ field }) => (
-              <SelectField
-                value={field.value}
-                onChange={(val) => {
-                  field.onChange(val);
-                  handleFieldChange("circleCode", val);
-                }}
-                options={circleOptions}
-                placeholder="Select Circle"
-                disabled={isRetryMode}
-              />
-            )}
-          />
-
-          {errors.circleCode && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.circleCode.message}
             </p>
           )}
         </div>

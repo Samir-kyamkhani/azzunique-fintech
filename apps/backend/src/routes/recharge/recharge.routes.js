@@ -13,6 +13,7 @@ import { rechargeOfferSchema } from '../../validators/recharge/rechargeOffer.sch
 import { rechargeTransactionSchema } from '../../validators/recharge/rechargeTransaction.schema.js';
 import rateLimit from 'express-rate-limit';
 import { rawQueryMiddleware } from '../../middleware/rawQuery.middleware.js';
+import { fetchRechargeOperators } from '../../controllers/recharge/rechargeOperator.controller.js';
 
 const router = Router();
 
@@ -34,6 +35,9 @@ const rechargeLimiter = rateLimit({
 //   validate({ query: rechargeHistoryQuerySchema }),
 //   fetchRechargeHistory,
 // );
+
+// RECHARGE OPERATORS GET /api/recharge/operators
+router.get('/operators', fetchRechargeOperators);
 
 // MPLAN — FETCH PLANS GET /api/recharge/plans
 router.get(

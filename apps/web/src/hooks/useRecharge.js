@@ -29,6 +29,17 @@ export const useRechargeOffers = (operatorCode, mobileNumber) =>
     },
   });
 
+/* ================= RECHARGE OPERATORS ================= */
+
+export const useRechargeOperators = () =>
+  useQuery({
+    queryKey: ["recharge-operators"],
+    queryFn: async () => {
+      const res = await apiClient("/recharge/operators");
+      return res.data.data; // backend returns { success, data }
+    },
+  });
+
 /* ================= INITIATE RECHARGE ================= */
 
 export const useInitiateRecharge = () => {

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSelector } from "react-redux";
-import { Plus, RefreshCw, Clock, CheckCircle, XCircle } from "lucide-react";
+import { RefreshCw, Clock, CheckCircle, XCircle } from "lucide-react";
 
 import QuickStats from "@/components/QuickStats";
 import Button from "@/components/ui/Button";
@@ -18,8 +18,7 @@ import {
   useInitiateRecharge,
   useRechargePlans,
   useRechargeOffers,
-  useOperatorMaps,
-  useCircleMaps,
+  useRechargeOperators,
 } from "@/hooks/useRecharge";
 import { Layers } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -40,15 +39,18 @@ export default function RechargeClient() {
 
   const { data: transactions = [], isLoading, refetch } = useRechargeHistory();
 
+  /* ================= RECHARGE OPERATORS ================= */
+
+  const { mutate: fetchOperators = [] } = useRechargeOperators();
+
+  console.log("fetchOperators", fetchOperators);
+
   /* ================= INITIATE ================= */
 
   const { mutate: initiateRecharge, isPending: initiating } =
     useInitiateRecharge();
 
   /* ================= ADMIN MAP DATA ================= */
-
-  const { data: operatorMaps = [] } = useOperatorMaps();
-  const { data: circleMaps = [] } = useCircleMaps();
 
   /* ================= RETRY ================= */
 
@@ -205,8 +207,7 @@ export default function RechargeClient() {
         initialData={selectedTxn}
         plans={plans}
         offers={offers}
-        operatorMaps={operatorMaps}
-        circleMaps={circleMaps}
+        operatorMaps={fetchOperators}
         onFieldChange={setFormValues}
       />
     </>
