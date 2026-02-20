@@ -3,6 +3,7 @@ import { rechargeOperatorMapTable } from '../../models/recharge/index.js';
 import { ApiError } from '../../lib/ApiError.js';
 import crypto from 'crypto';
 import { and, eq } from 'drizzle-orm';
+import { serviceProviderTable } from '../../models/core/serviceProvider.schema.js';
 
 class OperatorMapService {
   async upsert(data, actor) {

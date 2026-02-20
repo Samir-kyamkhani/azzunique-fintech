@@ -6,10 +6,10 @@ import TableBody from "./core/TableBody";
 import { Wrench } from "lucide-react";
 
 const columns = [
-  { key: "platformServiceId", label: "Service ID" },
-  { key: "internalOperatorCode", label: "Internal Code" },
-  { key: "providerCode", label: "Provider Code" },
-  { key: "providerOperatorCode", label: "Mapped Provider Code" },
+  { key: "id", label: "Mapping ID" },
+  { key: "internalOperatorCode", label: "Internal Operator Code" },
+  { key: "providerName", label: "Provider" },
+  { key: "providerOperatorCode", label: "Provider Code" },
   { key: "actions", label: "Actions" },
 ];
 
