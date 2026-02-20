@@ -29,6 +29,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { PERMISSIONS } from "@/lib/permissionKeys";
 import { permissionChecker } from "@/lib/permissionCheker";
+import { CreditCard } from "lucide-react";
 
 const Sidebar = () => {
   const queryClient = useQueryClient();
@@ -108,6 +109,18 @@ const Sidebar = () => {
           label: "Transactions",
           icon: History,
           path: "/dashboard/transactions",
+        },
+      ],
+    },
+    {
+      title: "Services",
+      items: [
+        {
+          id: "recharge",
+          label: "Recharge",
+          icon: CreditCard,
+          path: "/dashboard/recharge",
+          permission: PERMISSIONS.RECHARGE.READ,
         },
       ],
     },
