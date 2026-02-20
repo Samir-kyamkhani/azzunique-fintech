@@ -19,10 +19,14 @@ export const usersKycTable = mysqlTable(
 
     userId: varchar('user_id', { length: 36 }).notNull(),
 
-    verificationStatus: varchar('verification_status', { length: 20 })
+    verificationStatus: varchar('verification_status', { length: 30 })
       .notNull()
       .default('PENDING'),
+
+    aadhaarStatus: varchar('aadhaar_status', { length: 20 }).default('PENDING'),
+    panStatus: varchar('pan_status', { length: 20 }).default('PENDING'),
     // PENDING | VERIFIED | REJECTED
+    kycMode: varchar('kyc_mode', { length: 20 }), //bulkpe /  manual
 
     submittedByUserId: varchar('submitted_by_user_id', { length: 36 }),
     verifiedByUserId: varchar('verified_by_user_id', { length: 36 }),

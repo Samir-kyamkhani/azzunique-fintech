@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Sidebar from "@/components/Sidebar";
@@ -10,6 +10,7 @@ const MIN_BALANCE = 100;
 
 export default function DashboardLayout({ children }) {
   const userData = useSelector((s) => s.auth.user);
+  const [isFundOpen, setIsFundOpen] = useState(true);
 
   const complianceState = useMemo(() => {
     if (!userData) return "LOADING";
@@ -32,7 +33,12 @@ export default function DashboardLayout({ children }) {
 
   // 🔥 FULL LOCK MODE (Best UX)
   if (complianceState === "FUND") {
-    return <FundRequestModal open />;
+    return (
+      <FundRequestModal
+        open={isFundOpen}
+        onClose={() => setIsFundOpen(false)}
+      />
+    );
   }
 
   if (complianceState === "KYC") {

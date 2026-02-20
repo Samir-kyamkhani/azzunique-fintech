@@ -1,47 +1,31 @@
 import { Router } from 'express';
-import rateLimit from 'express-rate-limit';
-
 import { AuthMiddleware } from '../../middleware/auth.middleware.js';
-import { rawQueryMiddleware } from '../../middleware/rawQuery.middleware.js';
-
-import { aadhaarCallback } from '../../controllers/aadhaar/aadhaarCallback.controller.js';
 import { validate } from '../../middleware/zod-validate.js';
-import { sendOtpSchema, verifyOtpSchema } from '../../validators/aadhaar/aadhaar.schema.js';
+
 import {
   sendOtp,
-  verifyOtp,
+  upload,
+  verifyAadhaar,
 } from '../../controllers/aadhaar/aadhaar.controller.js';
+
+import {
+  sendOtpSchema,
+  verifyOtpSchema,
+} from '../../validators/aadhaar/aadhaar.schema.js';
 
 const router = Router();
 
-/**
- * 🔐 Auth Required Routes (OTP Send / Verify)
- * Callback route PUBLIC hoga
- */
-router.use('/secure', AuthMiddleware);
+router.use(AuthMiddleware);
 
 /**
- * 🚦 Callback rate limiter
+ * SEND OTP OR INITIATE MANUAL FLOW
  */
-const callbackLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 50, // Aadhaar providers thoda zyada retry karte hain
-});
-
 router.post('/send-otp', validate({ body: sendOtpSchema }), sendOtp);
 
-router.post('/verify-otp', validate({ body: verifyOtpSchema }), verifyOtp);
-
 /**
- * 🌐 PUBLIC CALLBACK ROUTE
- * Provider hit karega
- * No Auth
+ * VERIFY (OTP or Manual Submit)
  */
-router.post(
-  '/callback',
-  rawQueryMiddleware, // required for HMAC verification
-  callbackLimiter,
-  aadhaarCallback,
-);
+router.post('/verify', validate({ body: verifyOtpSchema }), verifyAadhaar);
+router.post('/decode-photo', upload);
 
 export default router;

@@ -1,19 +1,30 @@
 "use client";
 
+import { useCreateFundRequest } from "@/hooks/useFundRequest";
 import FundRequestForm from "../forms/FundRequestForm";
 
-export default function FundRequestModal({
-  open,
-  onClose,
-  isPending,
-  onSubmit,
-}) {
+export default function FundRequestModal({ open, onClose }) {
+  const { mutate, isPending } = useCreateFundRequest();
+
   if (!open) return null;
+
+  const handleSubmit = (data, setError) => {
+    mutate(data, {
+      onSuccess: () => {
+        onClose();
+      },
+      onError: (error) => {
+        setError("root", {
+          message:
+            error?.response?.data?.message || "Failed to create fund request",
+        });
+      },
+    });
+  };
 
   return (
     <div className="fixed inset-0 z-9999 bg-black/40 flex items-center justify-center p-4">
       <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-xl border bg-card shadow-xl">
-        {/* HEADER */}
         <div className="relative bg-gradient-theme px-6 py-6 rounded-t-xl">
           <button
             onClick={onClose}
@@ -33,9 +44,8 @@ export default function FundRequestModal({
           </div>
         </div>
 
-        {/* BODY */}
         <div className="p-6">
-          <FundRequestForm onSubmit={onSubmit} isPending={isPending} />
+          <FundRequestForm onSubmit={handleSubmit} isPending={isPending} />
         </div>
       </div>
     </div>

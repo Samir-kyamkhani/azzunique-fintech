@@ -1,11 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-<<<<<<< HEAD
-  "id": "d4098140-9a0c-4108-a75a-25f43ddd8f56",
-=======
-  "id": "aa3dc44a-7365-4b3e-8333-e06b87e5b71c",
->>>>>>> 3b825bfe9834d8a5fbf0e7d2ad439edfbbdeeb37
+  "id": "5345f465-6949-4f69-9030-c05184e353dc",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "audit_log": {
@@ -2909,11 +2905,34 @@
         },
         "verification_status": {
           "name": "verification_status",
-          "type": "varchar(20)",
+          "type": "varchar(30)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "'PENDING'"
+        },
+        "aadhaar_status": {
+          "name": "aadhaar_status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "'PENDING'"
+        },
+        "pan_status": {
+          "name": "pan_status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "'PENDING'"
+        },
+        "kyc_mode": {
+          "name": "kyc_mode",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         },
         "submitted_by_user_id": {
           "name": "submitted_by_user_id",
@@ -3065,6 +3084,13 @@
           "type": "varchar(50)",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false
+        },
+        "platform_code": {
+          "name": "platform_code",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "document_url": {
@@ -4252,13 +4278,6 @@
             "created_at"
           ],
           "isUnique": false
-        },
-        "idx_ledger_transaction": {
-          "name": "idx_ledger_transaction",
-          "columns": [
-            "transaction_id"
-          ],
-          "isUnique": false
         }
       },
       "foreignKeys": {
@@ -4268,19 +4287,6 @@
           "tableTo": "wallets",
           "columnsFrom": [
             "wallet_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "ledger_transaction_fk": {
-          "name": "ledger_transaction_fk",
-          "tableFrom": "ledgers",
-          "tableTo": "transactions",
-          "columnsFrom": [
-            "transaction_id"
           ],
           "columnsTo": [
             "id"

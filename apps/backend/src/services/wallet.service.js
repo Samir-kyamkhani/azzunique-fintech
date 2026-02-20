@@ -95,7 +95,6 @@ class WalletService {
         .select()
         .from(walletTable)
         .where(eq(walletTable.id, walletId))
-        .forUpdate()
         .limit(1);
 
       if (!wallet) {
@@ -135,6 +134,7 @@ class WalletService {
     amount, // paise
     transactionId = null,
     reference = null,
+    isSystem = false,
   }) {
     if (amount <= 0) {
       throw ApiError.badRequest('Invalid debit amount');
@@ -146,7 +146,6 @@ class WalletService {
         .select()
         .from(walletTable)
         .where(eq(walletTable.id, walletId))
-        .forUpdate()
         .limit(1);
 
       if (!wallet) {
@@ -157,19 +156,22 @@ class WalletService {
         throw ApiError.forbidden('Security wallet cannot be debited');
       }
 
-      if (wallet.balance < amount) {
+      if (!isSystem && wallet.balance < amount) {
         throw ApiError.badRequest('Insufficient balance');
       }
 
-      const newBalance = wallet.balance - amount;
+      let newBalance;
+      if (!isSystem) {
+        newBalance = wallet.balance - amount;
 
-      await tx
-        .update(walletTable)
-        .set({
-          balance: newBalance,
-          updatedAt: new Date(),
-        })
-        .where(eq(walletTable.id, walletId));
+        await tx
+          .update(walletTable)
+          .set({
+            balance: newBalance,
+            updatedAt: new Date(),
+          })
+          .where(eq(walletTable.id, walletId));
+      }
 
       await tx.insert(ledgerTable).values({
         id: crypto.randomUUID(),
@@ -178,7 +180,7 @@ class WalletService {
         reference: reference || crypto.randomUUID(),
         entryType: 'DEBIT',
         amount,
-        balanceAfter: newBalance,
+        balanceAfter: isSystem ? 0 : newBalance,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -203,7 +205,6 @@ class WalletService {
         .select()
         .from(walletTable)
         .where(eq(walletTable.id, walletId))
-        .forUpdate()
         .limit(1);
 
       if (!wallet) {
@@ -255,7 +256,6 @@ class WalletService {
         .select()
         .from(walletTable)
         .where(eq(walletTable.id, walletId))
-        .forUpdate()
         .limit(1);
 
       if (!wallet) {
@@ -313,7 +313,6 @@ class WalletService {
         .select()
         .from(walletTable)
         .where(eq(walletTable.id, walletId))
-        .forUpdate()
         .limit(1);
 
       if (!wallet) {

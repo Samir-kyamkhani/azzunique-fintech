@@ -18,6 +18,7 @@ export const kycDocumentTable = mysqlTable(
     ownerId: varchar('owner_id', { length: 36 }).notNull(),
 
     documentType: varchar('document_type', { length: 50 }).notNull(), // PAN | AADHAAR | GST
+    platformCode: varchar('platform_code', { length: 20 }), // bulkpe | MANUAL
 
     documentUrl: varchar('document_url', { length: 500 }).notNull(),
     documentNumber: varchar('document_number', { length: 255 }),

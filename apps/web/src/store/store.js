@@ -14,6 +14,7 @@ import roleReducer from "./roleSlice";
 import platformServiceReducer from "./platformServiceSlice";
 import serviceProviderReducer from "./serviceProviderSlice";
 import tenantServiceReducer from "./tenantServiceSlice";
+import fundTransactionReducer from "./fundTransactionSlice";
 import rechargeReducer from "./rechargeSlice";
 
 export const store = configureStore({
@@ -33,6 +34,7 @@ export const store = configureStore({
     platformService: platformServiceReducer,
     serviceProvider: serviceProviderReducer,
     tenantService: tenantServiceReducer,
+    fundRequest: fundTransactionReducer,
     recharge: rechargeReducer,
   },
 });

@@ -270,7 +270,7 @@ class AuthService {
       .leftJoin(
         walletTable,
         and(
-          eq(walletTable.ownerId, usersTable.id),
+          eq(walletTable.ownerId, userId),
           eq(walletTable.walletType, 'MAIN'),
         ),
       )
