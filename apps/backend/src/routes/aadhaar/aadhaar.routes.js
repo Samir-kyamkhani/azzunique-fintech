@@ -4,6 +4,7 @@ import { validate } from '../../middleware/zod-validate.js';
 
 import {
   sendOtp,
+  upload,
   verifyAadhaar,
 } from '../../controllers/aadhaar/aadhaar.controller.js';
 
@@ -25,5 +26,6 @@ router.post('/send-otp', validate({ body: sendOtpSchema }), sendOtp);
  * VERIFY (OTP or Manual Submit)
  */
 router.post('/verify', validate({ body: verifyOtpSchema }), verifyAadhaar);
+router.post('/decode-photo', upload);
 
 export default router;

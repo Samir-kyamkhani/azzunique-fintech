@@ -19,3 +19,22 @@ export const verifyAadhaar = async (req, res) => {
 
   res.json(result);
 };
+
+export const upload = async (req, res) => {
+  try {
+    const { photo_link } = req.body;
+
+    const result = await AadhaarService.decodeAndSave(photo_link);
+
+    return res.json({
+      success: true,
+      message: 'Photo saved successfully',
+      data: result,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

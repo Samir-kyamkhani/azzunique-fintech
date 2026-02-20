@@ -1,38 +1,28 @@
 import crypto from 'node:crypto';
 import { eq } from 'drizzle-orm';
-
 import { db } from '../../database/core/core-db.js';
 import { platformServiceResolve } from '../../lib/platformServiceResolver.util.js';
 import { getAadhaarPlugin } from '../../plugin_registry/aadhaar/pluginRegistry.js';
 import { ApiError } from '../../lib/ApiError.js';
-import { decrypt, encrypt } from '../../lib/lib.js';
+import { decrypt, encrypt, generateNumber } from '../../lib/lib.js';
 
 import { aadhaarTransactionTable } from '../../models/aadhaar/index.js';
 
 import { usersKycTable, kycDocumentTable } from '../../models/core/index.js';
 import { buildTenantChain } from '../../lib/tenantHierarchy.util.js';
 import { AADHAAR_SERVICE_CODE } from '../../config/constant.js';
-
+import path from 'node:path';
+import fs from 'fs';
 class AadhaarService {
   static async sendOtp({ aadhaarNumber, actor }) {
-    let providerCode;
-    let providerConfig = null;
-
     const tenantChain = await buildTenantChain(actor.tenantId);
 
-    try {
-      const { provider } = await platformServiceResolve({
-        tenantChain,
-        platformServiceCode: AADHAAR_SERVICE_CODE,
-      });
+    const { provider } = await platformServiceResolve({
+      tenantChain,
+      platformServiceCode: AADHAAR_SERVICE_CODE,
+    });
 
-      providerCode = provider.code;
-      providerConfig = provider.config;
-    } catch (err) {
-      providerCode = 'MANUAL_AADHAAR';
-    }
-
-    const plugin = getAadhaarPlugin(providerCode, providerConfig);
+    const plugin = getAadhaarPlugin(provider.code, provider.providerConfig);
 
     const response = await plugin.sendOtp({ aadhaarNumber });
 
@@ -41,6 +31,11 @@ class AadhaarService {
 
     const transactionId = crypto.randomUUID();
 
+    const ref =
+      provider.code === 'MANUAL_AADHAAR'
+        ? generateNumber('REF', 4)
+        : response.referenceId;
+
     await db.insert(aadhaarTransactionTable).values({
       id: transactionId,
       userId: actor.id,
@@ -48,11 +43,14 @@ class AadhaarService {
       usersKycId: null,
       maskedAadhaar: masked,
       aadhaarEncrypted: encrypted,
-      referenceId: response.referenceId,
-      providerCode,
-      providerConfig,
+      referenceId: ref,
+
+      providerCode: provider.code,
+      providerConfig: provider.providerConfig,
       providerResponse: response.raw,
-      status: providerCode === 'MANUAL_AADHAAR' ? 'INITIATED' : 'OTP_SENT',
+      failureReason:
+        response.data.status !== 'SUCCESS' ? response.message : null,
+      status: provider.code === 'MANUAL_AADHAAR' ? 'INITIATED' : 'OTP_SENT',
       attemptCount: 0,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -60,9 +58,9 @@ class AadhaarService {
 
     return {
       transactionId,
-      referenceId: response.referenceId,
-      mode: providerCode,
-      status: providerCode === 'MANUAL_AADHAAR' ? 'MANUAL_FLOW' : 'OTP_SENT',
+      referenceId: ref,
+      mode: provider.code,
+      status: provider.code === 'MANUAL_AADHAAR' ? 'MANUAL_FLOW' : 'OTP_SENT',
     };
   }
 
@@ -79,7 +77,7 @@ class AadhaarService {
 
     let verifyResponse;
 
-    if (txn.providerCode === 'MANUAL') {
+    if (txn.providerCode === 'MANUAL_AADHAAR') {
       const decrypted = decrypt(txn.aadhaarEncrypted);
 
       verifyResponse = await plugin.verifyOtp({
@@ -99,8 +97,10 @@ class AadhaarService {
         .update(aadhaarTransactionTable)
         .set({
           status:
-            txn.providerCode === 'MANUAL_AADHAAR' ? 'INITIATED' : 'VERIFIED',
-          providerResponse: verifyResponse.raw,
+            txn.providerCode === 'MANUAL_AADHAAR'
+              ? 'PENDING'
+              : verifyResponse.data.status,
+          providerResponse: verifyResponse.data,
           updatedAt: new Date(),
         })
         .where(eq(aadhaarTransactionTable.id, transactionId));
@@ -121,7 +121,9 @@ class AadhaarService {
           userId: actor.id,
           verificationStatus: 'PENDING_REVIEW',
           aadhaarStatus:
-            txn.providerCode === 'MANUAL_AADHAAR' ? 'PENDING' : 'SUCCESS',
+            txn.providerCode === 'MANUAL_AADHAAR'
+              ? 'PENDING'
+              : verifyResponse.data.status,
           kycMode: txn.providerCode,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -135,7 +137,9 @@ class AadhaarService {
           .update(usersKycTable)
           .set({
             aadhaarStatus:
-              txn.providerCode === 'MANUAL_AADHAAR' ? 'PENDING' : 'SUCCESS',
+              txn.providerCode === 'MANUAL_AADHAAR'
+                ? 'PENDING'
+                : verifyResponse.data.status,
             verificationStatus: 'PENDING_REVIEW',
             kycMode: txn.providerCode,
             updatedAt: new Date(),
@@ -154,7 +158,7 @@ class AadhaarService {
             ? formData.documentUrl
             : 'API_VERIFIED',
         documentNumber: txn.maskedAadhaar,
-        rowResponse: verifyResponse.raw,
+        rowResponse: verifyResponse.data,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -169,6 +173,58 @@ class AadhaarService {
     return {
       status: 'SUBMITTED_FOR_REVIEW',
     };
+  }
+
+  static async decodeAndSave(base64String) {
+    try {
+      if (!base64String) {
+        throw new Error('Photo data missing');
+      }
+
+      console.log('Full length:', base64String.length);
+
+      // Remove data:image prefix
+      let cleaned = base64String.replace(/data:image\/\w+;base64,/g, '');
+      cleaned = cleaned.replace(/\s/g, '');
+
+      while (cleaned.length % 4 !== 0) {
+        cleaned += '=';
+      }
+
+      const encryptedBuffer = Buffer.from(cleaned, 'base64');
+
+      console.log('Before decrypt:', encryptedBuffer.slice(0, 4));
+
+      // 🔥 TEMPORARY DECRYPT BLOCK
+      // Assuming IV is first 16 bytes
+      const iv = encryptedBuffer.slice(0, 16);
+      const encryptedData = encryptedBuffer.slice(16);
+
+      const secretKey = process.env.BULKPE_SECRET_KEY; // must be 32 bytes
+
+      console.log('Key length:', Buffer.from(secretKey).length);
+
+      const key = Buffer.from(secretKey, 'utf8');
+
+      const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+
+      let decrypted = decipher.update(encryptedData);
+      decrypted = Buffer.concat([decrypted, decipher.final()]);
+
+      console.log('After decrypt:', decrypted.slice(0, 4));
+
+      const fileName = `${crypto.randomUUID()}.png`;
+      const uploadPath = path.join('uploads', fileName);
+
+      fs.writeFileSync(uploadPath, decrypted);
+
+      return {
+        fileName,
+        path: uploadPath,
+      };
+    } catch (error) {
+      throw new Error('Photo decrypt failed: ' + error.message);
+    }
   }
 }
 

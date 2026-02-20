@@ -23,15 +23,13 @@ class BulkpeAadhaarPlugin extends AadhaarPluginInterface {
         aadhaar: aadhaarNumber,
       });
 
-      const data = response.data;
-
-      if (!data.status) {
+      if (!response.data.status) {
         throw ApiError.badRequest(data.message || 'Failed to send OTP');
       }
 
       return {
-        referenceId: data.data.ref_id,
-        raw: data,
+        referenceId: response.data.ref_id,
+        raw: response.data,
       };
     } catch (err) {
       throw ApiError.internal(
@@ -48,26 +46,13 @@ class BulkpeAadhaarPlugin extends AadhaarPluginInterface {
         otp,
       });
 
-      const data = response.data;
-
-      if (!data.status) {
-        throw ApiError.badRequest(data.message || 'OTP verification failed');
+      if (!response.data.status) {
+        throw ApiError.badRequest(
+          response.message || 'OTP verification failed',
+        );
       }
 
-      const aadhaarData = data.data;
-
-      return {
-        verificationStatus: 'VERIFIED',
-        aadhaarData: {
-          name: aadhaarData.name,
-          dob: aadhaarData.dob,
-          gender: aadhaarData.gender,
-          address: aadhaarData.address,
-          yearOfBirth: aadhaarData.year_of_birth,
-          mobileHash: aadhaarData.mobile_hash,
-        },
-        raw: data,
-      };
+      return response;
     } catch (err) {
       throw ApiError.internal(
         err.response?.data?.message || 'Aadhaar verification failed',
