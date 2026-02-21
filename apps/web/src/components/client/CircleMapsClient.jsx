@@ -14,6 +14,7 @@ import { PERMISSIONS } from "@/lib/permissionKeys";
 import { toast } from "@/lib/toast";
 import CircleMapsTable from "../tables/CircleMapsTable";
 import CircleMapModal from "../modals/CircleMapModal";
+import { useProviders, useServices } from "@/hooks/useAdminServices";
 
 export default function CircleMapsClient() {
   const [open, setOpen] = useState(false);
@@ -21,6 +22,9 @@ export default function CircleMapsClient() {
 
   const { data = [], isLoading, refetch } = useCircleMaps();
   const { mutate: upsertMap, isPending } = useUpsertCircleMap();
+
+  const { data: services = [] } = useServices();
+  const { data: providers = [] } = useProviders();
 
   const perms = useSelector((s) => s.auth.user?.permissions);
   const can = (perm) => permissionChecker(perms, perm.resource, perm.action);
@@ -91,6 +95,8 @@ export default function CircleMapsClient() {
         initialData={editingData}
         onSubmit={handleSubmit}
         isPending={isPending}
+        services={services}
+        providers={providers}
       />
     </>
   );

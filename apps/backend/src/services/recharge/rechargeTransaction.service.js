@@ -2,10 +2,7 @@ import crypto from 'node:crypto';
 import { rechargeDb as db } from '../../database/recharge/recharge-db.js';
 import { eq, and } from 'drizzle-orm';
 
-import {
-  rechargeOperatorMapTable,
-  rechargeTransactionTable,
-} from '../../models/recharge/index.js';
+import { rechargeTransactionTable } from '../../models/recharge/index.js';
 
 import { ApiError } from '../../lib/ApiError.js';
 import RechargeRuntimeService from './rechargeRuntime.service.js';
@@ -14,14 +11,13 @@ import { getRechargePlugin } from '../../plugin_registry/recharge/pluginRegistry
 import WalletService from '../wallet.service.js';
 
 import OperatorMapService from '../recharge-admin/operatorMap.service.js';
-import CircleMapService from '../recharge-admin/circleMap.service.js';
 import { RECHARGE_SERVICE_CODE } from '../../config/constant.js';
 import { buildTenantChain } from '../../lib/tenantHierarchy.util.js';
 
 class RechargeTransactionService {
   // MAIN ENTRY
   static async initiateRecharge({ payload, actor }) {
-    const { mobileNumber, operatorCode, circleCode, amount } = payload;
+    const { mobileNumber, operatorCode, amount } = payload;
 
     const tenantChain = await buildTenantChain(actor.tenantId);
 
@@ -110,14 +106,6 @@ class RechargeTransactionService {
         serviceProviderId: provider.providerId,
       });
 
-      const providerCircleCode = circleCode
-        ? await CircleMapService.resolve({
-            internalCircleCode: circleCode,
-            platformServiceId: service.id,
-            serviceProviderId: provider.providerId,
-          })
-        : null;
-
       // ✅ PROVIDER BALANCE CHECK (MANDATORY)
       if (typeof plugin.fetchBalance === 'function') {
         const providerBalance = await plugin.fetchBalance();
@@ -141,7 +129,6 @@ class RechargeTransactionService {
         number: mobileNumber,
         amount,
         transid: transactionId,
-        circle: providerCircleCode,
       });
     } catch (err) {
       await this._failAndRefund({

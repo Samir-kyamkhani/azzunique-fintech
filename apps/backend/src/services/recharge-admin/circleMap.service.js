@@ -2,6 +2,7 @@ import { db } from '../../database/core/core-db.js';
 import { rechargeCircleMapTable } from '../../models/recharge/index.js';
 import { ApiError } from '../../lib/ApiError.js';
 import crypto from 'node:crypto';
+import { and, eq } from 'drizzle-orm';
 
 class CircleMapService {
   async upsert(data, actor) {
@@ -11,8 +12,16 @@ class CircleMapService {
 
     await db
       .insert(rechargeCircleMapTable)
-      .values({ id: crypto.randomUUID(), ...data })
-      .onDuplicateKeyUpdate({ set: data });
+      .values({
+        id: crypto.randomUUID(),
+        ...data,
+      })
+      .onDuplicateKeyUpdate({
+        set: {
+          providerCircleCode: data.providerCircleCode,
+          updatedAt: new Date(),
+        },
+      });
 
     return { success: true };
   }

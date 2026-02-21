@@ -10,6 +10,8 @@ export default function CircleMapModal({
   initialData,
   onSubmit,
   isPending,
+  services,
+  providers,
 }) {
   if (!open) return null;
 
@@ -41,6 +43,8 @@ export default function CircleMapModal({
             initialData={initialData}
             onSubmit={onSubmit}
             isPending={isPending}
+            services={services}
+            providers={providers}
           />
         </div>
       </div>

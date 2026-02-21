@@ -15,7 +15,6 @@ import { rechargeTransactionTable } from '../../models/recharge/index.js';
 import { ApiError } from '../../lib/ApiError.js';
 import { getRechargePlugin } from '../../plugin_registry/recharge/pluginRegistry.js';
 import OperatorMapService from '../recharge-admin/operatorMap.service.js';
-import CircleMapService from '../recharge-admin/circleMap.service.js';
 import tenantServiceEffective from '../../lib/tenantService.effective.js';
 
 class RechargeRuntimeService {
@@ -180,19 +179,11 @@ class RechargeRuntimeService {
       serviceProviderId: txn.providerId,
     });
 
-    const providerCircleCode = txn.circleCode
-      ? await CircleMapService.resolve({
-          internalCircleCode: txn.circleCode,
-          providerCode: txn.providerCode,
-        })
-      : null;
-
     await plugin.recharge({
       opcode: providerOperatorCode,
       number: txn.mobileNumber,
       amount: txn.amount,
       transid: txn.id,
-      circle: providerCircleCode,
       isRetry,
     });
 

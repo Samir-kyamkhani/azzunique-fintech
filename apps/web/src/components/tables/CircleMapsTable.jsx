@@ -7,7 +7,9 @@ import { Globe } from "lucide-react";
 
 const columns = [
   { key: "internalCircleCode", label: "Internal Circle Code" },
-  { key: "mplanCircleCode", label: "MPLAN Circle Code" },
+  { key: "providerCircleCode", label: "Provider Circle Code" },
+  { key: "platformServiceId", label: "Service ID" },
+  { key: "serviceProviderId", label: "Provider ID" },
   { key: "actions", label: "Actions" },
 ];
 
