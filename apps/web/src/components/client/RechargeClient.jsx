@@ -42,7 +42,9 @@ export default function RechargeClient() {
 
   /* ================= RECHARGE OPERATORS ================= */
 
-  const { data: operatorMaps = [] } = useRechargeOperators();
+  const { data: rechargeOperatorMaps = [] } = useRechargeOperators("RECHARGE");
+
+  const { data: planOperatorMaps = [] } = useRechargeOperators("FETCH_PLANS");
 
   /* ================= INITIATE ================= */
 
@@ -208,7 +210,8 @@ export default function RechargeClient() {
         initialData={selectedTxn}
         plans={plans}
         offers={offers}
-        operatorMaps={operatorMaps}
+        planOperatorMaps={planOperatorMaps}
+        rechargeOperatorMaps={rechargeOperatorMaps}
         circleMaps={circleMaps}
         onFieldChange={setFormValues}
       />
