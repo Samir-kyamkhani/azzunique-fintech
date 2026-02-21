@@ -63,7 +63,13 @@ export async function seedUsers(tenantId) {
   });
 
   // 🔐 CREATE DEFAULT WALLETS FOR AZZUNIQUE
-  const wallets = ['MAIN', 'COMMISSION', 'SETTLEMENT', 'SECURITY'];
+  const wallets = [
+    'MAIN',
+    'COMMISSION',
+    'SETTLEMENT',
+    'SECURITY',
+    'GST_PAYABLE',
+  ];
 
   for (const walletType of wallets) {
     await db.insert(walletTable).values({

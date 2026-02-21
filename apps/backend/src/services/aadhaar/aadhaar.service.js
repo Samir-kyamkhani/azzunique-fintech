@@ -13,6 +13,7 @@ import { buildTenantChain } from '../../lib/tenantHierarchy.util.js';
 import { AADHAAR_SERVICE_CODE } from '../../config/constant.js';
 import path from 'node:path';
 import fs from 'fs';
+import { PermissionsRegistry } from '../../lib/PermissionsRegistry.js';
 class AadhaarService {
   static async sendOtp({ aadhaarNumber, actor }) {
     const tenantChain = await buildTenantChain(actor.tenantId);
@@ -22,14 +23,28 @@ class AadhaarService {
       platformServiceCode: AADHAAR_SERVICE_CODE,
     });
 
+    const permissions = actor._resolvedPermissions || [];
+
+    if (
+      provider.code === 'MANUAL_AADHAAR' &&
+      !permissions.includes(PermissionsRegistry.SERVICES.AADHAAR.MANUAL_CREATE)
+    ) {
+      throw ApiError.forbidden('Manual Aadhaar access denied');
+    }
+
+    if (
+      provider.code !== 'MANUAL_AADHAAR' &&
+      !permissions.includes(PermissionsRegistry.SERVICES.AADHAAR.API_CREATE)
+    ) {
+      throw ApiError.forbidden('API Aadhaar access denied');
+    }
+
     const plugin = getAadhaarPlugin(provider.code, provider.providerConfig);
 
     const response = await plugin.sendOtp({ aadhaarNumber });
 
     const masked = `XXXX-XXXX-${aadhaarNumber.slice(-4)}`;
     const encrypted = encrypt(aadhaarNumber);
-
-    const transactionId = crypto.randomUUID();
 
     const ref =
       provider.code === 'MANUAL_AADHAAR'
@@ -72,6 +87,22 @@ class AadhaarService {
       .limit(1);
 
     if (!txn) throw ApiError.notFound('Transaction not found');
+
+    const permissions = actor._resolvedPermissions || [];
+
+    if (
+      txn.providerCode === 'MANUAL_AADHAAR' &&
+      !permissions.includes(PermissionsRegistry.SERVICES.AADHAAR.MANUAL_CREATE)
+    ) {
+      throw ApiError.forbidden('Manual Aadhaar verify denied');
+    }
+
+    if (
+      txn.providerCode !== 'MANUAL_AADHAAR' &&
+      !permissions.includes(PermissionsRegistry.SERVICES.AADHAAR.API_CREATE)
+    ) {
+      throw ApiError.forbidden('API Aadhaar verify denied');
+    }
 
     const plugin = getAadhaarPlugin(txn.providerCode, txn.providerConfig);
 
