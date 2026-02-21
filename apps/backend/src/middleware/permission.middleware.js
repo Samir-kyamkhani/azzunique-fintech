@@ -19,6 +19,16 @@ export const PermissionMiddleware = (required) => {
       return next();
     }
 
+    if (Array.isArray(required)) {
+      const allowed = required.some((perm) => permissions.includes(perm));
+
+      if (!allowed) {
+        throw ApiError.forbidden('Permission denied');
+      }
+
+      return next();
+    }
+
     if (!permissions.includes(required)) {
       throw ApiError.forbidden('Permission denied');
     }
