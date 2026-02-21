@@ -1,7 +1,7 @@
 import { db } from '../../database/core/core-db.js';
 import { rechargeCircleMapTable } from '../../models/recharge/index.js';
 import { ApiError } from '../../lib/ApiError.js';
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 
 class CircleMapService {
   async upsert(data, actor) {
@@ -21,11 +21,17 @@ class CircleMapService {
     return db.select().from(rechargeCircleMapTable);
   }
 
-  async resolve({ internalCircleCode, providerCode }) {
+  async resolve({ internalCircleCode, platformServiceId, serviceProviderId }) {
     const [row] = await db
       .select()
       .from(rechargeCircleMapTable)
-      .where(eq(rechargeCircleMapTable.internalCircleCode, internalCircleCode))
+      .where(
+        and(
+          eq(rechargeCircleMapTable.internalCircleCode, internalCircleCode),
+          eq(rechargeCircleMapTable.platformServiceId, platformServiceId),
+          eq(rechargeCircleMapTable.serviceProviderId, serviceProviderId),
+        ),
+      )
       .limit(1);
 
     if (!row) {
@@ -34,15 +40,7 @@ class CircleMapService {
       );
     }
 
-    if (providerCode === 'MPLAN') {
-      if (!row.mplanCircleCode) {
-        throw ApiError.badRequest('MPLAN circle code missing');
-      }
-      return row.mplanCircleCode;
-    }
-
-    // RechargeExchange does NOT require circle
-    return null;
+    return row.providerCircleCode;
   }
 }
 

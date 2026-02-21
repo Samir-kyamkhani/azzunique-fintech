@@ -252,14 +252,11 @@ export const useMapProviderFeature = () => {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ serviceId, providerId, payload }) =>
-      apiClient(
-        `/admin/services/${serviceId}/providers/${providerId}/features`,
-        {
-          method: "POST",
-          body: JSON.stringify(payload),
-        },
-      ),
+    mutationFn: ({ providerId, payload }) =>
+      apiClient(`/admin/services/providers/${providerId}/features`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({
         queryKey: ["service-providers", vars.serviceId],

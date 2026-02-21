@@ -10,6 +10,7 @@ export const fetchRechargeOperators = async (req, res) => {
   const { service, provider } = await RechargeRuntimeService.resolve({
     tenantChain,
     platformServiceCode: RECHARGE_SERVICE_CODE,
+    featureCode: 'RECHARGE',
   });
 
   // Only transaction provider mappings

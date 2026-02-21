@@ -85,6 +85,7 @@ class OperatorMapService {
   async listForRecharge({ platformServiceId, serviceProviderId }) {
     return db
       .select({
+        id: rechargeOperatorMapTable.id,
         internalOperatorCode: rechargeOperatorMapTable.internalOperatorCode,
       })
       .from(rechargeOperatorMapTable)

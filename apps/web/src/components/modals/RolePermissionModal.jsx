@@ -15,8 +15,6 @@ export default function RolePermissionModal({
   useLockBodyScroll(open);
   if (!open) return null;
 
-  console.log(role);
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="bg-card border rounded-lg w-full max-w-3xl">

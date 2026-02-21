@@ -19,6 +19,7 @@ import {
   useRechargePlans,
   useRechargeOffers,
   useRechargeOperators,
+  useCircleMaps,
 } from "@/hooks/useRecharge";
 import { Layers } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -41,9 +42,7 @@ export default function RechargeClient() {
 
   /* ================= RECHARGE OPERATORS ================= */
 
-  const { mutate: fetchOperators = [] } = useRechargeOperators();
-
-  console.log("fetchOperators", fetchOperators);
+  const { data: operatorMaps = [] } = useRechargeOperators();
 
   /* ================= INITIATE ================= */
 
@@ -51,6 +50,8 @@ export default function RechargeClient() {
     useInitiateRecharge();
 
   /* ================= ADMIN MAP DATA ================= */
+
+  const { data: circleMaps = [] } = useCircleMaps();
 
   /* ================= RETRY ================= */
 
@@ -207,7 +208,8 @@ export default function RechargeClient() {
         initialData={selectedTxn}
         plans={plans}
         offers={offers}
-        operatorMaps={fetchOperators}
+        operatorMaps={operatorMaps}
+        circleMaps={circleMaps}
         onFieldChange={setFormValues}
       />
     </>

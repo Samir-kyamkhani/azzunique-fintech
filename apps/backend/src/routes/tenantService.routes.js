@@ -4,7 +4,6 @@ import { AuthMiddleware } from '../middleware/auth.middleware.js';
 
 import * as TS from '../controllers/tenantService.controller.js';
 import {
-  tenantServiceParamsSchema,
   tenantServiceWithPlatformParamsSchema,
   enableTenantServiceSchema,
 } from '../validators/tenantService.schema.js';

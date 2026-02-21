@@ -36,7 +36,7 @@ export const useRechargeOperators = () =>
     queryKey: ["recharge-operators"],
     queryFn: async () => {
       const res = await apiClient("/recharge/operators");
-      return res.data.data; // backend returns { success, data }
+      return res.data; // backend returns { success, data }
     },
   });
 

@@ -9,9 +9,10 @@ export const fetchRechargeOffers = async (req, res) => {
 
   const tenantChain = await buildTenantChain(actor.tenantId);
 
-  const { provider } = await RechargeRuntimeService.resolve({
+  const { service, provider } = await RechargeRuntimeService.resolve({
     tenantChain,
     platformServiceCode: RECHARGE_SERVICE_CODE,
+    featureCode: 'FETCH_OFFERS',
   });
 
   const plugin = getRechargePlugin(

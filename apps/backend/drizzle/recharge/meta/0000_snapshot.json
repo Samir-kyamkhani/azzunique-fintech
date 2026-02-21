@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "bdfcda40-fe6b-4ee4-a7df-25f971b3b721",
+  "id": "aedfd9da-6e62-4128-a9e6-2b24bd6f3b47",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "recharge_operator_map": {
@@ -21,9 +21,9 @@
           "notNull": true,
           "autoincrement": false
         },
-        "provider_code": {
-          "name": "provider_code",
-          "type": "varchar(30)",
+        "service_provider_id": {
+          "name": "service_provider_id",
+          "type": "varchar(36)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -75,7 +75,7 @@
           "columns": [
             "internal_operator_code",
             "platform_service_id",
-            "provider_code"
+            "service_provider_id"
           ]
         }
       },
@@ -192,6 +192,13 @@
         "status": {
           "name": "status",
           "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "provider_response": {
+          "name": "provider_response",
+          "type": "json",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -366,6 +373,20 @@
           "notNull": true,
           "autoincrement": false
         },
+        "platform_service_id": {
+          "name": "platform_service_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "service_provider_id": {
+          "name": "service_provider_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "internal_circle_code": {
           "name": "internal_circle_code",
           "type": "varchar(20)",
@@ -373,11 +394,11 @@
           "notNull": true,
           "autoincrement": false
         },
-        "mplan_circle_code": {
-          "name": "mplan_circle_code",
-          "type": "varchar(10)",
+        "provider_circle_code": {
+          "name": "provider_circle_code",
+          "type": "varchar(20)",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "created_at": {
@@ -397,7 +418,17 @@
           "default": "(now())"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "uq_circle_map": {
+          "name": "uq_circle_map",
+          "columns": [
+            "platform_service_id",
+            "service_provider_id",
+            "internal_circle_code"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {
         "recharge_circle_map_id": {

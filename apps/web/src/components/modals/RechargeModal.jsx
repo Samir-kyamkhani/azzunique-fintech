@@ -13,6 +13,7 @@ export default function RechargeModal({
   plans,
   offers,
   operatorMaps = [],
+  circleMaps = [],
   onFieldChange,
 }) {
   if (!open) return null;
@@ -51,6 +52,7 @@ export default function RechargeModal({
             plans={plans}
             offers={offers}
             operatorMaps={operatorMaps}
+            circleMaps={circleMaps}
             onFieldChange={onFieldChange}
           />
         </div>

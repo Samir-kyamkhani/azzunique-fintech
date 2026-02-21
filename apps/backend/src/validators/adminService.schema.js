@@ -16,7 +16,6 @@ export const featureIdParamSchema = z.object({
 });
 
 export const providerIdParamSchema = z.object({
-  serviceId: z.string().uuid(),
   providerId: z.string().uuid(),
 });
 

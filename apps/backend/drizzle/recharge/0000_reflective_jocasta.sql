@@ -1,13 +1,13 @@
 CREATE TABLE `recharge_operator_map` (
 	`id` varchar(36) NOT NULL,
 	`platform_service_id` varchar(36) NOT NULL,
-	`provider_code` varchar(30) NOT NULL,
+	`service_provider_id` varchar(36) NOT NULL,
 	`internal_operator_code` varchar(20) NOT NULL,
 	`provider_operator_code` varchar(20) NOT NULL,
 	`created_at` timestamp DEFAULT (now()),
 	`updated_at` timestamp DEFAULT (now()),
 	CONSTRAINT `recharge_operator_map_id` PRIMARY KEY(`id`),
-	CONSTRAINT `uq_rom_int_ps_prov` UNIQUE(`internal_operator_code`,`platform_service_id`,`provider_code`)
+	CONSTRAINT `uq_rom_int_ps_prov` UNIQUE(`internal_operator_code`,`platform_service_id`,`service_provider_id`)
 );
 --> statement-breakpoint
 CREATE TABLE `recharge_transactions` (
@@ -27,6 +27,7 @@ CREATE TABLE `recharge_transactions` (
 	`provider_id` varchar(36) NOT NULL,
 	`provider_config` json NOT NULL,
 	`status` varchar(20) NOT NULL,
+	`provider_response` json NOT NULL,
 	`provider_txn_id` varchar(100),
 	`reference_id` varchar(100),
 	`failure_reason` varchar(255),
@@ -53,9 +54,12 @@ CREATE TABLE `recharge_callbacks` (
 --> statement-breakpoint
 CREATE TABLE `recharge_circle_map` (
 	`id` varchar(36) NOT NULL,
+	`platform_service_id` varchar(36) NOT NULL,
+	`service_provider_id` varchar(36) NOT NULL,
 	`internal_circle_code` varchar(20) NOT NULL,
-	`mplan_circle_code` varchar(10),
+	`provider_circle_code` varchar(20) NOT NULL,
 	`created_at` timestamp DEFAULT (now()),
 	`updated_at` timestamp DEFAULT (now()),
-	CONSTRAINT `recharge_circle_map_id` PRIMARY KEY(`id`)
+	CONSTRAINT `recharge_circle_map_id` PRIMARY KEY(`id`),
+	CONSTRAINT `uq_circle_map` UNIQUE(`platform_service_id`,`service_provider_id`,`internal_circle_code`)
 );

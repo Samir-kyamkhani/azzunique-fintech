@@ -157,7 +157,7 @@ router.patch(
    ======================================================= */
 
 router.post(
-  '/:serviceId/providers/:providerId/features',
+  '/providers/:providerId/features',
   validate({
     params: providerIdParamSchema,
     body: mapProviderFeatureSchema,

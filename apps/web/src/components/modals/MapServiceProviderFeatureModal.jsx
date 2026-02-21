@@ -18,9 +18,10 @@ export default function MapServiceProviderFeatureModal({
 
   return (
     <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 p-4">
-      <div className="bg-card border rounded-lg w-full max-w-lg overflow-hidden">
-        {/* Header */}
-        <div className="bg-gradient-theme px-6 py-6 relative text-primary-foreground">
+      {/* Modal Container */}
+      <div className="bg-card border rounded-lg w-full max-w-lg max-h-[90vh] flex flex-col shadow-lg">
+        {/* ================= HEADER ================= */}
+        <div className="bg-gradient-theme px-6 py-6 relative text-primary-foreground shrink-0">
           <Button
             size="icon"
             variant="ghost"
@@ -36,8 +37,9 @@ export default function MapServiceProviderFeatureModal({
           </div>
         </div>
 
-        <div className="p-6 space-y-6">
-          {/* ================= MAPPED FEATURES ================= */}
+        {/* ================= SCROLLABLE BODY ================= */}
+        <div className="p-6 space-y-6 overflow-y-auto">
+          {/* ===== MAPPED FEATURES ===== */}
           <div>
             <h3 className="text-sm font-semibold mb-3">Mapped Features</h3>
 
@@ -46,11 +48,11 @@ export default function MapServiceProviderFeatureModal({
                 No features mapped yet.
               </p>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                 {mappedFeatures.map((mf) => (
                   <div
                     key={mf.id}
-                    className="flex justify-between items-center border rounded px-3 py-2"
+                    className="flex justify-between items-center border rounded px-3 py-2 bg-background"
                   >
                     <span className="text-sm font-medium">
                       {mf.name || mf.id}
@@ -72,7 +74,7 @@ export default function MapServiceProviderFeatureModal({
           {/* Divider */}
           <div className="border-t" />
 
-          {/* ================= MAP NEW FEATURE ================= */}
+          {/* ===== MAP NEW FEATURE ===== */}
           <div>
             <h3 className="text-sm font-semibold mb-3">Map New Feature</h3>
 

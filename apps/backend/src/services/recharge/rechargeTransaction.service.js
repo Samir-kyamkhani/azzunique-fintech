@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { rechargeDb as db } from '../../database/recharge/recharge-db.js';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 import {
   rechargeOperatorMapTable,
@@ -29,6 +29,7 @@ class RechargeTransactionService {
     const { service, provider } = await RechargeRuntimeService.resolve({
       tenantChain,
       platformServiceCode: RECHARGE_SERVICE_CODE,
+      featureCode: 'RECHARGE',
     });
 
     // ✅ IDEMPOTENCY CHECK (CRITICAL)
@@ -112,7 +113,8 @@ class RechargeTransactionService {
       const providerCircleCode = circleCode
         ? await CircleMapService.resolve({
             internalCircleCode: circleCode,
-            providerCode: provider.code,
+            platformServiceId: service.id,
+            serviceProviderId: provider.providerId,
           })
         : null;
 
