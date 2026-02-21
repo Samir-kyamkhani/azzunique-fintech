@@ -45,8 +45,8 @@ export default function RechargeForm({
   }));
 
   const circleOptions = circleMaps.map((c) => ({
-    label: `${c.circleName} (${c.circleCode})`,
-    value: c.circleCode,
+    label: c.internalCircleCode,
+    value: c.internalCircleCode,
     key: c.id,
   }));
 

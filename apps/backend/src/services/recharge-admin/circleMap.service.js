@@ -27,7 +27,12 @@ class CircleMapService {
   }
 
   async list() {
-    return db.select().from(rechargeCircleMapTable);
+    return db
+      .select({
+        id: rechargeCircleMapTable.id,
+        internalCircleCode: rechargeCircleMapTable.internalCircleCode,
+      })
+      .from(rechargeCircleMapTable);
   }
 
   async resolve({ internalCircleCode, platformServiceId, serviceProviderId }) {
