@@ -17,8 +17,7 @@ import tenantServiceRoutes from './tenantService.routes.js';
 import commisionRoutes from './commission.routes.js';
 import permissionRoutes from './permission.routes.js';
 import reportsRoutes from './reports/reports.routes.js';
-import aadhaarRoutes from './aadhaar/aadhaar.routes.js';
-import pancardRoutes from './pancard/pancard.routes.js';
+import kycRoutes from './kyc.routes.js';
 import fundRequestRoutes from './fund-request/fundTransaction.routes.js';
 import adminServiceRoutes from './adminService.routes.js';
 
@@ -43,7 +42,6 @@ router.use('/recharge', rechargeRoutes);
 router.use('/admin/recharge', rechargeAdminRoutes);
 router.use('/reports', reportsRoutes);
 router.use('/permissions', permissionRoutes);
-router.use('/aadhaar', aadhaarRoutes);
-router.use('/pancard', pancardRoutes);
+router.use('/kyc', kycRoutes);
 router.use('/fund-request', fundRequestRoutes);
 export default router;

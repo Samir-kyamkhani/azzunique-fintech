@@ -20,7 +20,7 @@ export const aadhaarTransactionTable = mysqlTable(
 
     userId: varchar('user_id', { length: 36 }).notNull(),
 
-    usersKycId: varchar('users_kyc_id', { length: 36 }).notNull(),
+    usersKycId: varchar('users_kyc_id', { length: 36 }),
 
     tenantId: varchar('tenant_id', { length: 36 }).notNull(),
 

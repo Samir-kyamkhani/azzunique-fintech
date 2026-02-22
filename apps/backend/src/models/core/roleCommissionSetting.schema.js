@@ -46,6 +46,7 @@ export const roleCommissionSettingTable = mysqlTable(
     gstInclusive: boolean('gst_inclusive').default(false).notNull(),
 
     maxCommissionValue: int('max_commission_value').default(0).notNull(),
+    // maxSurchargeValue: int('max_surcharge_value').default(0).notNull(),
 
     isActive: boolean('is_active').default(true).notNull(),
 

@@ -29,12 +29,14 @@ export async function platformServiceResolve({
     throw ApiError.notFound(`${platformServiceCode} service not configured`);
   }
 
+  console.log('service', service);
+
   const enabled = await tenantServiceEffective.isServiceEffectivelyEnabled(
     tenantChain[0],
     service.id,
   );
-
-  console.log(enabled);
+  console.log('enabled', enabled);
+  
 
   if (!enabled) {
     throw ApiError.forbidden(
@@ -63,8 +65,9 @@ export async function platformServiceResolve({
         eq(platformServiceProviderTable.isActive, true),
       ),
     )
-    .limit(1);
 
+    console.log("row", row);
+    
   if (!row) {
     throw ApiError.internal(`${platformServiceCode} provider not configured`);
   }

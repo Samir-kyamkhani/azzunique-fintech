@@ -1,0 +1,1 @@
+ALTER TABLE `user_commission_settings` ADD `max_surcharge_value` int DEFAULT 0 NOT NULL;

@@ -6,7 +6,7 @@ import {
   usersTable,
   tenantsTable,
 } from '../models/core/index.js';
-import { and, eq, like, desc, count } from 'drizzle-orm';
+import { and, eq, like, desc, count, or } from 'drizzle-orm';
 import crypto from 'crypto';
 import { ApiError } from '../lib/ApiError.js';
 import { canSetCommission } from '../guard/commission.guard.js';
@@ -283,45 +283,75 @@ class CommissionSettingService {
     tenantId,
     userId,
     roleId,
+    platformServiceId,
     platformServiceFeatureId,
   }) {
-    const [userRule] = await db
-      .select()
-      .from(userCommissionSettingTable)
-      .where(
-        and(
-          eq(userCommissionSettingTable.tenantId, tenantId),
-          eq(userCommissionSettingTable.userId, userId),
-          eq(
-            userCommissionSettingTable.platformServiceFeatureId,
-            platformServiceFeatureId,
+    console.log(
+      tenantId,
+      userId,
+      roleId,
+      platformServiceId,
+      platformServiceFeatureId,
+    );
+    try {
+      // 1️⃣ USER LEVEL CHECK
+      const [userRule] = await db
+        .select()
+        .from(userCommissionSettingTable)
+        .where(
+          and(
+            eq(userCommissionSettingTable.tenantId, tenantId),
+            eq(userCommissionSettingTable.userId, userId),
+            or(
+              eq(
+                userCommissionSettingTable.platformServiceFeatureId,
+                platformServiceFeatureId,
+              ),
+              eq(
+                userCommissionSettingTable.platformServiceId,
+                platformServiceId,
+              ),
+            ),
+            eq(userCommissionSettingTable.isActive, true),
           ),
-          eq(userCommissionSettingTable.isActive, true),
-        ),
-      )
-      .limit(1);
+        )
+        .limit(1);
 
-    if (userRule) return userRule;
+      console.log('User Rule:', userRule);
 
-    const [roleRule] = await db
-      .select()
-      .from(roleCommissionSettingTable)
-      .where(
-        and(
-          eq(roleCommissionSettingTable.tenantId, tenantId),
-          eq(roleCommissionSettingTable.roleId, roleId),
-          eq(
-            roleCommissionSettingTable.platformServiceFeatureId,
-            platformServiceFeatureId,
+      if (userRule) return userRule;
+
+      // 2️⃣ ROLE LEVEL CHECK
+      const [roleRule] = await db
+        .select()
+        .from(roleCommissionSettingTable)
+        .where(
+          and(
+            eq(roleCommissionSettingTable.tenantId, tenantId),
+            eq(roleCommissionSettingTable.roleId, roleId),
+            or(
+              eq(
+                roleCommissionSettingTable.platformServiceFeatureId, // ✅ FIXED
+                platformServiceFeatureId,
+              ),
+              eq(
+                roleCommissionSettingTable.platformServiceId, // ✅ FIXED
+                platformServiceId,
+              ),
+            ),
+            eq(roleCommissionSettingTable.isActive, true),
           ),
-          eq(roleCommissionSettingTable.isActive, true),
-        ),
-      )
-      .limit(1);
+        )
+        .limit(1);
 
-    if (roleRule) return roleRule;
+      console.log('Role Rule:', roleRule);
 
-    throw ApiError.notFound('Commission rule not configured');
+      if (roleRule) return roleRule;
+
+      throw ApiError.notFound('Commission rule not configured');
+    } catch (err) {
+      console.log(err);
+    }
   }
 }
 
