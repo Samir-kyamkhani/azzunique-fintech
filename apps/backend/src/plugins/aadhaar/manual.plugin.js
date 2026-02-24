@@ -22,19 +22,11 @@ class ManualAadhaarPlugin extends AadhaarPluginInterface {
       throw new Error('Aadhaar number missing');
     }
 
-    if (!files?.profilePhoto?.[0]) {
-      throw new Error('Profile photo missing');
-    }
-
-    if (!files?.aadhaarPhoto?.[0]) {
-      throw new Error('Aadhaar photo missing');
-    }
-
     const masked = `XXXX-XXXX-${aadhaarNumber.slice(-4)}`;
 
     // Example file metadata extraction
     const profilePhotoFile = files.profilePhoto[0];
-    const aadhaarPhotoFile = files.aadhaarPhoto[0];
+    const aadhaarPdfFile = files.aadhaarPdf[0];
 
     return {
       data: {
@@ -52,10 +44,10 @@ class ManualAadhaarPlugin extends AadhaarPluginInterface {
             mimeType: profilePhotoFile.mimetype,
             size: profilePhotoFile.size,
           },
-          aadhaarPhoto: {
-            originalName: aadhaarPhotoFile.originalname,
-            mimeType: aadhaarPhotoFile.mimetype,
-            size: aadhaarPhotoFile.size,
+          aadhaarPdfFile: {
+            originalName: aadhaarPdfFile.originalname,
+            mimeType: aadhaarPdfFile.mimetype,
+            size: aadhaarPdfFile.size,
           },
         },
       },

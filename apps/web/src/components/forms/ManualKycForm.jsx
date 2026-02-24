@@ -3,7 +3,8 @@
 import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
 import Button from "@/components/ui/Button";
-import { UploadCloud } from "lucide-react";
+import { UploadCloud, FileText } from "lucide-react";
+import Image from "next/image";
 
 export default function ManualKycForm({
   transactionId,
@@ -12,9 +13,21 @@ export default function ManualKycForm({
   onSubmit,
   aadhaarData,
 }) {
-  const { register, handleSubmit, setValue } = useForm();
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm();
+
   const [profilePreview, setProfilePreview] = useState(null);
-  const [aadhaarPreview, setAadhaarPreview] = useState(null);
+  const [aadhaarFileName, setAadhaarFileName] = useState(null);
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "";
+    const [day, month, year] = dateStr.split("-");
+    return `${year}-${month}-${day}`;
+  };
+
   useEffect(() => {
     if (!aadhaarData) return;
 
@@ -23,26 +36,14 @@ export default function ManualKycForm({
     setValue("gender", aadhaarData.gender || "");
     setValue("careOf", aadhaarData.care_of || "");
     setValue("address", aadhaarData.address || "");
-
-    if (aadhaarData.photo_link) {
-      setAadhaarPreview(aadhaarData.photo_link);
-    }
   }, [aadhaarData, setValue]);
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "";
-    const [day, month, year] = dateStr.split("-");
-    return `${year}-${month}-${day}`;
-  };
 
   const submitHandler = (data) => {
     const formData = new FormData();
 
-    // Required fields
     formData.append("transactionId", transactionId);
     formData.append("providerType", providerType);
 
-    // 👇 Wrap all text fields inside formData object
     const manualData = {
       fullName: data.fullName,
       dob: data.dob,
@@ -53,18 +54,12 @@ export default function ManualKycForm({
 
     formData.append("formData", JSON.stringify(manualData));
 
-    // 👇 Files also inside same FormData
     if (data.profilePhoto?.[0]) {
       formData.append("profilePhoto", data.profilePhoto[0]);
     }
 
-    if (data.aadhaarPhoto?.[0]) {
-      formData.append("aadhaarPhoto", data.aadhaarPhoto[0]);
-    }
-
-    // 🔥 Debug
-    for (let pair of formData.entries()) {
-      console.log(pair[0], pair[1]);
+    if (data.aadhaarPdf?.[0]) {
+      formData.append("aadhaarPdf", data.aadhaarPdf[0]);
     }
 
     onSubmit(formData);
@@ -76,15 +71,21 @@ export default function ManualKycForm({
       <div className="grid grid-cols-1 gap-4">
         <input
           placeholder="Full Name"
-          {...register("fullName", { required: true })}
+          {...register("fullName", { required: "Full Name is required" })}
           className="w-full border rounded-lg px-3 py-2"
         />
+        {errors.fullName && (
+          <p className="text-red-500 text-xs">{errors.fullName.message}</p>
+        )}
 
         <input
           type="date"
-          {...register("dob", { required: true })}
+          {...register("dob", { required: "Date of Birth is required" })}
           className="w-full border rounded-lg px-3 py-2"
         />
+        {errors.dob && (
+          <p className="text-red-500 text-xs">{errors.dob.message}</p>
+        )}
 
         <select
           {...register("gender")}
@@ -95,11 +96,20 @@ export default function ManualKycForm({
           <option value="F">Female</option>
         </select>
 
+        {/* 🔥 Care Of (No Numbers Allowed) */}
         <input
           placeholder="Care Of"
-          {...register("careOf")}
+          {...register("careOf", {
+            pattern: {
+              value: /^[A-Za-z\s]+$/,
+              message: "Only alphabets are allowed",
+            },
+          })}
           className="w-full border rounded-lg px-3 py-2"
         />
+        {errors.careOf && (
+          <p className="text-red-500 text-xs">{errors.careOf.message}</p>
+        )}
 
         <textarea
           placeholder="Address"
@@ -108,37 +118,43 @@ export default function ManualKycForm({
         />
       </div>
 
-      {/* Photo Section */}
+      {/* File Section */}
       <div className="grid grid-cols-2 gap-6">
-        {/* Aadhaar Photo Upload / Preview */}
+        {/* 🔥 Aadhaar PDF Upload */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">Aadhaar Photo</label>
+          <label className="text-sm font-medium">Aadhaar PDF</label>
 
           <div className="relative border-2 border-dashed rounded-xl p-4 text-center hover:border-primary transition cursor-pointer">
             <input
               type="file"
-              accept="image/*"
-              {...register("aadhaarPhoto")}
+              accept="application/pdf"
+              {...register("aadhaarPdf", {
+                required: "Aadhaar PDF is required",
+              })}
               className="absolute inset-0 opacity-0 cursor-pointer"
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
-                setAadhaarPreview(URL.createObjectURL(file));
+                setAadhaarFileName(file.name);
               }}
             />
 
-            {aadhaarPreview ? (
-              <img
-                src={aadhaarPreview}
-                className="h-28 w-28 mx-auto object-cover rounded-xl"
-              />
+            {aadhaarFileName ? (
+              <div className="flex flex-col items-center gap-2">
+                <FileText className="h-8 w-8 text-primary" />
+                <span className="text-xs">{aadhaarFileName}</span>
+              </div>
             ) : (
               <div className="flex flex-col items-center gap-2 text-muted-foreground">
                 <UploadCloud className="h-6 w-6" />
-                <span className="text-xs">Upload Aadhaar Photo</span>
+                <span className="text-xs">Upload Aadhaar PDF</span>
               </div>
             )}
           </div>
+
+          {errors.aadhaarPdf && (
+            <p className="text-red-500 text-xs">{errors.aadhaarPdf.message}</p>
+          )}
         </div>
 
         {/* Profile Photo Upload */}
@@ -159,8 +175,11 @@ export default function ManualKycForm({
             />
 
             {profilePreview ? (
-              <img
+              <Image
+                width={100}
+                height={100}
                 src={profilePreview}
+                alt={"Profile Preview"}
                 className="h-28 w-28 mx-auto object-cover rounded-xl"
               />
             ) : (

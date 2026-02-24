@@ -13,6 +13,7 @@ export default function Page() {
   const [step, setStep] = useState("LOADING");
   const [transactionId, setTransactionId] = useState(null);
   const [maskedAadhaar, setMaskedAadhaar] = useState(null);
+  const [error, setError] = useState(null);
 
   const perms = useSelector((s) => s.auth.user?.permissions || []);
   const can = (perm) => permissionChecker(perms, perm?.resource, perm?.action);
@@ -34,8 +35,10 @@ export default function Page() {
         setTransactionId(transactionId);
         setMaskedAadhaar(maskedAadhaar);
         setStep("OTP");
-      } else if (status === "SUCCESS" || status === "VERIFIED") {
-        setStep("SUCCESS");
+      } else if (status === "VERIFIED") {
+        setStep("VERIFIED");
+      } else if (status === "PENDING_REVIEW") {
+        setStep("UNDER_REVIEW");
       } else {
         setStep("AADHAAR");
       }
@@ -59,20 +62,29 @@ export default function Page() {
       onSendOtp={(payload) =>
         sendOtp.mutate(payload, {
           onSuccess: (data) => {
+            setError(null);
             setTransactionId(data.transactionId);
             setMaskedAadhaar(data.maskedAadhaar);
             setStep("OTP");
+          },
+          onError: (err) => {
+            setError(err?.message || "Failed to send OTP");
           },
         })
       }
       onVerifyOtp={(payload) =>
         verifyOtp.mutate(payload, {
           onSuccess: () => {
+            setError(null);
             setStep("SUCCESS");
+          },
+          onError: (err) => {
+            setError(err?.message || "Verification failed");
           },
         })
       }
       isPending={sendOtp.isPending || verifyOtp.isPending || statusLoading}
+      error={error}
     />
   );
 }

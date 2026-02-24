@@ -12,6 +12,7 @@ import { usersKycTable, kycDocumentTable } from '../../models/core/index.js';
 import { buildTenantChain } from '../../lib/tenantHierarchy.util.js';
 import { AADHAAR_SERVICE_CODE } from '../../config/constant.js';
 import SurchargeEngine from '../../lib/surcharge.engine.js';
+import s3Service from '../../lib/S3Service.js';
 
 class AadhaarService {
   static async sendOtp({ aadhaarNumber, actor }) {
@@ -161,35 +162,23 @@ class AadhaarService {
 
     const isManual = txn.providerCode === 'MANUAL_AADHAAR';
 
-    /* -------------------------------------------------- */
-    /* 1️⃣ MANUAL FILE VALIDATION */
-    /* -------------------------------------------------- */
-    if (isManual) {
-      if (!files?.profilePhoto?.[0]) {
-        throw ApiError.badRequest('Profile photo is required');
-      }
-
-      if (!files?.aadhaarPhoto?.[0]) {
-        throw ApiError.badRequest('Aadhaar photo is required');
-      }
-
-      if (!formData) {
-        throw ApiError.badRequest('Form data is required');
-      }
-
-      // If formData came as string (multipart case)
-      if (typeof formData === 'string') {
-        try {
-          formData = JSON.parse(formData);
-        } catch {
-          throw ApiError.badRequest('Invalid formData JSON');
-        }
-      }
+    if (!files?.aadhaarPdf?.[0]) {
+      throw ApiError.badRequest('Aadhaar PDF file is required');
     }
 
-    /* -------------------------------------------------- */
-    /* 2️⃣ LOAD PLUGIN */
-    /* -------------------------------------------------- */
+    if (isManual) {
+      if (!files?.profilePhoto?.[0])
+        throw ApiError.badRequest('Profile photo is required');
+
+      if (!formData) throw ApiError.badRequest('Form data is required');
+
+      if (typeof formData === 'string') {
+        formData = JSON.parse(formData);
+      }
+    } else {
+      if (!otp) throw ApiError.badRequest('OTP is required');
+    }
+
     const plugin = getAadhaarPlugin(txn.providerCode, txn.providerConfig);
 
     let verifyResponse;
@@ -200,49 +189,78 @@ class AadhaarService {
       verifyResponse = await plugin.verifyOtp({
         aadhaarNumber: decrypted,
         formData,
-        files, // if plugin needs it
+        files,
       });
     } else {
-      if (!otp) {
-        throw ApiError.badRequest('OTP is required');
-      }
-
       verifyResponse = await plugin.verifyOtp({
         referenceId: txn.referenceId,
         otp,
       });
     }
 
-    const providerStatus = isManual
-      ? 'SUCCESS'
-      : verifyResponse?.data?.status || 'FAILED';
+    // 🔥 FIXED STATUS LOGIC
+    const providerStatus =
+      verifyResponse?.data?.status || (isManual ? 'PENDING' : 'FAILED');
 
-    /* -------------------------------------------------- */
-    /* 3️⃣ DB TRANSACTION */
-    /* -------------------------------------------------- */
+    let profileKey = null;
+    let aadhaarPdfKey = null;
+
+    // Upload PDF (both flows)
+    const pdfUpload = await s3Service.upload(files.aadhaarPdf[0].path, 'kyc');
+    aadhaarPdfKey = pdfUpload.key;
+
+    // Manual profile upload
+    if (isManual) {
+      const profileUpload = await s3Service.upload(
+        files.profilePhoto[0].path,
+        'kyc',
+      );
+      profileKey = profileUpload.key;
+    }
+
+    // API profile (base64)
+    if (!isManual && verifyResponse?.data?.photo_link) {
+      const raw = verifyResponse.data.photo_link.replace(
+        /^https:\/\/api\.bulkpe\.in\/png;base64,/,
+        '',
+      );
+
+      const matches = raw.match(/^data:(.+);base64,/);
+      const mimeType = matches ? matches[1] : 'image/png';
+      const extension = mime.extension(mimeType) || 'png';
+
+      const base64Data = raw.replace(/^data:.+;base64,/, '');
+      const buffer = Buffer.from(base64Data, 'base64');
+
+      const upload = await s3Service.uploadBuffer(
+        buffer,
+        'kyc',
+        extension,
+        mimeType,
+      );
+
+      profileKey = upload.key;
+    }
+
     await db.transaction(async (tx) => {
-      // Update Aadhaar transaction
       await tx
         .update(aadhaarTransactionTable)
         .set({
           status: providerStatus,
-          providerResponse: verifyResponse?.data,
+          providerResponse: verifyResponse?.data || null,
           updatedAt: new Date(),
         })
         .where(eq(aadhaarTransactionTable.id, transactionId));
 
-      // Ensure users_kyc exists
       const [existingKyc] = await tx
         .select()
         .from(usersKycTable)
         .where(eq(usersKycTable.userId, actor.id))
         .limit(1);
 
-      let usersKycId;
+      let usersKycId = existingKyc?.id || crypto.randomUUID();
 
       if (!existingKyc) {
-        usersKycId = crypto.randomUUID();
-
         await tx.insert(usersKycTable).values({
           id: usersKycId,
           userId: actor.id,
@@ -253,33 +271,43 @@ class AadhaarService {
           updatedAt: new Date(),
         });
       } else {
-        usersKycId = existingKyc.id;
-
         await tx
           .update(usersKycTable)
           .set({
             aadhaarStatus: providerStatus,
             verificationStatus: 'PENDING_REVIEW',
-            kycMode: txn.providerCode,
             updatedAt: new Date(),
           })
           .where(eq(usersKycTable.userId, actor.id));
       }
 
-      // Insert KYC document
+      // Aadhaar PDF
       await tx.insert(kycDocumentTable).values({
         ownerType: 'USER',
         ownerId: actor.id,
-        documentType: 'AADHAAR',
+        documentType: 'AADHAAR_PDF',
         platformCode: txn.providerCode,
-        documentUrl: isManual ? 'MANUAL_UPLOAD_PENDING' : 'API_VERIFIED',
+        documentUrl: aadhaarPdfKey,
         documentNumber: txn.maskedAadhaar,
-        rowResponse: verifyResponse?.data,
+        rowResponse: null, // 🔥 FIXED
         createdAt: new Date(),
         updatedAt: new Date(),
       });
 
-      // Link transaction
+      // Profile Photo
+      if (profileKey) {
+        await tx.insert(kycDocumentTable).values({
+          ownerType: 'USER',
+          ownerId: actor.id,
+          documentType: 'PROFILE_PHOTO',
+          platformCode: txn.providerCode,
+          documentUrl: profileKey,
+          rowResponse: null, // 🔥 FIXED
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      }
+
       await tx
         .update(aadhaarTransactionTable)
         .set({ usersKycId })

@@ -37,7 +37,7 @@ router.post(
 router.post(
   '/:type/verify',
   KycPermissionResolver('VERIFY'),
-  upload.fields([{ name: 'profilePhoto' }, { name: 'aadhaarPhoto' }]),
+  upload.fields([{ name: 'profilePhoto' }, { name: 'aadhaarPdf' }]),
   validate({
     params: kycTypeParamSchema,
     body: verifyOtpSchema,

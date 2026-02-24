@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import AadhaarVerifyOtpForm from "../forms/AadhaarVerifyOtpForm";
 import ManualKycForm from "../forms/ManualKycForm";
 import AadhaarOtpForm from "../forms/AadhaarOtpForm";
+import KycStatusResult from "../KycStatusResult";
 
 export default function KycModal({
   open,
@@ -16,11 +17,12 @@ export default function KycModal({
   onSendOtp,
   onVerifyOtp,
   isPending,
+  error,
 }) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] p-4">
+    <div className="fixed inset-0  flex items-center justify-center z-[9999] p-4">
       <div className=" rounded-xl w-full max-w-md shadow-xl border overflow-hidden">
         <div className="flex justify-between items-center px-6 py-4 border-b">
           <h2 className="text-lg font-semibold">Complete Your KYC</h2>
@@ -52,7 +54,11 @@ export default function KycModal({
                   <span className="text-xs text-gray-500">{maskedAadhaar}</span>
                 )}
               </div>
-
+              {error && (
+                <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-600">
+                  {error}
+                </div>
+              )}
               {providerType === "API" ? (
                 <AadhaarVerifyOtpForm
                   transactionId={transactionId}
@@ -75,15 +81,8 @@ export default function KycModal({
             </>
           )}
 
-          {step === "SUCCESS" && (
-            <div className="text-center py-6">
-              <h3 className="text-green-600 font-semibold text-lg">
-                ✅ KYC Submitted Successfully
-              </h3>
-              <p className="text-sm text-gray-500 mt-2">
-                Your KYC is under review.
-              </p>
-            </div>
+          {["VERIFIED", "UNDER_REVIEW", "REJECTED"].includes(step) && (
+            <KycStatusResult status={step} />
           )}
         </div>
       </div>

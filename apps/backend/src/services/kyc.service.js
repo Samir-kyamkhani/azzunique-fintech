@@ -29,9 +29,6 @@ class KycService {
     }
   }
 
-  /**
-   * 🔥 NEW STATUS HANDLER
-   */
   static async getStatus(type, actor) {
     switch (type.toLowerCase()) {
       case 'aadhaar':
