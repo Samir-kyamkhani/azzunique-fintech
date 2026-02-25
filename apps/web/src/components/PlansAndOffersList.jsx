@@ -73,27 +73,31 @@ function PlanCard({ plan, selected, onClick, highlight = false }) {
     <button
       type="button"
       onClick={onClick}
-      className={`w-full text-left rounded-lg border px-4 py-3 transition ${
+      className={`w-full text-left rounded-xl border p-4 transition-all duration-200 ${
         selected
-          ? "border-primary bg-primary/10"
+          ? "border-primary bg-primary/5 shadow-md"
           : highlight
-            ? "border-warning/40 bg-warning/5"
-            : "border-border hover:border-primary/40"
+            ? "border-warning/40 bg-warning/5 hover:shadow-sm"
+            : "border-border hover:border-primary/40 hover:shadow-sm"
       }`}
     >
-      <div className="flex justify-between items-center">
-        <div className="font-semibold">₹{plan.rs}</div>
+      <div className="flex justify-between items-start">
+        <div>
+          <div className="text-lg font-bold text-primary">₹{plan.rs}</div>
 
-        {selected && <CheckCircle size={16} className="text-primary" />}
+          {plan.validity && (
+            <div className="text-xs text-muted-foreground mt-1">
+              Validity: {plan.validity} Days
+            </div>
+          )}
+        </div>
+
+        {selected && <CheckCircle size={18} className="text-primary mt-1" />}
       </div>
 
-      <div className="text-sm mt-1">{plan.desc}</div>
-
-      {plan.validity && (
-        <div className="text-xs text-muted-foreground mt-1">
-          Validity: {plan.validity} Days
-        </div>
-      )}
+      <div className="text-sm mt-3 leading-relaxed text-muted-foreground">
+        {plan.desc}
+      </div>
     </button>
   );
 }

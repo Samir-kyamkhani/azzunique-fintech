@@ -185,44 +185,50 @@ export default function RechargeForm({
 
         {/* ================= STEP 2 ================= */}
         {!isRetryMode && step === 2 && (
-          <>
+          <div className="flex flex-col h-[70vh]">
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="text-sm text-primary hover:underline"
+              className="text-sm text-primary hover:underline mb-2"
             >
               ← Change Details
             </button>
 
-            {/* ✅ SINGLE REUSABLE COMPONENT */}
-            <PlansAndOffersList
-              plans={plans}
-              selectedPlan={selectedPlan}
-              onSelect={(plan) => {
-                setSelectedPlan(plan);
-                setValue("amount", plan.rs);
-              }}
-            />
+            {/* Scrollable Plans Area */}
+            <div className="flex-1 overflow-y-auto pr-1">
+              <PlansAndOffersList
+                plans={plans}
+                selectedPlan={selectedPlan}
+                onSelect={(plan) => {
+                  setSelectedPlan(plan);
+                  setValue("amount", plan.rs);
+                }}
+              />
+            </div>
 
-            {/* Selected Summary */}
-            {selectedPlan && (
-              <div className="mt-4 p-3 bg-primary/10 border border-primary/20 rounded text-sm">
-                <div className="font-medium">
-                  Selected Plan: ₹{selectedPlan.rs}
+            {/* Sticky Bottom Section */}
+            <div className="pt-3 border-t bg-background sticky bottom-0">
+              {selectedPlan && (
+                <div className="mb-3 p-3 bg-primary/10 border border-primary/20 rounded text-sm">
+                  <div className="font-medium">
+                    Selected Plan: ₹{selectedPlan.rs}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {selectedPlan.desc}
+                  </div>
                 </div>
-                <div>{selectedPlan.desc}</div>
-              </div>
-            )}
+              )}
 
-            <Button
-              type="submit"
-              loading={isPending}
-              className="w-full"
-              disabled={!selectedPlan}
-            >
-              Recharge ₹{selectedPlan?.rs || ""}
-            </Button>
-          </>
+              <Button
+                type="submit"
+                loading={isPending}
+                className="w-full"
+                disabled={!selectedPlan}
+              >
+                Recharge ₹{selectedPlan?.rs || ""}
+              </Button>
+            </div>
+          </div>
         )}
 
         {/* ================= RETRY MODE ================= */}
