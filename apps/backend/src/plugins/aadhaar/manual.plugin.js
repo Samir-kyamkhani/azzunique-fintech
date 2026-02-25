@@ -17,21 +17,42 @@ class ManualAadhaarPlugin extends AadhaarPluginInterface {
   /**
    * Manual verify = form data accept karna
    */
-  async verifyOtp({ aadhaarNumber, formData }) {
+  async verifyOtp({ aadhaarNumber, formData, files }) {
+    if (!aadhaarNumber) {
+      throw new Error('Aadhaar number missing');
+    }
+
     const masked = `XXXX-XXXX-${aadhaarNumber.slice(-4)}`;
 
+    // Example file metadata extraction
+    const profilePhotoFile = files.profilePhoto[0];
+    const aadhaarPdfFile = files.aadhaarPdf[0];
+
     return {
-      verificationStatus: 'PENDING', // Admin review karega
-      aadhaarData: {
-        name: formData.name,
-        dob: formData.dob,
-        address: formData.address,
-        gender: formData.gender,
-        maskedAadhaar: masked,
+      data: {
+        status: 'PENDING',
+        aadhaarData: {
+          name: formData.fullName || formData.name,
+          dob: formData.dob,
+          address: formData.address,
+          gender: formData.gender,
+          maskedAadhaar: masked,
+        },
+        documents: {
+          profilePhoto: {
+            originalName: profilePhotoFile.originalname,
+            mimeType: profilePhotoFile.mimetype,
+            size: profilePhotoFile.size,
+          },
+          aadhaarPdfFile: {
+            originalName: aadhaarPdfFile.originalname,
+            mimeType: aadhaarPdfFile.mimetype,
+            size: aadhaarPdfFile.size,
+          },
+        },
       },
       raw: {
         source: 'MANUAL',
-        submittedData: formData,
         submittedAt: new Date(),
       },
     };

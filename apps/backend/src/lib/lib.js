@@ -213,3 +213,60 @@ export function generatePrefix(source, length = 3, padChar = 'X') {
     ? cleaned.substring(0, length)
     : cleaned.padEnd(length, padChar);
 }
+
+import fs from 'fs';
+import path from 'path';
+import mime from 'mime-types';
+
+const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
+
+export const saveBase64ToLocal = (rawString) => {
+  try {
+    // 1️⃣ Ensure uploads folder exists
+    if (!fs.existsSync(UPLOAD_DIR)) {
+      fs.mkdirSync(UPLOAD_DIR);
+    }
+
+    // 2️⃣ Remove bulkpe prefix if exists
+    const cleaned = rawString.replace(
+      /^https:\/\/api\.bulkpe\.in\/png;base64,/,
+      '',
+    );
+
+    // 3️⃣ Detect mime
+    const matches = cleaned.match(/^data:(.+);base64,/);
+    const mimeType = matches ? matches[1] : 'image/png';
+
+    // 4️⃣ Remove data:image/png;base64,
+    const base64Data = cleaned.replace(/^data:.+;base64,/, '');
+
+    // 5️⃣ Convert to buffer
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    if (!buffer || buffer.length === 0) {
+      throw new Error('Invalid base64 data');
+    }
+
+    // 6️⃣ Determine extension
+    const extension = mime.extension(mimeType) || 'png';
+
+    const fileName = `${Date.now()}_${crypto.randomUUID()}.${extension}`;
+    const filePath = path.join(UPLOAD_DIR, fileName);
+
+    // 7️⃣ Write file
+    fs.writeFileSync(filePath, buffer);
+
+    console.log('✅ File saved at:', filePath);
+    console.log('📦 Size:', buffer.length, 'bytes');
+
+    return {
+      fileName,
+      filePath,
+      size: buffer.length,
+      mimeType,
+    };
+  } catch (err) {
+    console.error('❌ Error saving base64:', err.message);
+    throw err;
+  }
+};

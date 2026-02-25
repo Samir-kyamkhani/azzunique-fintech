@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "5",
-      "when": 1771329751166,
-      "tag": "0000_great_squadron_supreme",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "5",
-      "when": 1771493122750,
-      "tag": "0001_cynical_stryfe",
+      "when": 1771901708312,
+      "tag": "0000_stiff_inhumans",
       "breakpoints": true
     }
   ]

@@ -22,6 +22,8 @@ export const RESOURCES = Object.freeze({
 
 export const ACTIONS = Object.freeze({
   CREATE: "CREATE",
+  API_CREATE: "API_CREATE",
+  MANUAL_CREATE: "MANUAL_CREATE",
   UPSERT: "UPSERT",
   READ: "READ",
   UPDATE: "UPDATE",
@@ -249,9 +251,13 @@ export const PERMISSIONS = {
         resource: RESOURCES.AADHAAR,
         action: ACTIONS.READ,
       },
-      CREATE: {
+      MANUAL_CREATE: {
         resource: RESOURCES.AADHAAR,
-        action: ACTIONS.CREATE,
+        action: ACTIONS.MANUAL_CREATE,
+      },
+      API_CREATE: {
+        resource: RESOURCES.AADHAAR,
+        action: ACTIONS.API_CREATE,
       },
       UPDATE: {
         resource: RESOURCES.AADHAAR,

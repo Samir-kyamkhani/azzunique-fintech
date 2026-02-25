@@ -80,6 +80,35 @@ class S3Service {
     }
   }
 
+  // ================= UPLOAD BUFFER (BASE64/API IMAGE) =================
+  async uploadBuffer(buffer, category, extension = 'png', contentType = null) {
+    if (!buffer) {
+      throw new Error('Buffer is required');
+    }
+
+    if (!ALLOWED_CATEGORIES.includes(category)) {
+      throw new Error(`Invalid upload category: ${category}`);
+    }
+
+    const uniqueName = `${Date.now()}_${crypto.randomUUID()}.${extension}`;
+    const s3Key = `${MAIN_FOLDER}/${category}/${uniqueName}`;
+
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: s3Key,
+        Body: buffer,
+        ContentType: contentType || `image/${extension}`,
+        ACL: 'private',
+      }),
+    );
+
+    return {
+      key: s3Key,
+      url: `https://${this.bucket}.s3.${envConfig.s3.region}.amazonaws.com/${s3Key}`,
+    };
+  }
+
   // ================= DELETE =================
   async deleteByKey(s3Key) {
     if (!s3Key) {
