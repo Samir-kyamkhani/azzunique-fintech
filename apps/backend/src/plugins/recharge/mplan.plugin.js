@@ -6,13 +6,13 @@ class MplanPlugin extends MplanPluginInterface {
   constructor(config) {
     super(config);
     this.client = axios.create({
-      baseURL: this.config.config.mplanpluginUrl, //mplanpluginUrl
+      baseURL: this.config.mplanpluginUrl, //mplanpluginUrl
       timeout: 10000,
     });
   }
 
   async fetchPlans({ operatorCode, circleCode }) {
-    const apiKey = this.config.config.apikey;
+    const apiKey = this.config.apikey;
 
     const res = await this.client.get('/mobileplans', {
       params: {
