@@ -7,10 +7,6 @@ import { PERMISSIONS } from "@/lib/permissionKeys";
 import { permissionChecker } from "@/lib/permissionCheker";
 import CommisionClient from "@/components/client/CommissionClient";
 
-export const metadata = {
-  title: "Commission",
-};
-
 export default function Page() {
   const router = useRouter();
   const perms = useSelector((s) => s.auth.user?.permissions);
