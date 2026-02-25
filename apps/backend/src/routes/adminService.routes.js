@@ -19,6 +19,7 @@ import {
   assignProviderToServiceSchema,
   updateProviderConfigSchema,
   mapProviderFeatureSchema,
+  providerIdParamSchema,
 } from '../validators/adminService.schema.js';
 
 const router = Router();
