@@ -8,7 +8,6 @@ import {
   serviceIdOnlyParamSchema,
   featureIdParamSchema,
   providerIdOnlyParamSchema,
-  providerIdOnlyParamSchema,
   providerFeatureParamSchema,
   createServiceSchema,
   updateServiceSchema,
