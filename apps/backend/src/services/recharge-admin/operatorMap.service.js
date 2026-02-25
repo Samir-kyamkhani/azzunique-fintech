@@ -87,6 +87,7 @@ class OperatorMapService {
       .select({
         id: rechargeOperatorMapTable.id,
         internalOperatorCode: rechargeOperatorMapTable.internalOperatorCode,
+        providerOperatorCode: rechargeOperatorMapTable.providerOperatorCode,
       })
       .from(rechargeOperatorMapTable)
       .where(

@@ -17,7 +17,6 @@ import {
   useRetryRecharge,
   useInitiateRecharge,
   useRechargePlans,
-  useRechargeOffers,
   useRechargeOperators,
   useCircleMaps,
 } from "@/hooks/useRecharge";
@@ -61,15 +60,11 @@ export default function RechargeClient() {
 
   /* ================= PLANS & OFFERS ================= */
 
-  const { data: plans = [] } = useRechargePlans(
-    formValues.operatorCode,
-    formValues.circleCode,
-  );
-
-  const { data: offers = [] } = useRechargeOffers(
-    formValues.operatorCode,
-    formValues.mobileNumber,
-  );
+  const {
+    data: plans = [],
+    refetch: fetchPlans,
+    isFetching: plansLoading,
+  } = useRechargePlans(formValues.operatorCode, formValues.circleCode);
 
   /* ================= PERMISSIONS ================= */
 
@@ -209,11 +204,12 @@ export default function RechargeClient() {
         isPending={selectedTxn ? retrying : initiating}
         initialData={selectedTxn}
         plans={plans}
-        offers={offers}
         planOperatorMaps={planOperatorMaps}
         rechargeOperatorMaps={rechargeOperatorMaps}
         circleMaps={circleMaps}
         onFieldChange={setFormValues}
+        fetchPlans={fetchPlans}
+        plansLoading={plansLoading}
       />
     </>
   );

@@ -15,10 +15,11 @@ export default function RechargeForm({
   isPending,
   isRetryMode,
   plans = {},
-  offers = [],
   planOperatorMaps = [],
   circleMaps = [],
   onFieldChange,
+  fetchPlans,
+  plansLoading,
 }) {
   const [step, setStep] = useState(1);
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -45,12 +46,14 @@ export default function RechargeForm({
 
   const operatorOptions = planOperatorMaps.map((o) => ({
     label: o.internalOperatorCode,
-    value: o.internalOperatorCode,
+    value: o.providerOperatorCode,
+    key: o.id,
   }));
 
   const circleOptions = circleMaps.map((c) => ({
     label: c.internalCircleCode,
-    value: c.internalCircleCode,
+    value: c.providerCircleCode,
+    key: c.id,
   }));
 
   /* ================= STEP CONTROL ================= */
@@ -69,7 +72,14 @@ export default function RechargeForm({
       return;
     }
 
-    setStep(2);
+    try {
+      await fetchPlans({ throwOnError: true });
+      setStep(2);
+    } catch (err) {
+      setError("root", {
+        message: err.message,
+      });
+    }
   };
 
   /* ================= SUBMIT ================= */
@@ -93,7 +103,7 @@ export default function RechargeForm({
   return (
     <>
       {errors?.root && (
-        <div className="mb-4 bg-destructive/10 border border-destructive/20 p-3 rounded">
+        <div className="mb-4 bg-destructive/10 text-red-500 border border-destructive/20 p-3 rounded">
           <div className="flex gap-2 items-center text-sm">
             <AlertCircle size={16} />
             {errors.root.message}
@@ -162,7 +172,12 @@ export default function RechargeForm({
               )}
             />
 
-            <Button type="button" onClick={handleContinue} className="w-full">
+            <Button
+              type="button"
+              onClick={handleContinue}
+              className="w-full"
+              loading={plansLoading}
+            >
               View Plans
             </Button>
           </>
@@ -181,7 +196,6 @@ export default function RechargeForm({
 
             {/* ✅ SINGLE REUSABLE COMPONENT */}
             <PlansAndOffersList
-              offers={offers}
               plans={plans}
               selectedPlan={selectedPlan}
               onSelect={(plan) => {

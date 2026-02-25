@@ -31,6 +31,7 @@ class CircleMapService {
       .select({
         id: rechargeCircleMapTable.id,
         internalCircleCode: rechargeCircleMapTable.internalCircleCode,
+        providerCircleCode: rechargeCircleMapTable.providerCircleCode,
       })
       .from(rechargeCircleMapTable);
   }

@@ -6,37 +6,31 @@ import { apiClient } from "@/lib/apiClient";
 export const useRechargePlans = (operatorCode, circleCode) =>
   useQuery({
     queryKey: ["recharge-plans", operatorCode, circleCode],
-    enabled: Boolean(operatorCode && circleCode),
+    enabled: false, // 🔥 Disable auto run
+    retry: false, // Optional: provider error pe retry na kare
     queryFn: async () => {
-      const res = await apiClient(
-        `/recharge/plans?operatorCode=${operatorCode}&circleCode=${circleCode}`,
-      );
-      return res.data.plans;
-    },
-  });
+      try {
+        const res = await apiClient(
+          `/recharge/plans?operatorCode=${operatorCode}&circleCode=${circleCode}`,
+        );
 
-/* ================= FETCH OFFERS ================= */
-
-export const useRechargeOffers = (operatorCode, mobileNumber) =>
-  useQuery({
-    queryKey: ["recharge-offers", operatorCode, mobileNumber],
-    enabled: Boolean(operatorCode && mobileNumber),
-    queryFn: async () => {
-      const res = await apiClient(
-        `/recharge/offers?operatorCode=${operatorCode}&mobileNumber=${mobileNumber}`,
-      );
-      return res.data.offers;
+        return res.data.plans;
+      } catch (err) {
+        // 🔥 Backend error propagate karo
+        throw new Error(err.response?.data?.message || "Failed to fetch plans");
+      }
     },
   });
 
 /* ================= RECHARGE OPERATORS ================= */
 
-export const useRechargeOperators = () =>
+export const useRechargeOperators = (feature) =>
   useQuery({
-    queryKey: ["recharge-operators"],
+    queryKey: ["recharge-operators", feature],
+    enabled: Boolean(feature),
     queryFn: async () => {
-      const res = await apiClient("/recharge/operators");
-      return res.data; // backend returns { success, data }
+      const res = await apiClient(`/recharge/operators/${feature}`);
+      return res.data;
     },
   });
 

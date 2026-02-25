@@ -11,11 +11,12 @@ export default function RechargeModal({
   isPending,
   initialData,
   plans,
-  offers,
   planOperatorMaps = [],
   rechargeOperatorMaps = [],
   circleMaps = [],
   onFieldChange,
+  fetchPlans,
+  plansLoading,
 }) {
   if (!open) return null;
 
@@ -51,11 +52,12 @@ export default function RechargeModal({
             isPending={isPending}
             isRetryMode={isRetryMode}
             plans={plans}
-            offers={offers}
             planOperatorMaps={planOperatorMaps}
             rechargeOperatorMaps={rechargeOperatorMaps}
             circleMaps={circleMaps}
             onFieldChange={onFieldChange}
+            fetchPlans={fetchPlans} 
+            plansLoading={plansLoading}
           />
         </div>
       </div>
