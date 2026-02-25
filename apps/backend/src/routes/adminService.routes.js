@@ -8,7 +8,7 @@ import {
   serviceIdOnlyParamSchema,
   featureIdParamSchema,
   providerIdOnlyParamSchema,
-  providerIdParamSchema,
+  providerIdOnlyParamSchema,
   providerFeatureParamSchema,
   createServiceSchema,
   updateServiceSchema,
@@ -139,7 +139,7 @@ router.get(
 
 router.delete(
   '/:serviceId/providers/:providerId',
-  validate({ params: providerIdParamSchema }),
+  validate({ params: providerIdOnlyParamSchema }),
   Admin.unassignProviderFromService,
 );
 
@@ -159,7 +159,7 @@ router.patch(
 router.post(
   '/providers/:providerId/features',
   validate({
-    params: providerIdParamSchema,
+    params: providerIdOnlyParamSchema,
     body: mapProviderFeatureSchema,
   }),
   Admin.mapProviderFeature,
