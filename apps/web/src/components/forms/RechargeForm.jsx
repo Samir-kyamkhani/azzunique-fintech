@@ -16,6 +16,7 @@ export default function RechargeForm({
   isRetryMode,
   plans = {},
   planOperatorMaps = [],
+  rechargeOperatorMaps,
   circleMaps = [],
   onFieldChange,
   fetchPlans,

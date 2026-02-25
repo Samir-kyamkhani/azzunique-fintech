@@ -41,7 +41,7 @@ export default function RechargeClient() {
 
   /* ================= RECHARGE OPERATORS ================= */
 
-  const { data: rechargeOperatorMaps = [] } = useRechargeOperators("RECHARGE");
+  const { data: rechargeOperatorMaps = [] } = useRechargeOperators("INITIATE_RECHARGE");
 
   const { data: planOperatorMaps = [] } = useRechargeOperators("FETCH_PLANS");
 
