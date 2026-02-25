@@ -1,6 +1,6 @@
 import RechargeRuntimeService from '../../services/recharge/rechargeRuntime.service.js';
 import { getRechargePlugin } from '../../plugin_registry/recharge/pluginRegistry.js';
-import { RECHARGE_SERVICE_CODE } from '../../config/constant.js';
+import { RECHARGE_FEATURES, RECHARGE_SERVICE_CODE } from '../../config/constant.js';
 import { buildTenantChain } from '../../lib/tenantHierarchy.util.js';
 
 export const fetchRechargeOffers = async (req, res) => {
@@ -12,7 +12,7 @@ export const fetchRechargeOffers = async (req, res) => {
   const { service, provider } = await RechargeRuntimeService.resolve({
     tenantChain,
     platformServiceCode: RECHARGE_SERVICE_CODE,
-    featureCode: 'FETCH_OFFERS',
+    featureCode: RECHARGE_FEATURES.FETCH_OFFERS,
   });
 
   const plugin = getRechargePlugin(

@@ -13,7 +13,7 @@ import { rechargeOfferSchema } from '../../validators/recharge/rechargeOffer.sch
 import { rechargeTransactionSchema } from '../../validators/recharge/rechargeTransaction.schema.js';
 import rateLimit from 'express-rate-limit';
 import { rawQueryMiddleware } from '../../middleware/rawQuery.middleware.js';
-import { fetchRechargeOperators } from '../../controllers/recharge/rechargeOperator.controller.js';
+import { fetchOperatorsByFeature } from '../../controllers/recharge/rechargeOperator.controller.js';
 
 const router = Router();
 
@@ -36,9 +36,6 @@ const rechargeLimiter = rateLimit({
 //   fetchRechargeHistory,
 // );
 
-// RECHARGE OPERATORS GET /api/recharge/operators
-router.get('/operators', fetchRechargeOperators);
-
 // MPLAN — FETCH PLANS GET /api/recharge/plans
 router.get(
   '/plans',
@@ -46,12 +43,12 @@ router.get(
   fetchRechargePlans,
 );
 
-// MPLAN — FETCH OFFERS GET /api/recharge/offers
-router.get(
-  '/offers',
-  validate({ query: rechargeOfferSchema }),
-  fetchRechargeOffers,
-);
+// MPLAN — FETCH OFFERS GET /api/recharge/offers (agar future me offer bhi lana hua to)
+// router.get(
+//   '/offers',
+//   validate({ query: rechargeOfferSchema }),
+//   fetchRechargeOffers,
+// );
 
 // RECHARGE TRANSACTION POST /api/recharge
 router.post(
@@ -60,6 +57,9 @@ router.post(
   validate({ body: rechargeTransactionSchema }),
   initiateRecharge,
 );
+
+// RECHARGE OPERATORS GET /api/recharge/operators/:feature
+router.get('/operators/:feature', fetchOperatorsByFeature);
 
 // RECHARGE TRANSACTION RETRY POST /api/recharge/:transactionId/retry
 router.post('/:transactionId/retry', rechargeLimiter, retryRecharge);

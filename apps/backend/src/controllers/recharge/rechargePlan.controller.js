@@ -1,7 +1,10 @@
 import RechargeRuntimeService from '../../services/recharge/rechargeRuntime.service.js';
 import { getRechargePlugin } from '../../plugin_registry/recharge/pluginRegistry.js';
 import { buildTenantChain } from '../../lib/tenantHierarchy.util.js';
-import { RECHARGE_SERVICE_CODE } from '../../config/constant.js';
+import {
+  RECHARGE_FEATURES,
+  RECHARGE_SERVICE_CODE,
+} from '../../config/constant.js';
 
 export const fetchRechargePlans = async (req, res) => {
   const { operatorCode, circleCode } = req.query;
@@ -9,10 +12,10 @@ export const fetchRechargePlans = async (req, res) => {
 
   const tenantChain = await buildTenantChain(actor.tenantId);
 
-  const { service, provider } = await RechargeRuntimeService.resolve({
+  const { provider } = await RechargeRuntimeService.resolve({
     tenantChain,
     platformServiceCode: RECHARGE_SERVICE_CODE,
-    featureCode: 'FETCH_PLANS',
+    featureCode: RECHARGE_FEATURES.FETCH_PLANS,
   });
 
   const plugin = getRechargePlugin(

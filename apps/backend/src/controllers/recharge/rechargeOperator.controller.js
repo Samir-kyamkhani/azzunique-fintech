@@ -3,14 +3,16 @@ import OperatorMapService from '../../services/recharge-admin/operatorMap.servic
 import { RECHARGE_SERVICE_CODE } from '../../config/constant.js';
 import { buildTenantChain } from '../../lib/tenantHierarchy.util.js';
 
-export const fetchRechargeOperators = async (req, res) => {
+export const fetchOperatorsByFeature = async (req, res) => {
+  const { feature } = req.params;
+
   const tenantChain = await buildTenantChain(req.user.tenantId);
 
   // Resolve TRANSACTION provider
   const { service, provider } = await RechargeRuntimeService.resolve({
     tenantChain,
     platformServiceCode: RECHARGE_SERVICE_CODE,
-    featureCode: 'RECHARGE',
+    featureCode: feature,
   });
 
   // Only transaction provider mappings

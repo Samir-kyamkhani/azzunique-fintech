@@ -11,7 +11,7 @@ import { getRechargePlugin } from '../../plugin_registry/recharge/pluginRegistry
 import WalletService from '../wallet.service.js';
 
 import OperatorMapService from '../recharge-admin/operatorMap.service.js';
-import { RECHARGE_SERVICE_CODE } from '../../config/constant.js';
+import { RECHARGE_FEATURES, RECHARGE_SERVICE_CODE } from '../../config/constant.js';
 import { buildTenantChain } from '../../lib/tenantHierarchy.util.js';
 
 class RechargeTransactionService {
@@ -25,7 +25,7 @@ class RechargeTransactionService {
     const { service, provider } = await RechargeRuntimeService.resolve({
       tenantChain,
       platformServiceCode: RECHARGE_SERVICE_CODE,
-      featureCode: 'RECHARGE',
+      featureCode: RECHARGE_FEATURES.INITIATE_RECHARGE,
     });
 
     // ✅ IDEMPOTENCY CHECK (CRITICAL)
