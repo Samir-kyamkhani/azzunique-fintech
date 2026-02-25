@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "aedfd9da-6e62-4128-a9e6-2b24bd6f3b47",
+  "id": "fd72a540-c6aa-4d8d-9b0f-ff055c83f8dd",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "recharge_operator_map": {
