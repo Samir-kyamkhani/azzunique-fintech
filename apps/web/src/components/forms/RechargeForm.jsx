@@ -45,7 +45,7 @@ export default function RechargeForm({
 
   /* ================= OPTIONS ================= */
 
-  const operatorOptions = planOperatorMaps.map((o) => ({
+  const planOperatorOptions = planOperatorMaps.map((o) => ({
     label: o.internalOperatorCode,
     value: o.providerOperatorCode,
     key: o.id,
@@ -91,9 +91,39 @@ export default function RechargeForm({
       return;
     }
 
+    // Find selected PLAN operator (by providerOperatorCode)
+    const selectedPlanOperator = planOperatorMaps.find(
+      (o) => o.providerOperatorCode === data.operatorCode,
+    );
+
+    console.log("selectedPlanOperator", selectedPlanOperator);
+
+    if (!selectedPlanOperator) {
+      setError("operatorCode", {
+        message: "Invalid plan operator selected",
+      });
+      return;
+    }
+
+    // Now match RECHARGE operator using internalOperatorCode
+    const matchedRechargeOperator = rechargeOperatorMaps.find(
+      (o) =>
+        o.internalOperatorCode === selectedPlanOperator.internalOperatorCode,
+    );
+
+    console.log("matchedRechargeOperator", matchedRechargeOperator);
+
+    if (!matchedRechargeOperator) {
+      setError("operatorCode", {
+        message: "Recharge mapping not found for this operator",
+      });
+      return;
+    }
+
     onSubmit(
       {
         ...data,
+        operatorCode: matchedRechargeOperator.providerOperatorCode,
         amount: Number(data.amount),
         idempotencyKey: uuid(),
       },
@@ -147,7 +177,7 @@ export default function RechargeForm({
                       operatorCode: val,
                     }));
                   }}
-                  options={operatorOptions}
+                  options={planOperatorOptions}
                   placeholder="Select Operator"
                 />
               )}
