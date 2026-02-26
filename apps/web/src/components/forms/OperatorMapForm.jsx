@@ -1,9 +1,10 @@
 "use client";
 
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import InputField from "../ui/InputField";
 import Button from "../ui/Button";
 import SelectField from "../ui/SelectField";
+import { useServiceFeatures } from "@/hooks/useAdminServices";
 
 export default function OperatorMapForm({
   initialData,
@@ -21,15 +22,28 @@ export default function OperatorMapForm({
   } = useForm({
     defaultValues: {
       platformServiceId: initialData?.platformServiceId || "",
+      platformServiceFeatureId: initialData?.platformServiceFeatureId || "",
       serviceProviderId: initialData?.serviceProviderId || "",
       internalOperatorCode: initialData?.internalOperatorCode || "",
       providerOperatorCode: initialData?.providerOperatorCode || "",
     },
   });
 
+  const selectedServiceId = useWatch({
+    control,
+    name: "platformServiceId",
+  });
+  
+  const { data: features = [] } = useServiceFeatures(selectedServiceId);
+
   const serviceOptions = services.map((s) => ({
     label: `${s.name} (${s.code})`,
     value: s.id,
+  }));
+
+  const featureOptions = features.map((f) => ({
+    label: `${f.name} (${f.code})`,
+    value: f.id,
   }));
 
   const providerOptions = providers.map((p) => ({
@@ -77,6 +91,39 @@ export default function OperatorMapForm({
           {errors.platformServiceId && (
             <p className="text-sm text-destructive mt-1">
               {errors.platformServiceId.message}
+            </p>
+          )}
+        </div>
+
+        {/* Platform Service Feature */}
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Select Service Feature
+          </label>
+
+          <p className="text-xs text-muted-foreground mb-2">
+            Choose the specific feature (e.g., INITIATE_RECHARGE, FETCH_PLANS,
+            STATUS_CHECK).
+          </p>
+
+          <Controller
+            name="platformServiceFeatureId"
+            control={control}
+            rules={{ required: "Feature is required" }}
+            render={({ field }) => (
+              <SelectField
+                value={field.value}
+                onChange={field.onChange}
+                options={featureOptions}
+                placeholder="Select Feature"
+                disabled={!selectedServiceId}
+              />
+            )}
+          />
+
+          {errors.platformServiceFeatureId && (
+            <p className="text-sm text-destructive mt-1">
+              {errors.platformServiceFeatureId.message}
             </p>
           )}
         </div>

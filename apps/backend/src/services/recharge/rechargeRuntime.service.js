@@ -57,6 +57,7 @@ class RechargeRuntimeService {
         providerId: serviceProviderTable.id,
         providerCode: serviceProviderTable.code,
         config: platformServiceProviderTable.config,
+        featureId: platformServiceFeatureTable.id,
       })
       .from(platformServiceProviderTable)
 
@@ -121,6 +122,10 @@ class RechargeRuntimeService {
 
     return {
       service,
+      feature: {
+        id: row.featureId,
+        code: featureCode,
+      },
       provider: {
         providerId: row.providerId,
         code: row.providerCode,
@@ -176,6 +181,7 @@ class RechargeRuntimeService {
     const providerOperatorCode = await OperatorMapService.resolve({
       internalOperatorCode: txn.operatorCode,
       platformServiceId: txn.platformServiceId,
+      platformServiceFeatureId: txn.platformServiceFeatureId,
       serviceProviderId: txn.providerId,
     });
 

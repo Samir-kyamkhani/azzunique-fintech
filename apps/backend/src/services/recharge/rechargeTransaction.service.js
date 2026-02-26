@@ -25,11 +25,13 @@ class RechargeTransactionService {
     const tenantChain = await buildTenantChain(actor.tenantId);
 
     // 2️⃣ Resolve service + provider
-    const { service, provider } = await RechargeRuntimeService.resolve({
-      tenantChain,
-      platformServiceCode: RECHARGE_SERVICE_CODE,
-      featureCode: RECHARGE_FEATURES.INITIATE_RECHARGE,
-    });
+    const { service, feature, provider } = await RechargeRuntimeService.resolve(
+      {
+        tenantChain,
+        platformServiceCode: RECHARGE_SERVICE_CODE,
+        featureCode: RECHARGE_FEATURES.INITIATE_RECHARGE,
+      },
+    );
 
     // ✅ IDEMPOTENCY CHECK (CRITICAL)
     const existing = await db
@@ -86,8 +88,9 @@ class RechargeTransactionService {
       amount,
       blockedAmount: amount,
       platformServiceId: service.id,
-      platformServiceFeatureId: null, // recharge has single feature
+      platformServiceFeatureId: feature.id,
       providerCode: provider.code,
+
       providerId: provider.providerId,
       providerConfig: provider.config,
 
@@ -106,6 +109,7 @@ class RechargeTransactionService {
       const providerOperatorCode = await OperatorMapService.resolve({
         internalOperatorCode: operatorCode,
         platformServiceId: service.id,
+        platformServiceFeatureId: feature.id,
         serviceProviderId: provider.providerId,
       });
 

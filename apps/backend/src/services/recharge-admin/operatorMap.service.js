@@ -15,6 +15,7 @@ class OperatorMapService {
      * Expected data:
      * {
      *   platformServiceId,
+     *   platformServiceFeatureId
      *   serviceProviderId,
      *   internalOperatorCode,
      *   providerOperatorCode
@@ -55,6 +56,7 @@ class OperatorMapService {
   async resolve({
     internalOperatorCode,
     platformServiceId,
+    platformServiceFeatureId,
     serviceProviderId,
   }) {
     console.log('internalOperatorCode', internalOperatorCode);
@@ -71,6 +73,10 @@ class OperatorMapService {
             internalOperatorCode,
           ),
           eq(rechargeOperatorMapTable.platformServiceId, platformServiceId),
+          eq(
+            rechargeOperatorMapTable.platformServiceFeatureId,
+            platformServiceFeatureId,
+          ),
           eq(rechargeOperatorMapTable.serviceProviderId, serviceProviderId),
         ),
       )

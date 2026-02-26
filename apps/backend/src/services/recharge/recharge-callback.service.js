@@ -51,7 +51,15 @@ class RechargeCallbackService {
           platformServiceProviderTable.serviceProviderId,
         ),
       )
-      .where(eq(platformServiceProviderTable.id, txn.providerId))
+      .where(
+        and(
+          eq(
+            platformServiceProviderTable.platformServiceId,
+            txn.platformServiceId,
+          ),
+          eq(platformServiceProviderTable.serviceProviderId, txn.providerId),
+        ),
+      )
       .limit(1);
 
     if (!providerRow) {
