@@ -92,6 +92,7 @@ class RechargeTransactionService {
       providerConfig: provider.config,
 
       status: 'PENDING',
+      providerResponse: {},
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -177,6 +178,7 @@ class RechargeTransactionService {
           status: 'PENDING', // 👈 IMPORTANT
           providerTxnId: providerResponse.optransid,
           referenceId: providerResponse.referenceid,
+          providerResponse: providerResponse,
           updatedAt: new Date(),
         })
         .where(eq(rechargeTransactionTable.id, transactionId));
