@@ -8,7 +8,7 @@ import { Wrench } from "lucide-react";
 const columns = [
   { key: "id", label: "Mapping ID" },
   { key: "internalOperatorCode", label: "Internal Operator Code" },
-  { key: "featureName", label: "Feature" },
+  { key: "featureName", label: "Feature Name" },
   { key: "featureCode", label: "Feature Code" },
   { key: "providerName", label: "Provider" },
   { key: "providerOperatorCode", label: "Provider Code" },
