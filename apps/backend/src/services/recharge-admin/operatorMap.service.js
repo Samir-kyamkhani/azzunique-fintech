@@ -4,6 +4,7 @@ import { ApiError } from '../../lib/ApiError.js';
 import crypto from 'crypto';
 import { and, eq } from 'drizzle-orm';
 import { serviceProviderTable } from '../../models/core/serviceProvider.schema.js';
+import { platformServiceFeatureTable } from '../../models/core/platformServiceFeature.schema.js';
 
 class OperatorMapService {
   async upsert(data, actor) {
@@ -45,11 +46,22 @@ class OperatorMapService {
         internalOperatorCode: rechargeOperatorMapTable.internalOperatorCode,
         providerOperatorCode: rechargeOperatorMapTable.providerOperatorCode,
         providerName: serviceProviderTable.providerName,
+        featureName: platformServiceFeatureTable.name,
+        featureCode: platformServiceFeatureTable.code,
       })
       .from(rechargeOperatorMapTable)
+
       .leftJoin(
         serviceProviderTable,
         eq(rechargeOperatorMapTable.serviceProviderId, serviceProviderTable.id),
+      )
+
+      .leftJoin(
+        platformServiceFeatureTable,
+        eq(
+          rechargeOperatorMapTable.platformServiceFeatureId,
+          platformServiceFeatureTable.id,
+        ),
       );
   }
 
