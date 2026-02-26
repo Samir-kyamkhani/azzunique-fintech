@@ -119,7 +119,7 @@ export default function RechargeForm({
     onSubmit(
       {
         ...data,
-        operatorCode: matchedRechargeOperator.providerOperatorCode,
+        operatorCode: matchedRechargeOperator.internalOperatorCode,
         amount: Number(data.amount),
         idempotencyKey: uuid(),
       },
