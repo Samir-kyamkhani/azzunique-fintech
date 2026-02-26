@@ -22,8 +22,6 @@ class RechargeTransactionService {
   static async initiateRecharge({ payload, actor }) {
     const { mobileNumber, operatorCode, amount } = payload;
 
-    console.log("payload", payload);
-
     const tenantChain = await buildTenantChain(actor.tenantId);
 
     // 2️⃣ Resolve service + provider
@@ -84,7 +82,6 @@ class RechargeTransactionService {
 
       mobileNumber,
       operatorCode,
-      circleCode,
 
       amount,
       blockedAmount: amount,

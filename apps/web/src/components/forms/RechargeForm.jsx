@@ -96,8 +96,6 @@ export default function RechargeForm({
       (o) => o.providerOperatorCode === data.operatorCode,
     );
 
-    console.log("selectedPlanOperator", selectedPlanOperator);
-
     if (!selectedPlanOperator) {
       setError("operatorCode", {
         message: "Invalid plan operator selected",
@@ -110,8 +108,6 @@ export default function RechargeForm({
       (o) =>
         o.internalOperatorCode === selectedPlanOperator.internalOperatorCode,
     );
-
-    console.log("matchedRechargeOperator", matchedRechargeOperator);
 
     if (!matchedRechargeOperator) {
       setError("operatorCode", {
