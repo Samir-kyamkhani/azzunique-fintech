@@ -9,6 +9,7 @@ const columns = [
   { key: "id", label: "Mapping ID" },
   { key: "internalOperatorCode", label: "Internal Operator Code" },
   { key: "featureName", label: "Feature" },
+  { key: "featureCode", label: "Feature Code" },
   { key: "providerName", label: "Provider" },
   { key: "providerOperatorCode", label: "Provider Code" },
   { key: "actions", label: "Actions" },
