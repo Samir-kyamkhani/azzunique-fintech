@@ -14,8 +14,7 @@ export const verify = async (req, res) => {
 };
 
 export const getStatus = async (req, res) => {
-  const { type } = req.params;
-  const result = await KycService.getStatus(type, req.user);
+  const result = await KycService.getStatus(req.user);
   res.status(200).json(result);
 };
 

@@ -45,12 +45,6 @@ router.post(
   asyncHandler(verify),
 );
 
-router.get(
-  '/:type/status',
-  validate({
-    params: kycTypeParamSchema,
-  }),
-  asyncHandler(getStatus),
-);
+router.get('/status', asyncHandler(getStatus));
 
 export default router;

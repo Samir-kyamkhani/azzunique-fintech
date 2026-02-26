@@ -44,7 +44,7 @@ export const useKycStatus = (type) =>
   useQuery({
     queryKey: ["kyc-status", type],
     queryFn: async () => {
-      const res = await apiClient(`/kyc/${type}/status`);
+      const res = await apiClient(`/kyc/status`);
       return res.data;
     },
   });
