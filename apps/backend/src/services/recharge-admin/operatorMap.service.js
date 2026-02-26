@@ -57,6 +57,10 @@ class OperatorMapService {
     platformServiceId,
     serviceProviderId,
   }) {
+    console.log('internalOperatorCode', internalOperatorCode);
+    console.log('platformServiceId', platformServiceId);
+    console.log('serviceProviderId', serviceProviderId);
+
     const [row] = await db
       .select()
       .from(rechargeOperatorMapTable)
