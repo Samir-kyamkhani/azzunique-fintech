@@ -183,7 +183,18 @@ class RechargeTransactionService {
 
     const [data, totalResult] = await Promise.all([
       db
-        .select()
+        .select({
+          id: rechargeTransactionTable.id,
+          mobileNumber: rechargeTransactionTable.mobileNumber,
+          operatorCode: rechargeTransactionTable.operatorCode,
+          amount: rechargeTransactionTable.amount,
+          status: rechargeTransactionTable.status,
+          providerTxnId: rechargeTransactionTable.providerTxnId,
+          referenceId: rechargeTransactionTable.referenceId,
+          failureReason: rechargeTransactionTable.failureReason,
+          retryCount: rechargeTransactionTable.retryCount,
+          createdAt: rechargeTransactionTable.createdAt,
+        })
         .from(rechargeTransactionTable)
         .where(and(...conditions))
         .orderBy(desc(rechargeTransactionTable.createdAt))
@@ -203,7 +214,6 @@ class RechargeTransactionService {
       data,
     };
   }
-
   // PROVIDER RESPONSE HANDLER
   static async _handleProviderResponse({
     transactionId,
