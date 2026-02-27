@@ -26,6 +26,7 @@ import { useRouter } from "next/navigation";
 export default function RechargeClient() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTxn, setSelectedTxn] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState(undefined);
 
   const router = useRouter();
 
@@ -37,7 +38,11 @@ export default function RechargeClient() {
 
   /* ================= HISTORY ================= */
 
-  const { data: transactions = [], isLoading, refetch } = useRechargeHistory();
+  const {
+    data: transactions = [],
+    isLoading,
+    refetch,
+  } = useRechargeHistory({ page: 1, limit: 10, status: selectedStatus });
 
   /* ================= RECHARGE OPERATORS ================= */
 

@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { rechargeDb as db } from '../../database/recharge/recharge-db.js';
-import { eq, and } from 'drizzle-orm';
+import { desc, and, eq, sql } from 'drizzle-orm';
 
 import { rechargeTransactionTable } from '../../models/recharge/index.js';
 
@@ -165,6 +165,43 @@ class RechargeTransactionService {
       service,
       amount,
     });
+  }
+
+  static async fetchHistory({ actor, query }) {
+    const { page, limit, status } = query;
+
+    const offset = (page - 1) * limit;
+
+    const conditions = [
+      eq(rechargeTransactionTable.tenantId, actor.tenantId),
+      eq(rechargeTransactionTable.userId, actor.id),
+    ];
+
+    if (status) {
+      conditions.push(eq(rechargeTransactionTable.status, status));
+    }
+
+    const [data, totalResult] = await Promise.all([
+      db
+        .select()
+        .from(rechargeTransactionTable)
+        .where(and(...conditions))
+        .orderBy(desc(rechargeTransactionTable.createdAt))
+        .limit(limit)
+        .offset(offset),
+
+      db
+        .select({ count: sql`count(*)` })
+        .from(rechargeTransactionTable)
+        .where(and(...conditions)),
+    ]);
+
+    return {
+      page,
+      limit,
+      total: Number(totalResult[0]?.count ?? 0),
+      data,
+    };
   }
 
   // PROVIDER RESPONSE HANDLER

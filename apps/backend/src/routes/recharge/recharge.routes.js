@@ -4,6 +4,7 @@ import { AuthMiddleware } from '../../middleware/auth.middleware.js';
 import { fetchRechargePlans } from '../../controllers/recharge/rechargePlan.controller.js';
 import { fetchRechargeOffers } from '../../controllers/recharge/rechargeOffer.controller.js';
 import {
+  fetchRechargeHistory,
   initiateRecharge,
   retryRecharge,
 } from '../../controllers/recharge/rechargeTransaction.controller.js';
@@ -14,6 +15,7 @@ import { rechargeTransactionSchema } from '../../validators/recharge/rechargeTra
 import rateLimit from 'express-rate-limit';
 import { rawQueryMiddleware } from '../../middleware/rawQuery.middleware.js';
 import { fetchOperatorsByFeature } from '../../controllers/recharge/rechargeOperator.controller.js';
+import { rechargeHistoryQuerySchema } from '../../validators/recharge/rechargeHistory.schema.js';
 
 const router = Router();
 
@@ -30,11 +32,11 @@ const rechargeLimiter = rateLimit({
 });
 
 // RECHARGE HISTORY GET /api/recharge/history
-// router.get(
-//   '/history',
-//   validate({ query: rechargeHistoryQuerySchema }),
-//   fetchRechargeHistory,
-// );
+router.get(
+  '/history',
+  validate({ query: rechargeHistoryQuerySchema }),
+  fetchRechargeHistory,
+);
 
 // MPLAN — FETCH PLANS GET /api/recharge/plans
 router.get(
