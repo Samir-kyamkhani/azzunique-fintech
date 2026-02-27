@@ -3,31 +3,13 @@
 import { CheckCircle } from "lucide-react";
 
 export default function PlansAndOffersList({
-  offers,
-  plans,
+  offers = [],
+  plans = {},
   selectedPlan,
   onSelect,
 }) {
-  // ✅ Always normalize offers to array
-  const safeOffers = Array.isArray(offers) ? offers : [];
-
-  // ✅ Handle plans in multiple possible shapes
-  let normalizedPlans = null;
-
-  if (Array.isArray(plans)) {
-    // Backend accidentally sent flat array
-    normalizedPlans = { Plans: plans };
-  } else if (plans && typeof plans === "object") {
-    normalizedPlans = plans;
-  }
-
-  const hasOffers = safeOffers.length > 0;
-
-  const hasPlans =
-    normalizedPlans &&
-    Object.values(normalizedPlans).some(
-      (val) => Array.isArray(val) && val.length > 0,
-    );
+  const hasOffers = offers?.length > 0;
+  const hasPlans = plans && Object.keys(plans).length > 0;
 
   if (!hasOffers && !hasPlans) {
     return (
@@ -42,12 +24,12 @@ export default function PlansAndOffersList({
       {/* ================= OFFERS SECTION ================= */}
       {hasOffers && (
         <SectionWrapper title="Special Offers">
-          {safeOffers.map((offer, i) => (
+          {offers.map((offer, i) => (
             <PlanCard
               key={`offer-${i}`}
               plan={offer}
-              selected={selectedPlan?.rs === offer?.rs}
-              onClick={() => onSelect?.(offer)}
+              selected={selectedPlan?.rs === offer.rs}
+              onClick={() => onSelect(offer)}
               highlight
             />
           ))}
@@ -56,20 +38,18 @@ export default function PlansAndOffersList({
 
       {/* ================= NORMAL PLANS ================= */}
       {hasPlans &&
-        Object.entries(normalizedPlans).map(([category, planList]) =>
-          Array.isArray(planList) && planList.length > 0 ? (
-            <SectionWrapper key={category} title={category}>
-              {planList.map((plan, i) => (
-                <PlanCard
-                  key={`${category}-${i}`}
-                  plan={plan}
-                  selected={selectedPlan?.rs === plan?.rs}
-                  onClick={() => onSelect?.(plan)}
-                />
-              ))}
-            </SectionWrapper>
-          ) : null,
-        )}
+        Object.entries(plans).map(([category, planList]) => (
+          <SectionWrapper key={category} title={category}>
+            {planList.map((plan, i) => (
+              <PlanCard
+                key={`${category}-${i}`}
+                plan={plan}
+                selected={selectedPlan?.rs === plan.rs}
+                onClick={() => onSelect(plan)}
+              />
+            ))}
+          </SectionWrapper>
+        ))}
     </div>
   );
 }
@@ -80,6 +60,7 @@ function SectionWrapper({ title, children }) {
   return (
     <div>
       <h3 className="text-sm font-semibold mb-3">{title}</h3>
+
       <div className="space-y-2">{children}</div>
     </div>
   );
@@ -87,7 +68,7 @@ function SectionWrapper({ title, children }) {
 
 /* ================= PLAN CARD ================= */
 
-function PlanCard({ plan = {}, selected, onClick, highlight = false }) {
+function PlanCard({ plan, selected, onClick, highlight = false }) {
   return (
     <button
       type="button"
@@ -102,9 +83,9 @@ function PlanCard({ plan = {}, selected, onClick, highlight = false }) {
     >
       <div className="flex justify-between items-start">
         <div>
-          <div className="text-lg font-bold text-primary">₹{plan?.rs ?? 0}</div>
+          <div className="text-lg font-bold text-primary">₹{plan.rs}</div>
 
-          {plan?.validity && (
+          {plan.validity && (
             <div className="text-xs text-muted-foreground mt-1">
               Validity: {plan.validity} Days
             </div>
@@ -115,7 +96,7 @@ function PlanCard({ plan = {}, selected, onClick, highlight = false }) {
       </div>
 
       <div className="text-sm mt-3 leading-relaxed text-muted-foreground">
-        {plan?.desc ?? ""}
+        {plan.desc}
       </div>
     </button>
   );
