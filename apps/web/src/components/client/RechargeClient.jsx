@@ -37,14 +37,6 @@ export default function RechargeClient() {
 
   /* ================= HISTORY ================= */
 
-  const {
-    data: transactions = [],
-    isLoading,
-    refetch,
-  } = useRechargeHistory({ page: 1, limit: 10 });
-
-  console.log(transactions);
-
   /* ================= RECHARGE OPERATORS ================= */
 
   const { data: planOperatorMaps = [] } = useRechargeOperators("FETCH_PLANS");
