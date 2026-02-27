@@ -39,8 +39,6 @@ export default function RechargeClient() {
 
   const { data: transactions = [], isLoading, refetch } = useRechargeHistory();
 
-  console.log("transactions", transactions);
-
   /* ================= RECHARGE OPERATORS ================= */
 
   const { data: planOperatorMaps = [] } = useRechargeOperators("FETCH_PLANS");
@@ -179,23 +177,16 @@ export default function RechargeClient() {
               }
             : undefined
         }
-        onExtraActions={(row) => {
-          if (row.status === "FAILED" && canRetry) {
-            return (
-              <button
-                onClick={() => {
-                  setSelectedTxn(row);
-                  setModalOpen(true);
-                }}
-                className="text-primary hover:underline"
-              >
-                Retry
-              </button>
-            );
-          }
-
-          return null;
-        }}
+        onExtraActions={[
+          {
+            label: "Retry",
+            show: (row) => row.status === "FAILED" && canRetry,
+            onClick: (row) => {
+              setSelectedTxn(row);
+              setModalOpen(true);
+            },
+          },
+        ]}
       />
 
       {/* MODAL */}
