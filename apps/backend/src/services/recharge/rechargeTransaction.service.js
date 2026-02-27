@@ -92,10 +92,10 @@ class RechargeTransactionService {
       providerCode: provider.code,
 
       providerId: provider.providerId,
-      providerConfig: provider.config,
+      providerConfig: JSON.stringify(provider.config),
 
       status: 'PENDING',
-      providerResponse: {},
+      providerResponse: JSON.stringify({}),
       createdAt: new Date(),
       updatedAt: new Date(),
     });
