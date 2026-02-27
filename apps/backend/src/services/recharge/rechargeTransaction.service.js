@@ -20,6 +20,8 @@ import { buildTenantChain } from '../../lib/tenantHierarchy.util.js';
 class RechargeTransactionService {
   // MAIN ENTRY
   static async initiateRecharge({ payload, actor }) {
+    console.log('initiateRecharge payload', payload);
+
     const { mobileNumber, operatorCode, amount } = payload;
 
     const tenantChain = await buildTenantChain(actor.tenantId);
