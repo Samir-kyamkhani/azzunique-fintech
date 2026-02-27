@@ -50,8 +50,6 @@ class RechargeExchangePlugin extends RechargeExchangePluginInterface {
 
   async fetchBalance() {
     const { userId, token } = this.config;
-    console.log('fetchBalance config direct', this.config);
-    console.log('fetchBalance config', userId, token);
 
     const res = await this.statusClient.get('/BalanceNew', {
       params: {
@@ -59,8 +57,6 @@ class RechargeExchangePlugin extends RechargeExchangePluginInterface {
         token,
       },
     });
-
-    console.log('fetchBalance res', res);
 
     if (res.data.status !== 'SUCCESS') {
       throw ApiError.badRequest('Unable to fetch provider balance');
