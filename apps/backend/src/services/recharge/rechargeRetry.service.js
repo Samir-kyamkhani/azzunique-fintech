@@ -1,6 +1,6 @@
 import { rechargeDb as db } from '../../database/recharge/recharge-db.js';
 import { rechargeTransactionTable } from '../../models/recharge/index.js';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { ApiError } from '../../lib/ApiError.js';
 import { canRetryRecharge } from '../../guard/rechargeRetry.guard.js';
 import RechargeRuntimeService from './rechargeRuntime.service.js';
@@ -8,12 +8,11 @@ import RechargeRuntimeService from './rechargeRuntime.service.js';
 class RechargeRetryService {
   async retry(transactionId, actor) {
     return db.transaction(async (tx) => {
-      // 1️⃣ Lock transaction
+      // 1️⃣ Fetch transaction
       const [txn] = await tx
         .select()
         .from(rechargeTransactionTable)
         .where(eq(rechargeTransactionTable.id, transactionId))
-        .forUpdate()
         .limit(1);
 
       if (!txn) {
@@ -28,10 +27,30 @@ class RechargeRetryService {
 
       // 3️⃣ Retry rules
       if (!canRetryRecharge(txn)) {
-        throw ApiError.badRequest('Retry not allowed for this transaction');
+        throw ApiError.badRequest('Retry not allowed');
       }
 
-      // 4️⃣ Trigger recharge again (SAFE)
+      // 4️⃣ Atomic status update (CRITICAL)
+      const result = await tx
+        .update(rechargeTransactionTable)
+        .set({
+          status: 'PENDING',
+          retryCount: txn.retryCount + 1,
+          lastRetryAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(rechargeTransactionTable.id, transactionId),
+            eq(rechargeTransactionTable.status, 'FAILED'),
+          ),
+        );
+
+      if (result.rowsAffected === 0) {
+        throw ApiError.badRequest('Transaction already retried');
+      }
+
+      // 5️⃣ Execute recharge
       await RechargeRuntimeService.execute({
         transactionId: txn.id,
         isRetry: true,
