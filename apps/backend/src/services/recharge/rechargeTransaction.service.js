@@ -76,7 +76,7 @@ class RechargeTransactionService {
       reference: `RECHARGE:${transactionId}:${actor.id}`,
     });
 
-    console.log('providerConfig', provider.config);
+    console.log('provider', provider);
 
     // 6️⃣ Insert INITIATED transaction
     await db.insert(rechargeTransactionTable).values({
