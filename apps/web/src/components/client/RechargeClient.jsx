@@ -180,6 +180,7 @@ export default function RechargeClient() {
         onExtraActions={[
           {
             label: "Retry",
+            icon: RefreshCw,
             show: (row) => row.status === "FAILED" && canRetry,
             onClick: (row) => {
               setSelectedTxn(row);
