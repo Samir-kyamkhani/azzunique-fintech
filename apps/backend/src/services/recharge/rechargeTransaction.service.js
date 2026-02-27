@@ -91,15 +91,23 @@ class RechargeTransactionService {
 
       amount,
       blockedAmount: amount,
+
       platformServiceId: service.id,
       platformServiceFeatureId: feature.id,
-      providerCode: provider.code,
 
+      providerCode: provider.code,
       providerId: provider.providerId,
       providerConfig: provider.config,
 
       status: 'PENDING',
       providerResponse: {},
+
+      providerTxnId: null,
+      referenceId: null,
+      failureReason: null,
+      retryCount: 0,
+      lastRetryAt: null,
+
       createdAt: new Date(),
       updatedAt: new Date(),
     });
