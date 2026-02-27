@@ -98,6 +98,11 @@ export default function RechargeClient() {
     });
   };
 
+  const total = transactions.length;
+  const pending = transactions.filter((t) => t?.status === "PENDING").length;
+  const success = transactions.filter((t) => t?.status === "SUCCESS").length;
+  const failed = transactions.filter((t) => t?.status === "FAILED").length;
+
   return (
     <>
       {/* HEADER */}
@@ -129,21 +134,21 @@ export default function RechargeClient() {
         stats={[
           {
             title: "Total",
-            value: transactions.length,
+            value: total,
             icon: RefreshCw,
             iconColor: "text-primary",
             bgColor: "bg-primary/10",
           },
           {
             title: "Pending",
-            value: transactions.filter((t) => t.status === "PENDING").length,
+            value: pending,
             icon: Clock,
             iconColor: "text-warning",
             bgColor: "bg-warning/10",
           },
           {
             title: "Success",
-            value: transactions.filter((t) => t.status === "SUCCESS").length,
+            value: success,
             icon: CheckCircle,
             iconColor: "text-success",
             bgColor: "bg-success/10",
@@ -151,7 +156,7 @@ export default function RechargeClient() {
           },
           {
             title: "Failed",
-            value: transactions.filter((t) => t.status === "FAILED").length,
+            value: failed,
             icon: XCircle,
             iconColor: "text-destructive",
             bgColor: "bg-destructive/10",
