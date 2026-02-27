@@ -12,7 +12,6 @@ export default function RechargeModal({
   initialData,
   plans,
   planOperatorMaps = [],
-  rechargeOperatorMaps = [],
   circleMaps = [],
   onFieldChange,
   fetchPlans,
@@ -53,10 +52,9 @@ export default function RechargeModal({
             isRetryMode={isRetryMode}
             plans={plans}
             planOperatorMaps={planOperatorMaps}
-            rechargeOperatorMaps={rechargeOperatorMaps}
             circleMaps={circleMaps}
             onFieldChange={onFieldChange}
-            fetchPlans={fetchPlans} 
+            fetchPlans={fetchPlans}
             plansLoading={plansLoading}
           />
         </div>

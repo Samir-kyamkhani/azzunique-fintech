@@ -3,26 +3,35 @@ import OperatorMapService from '../../services/recharge-admin/operatorMap.servic
 import { RECHARGE_SERVICE_CODE } from '../../config/constant.js';
 import { buildTenantChain } from '../../lib/tenantHierarchy.util.js';
 
-export const fetchOperatorsByFeature = async (req, res) => {
-  const { feature } = req.params;
+export const fetchOperatorsByFeature = async (req, res, next) => {
+  try {
+    const { feature } = req.params;
 
-  const tenantChain = await buildTenantChain(req.user.tenantId);
+    const tenantChain = await buildTenantChain(req.user.tenantId);
 
-  // Resolve TRANSACTION provider
-  const { service, provider } = await RechargeRuntimeService.resolve({
-    tenantChain,
-    platformServiceCode: RECHARGE_SERVICE_CODE,
-    featureCode: feature,
-  });
+    // Resolve service + feature + provider
+    const {
+      service,
+      feature: resolvedFeature,
+      provider,
+    } = await RechargeRuntimeService.resolve({
+      tenantChain,
+      platformServiceCode: RECHARGE_SERVICE_CODE,
+      featureCode: feature,
+    });
 
-  // Only transaction provider mappings
-  const operators = await OperatorMapService.listForRecharge({
-    platformServiceId: service.id,
-    serviceProviderId: provider.providerId,
-  });
+    // Fetch operators for this specific feature
+    const operators = await OperatorMapService.listForRecharge({
+      platformServiceId: service.id,
+      platformServiceFeatureId: resolvedFeature.id, // ✅ IMPORTANT
+      serviceProviderId: provider.providerId,
+    });
 
-  res.json({
-    success: true,
-    data: operators,
-  });
+    res.json({
+      success: true,
+      data: operators,
+    });
+  } catch (err) {
+    next(err);
+  }
 };

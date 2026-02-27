@@ -1,7 +1,7 @@
 "use client";
 
 import { Controller, useForm } from "react-hook-form";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import InputField from "../ui/InputField";
 import Button from "../ui/Button";
 import { AlertCircle } from "lucide-react";
@@ -16,7 +16,6 @@ export default function RechargeForm({
   isRetryMode,
   plans = {},
   planOperatorMaps = [],
-  rechargeOperatorMaps,
   circleMaps = [],
   onFieldChange,
   fetchPlans,
@@ -24,6 +23,9 @@ export default function RechargeForm({
 }) {
   const [step, setStep] = useState(1);
   const [selectedPlan, setSelectedPlan] = useState(null);
+
+  // ✅ Stable idempotency key per modal open
+  const idempotencyKey = useMemo(() => uuid(), []);
 
   const {
     register,
@@ -45,15 +47,16 @@ export default function RechargeForm({
 
   /* ================= OPTIONS ================= */
 
+  // ✅ Store INTERNAL operator code directly
   const planOperatorOptions = planOperatorMaps.map((o) => ({
     label: o.internalOperatorCode,
-    value: o.providerOperatorCode,
+    value: o.internalOperatorCode,
     key: o.id,
   }));
 
   const circleOptions = circleMaps.map((c) => ({
     label: c.internalCircleCode,
-    value: c.providerCircleCode,
+    value: c.internalCircleCode,
     key: c.id,
   }));
 
@@ -61,7 +64,6 @@ export default function RechargeForm({
 
   const handleContinue = async () => {
     const valid = await trigger(["mobileNumber", "operatorCode", "circleCode"]);
-
     if (!valid) return;
 
     const { mobileNumber } = getValues();
@@ -91,37 +93,11 @@ export default function RechargeForm({
       return;
     }
 
-    // Find selected PLAN operator (by providerOperatorCode)
-    const selectedPlanOperator = planOperatorMaps.find(
-      (o) => o.providerOperatorCode === data.operatorCode,
-    );
-
-    if (!selectedPlanOperator) {
-      setError("operatorCode", {
-        message: "Invalid plan operator selected",
-      });
-      return;
-    }
-
-    // Now match RECHARGE operator using internalOperatorCode
-    const matchedRechargeOperator = rechargeOperatorMaps.find(
-      (o) =>
-        o.internalOperatorCode === selectedPlanOperator.internalOperatorCode,
-    );
-
-    if (!matchedRechargeOperator) {
-      setError("operatorCode", {
-        message: "Recharge mapping not found for this operator",
-      });
-      return;
-    }
-
     onSubmit(
       {
         ...data,
-        operatorCode: matchedRechargeOperator.internalOperatorCode,
         amount: Number(data.amount),
-        idempotencyKey: uuid(),
+        idempotencyKey,
       },
       setError,
     );
@@ -139,7 +115,7 @@ export default function RechargeForm({
       )}
 
       <form onSubmit={handleSubmit(submitHandler)} className="space-y-5">
-        {/* ================= STEP 1 ================= */}
+        {/* STEP 1 */}
         {!isRetryMode && step === 1 && (
           <>
             <InputField
@@ -210,7 +186,7 @@ export default function RechargeForm({
           </>
         )}
 
-        {/* ================= STEP 2 ================= */}
+        {/* STEP 2 */}
         {!isRetryMode && step === 2 && (
           <div className="flex flex-col h-[70vh]">
             <button
@@ -221,7 +197,6 @@ export default function RechargeForm({
               ← Change Details
             </button>
 
-            {/* Scrollable Plans Area */}
             <div className="flex-1 overflow-y-auto pr-1">
               <PlansAndOffersList
                 plans={plans}
@@ -233,7 +208,6 @@ export default function RechargeForm({
               />
             </div>
 
-            {/* Sticky Bottom Section */}
             <div className="pt-3 border-t bg-background sticky bottom-0">
               {selectedPlan && (
                 <div className="mb-3 p-3 bg-primary/10 border border-primary/20 rounded text-sm">
@@ -258,7 +232,7 @@ export default function RechargeForm({
           </div>
         )}
 
-        {/* ================= RETRY MODE ================= */}
+        {/* RETRY MODE */}
         {isRetryMode && (
           <>
             <InputField

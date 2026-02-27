@@ -104,7 +104,11 @@ class OperatorMapService {
   }
 
   // List operator mappings for a given service and provider. Used in recharge flow to show operator options.
-  async listForRecharge({ platformServiceId, serviceProviderId }) {
+  async listForRecharge({
+    platformServiceId,
+    platformServiceFeatureId,
+    serviceProviderId,
+  }) {
     return db
       .select({
         id: rechargeOperatorMapTable.id,
@@ -115,6 +119,10 @@ class OperatorMapService {
       .where(
         and(
           eq(rechargeOperatorMapTable.platformServiceId, platformServiceId),
+          eq(
+            rechargeOperatorMapTable.platformServiceFeatureId,
+            platformServiceFeatureId,
+          ),
           eq(rechargeOperatorMapTable.serviceProviderId, serviceProviderId),
         ),
       );
