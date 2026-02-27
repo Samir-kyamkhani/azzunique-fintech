@@ -16,7 +16,7 @@ export const rechargeTransactionTable = mysqlTable(
     userId: varchar('user_id', { length: 36 }).notNull(),
 
     mobileNumber: varchar('mobile_number', { length: 15 }).notNull(),
-    operatorCode: varchar('operator_code', { length: 10 }).notNull(),
+    operatorCode: varchar('operator_code', { length: 20 }).notNull(),
 
     idempotencyKey: varchar('idempotency_key', { length: 64 }).notNull(),
 
