@@ -84,9 +84,7 @@ export const useRechargeHistory = () =>
     queryFn: async () => {
       const res = await apiClient("/recharge/history");
 
-      console.log(res);
-
-      return res.data;
+      return res.data?.data || [];
     },
   });
 
