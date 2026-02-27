@@ -82,7 +82,10 @@ export const useRechargeHistory = () =>
   useQuery({
     queryKey: ["recharge-history"],
     queryFn: async () => {
-      const res = await apiClient("/recharge/historys");
+      const res = await apiClient("/recharge/history");
+
+      console.log(res);
+
       return res.data;
     },
   });
