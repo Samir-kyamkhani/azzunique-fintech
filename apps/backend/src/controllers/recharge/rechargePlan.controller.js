@@ -36,7 +36,7 @@ export const fetchRechargePlans = async (req, res, next) => {
 
     // 4️⃣ Fetch plans using mapped provider code
     const plans = await plugin.fetchPlans({
-      operatorCode: providerOperatorCode,
+      operatorCode: Number(providerOperatorCode),
       circleCode,
     });
 
