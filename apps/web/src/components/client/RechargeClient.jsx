@@ -41,7 +41,9 @@ export default function RechargeClient() {
     data: transactions = [],
     isLoading,
     refetch,
-  } = useRechargeHistory({ page: 1, limit: 10, });
+  } = useRechargeHistory({ page: 1, limit: 10 });
+
+  console.log(transactions);
 
   /* ================= RECHARGE OPERATORS ================= */
 
