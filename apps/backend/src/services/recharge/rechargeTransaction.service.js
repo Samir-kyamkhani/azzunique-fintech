@@ -76,6 +76,8 @@ class RechargeTransactionService {
       reference: `RECHARGE:${transactionId}:${actor.id}`,
     });
 
+    console.log('providerConfig', provider.config);
+
     // 6️⃣ Insert INITIATED transaction
     await db.insert(rechargeTransactionTable).values({
       id: transactionId,
@@ -94,10 +96,10 @@ class RechargeTransactionService {
       providerCode: provider.code,
 
       providerId: provider.providerId,
-      providerConfig: JSON.stringify(provider.config),
+      providerConfig: provider.config,
 
       status: 'PENDING',
-      providerResponse: JSON.stringify({}),
+      providerResponse: {},
       createdAt: new Date(),
       updatedAt: new Date(),
     });
