@@ -78,16 +78,13 @@ export const useRetryRecharge = () => {
 
 /* ================= HISTORY ================= */
 
-export const useRechargeHistory = ({ page = 1, limit = 10, status }) =>
+export const useRechargeHistory = () =>
   useQuery({
-    queryKey: ["recharge-history", page, limit, status],
+    queryKey: ["recharge-history"],
     queryFn: async () => {
-      const res = await apiClient("/recharge/history", {
-        params: { page, limit, status },
-      });
+      const res = await apiClient("/recharge/history");
       return res.data;
     },
-    keepPreviousData: true,
   });
 
 /* ================= OPERATOR MAP ================= */
