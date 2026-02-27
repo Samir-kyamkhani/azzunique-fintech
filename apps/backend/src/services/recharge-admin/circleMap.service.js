@@ -1,5 +1,7 @@
 import { db } from '../../database/core/core-db.js';
 import { rechargeCircleMapTable } from '../../models/recharge/index.js';
+import { serviceProviderTable } from '../../models/core/serviceProvider.schema.js';
+import { platformServiceTable } from '../../models/core/platformService.schema.js';
 import { ApiError } from '../../lib/ApiError.js';
 import crypto from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
@@ -32,13 +34,25 @@ class CircleMapService {
         id: rechargeCircleMapTable.id,
         internalCircleCode: rechargeCircleMapTable.internalCircleCode,
         providerCircleCode: rechargeCircleMapTable.providerCircleCode,
+        serviceName: platformServiceTable.name,
+        providerName: serviceProviderTable.providerName,
       })
-      .from(rechargeCircleMapTable);
+      .from(rechargeCircleMapTable)
+      .leftJoin(
+        platformServiceTable,
+        eq(rechargeCircleMapTable.platformServiceId, platformServiceTable.id),
+      )
+      .leftJoin(
+        serviceProviderTable,
+        eq(rechargeCircleMapTable.serviceProviderId, serviceProviderTable.id),
+      );
   }
 
   async resolve({ internalCircleCode, platformServiceId, serviceProviderId }) {
     const [row] = await db
-      .select()
+      .select({
+        providerCircleCode: rechargeCircleMapTable.providerCircleCode,
+      })
       .from(rechargeCircleMapTable)
       .where(
         and(

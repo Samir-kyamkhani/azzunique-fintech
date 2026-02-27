@@ -2,6 +2,7 @@ import RechargeRuntimeService from '../../services/recharge/rechargeRuntime.serv
 import { getRechargePlugin } from '../../plugin_registry/recharge/pluginRegistry.js';
 import { buildTenantChain } from '../../lib/tenantHierarchy.util.js';
 import OperatorMapService from '../../services/recharge-admin/operatorMap.service.js';
+import CircleMapService from '../../services/recharge-admin/circleMap.service.js';
 import {
   RECHARGE_FEATURES,
   RECHARGE_SERVICE_CODE,
@@ -23,7 +24,7 @@ export const fetchRechargePlans = async (req, res, next) => {
       },
     );
 
-    // 2️⃣ Resolve operator mapping (feature-aware)
+    // 2️⃣ Resolve operator mapping
     const providerOperatorCode = await OperatorMapService.resolve({
       internalOperatorCode: operatorCode,
       platformServiceId: service.id,
@@ -31,13 +32,19 @@ export const fetchRechargePlans = async (req, res, next) => {
       serviceProviderId: provider.providerId,
     });
 
-    // 3️⃣ Load provider plugin
+    // 3️⃣ Resolve circle mapping
+    const providerCircleCode = await CircleMapService.resolve({
+      internalCircleCode: circleCode,
+      platformServiceId: service.id,
+      serviceProviderId: provider.providerId,
+    });
+
+    // 4️⃣ Load plugin
     const plugin = getRechargePlugin(provider.code, provider.config);
 
-    // 4️⃣ Fetch plans using mapped provider code
     const plans = await plugin.fetchPlans({
       operatorCode: Number(providerOperatorCode),
-      circleCode,
+      circleCode: Number(providerCircleCode),
     });
 
     res.json({ plans });

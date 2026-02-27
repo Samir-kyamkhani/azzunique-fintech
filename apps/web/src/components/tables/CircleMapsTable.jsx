@@ -8,8 +8,8 @@ import { Globe } from "lucide-react";
 const columns = [
   { key: "internalCircleCode", label: "Internal Circle Code" },
   { key: "providerCircleCode", label: "Provider Circle Code" },
-  { key: "platformServiceId", label: "Service ID" },
-  { key: "serviceProviderId", label: "Provider ID" },
+  { key: "serviceName", label: "Service" },
+  { key: "providerName", label: "Provider" },
   { key: "actions", label: "Actions" },
 ];
 
