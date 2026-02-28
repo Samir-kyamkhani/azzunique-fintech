@@ -58,6 +58,8 @@ class RechargeExchangePlugin extends RechargeExchangePluginInterface {
       },
     });
 
+    console.log('res =======>', res);
+
     if (res.data.status !== 'SUCCESS') {
       throw ApiError.badRequest('Unable to fetch provider balance');
     }
