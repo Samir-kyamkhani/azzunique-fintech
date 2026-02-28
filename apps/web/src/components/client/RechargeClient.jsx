@@ -14,7 +14,6 @@ import { PERMISSIONS } from "@/lib/permissionKeys";
 import { toast } from "@/lib/toast";
 import {
   useRechargeHistory,
-  useRetryRecharge,
   useInitiateRecharge,
   useRechargePlans,
   useRechargeOperators,
@@ -25,7 +24,6 @@ import { useRouter } from "next/navigation";
 
 export default function RechargeClient() {
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedTxn, setSelectedTxn] = useState(null);
 
   const router = useRouter();
 
@@ -52,10 +50,6 @@ export default function RechargeClient() {
 
   const { data: circleMaps = [] } = useCircleMaps();
 
-  /* ================= RETRY ================= */
-
-  const { mutate: retryRecharge, isPending: retrying } = useRetryRecharge();
-
   /* ================= PLANS & OFFERS ================= */
 
   const {
@@ -69,7 +63,6 @@ export default function RechargeClient() {
   const perms = useSelector((s) => s.auth.user?.permissions);
   const can = (perm) => permissionChecker(perms, perm.resource, perm.action);
 
-  const canRetry = can(PERMISSIONS.RECHARGE.RETRY);
   const canCreate = can(PERMISSIONS.RECHARGE.CREATE);
   const canCreateAdmin =
     can(PERMISSIONS.RECHARGE.ADMIN.OPERATORS.CREATE) ||
@@ -82,17 +75,6 @@ export default function RechargeClient() {
       onSuccess: () => {
         toast.success("Recharge initiated");
         setModalOpen(false);
-      },
-      onError: (err) => setError("root", { message: err.message }),
-    });
-  };
-
-  const handleRetrySubmit = (_, setError) => {
-    retryRecharge(selectedTxn.id, {
-      onSuccess: () => {
-        toast.success("Retry initiated");
-        setModalOpen(false);
-        setSelectedTxn(null);
       },
       onError: (err) => setError("root", { message: err.message }),
     });
@@ -172,22 +154,10 @@ export default function RechargeClient() {
         onAdd={
           canCreate
             ? () => {
-                setSelectedTxn(null);
                 setModalOpen(true);
               }
             : undefined
         }
-        onExtraActions={[
-          {
-            label: "Retry",
-            icon: RefreshCw,
-            show: (row) => row.status === "FAILED" && canRetry,
-            onClick: (row) => {
-              setSelectedTxn(row);
-              setModalOpen(true);
-            },
-          },
-        ]}
       />
 
       {/* MODAL */}
@@ -195,11 +165,10 @@ export default function RechargeClient() {
         open={modalOpen}
         onClose={() => {
           setModalOpen(false);
-          setSelectedTxn(null);
         }}
-        onSubmit={selectedTxn ? handleRetrySubmit : handleCreateSubmit}
-        isPending={selectedTxn ? retrying : initiating}
-        initialData={selectedTxn}
+        onSubmit={handleCreateSubmit}
+        isPending={initiating}
+        initialData={null}
         plans={plans}
         planOperatorMaps={planOperatorMaps}
         circleMaps={circleMaps}

@@ -9,7 +9,6 @@ export default function RechargeModal({
   onClose,
   onSubmit,
   isPending,
-  initialData,
   plans,
   planOperatorMaps = [],
   circleMaps = [],
@@ -19,12 +18,10 @@ export default function RechargeModal({
 }) {
   if (!open) return null;
 
-  const isRetryMode = Boolean(initialData?.id);
-
   return (
     <div className="fixed inset-0 bg-black/40 flex justify-center items-center p-4 z-50">
       <div className="bg-card border rounded-lg w-full max-w-xl max-h-[90vh] flex flex-col">
-        {/* HEADER (Fixed) */}
+        {/* HEADER */}
         <div className="bg-gradient-theme px-6 py-6 relative shrink-0">
           <Button
             size="icon"
@@ -37,19 +34,15 @@ export default function RechargeModal({
 
           <div className="flex gap-3 text-primary-foreground">
             <Zap />
-            <h2 className="text-xl font-bold">
-              {isRetryMode ? "Retry Recharge" : "New Recharge"}
-            </h2>
+            <h2 className="text-xl font-bold">New Recharge</h2>
           </div>
         </div>
 
-        {/* BODY (Scrollable) */}
+        {/* BODY */}
         <div className="p-6 overflow-y-auto flex-1">
           <RechargeForm
-            initialData={initialData}
             onSubmit={onSubmit}
             isPending={isPending}
-            isRetryMode={isRetryMode}
             plans={plans}
             planOperatorMaps={planOperatorMaps}
             circleMaps={circleMaps}

@@ -56,26 +56,6 @@ export const useInitiateRecharge = () => {
   });
 };
 
-/* ================= RETRY RECHARGE ================= */
-
-export const useRetryRecharge = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (transactionId) => {
-      const res = await apiClient(`/recharge/${transactionId}/retry`, {
-        method: "POST",
-      });
-      return res.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["recharge-history"],
-      });
-    },
-  });
-};
-
 /* ================= HISTORY ================= */
 
 export const useRechargeHistory = () =>
@@ -83,7 +63,7 @@ export const useRechargeHistory = () =>
     queryKey: ["recharge-history"],
     queryFn: async () => {
       const res = await apiClient("/recharge/history");
-      
+
       return res.data;
     },
   });

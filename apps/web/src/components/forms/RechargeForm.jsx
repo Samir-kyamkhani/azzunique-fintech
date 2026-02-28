@@ -10,10 +10,8 @@ import { v4 as uuid } from "uuid";
 import PlansAndOffersList from "../PlansAndOffersList";
 
 export default function RechargeForm({
-  initialData,
   onSubmit,
   isPending,
-  isRetryMode,
   plans = {},
   planOperatorMaps = [],
   circleMaps = [],
@@ -24,7 +22,6 @@ export default function RechargeForm({
   const [step, setStep] = useState(1);
   const [selectedPlan, setSelectedPlan] = useState(null);
 
-  // ✅ Stable idempotency key per modal open
   const idempotencyKey = useMemo(() => uuid(), []);
 
   const {
@@ -38,16 +35,13 @@ export default function RechargeForm({
     formState: { errors },
   } = useForm({
     defaultValues: {
-      mobileNumber: initialData?.mobileNumber || "",
-      operatorCode: initialData?.operatorCode || "",
-      circleCode: initialData?.circleCode || "",
-      amount: initialData?.amount || "",
+      mobileNumber: "",
+      operatorCode: "",
+      circleCode: "",
+      amount: "",
     },
   });
 
-  /* ================= OPTIONS ================= */
-
-  // ✅ Store INTERNAL operator code directly
   const planOperatorOptions = planOperatorMaps.map((o) => ({
     label: o.internalOperatorCode,
     value: o.internalOperatorCode,
@@ -59,8 +53,6 @@ export default function RechargeForm({
     value: c.internalCircleCode,
     key: c.id,
   }));
-
-  /* ================= STEP CONTROL ================= */
 
   const handleContinue = async () => {
     const valid = await trigger(["mobileNumber", "operatorCode", "circleCode"]);
@@ -84,8 +76,6 @@ export default function RechargeForm({
       });
     }
   };
-
-  /* ================= SUBMIT ================= */
 
   const submitHandler = (data) => {
     if (!data.amount) {
@@ -115,8 +105,7 @@ export default function RechargeForm({
       )}
 
       <form onSubmit={handleSubmit(submitHandler)} className="space-y-5">
-        {/* STEP 1 */}
-        {!isRetryMode && step === 1 && (
+        {step === 1 && (
           <>
             <InputField
               label="Mobile Number"
@@ -186,8 +175,7 @@ export default function RechargeForm({
           </>
         )}
 
-        {/* STEP 2 */}
-        {!isRetryMode && step === 2 && (
+        {step === 2 && (
           <div className="flex flex-col h-[70vh]">
             <button
               type="button"
@@ -230,27 +218,6 @@ export default function RechargeForm({
               </Button>
             </div>
           </div>
-        )}
-
-        {/* RETRY MODE */}
-        {isRetryMode && (
-          <>
-            <InputField
-              label="Mobile Number"
-              name="mobileNumber"
-              register={register}
-              disabled
-            />
-            <InputField
-              label="Amount"
-              name="amount"
-              register={register}
-              disabled
-            />
-            <Button type="submit" loading={isPending} className="w-full">
-              Retry Recharge
-            </Button>
-          </>
         )}
       </form>
     </>
