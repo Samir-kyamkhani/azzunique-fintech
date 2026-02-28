@@ -7,16 +7,23 @@ import {
   tenantServiceWithPlatformParamsSchema,
   enableTenantServiceSchema,
 } from '../validators/tenantService.schema.js';
+import { PermissionMiddleware } from '../middleware/permission.middleware.js';
+import { PermissionsRegistry } from '../lib/PermissionsRegistry.js';
 
 const router = Router();
 router.use(AuthMiddleware);
 
 // List All Services (Hierarchy based)
-router.get('/services/all', TS.listAllTenantServices);
+router.get(
+  '/services/all',
+  PermissionMiddleware(PermissionsRegistry.PLATFORM.SERVICE_TENANTS.READ),
+  TS.listAllTenantServices,
+);
 
 // Enable Service
 router.put(
   '/services',
+  PermissionMiddleware(PermissionsRegistry.PLATFORM.SERVICE_TENANTS.CREATE),
   validate({
     body: enableTenantServiceSchema,
   }),
@@ -26,6 +33,7 @@ router.put(
 // Disable Service
 router.delete(
   '/:tenantId/services/:platformServiceId',
+  PermissionMiddleware(PermissionsRegistry.PLATFORM.SERVICE_TENANTS.UPDATE),
   validate({
     params: tenantServiceWithPlatformParamsSchema,
   }),

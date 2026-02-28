@@ -58,6 +58,7 @@ router.put(
 
 router.get(
   '/:id/descendants',
+  PermissionMiddleware(PermissionsRegistry.USER.VIEW_DESCENDANTS),
   validate({ params: userIdParamSchema }),
   asyncHandler(getAllDescendants),
 );

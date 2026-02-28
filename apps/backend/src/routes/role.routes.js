@@ -39,6 +39,7 @@ router.get(
 
 router.get(
   '/:id',
+  PermissionMiddleware(PermissionsRegistry.ROLE.READ),
   validate({ params: roleIdParamSchema }),
   asyncHandler(findRole),
 );
