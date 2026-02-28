@@ -1,12 +1,13 @@
 import { Router } from 'express';
 import { validate } from '../../middleware/zod-validate.js';
 import { AuthMiddleware } from '../../middleware/auth.middleware.js';
-import { fetchRechargePlans } from '../../controllers/recharge/rechargePlan.controller.js';
-import { fetchRechargeOffers } from '../../controllers/recharge/rechargeOffer.controller.js';
+import {
+  fetchRechargeOffers,
+  fetchRechargePlans,
+} from '../../controllers/recharge/rechargePlan.controller.js';
 import {
   fetchRechargeHistory,
   initiateRecharge,
-  retryRecharge,
 } from '../../controllers/recharge/rechargeTransaction.controller.js';
 import { rechargePlanSchema } from '../../validators/recharge/rechargePlan.schema.js';
 import { rechargeOfferSchema } from '../../validators/recharge/rechargeOffer.schema.js';
@@ -55,8 +56,5 @@ router.post(
 
 // RECHARGE OPERATORS GET /api/recharge/operators/:feature
 router.get('/operators/:feature', fetchOperatorsByFeature);
-
-// RECHARGE TRANSACTION RETRY POST /api/recharge/:transactionId/retry
-router.post('/:transactionId/retry', rechargeLimiter, retryRecharge);
 
 export default router;

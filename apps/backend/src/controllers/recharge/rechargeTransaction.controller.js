@@ -1,4 +1,3 @@
-import rechargeRetryService from '../../services/recharge/rechargeRetry.service.js';
 import RechargeTransactionService from '../../services/recharge/rechargeTransaction.service.js';
 
 export const initiateRecharge = async (req, res) => {
@@ -16,13 +15,5 @@ export const fetchRechargeHistory = async (req, res) => {
     query: req.query,
   });
 
-  res.json(result);
-};
-
-export const retryRecharge = async (req, res) => {
-  const result = await rechargeRetryService.retry(
-    req.params.transactionId,
-    req.user,
-  );
   res.json(result);
 };

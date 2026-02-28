@@ -1,6 +1,5 @@
 import cron from 'node-cron';
 
-import { autoRetryPendingRecharges } from './rechargeAutoRetry.cron.js';
 import { reconcileWallets } from './ledger.reconciliation.cron.js';
 import { takeDailyWalletSnapshot } from './wallet.snapshot.cron.js';
 import envConfig from '../config/config.js';
@@ -12,9 +11,6 @@ export function startAllCrons() {
     console.log('⏭ All crons disabled');
     return;
   }
-
-  // Auto retry every 5 min
-  cron.schedule('*/5 * * * *', autoRetryPendingRecharges);
 
   // Ledger reconciliation every night 2 AM
   cron.schedule('0 2 * * *', reconcileWallets);
