@@ -101,8 +101,12 @@ class RechargeTransactionService {
       providerTxnId: null,
       referenceId: null,
       failureReason: null,
+
       retryCount: 0,
       lastRetryAt: null,
+
+      nextStatusCheckAt: new Date(Date.now() + 5 * 60 * 1000), // first poll after 5 min
+      pollAttempt: 0,
 
       createdAt: new Date(),
       updatedAt: new Date(),

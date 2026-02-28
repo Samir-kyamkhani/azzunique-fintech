@@ -35,8 +35,8 @@ class RechargeRetryService {
         .update(rechargeTransactionTable)
         .set({
           status: 'PENDING',
-          retryCount: txn.retryCount + 1,
-          lastRetryAt: new Date(),
+          pollAttempt: 0,
+          nextStatusCheckAt: new Date(Date.now() + 5 * 60 * 1000),
           updatedAt: new Date(),
         })
         .where(
@@ -54,6 +54,7 @@ class RechargeRetryService {
       await RechargeRuntimeService.execute({
         transactionId: txn.id,
         isRetry: true,
+        tx,
       });
 
       return { success: true };

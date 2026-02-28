@@ -1,6 +1,6 @@
 import { db } from '../../database/core/core-db.js';
 import { rechargeDb } from '../../database/recharge/recharge-db.js';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql, lt } from 'drizzle-orm';
 
 import {
   platformServiceFeatureTable,
@@ -135,47 +135,52 @@ class RechargeRuntimeService {
   }
 
   /* EXECUTE RECHARGE (RETRY / CRON FLOW)                 */
-  static async execute({ transactionId, isRetry = false }) {
-    // 1️⃣ LOCK + VALIDATE (SHORT TRANSACTION)
-    const txn = await rechargeDb.transaction(async (tx) => {
-      const [lockedTxn] = await tx
-        .select()
-        .from(rechargeTransactionTable)
-        .where(eq(rechargeTransactionTable.id, transactionId))
-        .forUpdate()
-        .limit(1);
+  static async execute({ transactionId, isRetry = false, tx = rechargeDb }) {
+    // 1️⃣ ATOMIC CLAIM (NO LOCKING NEEDED)
+    const result = await tx
+      .update(rechargeTransactionTable)
+      .set({
+        retryCount: sql`${rechargeTransactionTable.retryCount} + 1`,
+        lastRetryAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(rechargeTransactionTable.id, transactionId),
+          eq(rechargeTransactionTable.status, 'PENDING'),
+          lt(rechargeTransactionTable.retryCount, 3),
+        ),
+      );
 
-      if (!lockedTxn) {
-        throw ApiError.notFound('Recharge transaction not found');
-      }
+    if (result.rowsAffected === 0) {
+      throw ApiError.badRequest('Transaction not retryable');
+    }
 
-      if (lockedTxn.status !== 'PENDING') {
-        throw ApiError.badRequest('Transaction not retryable');
-      }
+    // 2️⃣ Fetch fresh txn AFTER claim
+    const [txn] = await tx
+      .select()
+      .from(rechargeTransactionTable)
+      .where(eq(rechargeTransactionTable.id, transactionId))
+      .limit(1);
 
-      if (lockedTxn.retryCount >= 3) {
-        throw ApiError.badRequest('Retry limit exceeded');
-      }
+    if (!txn) {
+      throw ApiError.notFound('Recharge transaction not found');
+    }
 
-      if (!lockedTxn.providerCode || !lockedTxn.providerConfig) {
-        throw ApiError.internal('Frozen provider data missing');
-      }
+    if (!txn.providerCode || !txn.providerConfig) {
+      throw ApiError.internal('Frozen provider data missing');
+    }
 
-      // 🔥 Effective service check (retry safe)
-      const isEnabled =
-        await tenantServiceEffective.isServiceEffectivelyEnabled(
-          lockedTxn.tenantId,
-          lockedTxn.platformServiceId,
-        );
+    const isEnabled = await tenantServiceEffective.isServiceEffectivelyEnabled(
+      txn.tenantId,
+      txn.platformServiceId,
+    );
 
-      if (!isEnabled) {
-        throw ApiError.forbidden('Recharge service disabled for this tenant');
-      }
+    if (!isEnabled) {
+      throw ApiError.forbidden('Recharge service disabled');
+    }
 
-      return lockedTxn;
-    });
-
-    // 2️⃣ OUTSIDE TRANSACTION → CALL PROVIDER
+    // 3️⃣ Call provider OUTSIDE transaction
     const plugin = getRechargePlugin(txn.providerCode, txn.providerConfig);
 
     const providerOperatorCode = await OperatorMapService.resolve({
@@ -193,20 +198,10 @@ class RechargeRuntimeService {
       isRetry,
     });
 
-    // 3️⃣ UPDATE RETRY METADATA (SHORT TX AGAIN)
-    await rechargeDb
-      .update(rechargeTransactionTable)
-      .set({
-        retryCount: txn.retryCount + 1,
-        lastRetryAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(rechargeTransactionTable.id, txn.id));
-
     return {
       success: true,
       transactionId: txn.id,
-      retryCount: txn.retryCount + 1,
+      retryCount: txn.retryCount,
     };
   }
 }

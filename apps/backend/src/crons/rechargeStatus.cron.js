@@ -9,6 +9,11 @@ export function startRechargeStatusCron() {
   }
 
   cron.schedule('*/5 * * * *', async () => {
+    console.log(
+      '[CRON] Running Recharge Status Cron',
+      new Date().toISOString(),
+    );
+
     try {
       await RechargeStatusService.processPendingTransactions();
     } catch (err) {
@@ -16,5 +21,5 @@ export function startRechargeStatusCron() {
     }
   });
 
-  console.log('✅ Recharge status cron started');
+  console.log('✅ Recharge status cron started (Every 5 minutes)');
 }
