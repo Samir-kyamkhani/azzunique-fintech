@@ -9,8 +9,19 @@ import { eq, and, ne, sql, inArray } from 'drizzle-orm';
 import { ApiError } from '../lib/ApiError.js';
 import crypto from 'crypto';
 import { resolvePermissions } from './permission.resolver.js';
-import { ROLE_HIERARCHY } from '../config/constant.js';
 
+const ROLE_HIERARCHY = {
+  AZZUNIQUE: 'RESELLER',
+
+  RESELLER: 'WHITE_LABEL',
+
+  WHITE_LABEL: ['STATE_HEAD', 'MASTER_DISTRIBUTOR', 'DISTRIBUTOR', 'RETAILER'],
+
+  STATE_HEAD: null,
+  MASTER_DISTRIBUTOR: null,
+  DISTRIBUTOR: null,
+  RETAILER: null,
+};
 class RoleService {
   async create(payload, actor) {
     if (!actor?.tenantId) {
