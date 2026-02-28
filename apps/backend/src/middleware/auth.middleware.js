@@ -32,7 +32,7 @@ export const AuthMiddleware = async (req, res, next) => {
       id: decoded.sub,
       tenantId: decoded.tenantId,
       type: decoded.type,
-
+      roleCode: decoded.roleCode,
       roleLevel: decoded.roleLevel,
       roleId: decoded.type === 'USER' ? decoded.roleId : null,
       departmentId: decoded.type === 'EMPLOYEE' ? decoded.departmentId : null,

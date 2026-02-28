@@ -12,14 +12,19 @@ import WalletService from '../wallet.service.js';
 
 import OperatorMapService from '../recharge-admin/operatorMap.service.js';
 import {
+  ALLOWED_SERVICES_ROLES,
   RECHARGE_FEATURES,
   RECHARGE_SERVICE_CODE,
 } from '../../config/constant.js';
 import { buildTenantChain } from '../../lib/tenantHierarchy.util.js';
+import { assertRoleAllowed } from '../../guard/role.guard.js';
 
 class RechargeTransactionService {
   // MAIN ENTRY
   static async initiateRecharge({ payload, actor }) {
+    // 🔒 STRICT ROLE CHECK
+    assertRoleAllowed(actor, ALLOWED_SERVICES_ROLES);
+
     const { mobileNumber, operatorCode, amount } = payload;
 
     const tenantChain = await buildTenantChain(actor.tenantId);
@@ -168,6 +173,8 @@ class RechargeTransactionService {
   }
 
   static async fetchHistory({ actor, query }) {
+    assertRoleAllowed(actor, ALLOWED_SERVICES_ROLES);
+
     const { page, limit, status } = query;
 
     const offset = (page - 1) * limit;

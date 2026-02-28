@@ -4,14 +4,18 @@ import { buildTenantChain } from '../../lib/tenantHierarchy.util.js';
 import OperatorMapService from '../../services/recharge-admin/operatorMap.service.js';
 import CircleMapService from '../../services/recharge-admin/circleMap.service.js';
 import {
+  ALLOWED_SERVICES_ROLES,
   RECHARGE_FEATURES,
   RECHARGE_SERVICE_CODE,
 } from '../../config/constant.js';
+import { assertRoleAllowed } from '../../guard/role.guard.js';
 
 export const fetchRechargePlans = async (req, res, next) => {
   try {
     const { operatorCode, circleCode } = req.query;
     const actor = req.user;
+
+    assertRoleAllowed(actor, ALLOWED_SERVICES_ROLES);
 
     const tenantChain = await buildTenantChain(actor.tenantId);
 

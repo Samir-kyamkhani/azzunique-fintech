@@ -25,6 +25,7 @@ class AuthService {
         passwordHash: usersTable.passwordHash,
         tenantId: usersTable.tenantId,
         userStatus: usersTable.userStatus,
+        roleCode: roleTable.roleCode,
         roleId: usersTable.roleId,
         isSystem: roleTable.isSystem,
         ownerUserId: usersTable.ownerUserId,
@@ -81,6 +82,7 @@ class AuthService {
       tenantType: tenant.userType,
       type: 'USER',
       roleId: user.roleId,
+      roleCode: user.roleCode,
       roleLevel: role.roleLevel,
     });
 
