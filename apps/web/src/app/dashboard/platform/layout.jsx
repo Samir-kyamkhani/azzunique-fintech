@@ -2,6 +2,7 @@
 
 import ClientGuard from "@/components/ClientGuard";
 import TabsNav from "@/components/details/TabsNav";
+import { ADMIN_ROLE } from "@/lib/constants";
 import { Building2 } from "lucide-react";
 import { Users } from "lucide-react";
 
