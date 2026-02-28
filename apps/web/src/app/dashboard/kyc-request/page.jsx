@@ -19,8 +19,8 @@ export default function Page() {
   const can = (perm) => permissionChecker(perms, perm?.resource, perm?.action);
 
   const providerType = useMemo(() => {
-    if (can(PERMISSIONS.TRANSACTIONS.AADHAAR.MANUAL_CREATE)) return "MANUAL";
-    if (can(PERMISSIONS.TRANSACTIONS.AADHAAR.API_CREATE)) return "API";
+    if (can(PERMISSIONS.SERVICES_PAGES.AADHAAR.MANUAL_CREATE)) return "MANUAL";
+    if (can(PERMISSIONS.SERVICES_PAGES.AADHAAR.API_CREATE)) return "API";
     return null;
   }, [perms]);
 

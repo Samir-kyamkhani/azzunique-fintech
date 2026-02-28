@@ -7,27 +7,27 @@ export default function Page() {
   return (
     <ClientGuard
       anyOf={[
-        PERMISSIONS.TRANSACTIONS.FUND_REQUEST.READ,
-        PERMISSIONS.TRANSACTIONS.AADHAAR.READ,
-        PERMISSIONS.TRANSACTIONS.PANCARD.READ,
-        PERMISSIONS.TRANSACTIONS.RECHARGE.READ,
+        PERMISSIONS.SERVICES_PAGES.FUND_REQUEST.READ,
+        PERMISSIONS.SERVICES_PAGES.AADHAAR.READ,
+        PERMISSIONS.SERVICES_PAGES.PANCARD.READ,
+        PERMISSIONS.SERVICES_PAGES.PANCARD.READ,
       ]}
       redirectMap={[
         {
           path: "/dashboard/transactions/fund-request",
-          perm: PERMISSIONS.TRANSACTIONS.FUND_REQUEST.READ,
+          perm: PERMISSIONS.SERVICES_PAGES.FUND_REQUEST.READ,
         },
         {
           path: "/dashboard/transactions/aadhaar",
-          perm: PERMISSIONS.TRANSACTIONS.AADHAAR.READ,
+          perm: PERMISSIONS.SERVICES_PAGES.AADHAAR.READ,
         },
         {
           path: "/dashboard/transactions/pancard",
-          perm: PERMISSIONS.TRANSACTIONS.PANCARD.READ,
+          perm: PERMISSIONS.SERVICES_PAGES.PANCARD.READ,
         },
         {
           path: "/dashboard/transactions/recharge",
-          perm: PERMISSIONS.TRANSACTIONS.RECHARGE.READ,
+          perm: PERMISSIONS.SERVICES_PAGES.PANCARD.READ,
         },
       ]}
     >

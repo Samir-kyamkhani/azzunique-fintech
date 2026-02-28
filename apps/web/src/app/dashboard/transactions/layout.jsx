@@ -12,10 +12,10 @@ export default function UserManagementLayout({ children }) {
   const perms = useSelector((s) => s.auth.user?.permissions);
   const can = (perm) => permissionChecker(perms, perm?.resource, perm?.action);
 
-  const canRecharge = can(PERMISSIONS.TRANSACTIONS.RECHARGE.READ);
-  const canfundRequest = can(PERMISSIONS.TRANSACTIONS.FUND_REQUEST.READ);
-  const canAadhaar = can(PERMISSIONS.TRANSACTIONS.AADHAAR.READ);
-  const canPancard = can(PERMISSIONS.TRANSACTIONS.PANCARD.READ);
+  const canRecharge = can(PERMISSIONS.SERVICES_PAGES.PANCARD.READ);
+  const canfundRequest = can(PERMISSIONS.SERVICES_PAGES.FUND_REQUEST.READ);
+  const canAadhaar = can(PERMISSIONS.SERVICES_PAGES.AADHAAR.READ);
+  const canPancard = can(PERMISSIONS.SERVICES_PAGES.PANCARD.READ);
 
   const tabs = [
     canfundRequest && {

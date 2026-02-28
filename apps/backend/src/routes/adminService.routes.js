@@ -21,23 +21,32 @@ import {
   providerIdParamSchema,
 } from '../validators/adminService.schema.js';
 
+import { PermissionMiddleware } from '../middleware/permission.middleware.js';
+import { PermissionsRegistry } from '../lib/PermissionsRegistry.js';
+
 const router = Router();
 router.use(AuthMiddleware);
 
 /* =======================================================
-   GLOBAL PROVIDERS (STATIC ROUTES FIRST)
+   GLOBAL PROVIDERS
    ======================================================= */
 
 router.post(
   '/providers',
+  PermissionMiddleware(PermissionsRegistry.PLATFORM.SERVICE_PROVIDERS.CREATE),
   validate({ body: createProviderSchema }),
   Admin.createProvider,
 );
 
-router.get('/providers', Admin.listAllProviders);
+router.get(
+  '/providers',
+  PermissionMiddleware(PermissionsRegistry.PLATFORM.SERVICE_PROVIDERS.READ),
+  Admin.listAllProviders,
+);
 
 router.patch(
   '/providers/:providerId',
+  PermissionMiddleware(PermissionsRegistry.PLATFORM.SERVICE_PROVIDERS.UPDATE),
   validate({
     params: providerIdOnlyParamSchema,
     body: updateProviderSchema,
@@ -47,30 +56,38 @@ router.patch(
 
 router.delete(
   '/providers/:providerId',
+  PermissionMiddleware(PermissionsRegistry.PLATFORM.SERVICE_PROVIDERS.DELETE),
   validate({ params: providerIdOnlyParamSchema }),
   Admin.deleteProvider,
 );
 
 /* =======================================================
-   SERVICES (STATIC ROOT ROUTES)
+   SERVICES
    ======================================================= */
 
-router.post('/', validate({ body: createServiceSchema }), Admin.createService);
+router.post(
+  '/',
+  PermissionMiddleware(PermissionsRegistry.PLATFORM.SERVICES.CREATE),
+  validate({ body: createServiceSchema }),
+  Admin.createService,
+);
 
-router.get('/', Admin.listServices);
-
-/* =======================================================
-   SERVICE BY ID (DYNAMIC SINGLE PARAM ROUTES)
-   ======================================================= */
+router.get(
+  '/',
+  PermissionMiddleware(PermissionsRegistry.PLATFORM.SERVICES.READ),
+  Admin.listServices,
+);
 
 router.get(
   '/:id',
+  PermissionMiddleware(PermissionsRegistry.PLATFORM.SERVICES.READ),
   validate({ params: serviceIdOnlyParamSchema }),
   Admin.getService,
 );
 
 router.patch(
   '/:id',
+  PermissionMiddleware(PermissionsRegistry.PLATFORM.SERVICES.UPDATE),
   validate({
     params: serviceIdOnlyParamSchema,
     body: updateServiceSchema,
@@ -80,16 +97,18 @@ router.patch(
 
 router.delete(
   '/:id',
+  PermissionMiddleware(PermissionsRegistry.PLATFORM.SERVICES.DELETE),
   validate({ params: serviceIdOnlyParamSchema }),
   Admin.deleteService,
 );
 
 /* =======================================================
-   SERVICE FEATURES (NESTED ROUTES)
+   SERVICE FEATURES
    ======================================================= */
 
 router.post(
   '/:serviceId/features',
+  PermissionMiddleware(PermissionsRegistry.PLATFORM.SERVICE_FEATURES.CREATE),
   validate({
     params: serviceIdParamSchema,
     body: createFeatureSchema,
@@ -99,12 +118,14 @@ router.post(
 
 router.get(
   '/:serviceId/features',
+  PermissionMiddleware(PermissionsRegistry.PLATFORM.SERVICE_FEATURES.READ),
   validate({ params: serviceIdParamSchema }),
   Admin.listFeatures,
 );
 
 router.patch(
   '/:serviceId/features/:featureId',
+  PermissionMiddleware(PermissionsRegistry.PLATFORM.SERVICE_FEATURES.UPDATE),
   validate({
     params: featureIdParamSchema,
     body: updateFeatureSchema,
@@ -114,16 +135,18 @@ router.patch(
 
 router.delete(
   '/:serviceId/features/:featureId',
+  PermissionMiddleware(PermissionsRegistry.PLATFORM.SERVICE_FEATURES.DELETE),
   validate({ params: featureIdParamSchema }),
   Admin.deleteFeature,
 );
 
 /* =======================================================
-   SERVICE ↔ PROVIDER ASSIGNMENT (NESTED)
+   SERVICE ↔ PROVIDER ASSIGNMENT
    ======================================================= */
 
 router.post(
   '/:serviceId/providers',
+  PermissionMiddleware(PermissionsRegistry.PLATFORM.SERVICES.ASSIGN_PROVIDER),
   validate({
     params: serviceIdParamSchema,
     body: assignProviderToServiceSchema,
@@ -133,18 +156,21 @@ router.post(
 
 router.get(
   '/:serviceId/providers',
+  PermissionMiddleware(PermissionsRegistry.PLATFORM.SERVICE_PROVIDERS.READ),
   validate({ params: serviceIdParamSchema }),
   Admin.listProviders,
 );
 
 router.delete(
   '/:serviceId/providers/:providerId',
+  PermissionMiddleware(PermissionsRegistry.PLATFORM.SERVICES.UNASSIGN_PROVIDER),
   validate({ params: providerIdOnlyParamSchema }),
   Admin.unassignProviderFromService,
 );
 
 router.patch(
   '/:serviceId/providers/:providerId/config',
+  PermissionMiddleware(PermissionsRegistry.PLATFORM.SERVICE_PROVIDERS.UPDATE),
   validate({
     params: providerIdParamSchema,
     body: updateProviderConfigSchema,
@@ -153,11 +179,12 @@ router.patch(
 );
 
 /* =======================================================
-   PROVIDER FEATURE MAPPING (DEEPLY NESTED)
+   PROVIDER FEATURE MAPPING
    ======================================================= */
 
 router.post(
   '/providers/:providerId/features',
+  PermissionMiddleware(PermissionsRegistry.PLATFORM.SERVICE_FEATURES.UPDATE),
   validate({
     params: providerIdOnlyParamSchema,
     body: mapProviderFeatureSchema,
@@ -167,6 +194,7 @@ router.post(
 
 router.delete(
   '/:serviceId/providers/:providerId/features/:featureId',
+  PermissionMiddleware(PermissionsRegistry.PLATFORM.SERVICE_FEATURES.DELETE),
   validate({ params: providerFeatureParamSchema }),
   Admin.unmapProviderFeature,
 );
