@@ -105,7 +105,7 @@ class RechargeTransactionService {
       retryCount: 0,
       lastRetryAt: null,
 
-      nextStatusCheckAt: new Date(Date.now() + 5 * 60 * 1000), // first poll after 5 min
+      nextStatusCheckAt: new Date(), // immediate poll
       pollAttempt: 0,
 
       createdAt: new Date(),
