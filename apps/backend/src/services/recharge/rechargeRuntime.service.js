@@ -1,6 +1,5 @@
 import { db } from '../../database/core/core-db.js';
-import { rechargeDb } from '../../database/recharge/recharge-db.js';
-import { eq, and, sql, lt } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 import {
   platformServiceFeatureTable,
@@ -10,11 +9,7 @@ import {
   serviceProviderTable,
 } from '../../models/core/index.js';
 
-import { rechargeTransactionTable } from '../../models/recharge/index.js';
-
 import { ApiError } from '../../lib/ApiError.js';
-import { getRechargePlugin } from '../../plugin_registry/recharge/pluginRegistry.js';
-import OperatorMapService from '../recharge-admin/operatorMap.service.js';
 import tenantServiceEffective from '../../lib/tenantService.effective.js';
 
 class RechargeRuntimeService {
@@ -131,77 +126,6 @@ class RechargeRuntimeService {
         code: row.providerCode,
         config: row.config,
       },
-    };
-  }
-
-  /* EXECUTE RECHARGE (RETRY / CRON FLOW)                 */
-  static async execute({ transactionId, isRetry = false, tx = rechargeDb }) {
-    // 1️⃣ ATOMIC CLAIM (NO LOCKING NEEDED)
-    const result = await tx
-      .update(rechargeTransactionTable)
-      .set({
-        retryCount: sql`${rechargeTransactionTable.retryCount} + 1`,
-        lastRetryAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(
-        and(
-          eq(rechargeTransactionTable.id, transactionId),
-          eq(rechargeTransactionTable.status, 'PENDING'),
-          lt(rechargeTransactionTable.retryCount, 3),
-        ),
-      );
-
-    if (result.rowsAffected === 0) {
-      throw ApiError.badRequest('Transaction not retryable');
-    }
-
-    // 2️⃣ Fetch fresh txn AFTER claim
-    const [txn] = await tx
-      .select()
-      .from(rechargeTransactionTable)
-      .where(eq(rechargeTransactionTable.id, transactionId))
-      .limit(1);
-
-    if (!txn) {
-      throw ApiError.notFound('Recharge transaction not found');
-    }
-
-    if (!txn.providerCode || !txn.providerConfig) {
-      throw ApiError.internal('Frozen provider data missing');
-    }
-
-    const isEnabled = await tenantServiceEffective.isServiceEffectivelyEnabled(
-      txn.tenantId,
-      txn.platformServiceId,
-    );
-
-    if (!isEnabled) {
-      throw ApiError.forbidden('Recharge service disabled');
-    }
-
-    // 3️⃣ Call provider OUTSIDE transaction
-    const plugin = getRechargePlugin(txn.providerCode, txn.providerConfig);
-
-    const providerOperatorCode = await OperatorMapService.resolve({
-      internalOperatorCode: txn.operatorCode,
-      platformServiceId: txn.platformServiceId,
-      platformServiceFeatureId: txn.platformServiceFeatureId,
-      serviceProviderId: txn.providerId,
-    });
-
-    await plugin.recharge({
-      opcode: providerOperatorCode,
-      number: txn.mobileNumber,
-      amount: txn.amount,
-      transid: txn.id,
-      isRetry,
-    });
-
-    return {
-      success: true,
-      transactionId: txn.id,
-      retryCount: txn.retryCount,
     };
   }
 }
