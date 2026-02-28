@@ -29,8 +29,8 @@ export default function CircleMapsClient() {
   const perms = useSelector((s) => s.auth.user?.permissions);
   const can = (perm) => permissionChecker(perms, perm.resource, perm.action);
 
-  const canCreate = can(PERMISSIONS.RECHARGE.ADMIN.CIRCLES.CREATE);
-  const canUpdate = can(PERMISSIONS.RECHARGE.ADMIN.CIRCLES.UPDATE);
+  const canCreate = can(PERMISSIONS.SERVICES_PAGES.RECHARGE.ADMIN.CIRCLES.CREATE);
+  const canUpdate = can(PERMISSIONS.SERVICES_PAGES.RECHARGE.ADMIN.CIRCLES.UPDATE);
 
   const handleSubmit = (payload, setError) => {
     upsertMap(payload, {

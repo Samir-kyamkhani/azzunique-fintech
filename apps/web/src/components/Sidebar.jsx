@@ -120,8 +120,11 @@ const Sidebar = () => {
           id: "recharge",
           label: "Recharge",
           icon: CreditCard,
-          path: "/dashboard/recharge",
-          permission: PERMISSIONS.RECHARGE.READ,
+          path: "/dashboard/recharge/admin",
+          permissionGroup: [
+            PERMISSIONS.SERVICES_PAGES.RECHARGE.ADMIN.OPERATORS.READ,
+            PERMISSIONS.SERVICES_PAGES.RECHARGE.ADMIN.CIRCLES.READ,
+          ],
         },
       ],
     },
@@ -196,11 +199,12 @@ const Sidebar = () => {
     // Parent with children
     if (item.children) {
       // 🔥 Auto-open if any child route matches
-      const isAutoOpen = item.children.some((child) =>
+      const isActiveChild = item.children.some((child) =>
         pathname.startsWith(child.path),
       );
 
-      const isOpen = openMenus[item.id] || isAutoOpen;
+      const isOpen =
+        openMenus[item.id] !== undefined ? openMenus[item.id] : isActiveChild;
 
       return (
         <div>

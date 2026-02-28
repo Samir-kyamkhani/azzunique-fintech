@@ -63,10 +63,10 @@ export default function RechargeClient() {
   const perms = useSelector((s) => s.auth.user?.permissions);
   const can = (perm) => permissionChecker(perms, perm.resource, perm.action);
 
-  const canCreate = can(PERMISSIONS.RECHARGE.CREATE);
+  const canCreate = can(PERMISSIONS.SERVICES_PAGES.RECHARGE.CREATE);
   const canCreateAdmin =
-    can(PERMISSIONS.RECHARGE.ADMIN.OPERATORS.CREATE) ||
-    can(PERMISSIONS.RECHARGE.ADMIN.CIRCLES.CREATE);
+    can(PERMISSIONS.SERVICES_PAGES.RECHARGE.ADMIN.OPERATORS.CREATE) ||
+    can(PERMISSIONS.SERVICES_PAGES.RECHARGE.ADMIN.CIRCLES.CREATE);
 
   /* ================= HANDLERS ================= */
 

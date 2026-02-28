@@ -1,5 +1,6 @@
 import RechargeClient from "@/components/client/RechargeClient";
 import ClientGuard from "@/components/ClientGuard";
+import { ALLOWED_SERVICES_ROLES } from "@/lib/constants";
 import { PERMISSIONS } from "@/lib/permissionKeys";
 
 export const metadata = {
@@ -8,7 +9,10 @@ export const metadata = {
 
 export default function RechargePage() {
   return (
-    <ClientGuard anyOf={[PERMISSIONS.RECHARGE.CREATE]}>
+    <ClientGuard
+      roles={ALLOWED_SERVICES_ROLES}
+      anyOf={[PERMISSIONS.SERVICES_PAGES.RECHARGE.CREATE]}
+    >
       <RechargeClient />
     </ClientGuard>
   );

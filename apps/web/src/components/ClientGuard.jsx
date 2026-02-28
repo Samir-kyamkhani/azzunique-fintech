@@ -1,40 +1,56 @@
 "use client";
+
 import { useSelector } from "react-redux";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { permissionChecker } from "@/lib/permissionCheker";
 
-export default function ClientGuard({ anyOf, redirectMap, children }) {
-  const perms = useSelector((s) => s.auth.user?.permissions);
+export default function ClientGuard({
+  anyOf = [],
+  roles = [],
+  redirectMap,
+  children,
+}) {
+  const user = useSelector((s) => s.auth.user);
+  const perms = user?.permissions;
+  const roleCode = user?.role?.roleCode;
+
   const router = useRouter();
   const pathname = usePathname();
 
-  const allowed = anyOf.some((p) =>
-    permissionChecker(perms, p.resource, p.action),
-  );
+  /* ================= ROLE CHECK ================= */
+
+  const roleAllowed = roles.length === 0 || roles.includes(roleCode);
+
+  /* ================= PERMISSION CHECK ================= */
+
+  const permissionAllowed =
+    anyOf.length === 0 ||
+    anyOf.some((p) => permissionChecker(perms, p.resource, p.action));
+
+  const allowed = roleAllowed && permissionAllowed;
 
   useEffect(() => {
-    if (!perms) return;
+    if (!user) return;
 
-    // ❌ page not allowed
     if (!allowed) {
       router.replace("/dashboard");
       return;
     }
 
-    // 🔁 handle default child redirect
+    // child auto-redirect
     if (redirectMap) {
-      const current = pathname.split("/").pop();
       const found = redirectMap.find((r) =>
         permissionChecker(perms, r.perm.resource, r.perm.action),
       );
 
-      if (found && current !== found.path) {
+      if (found && pathname !== found.path) {
         router.replace(found.path);
       }
     }
-  }, [allowed, perms, pathname, redirectMap, router]);
+  }, [allowed, user, pathname, redirectMap, perms, router]);
 
-  if (!perms) return null;
-  return allowed ? children : null;
+  if (!user || !allowed) return null;
+
+  return children;
 }

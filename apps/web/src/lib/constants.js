@@ -1,0 +1,8 @@
+export const ALLOWED_SERVICES_ROLES = [
+  "STATE_HEAD",
+  "MASTER_DISTRIBUTOR",
+  "DISTRIBUTOR",
+  "RETAILER",
+];
+
+export const ADMIN_ROLE = "AZZUNIQUE";
