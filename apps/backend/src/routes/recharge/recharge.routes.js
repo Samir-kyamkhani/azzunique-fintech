@@ -8,21 +8,14 @@ import {
   initiateRecharge,
   retryRecharge,
 } from '../../controllers/recharge/rechargeTransaction.controller.js';
-import { rechargeCallback } from '../../controllers/recharge/rechargeCallback.controller.js';
 import { rechargePlanSchema } from '../../validators/recharge/rechargePlan.schema.js';
 import { rechargeOfferSchema } from '../../validators/recharge/rechargeOffer.schema.js';
 import { rechargeTransactionSchema } from '../../validators/recharge/rechargeTransaction.schema.js';
 import rateLimit from 'express-rate-limit';
-import { rawQueryMiddleware } from '../../middleware/rawQuery.middleware.js';
 import { fetchOperatorsByFeature } from '../../controllers/recharge/rechargeOperator.controller.js';
 import { rechargeHistoryQuerySchema } from '../../validators/recharge/rechargeHistory.schema.js';
 
 const router = Router();
-
-const callbackLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 30, // limit each IP to 30 requests per windowMs
-});
 
 router.use(AuthMiddleware);
 
@@ -65,8 +58,5 @@ router.get('/operators/:feature', fetchOperatorsByFeature);
 
 // RECHARGE TRANSACTION RETRY POST /api/recharge/:transactionId/retry
 router.post('/:transactionId/retry', rechargeLimiter, retryRecharge);
-
-// PUBLIC CALLBACK (NO AUTH) RechargeExchange will hit this
-router.get('/callback', rawQueryMiddleware, callbackLimiter, rechargeCallback);
 
 export default router;

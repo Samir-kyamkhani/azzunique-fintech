@@ -105,9 +105,6 @@ class RechargeTransactionService {
       retryCount: 0,
       lastRetryAt: null,
 
-      nextStatusCheckAt: new Date(), // immediate poll
-      pollAttempt: 0,
-
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -166,7 +163,6 @@ class RechargeTransactionService {
       providerResponse,
       walletId: mainWallet.id,
       actor,
-      service,
       amount,
     });
   }
@@ -224,55 +220,105 @@ class RechargeTransactionService {
     providerResponse,
     walletId,
     amount,
+    actor,
   }) {
-    const status = String(providerResponse.status).toUpperCase();
+    const status = String(providerResponse.status || '').toUpperCase();
 
-    /**
-     * RULE:
-     * - Immediate SUCCESS is NOT FINAL
-     * - Wallet + commission ONLY via callback / cron
-     */
+    // 🔒 SAFETY MAPPING
+    const providerTxnId =
+      providerResponse.optransid ||
+      providerResponse.opid ||
+      providerResponse.operatorid ||
+      null;
 
-    // ✅ SUCCESS → WAIT FOR CALLBACK
+    const referenceId =
+      providerResponse.referenceid || providerResponse.txnid || null;
+
+    // ✅ SUCCESS (FINAL)
     if (status === 'SUCCESS') {
-      await db
-        .update(rechargeTransactionTable)
-        .set({
-          status: 'PENDING', // 👈 IMPORTANT
-          providerTxnId: providerResponse.optransid,
-          referenceId: providerResponse.referenceid,
-          providerResponse: providerResponse,
-          updatedAt: new Date(),
-        })
-        .where(eq(rechargeTransactionTable.id, transactionId));
+      await db.transaction(async (tx) => {
+        const [lockedTxn] = await tx
+          .select()
+          .from(rechargeTransactionTable)
+          .where(eq(rechargeTransactionTable.id, transactionId))
+          .forUpdate()
+          .limit(1);
 
-      return { status: 'PENDING', transactionId };
+        if (!lockedTxn || lockedTxn.status !== 'PENDING') return;
+
+        // 1️⃣ Mark SUCCESS
+        await tx
+          .update(rechargeTransactionTable)
+          .set({
+            status: 'SUCCESS',
+            providerTxnId,
+            referenceId,
+            providerResponse,
+            updatedAt: new Date(),
+          })
+          .where(eq(rechargeTransactionTable.id, transactionId));
+
+        // 2️⃣ Debit blocked amount
+        if (lockedTxn.blockedAmount > 0) {
+          await WalletService.debitBlockedAmount({
+            walletId,
+            amount,
+            transactionId,
+            reference: `RECHARGE_SUCCESS:${transactionId}`,
+          });
+        }
+
+        // 3️⃣ Commission
+        await CommissionEngine.calculateAndCredit({
+          transaction: {
+            id: lockedTxn.id,
+            tenantId: lockedTxn.tenantId,
+            platformServiceId: lockedTxn.platformServiceId,
+            platformServiceFeatureId: lockedTxn.platformServiceFeatureId,
+            amount: lockedTxn.amount,
+          },
+          user: {
+            id: lockedTxn.userId,
+            tenantId: lockedTxn.tenantId,
+            roleId: actor.roleId,
+          },
+        });
+
+        // 4️⃣ Multi Level Commission
+        await MultiLevelCommission.process({
+          transaction: lockedTxn,
+          user: {
+            id: lockedTxn.userId,
+            tenantId: lockedTxn.tenantId,
+            roleId: actor.roleId,
+          },
+        });
+      });
+
+      return { status: 'SUCCESS', transactionId };
     }
 
-    //  FAIL → FINAL (refund immediately)
-    if (status === 'FAIL') {
+    // ❌ FAIL (FINAL)
+    if (['FAIL', 'FAILED', 'ERROR', 'REJECTED'].includes(status)) {
       await this._failAndRefund({
         transactionId,
         walletId,
         amount,
-        reason: providerResponse.message,
+        reason: providerResponse.message || 'Recharge failed',
       });
 
       return { status: 'FAILED', transactionId };
     }
 
-    //  PENDING / UNKNOWN → KEEP WAITING
-    await db
-      .update(rechargeTransactionTable)
-      .set({
-        status: 'PENDING',
-        providerTxnId: providerResponse.optransid,
-        referenceId: providerResponse.referenceid,
-        updatedAt: new Date(),
-      })
-      .where(eq(rechargeTransactionTable.id, transactionId));
+    // ⏳ UNKNOWN → treat as FAIL
+    await this._failAndRefund({
+      transactionId,
+      walletId,
+      amount,
+      reason: 'Unknown provider response',
+    });
 
-    return { status: 'PENDING', transactionId };
+    return { status: 'FAILED', transactionId };
   }
 
   // FAIL + REFUND (ATOMIC)

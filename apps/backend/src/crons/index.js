@@ -1,6 +1,5 @@
 import cron from 'node-cron';
 
-import { startRechargeStatusCron } from './rechargeStatus.cron.js';
 import { autoRetryPendingRecharges } from './rechargeAutoRetry.cron.js';
 import { reconcileWallets } from './ledger.reconciliation.cron.js';
 import { takeDailyWalletSnapshot } from './wallet.snapshot.cron.js';
@@ -13,9 +12,6 @@ export function startAllCrons() {
     console.log('⏭ All crons disabled');
     return;
   }
-
-  // Recharge status polling
-  startRechargeStatusCron();
 
   // Auto retry every 5 min
   cron.schedule('*/5 * * * *', autoRetryPendingRecharges);

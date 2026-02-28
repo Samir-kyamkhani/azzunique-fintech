@@ -47,9 +47,6 @@ export const rechargeTransactionTable = mysqlTable(
     retryCount: int('retry_count').default(0),
     lastRetryAt: timestamp('last_retry_at'),
 
-    nextStatusCheckAt: timestamp('next_status_check_at'),
-    pollAttempt: int('poll_attempt').default(0),
-
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
   },

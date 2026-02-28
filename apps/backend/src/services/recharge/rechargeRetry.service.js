@@ -35,8 +35,6 @@ class RechargeRetryService {
         .update(rechargeTransactionTable)
         .set({
           status: 'PENDING',
-          pollAttempt: 0,
-          nextStatusCheckAt: new Date(Date.now() + 5 * 60 * 1000),
           updatedAt: new Date(),
         })
         .where(
