@@ -1,11 +1,13 @@
 "use client";
 
 import ClientGuard from "@/components/ClientGuard";
+import { ADMIN_ROLE } from "@/lib/constants";
 import { PERMISSIONS } from "@/lib/permissionKeys";
 
 export default function Page() {
   return (
     <ClientGuard
+      roles={ADMIN_ROLE}
       anyOf={[
         PERMISSIONS.PLATFORM.SERVICES.READ,
         PERMISSIONS.PLATFORM.SERVICE_PROVIDERS.READ,
