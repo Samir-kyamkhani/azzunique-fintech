@@ -47,3 +47,8 @@ export const createCommissionSchema = z
       });
     }
   });
+
+export const commissionListQuerySchema = z.object({
+  page: z.string().regex(/^\d+$/).transform(Number).optional().default('1'),
+  limit: z.string().regex(/^\d+$/).transform(Number).optional().default('10'),
+});

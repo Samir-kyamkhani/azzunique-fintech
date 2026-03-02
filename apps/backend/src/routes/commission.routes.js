@@ -5,7 +5,7 @@ import { validate } from '../middleware/zod-validate.js';
 import { PermissionMiddleware } from '../middleware/permission.middleware.js';
 import { PermissionsRegistry } from '../lib/PermissionsRegistry.js';
 
-import { getAllCommissionList } from '../controllers/commission.controller.js';
+import { getAllCommissionList, setCommission } from '../controllers/commission.controller.js';
 
 import {
   commissionListQuerySchema,
