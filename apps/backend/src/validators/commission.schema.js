@@ -21,17 +21,29 @@ const baseCommissionSchema = {
   effectiveTo: z.date().optional(),
 };
 
-export const createUserCommissionSchema = z.object({
-  targetUserId: z.string().uuid(),
-  ...baseCommissionSchema,
-});
+export const createCommissionSchema = z
+  .object({
+    scope: z.enum(['USER', 'ROLE']),
 
-export const createRoleCommissionSchema = z.object({
-  roleId: z.string().uuid(),
-  ...baseCommissionSchema,
-});
+    targetUserId: z.string().uuid().optional(),
+    roleId: z.string().uuid().optional(),
 
-export const commissionListQuerySchema = z.object({
-  page: z.string().regex(/^\d+$/).transform(Number).optional().default('1'),
-  limit: z.string().regex(/^\d+$/).transform(Number).optional().default('10'),
-});
+    ...baseCommissionSchema,
+  })
+  .superRefine((data, ctx) => {
+    if (data.scope === 'USER' && !data.targetUserId) {
+      ctx.addIssue({
+        path: ['targetUserId'],
+        code: 'custom',
+        message: 'targetUserId is required when scope is USER',
+      });
+    }
+
+    if (data.scope === 'ROLE' && !data.roleId) {
+      ctx.addIssue({
+        path: ['roleId'],
+        code: 'custom',
+        message: 'roleId is required when scope is ROLE',
+      });
+    }
+  });

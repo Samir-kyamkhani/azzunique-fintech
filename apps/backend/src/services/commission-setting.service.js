@@ -10,8 +10,8 @@ import { ApiError } from '../lib/ApiError.js';
 import { canSetCommission } from '../guard/commission.guard.js';
 
 class CommissionSettingService {
-  // USER COMMISSION
-  static async setUserRule(payload, actor) {
+  //  SET COMMISSION
+  static async setRule(payload, actor) {
     if (!actor.tenantId) {
       throw ApiError.badRequest('Tenant missing');
     }
@@ -26,30 +26,50 @@ class CommissionSettingService {
       throw ApiError.forbidden('Invalid actor role');
     }
 
-    const [targetUser] = await db
-      .select({ roleId: usersTable.roleId })
-      .from(usersTable)
-      .where(eq(usersTable.id, payload.targetUserId))
-      .limit(1);
+    let targetRoleLevel;
 
-    if (!targetUser) {
-      throw ApiError.notFound('Target user not found');
+    if (payload.scope === 'USER') {
+      const [targetUser] = await db
+        .select({ roleId: usersTable.roleId })
+        .from(usersTable)
+        .where(eq(usersTable.id, payload.targetUserId))
+        .limit(1);
+
+      if (!targetUser) {
+        throw ApiError.notFound('Target user not found');
+      }
+
+      const [targetRole] = await db
+        .select({ roleLevel: roleTable.roleLevel })
+        .from(roleTable)
+        .where(eq(roleTable.id, targetUser.roleId))
+        .limit(1);
+
+      targetRoleLevel = targetRole?.roleLevel;
     }
 
-    const [targetRole] = await db
-      .select({ roleLevel: roleTable.roleLevel })
-      .from(roleTable)
-      .where(eq(roleTable.id, targetUser.roleId))
-      .limit(1);
+    if (payload.scope === 'ROLE') {
+      const [targetRole] = await db
+        .select({ roleLevel: roleTable.roleLevel })
+        .from(roleTable)
+        .where(eq(roleTable.id, payload.roleId))
+        .limit(1);
+
+      if (!targetRole) {
+        throw ApiError.notFound('Target role not found');
+      }
+
+      targetRoleLevel = targetRole.roleLevel;
+    }
 
     if (
       !canSetCommission({
         actorRoleLevel: actorRole.roleLevel,
-        targetRoleLevel: targetRole.roleLevel,
+        targetRoleLevel,
       })
     ) {
       throw ApiError.forbidden(
-        'You are not allowed to set commission for this user',
+        'You are not allowed to set commission for this target',
       );
     }
 
@@ -58,10 +78,11 @@ class CommissionSettingService {
       .values({
         id: crypto.randomUUID(),
         tenantId: actor.tenantId,
-        scope: 'USER',
-        roleId: null,
+        scope: payload.scope,
 
-        targetUserId: payload.targetUserId,
+        roleId: payload.scope === 'ROLE' ? payload.roleId : null,
+        targetUserId: payload.scope === 'USER' ? payload.targetUserId : null,
+
         platformServiceId: payload.platformServiceId,
         platformServiceFeatureId: payload.platformServiceFeatureId,
 
@@ -85,8 +106,6 @@ class CommissionSettingService {
       })
       .onDuplicateKeyUpdate({
         set: {
-          roleId: null,
-          targetUserId: payload.targetUserId,
           type: payload.type,
           value: payload.value,
           minAmount: payload.minAmount ?? 0,
@@ -100,97 +119,10 @@ class CommissionSettingService {
         },
       });
 
-    return { success: true };
-  }
-
-  // ROLE COMMISSION
-  static async setRoleRule(payload, actor) {
-    if (!actor.tenantId) {
-      throw ApiError.badRequest('Tenant missing');
-    }
-
-    const [actorRole] = await db
-      .select({ roleLevel: roleTable.roleLevel })
-      .from(roleTable)
-      .where(eq(roleTable.id, actor.roleId))
-      .limit(1);
-
-    if (!actorRole) {
-      throw ApiError.forbidden('Invalid actor role');
-    }
-
-    const [targetRole] = await db
-      .select({ roleLevel: roleTable.roleLevel })
-      .from(roleTable)
-      .where(eq(roleTable.id, payload.roleId))
-      .limit(1);
-
-    if (!targetRole) {
-      throw ApiError.notFound('Target role not found');
-    }
-
-    if (
-      !canSetCommission({
-        actorRoleLevel: actorRole.roleLevel,
-        targetRoleLevel: targetRole.roleLevel,
-      })
-    ) {
-      throw ApiError.forbidden(
-        'You are not allowed to set commission for this role',
-      );
-    }
-
-    await db
-      .insert(commissionSettingTable)
-      .values({
-        id: crypto.randomUUID(),
-        tenantId: actor.tenantId,
-        scope: 'ROLE',
-        targetUserId: null,
-
-        roleId: payload.roleId,
-        platformServiceId: payload.platformServiceId,
-        platformServiceFeatureId: payload.platformServiceFeatureId,
-
-        mode: payload.mode,
-        type: payload.type,
-        value: payload.value,
-
-        minAmount: payload.minAmount ?? 0,
-        maxAmount: payload.maxAmount ?? 0,
-
-        applyTDS: payload.applyTDS ?? false,
-        tdsPercent: payload.tdsPercent ?? null,
-
-        applyGST: payload.applyGST ?? false,
-        gstPercent: payload.gstPercent ?? null,
-
-        effectiveTo: payload.effectiveTo ?? null,
-
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .onDuplicateKeyUpdate({
-        set: {
-          targetUserId: null,
-          roleId: payload.roleId,
-          type: payload.type,
-          value: payload.value,
-          minAmount: payload.minAmount ?? 0,
-          maxAmount: payload.maxAmount ?? 0,
-          applyTDS: payload.applyTDS ?? false,
-          tdsPercent: payload.tdsPercent ?? null,
-          applyGST: payload.applyGST ?? false,
-          gstPercent: payload.gstPercent ?? null,
-          effectiveTo: payload.effectiveTo ?? null,
-          updatedAt: new Date(),
-        },
-      });
     return { success: true };
   }
 
   //  GET COMMISSION LIST (USER + ROLE)
-
   static async getCommissionList(actor, query = {}) {
     const { tenantId } = actor;
 

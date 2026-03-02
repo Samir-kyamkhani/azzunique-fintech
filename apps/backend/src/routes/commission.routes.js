@@ -5,16 +5,11 @@ import { validate } from '../middleware/zod-validate.js';
 import { PermissionMiddleware } from '../middleware/permission.middleware.js';
 import { PermissionsRegistry } from '../lib/PermissionsRegistry.js';
 
-import {
-  setUserCommission,
-  setRoleCommission,
-  getAllCommissionList,
-} from '../controllers/commission.controller.js';
+import { getAllCommissionList } from '../controllers/commission.controller.js';
 
 import {
-  createUserCommissionSchema,
-  createRoleCommissionSchema,
   commissionListQuerySchema,
+  createCommissionSchema,
 } from '../validators/commission.schema.js';
 
 const router = Router();
@@ -22,17 +17,10 @@ const router = Router();
 router.use(AuthMiddleware);
 
 router.post(
-  '/user',
-  PermissionMiddleware(PermissionsRegistry.COMMISSION.SET_USER_RULE),
-  validate({ body: createUserCommissionSchema }),
-  asyncHandler(setUserCommission),
-);
-
-router.post(
-  '/role',
-  PermissionMiddleware(PermissionsRegistry.COMMISSION.SET_ROLE_RULE),
-  validate({ body: createRoleCommissionSchema }),
-  asyncHandler(setRoleCommission),
+  '/',
+  PermissionMiddleware(PermissionsRegistry.COMMISSION.SET_RULE),
+  validate({ body: createCommissionSchema }),
+  asyncHandler(setCommission),
 );
 
 router.get(
