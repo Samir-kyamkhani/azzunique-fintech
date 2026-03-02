@@ -32,7 +32,6 @@ export * from './wallet.schema.js';
 export * from './ledger.schema.js';
 export * from './refund.schema.js';
 export * from './commissionEarning.schema.js';
-export * from './roleCommissionSetting.schema.js';
-export * from './userCommissionSetting.schema.js';
+export * from './commissionSetting.schema.js';
 export * from './walletSnapshot.schema.js';
 export * from './mailQueue.schema.js';

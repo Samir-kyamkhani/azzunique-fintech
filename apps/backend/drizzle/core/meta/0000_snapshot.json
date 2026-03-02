@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "5ba36adf-e892-479e-a85c-3389be6ad6d6",
+  "id": "f8a195a1-41b0-49d7-b6f3-583cf55be3c1",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "audit_log": {
@@ -4513,72 +4513,51 @@
           "notNull": true,
           "autoincrement": false
         },
-        "commission_type": {
-          "name": "commission_type",
+        "mode": {
+          "name": "mode",
           "type": "varchar(20)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "commission_value": {
-          "name": "commission_value",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "commission_amount": {
-          "name": "commission_amount",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "surcharge_type": {
-          "name": "surcharge_type",
+        "type": {
+          "name": "type",
           "type": "varchar(20)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "surcharge_value": {
-          "name": "surcharge_value",
-          "type": "int",
+        "value": {
+          "name": "value",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "surcharge_amount": {
-          "name": "surcharge_amount",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "gross_amount": {
-          "name": "gross_amount",
-          "type": "int",
+        "base_amount": {
+          "name": "base_amount",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
         "gst_amount": {
           "name": "gst_amount",
-          "type": "int",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "net_amount": {
-          "name": "net_amount",
-          "type": "int",
+        "tds_amount": {
+          "name": "tds_amount",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
         "final_amount": {
           "name": "final_amount",
-          "type": "int",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -4601,8 +4580,8 @@
         }
       },
       "indexes": {
-        "uniq_commission_earning": {
-          "name": "uniq_commission_earning",
+        "uniq_commission": {
+          "name": "uniq_commission",
           "columns": [
             "transaction_id",
             "user_id"
@@ -4722,8 +4701,8 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
-    "role_commission_settings": {
-      "name": "role_commission_settings",
+    "commission_settings": {
+      "name": "commission_settings",
       "columns": {
         "id": {
           "name": "id",
@@ -4740,6 +4719,27 @@
           "notNull": true,
           "autoincrement": false
         },
+        "scope": {
+          "name": "scope",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "role_id": {
+          "name": "role_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "target_user_id": {
+          "name": "target_user_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "platform_service_id": {
           "name": "platform_service_id",
           "type": "varchar(36)",
@@ -4754,79 +4754,72 @@
           "notNull": true,
           "autoincrement": false
         },
-        "role_id": {
-          "name": "role_id",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "commission_type": {
-          "name": "commission_type",
+        "mode": {
+          "name": "mode",
           "type": "varchar(20)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "commission_value": {
-          "name": "commission_value",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "surcharge_type": {
-          "name": "surcharge_type",
+        "type": {
+          "name": "type",
           "type": "varchar(20)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "surcharge_value": {
-          "name": "surcharge_value",
-          "type": "int",
+        "value": {
+          "name": "value",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "gst_applicable": {
-          "name": "gst_applicable",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": false
-        },
-        "gst_rate": {
-          "name": "gst_rate",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 18
-        },
-        "gst_on": {
-          "name": "gst_on",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "gst_inclusive": {
-          "name": "gst_inclusive",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": false
-        },
-        "max_commission_value": {
-          "name": "max_commission_value",
-          "type": "int",
+        "min_amount": {
+          "name": "min_amount",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": 0
+        },
+        "max_amount": {
+          "name": "max_amount",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "apply_tds": {
+          "name": "apply_tds",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "tds_percent": {
+          "name": "tds_percent",
+          "type": "decimal(5,2)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "apply_gst": {
+          "name": "apply_gst",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "gst_percent": {
+          "name": "gst_percent",
+          "type": "decimal(5,2)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         },
         "is_active": {
           "name": "is_active",
@@ -4835,6 +4828,13 @@
           "notNull": true,
           "autoincrement": false,
           "default": true
+        },
+        "effective_to": {
+          "name": "effective_to",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         },
         "created_at": {
           "name": "created_at",
@@ -4854,41 +4854,45 @@
         }
       },
       "indexes": {
-        "uniq_role_commission_rule": {
-          "name": "uniq_role_commission_rule",
+        "cs_user_rule_uniq": {
+          "name": "cs_user_rule_uniq",
           "columns": [
             "tenant_id",
-            "role_id",
-            "platform_service_feature_id"
+            "target_user_id",
+            "platform_service_feature_id",
+            "mode",
+            "min_amount"
           ],
           "isUnique": true
         },
-        "idx_rcs_tenant": {
-          "name": "idx_rcs_tenant",
+        "cs_role_rule_uniq": {
+          "name": "cs_role_rule_uniq",
           "columns": [
-            "tenant_id"
+            "tenant_id",
+            "role_id",
+            "platform_service_feature_id",
+            "mode",
+            "min_amount"
           ],
-          "isUnique": false
+          "isUnique": true
         },
-        "idx_rcs_role": {
-          "name": "idx_rcs_role",
+        "cs_resolve_idx": {
+          "name": "cs_resolve_idx",
           "columns": [
-            "role_id"
-          ],
-          "isUnique": false
-        },
-        "idx_rcs_feature": {
-          "name": "idx_rcs_feature",
-          "columns": [
-            "platform_service_feature_id"
+            "tenant_id",
+            "scope",
+            "role_id",
+            "target_user_id",
+            "platform_service_feature_id",
+            "is_active"
           ],
           "isUnique": false
         }
       },
       "foreignKeys": {
-        "rcs_tenant_fk": {
-          "name": "rcs_tenant_fk",
-          "tableFrom": "role_commission_settings",
+        "cs_tenant_fk": {
+          "name": "cs_tenant_fk",
+          "tableFrom": "commission_settings",
           "tableTo": "tenants",
           "columnsFrom": [
             "tenant_id"
@@ -4899,9 +4903,9 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "rcs_ps_fk": {
-          "name": "rcs_ps_fk",
-          "tableFrom": "role_commission_settings",
+        "cs_ps_fk": {
+          "name": "cs_ps_fk",
+          "tableFrom": "commission_settings",
           "tableTo": "platform_services",
           "columnsFrom": [
             "platform_service_id"
@@ -4912,9 +4916,9 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "rcs_psf_fk": {
-          "name": "rcs_psf_fk",
-          "tableFrom": "role_commission_settings",
+        "cs_psf_fk": {
+          "name": "cs_psf_fk",
+          "tableFrom": "commission_settings",
           "tableTo": "platform_service_features",
           "columnsFrom": [
             "platform_service_feature_id"
@@ -4925,9 +4929,9 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "rcs_role_fk": {
-          "name": "rcs_role_fk",
-          "tableFrom": "role_commission_settings",
+        "cs_role_fk": {
+          "name": "cs_role_fk",
+          "tableFrom": "commission_settings",
           "tableTo": "roles",
           "columnsFrom": [
             "role_id"
@@ -4937,207 +4941,13 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "role_commission_settings_id": {
-          "name": "role_commission_settings_id",
-          "columns": [
-            "id"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "checkConstraint": {}
-    },
-    "user_commission_settings": {
-      "name": "user_commission_settings",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(UUID())"
         },
-        "tenant_id": {
-          "name": "tenant_id",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "platform_service_id": {
-          "name": "platform_service_id",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "platform_service_feature_id": {
-          "name": "platform_service_feature_id",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "commission_type": {
-          "name": "commission_type",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "commission_value": {
-          "name": "commission_value",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "surcharge_type": {
-          "name": "surcharge_type",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "surcharge_value": {
-          "name": "surcharge_value",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "gst_applicable": {
-          "name": "gst_applicable",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": false
-        },
-        "gst_rate": {
-          "name": "gst_rate",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 18
-        },
-        "gst_on": {
-          "name": "gst_on",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "gst_inclusive": {
-          "name": "gst_inclusive",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": false
-        },
-        "max_commission_value": {
-          "name": "max_commission_value",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        },
-        "is_active": {
-          "name": "is_active",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(now())"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(now())"
-        }
-      },
-      "indexes": {
-        "uniq_user_commission_setting": {
-          "name": "uniq_user_commission_setting",
-          "columns": [
-            "tenant_id",
-            "user_id",
-            "platform_service_feature_id"
-          ],
-          "isUnique": true
-        }
-      },
-      "foreignKeys": {
-        "ucs_tenant_fk": {
-          "name": "ucs_tenant_fk",
-          "tableFrom": "user_commission_settings",
-          "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "ucs_platform_service_fk": {
-          "name": "ucs_platform_service_fk",
-          "tableFrom": "user_commission_settings",
-          "tableTo": "platform_services",
-          "columnsFrom": [
-            "platform_service_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "ucs_platform_service_feature_fk": {
-          "name": "ucs_platform_service_feature_fk",
-          "tableFrom": "user_commission_settings",
-          "tableTo": "platform_service_features",
-          "columnsFrom": [
-            "platform_service_feature_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "ucs_user_fk": {
-          "name": "ucs_user_fk",
-          "tableFrom": "user_commission_settings",
+        "cs_user_fk": {
+          "name": "cs_user_fk",
+          "tableFrom": "commission_settings",
           "tableTo": "users",
           "columnsFrom": [
-            "user_id"
+            "target_user_id"
           ],
           "columnsTo": [
             "id"
@@ -5147,8 +4957,8 @@
         }
       },
       "compositePrimaryKeys": {
-        "user_commission_settings_id": {
-          "name": "user_commission_settings_id",
+        "commission_settings_id": {
+          "name": "commission_settings_id",
           "columns": [
             "id"
           ]

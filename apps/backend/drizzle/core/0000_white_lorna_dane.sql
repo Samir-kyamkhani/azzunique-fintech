@@ -520,64 +520,43 @@ CREATE TABLE `commission_earnings` (
 	`transaction_id` varchar(36) NOT NULL,
 	`platform_service_id` varchar(36) NOT NULL,
 	`platform_service_feature_id` varchar(36) NOT NULL,
-	`commission_type` varchar(20) NOT NULL,
-	`commission_value` int NOT NULL,
-	`commission_amount` int NOT NULL,
-	`surcharge_type` varchar(20) NOT NULL,
-	`surcharge_value` int NOT NULL,
-	`surcharge_amount` int NOT NULL,
-	`gross_amount` int NOT NULL,
-	`gst_amount` int NOT NULL,
-	`net_amount` int NOT NULL,
-	`final_amount` int NOT NULL,
+	`mode` varchar(20) NOT NULL,
+	`type` varchar(20) NOT NULL,
+	`value` bigint NOT NULL,
+	`base_amount` bigint NOT NULL,
+	`gst_amount` bigint NOT NULL,
+	`tds_amount` bigint NOT NULL,
+	`final_amount` bigint NOT NULL,
 	`created_at` timestamp NOT NULL DEFAULT (now()),
 	`updated_at` timestamp NOT NULL DEFAULT (now()),
 	CONSTRAINT `commission_earnings_id` PRIMARY KEY(`id`),
-	CONSTRAINT `uniq_commission_earning` UNIQUE(`transaction_id`,`user_id`)
+	CONSTRAINT `uniq_commission` UNIQUE(`transaction_id`,`user_id`)
 );
 --> statement-breakpoint
-CREATE TABLE `role_commission_settings` (
+CREATE TABLE `commission_settings` (
 	`id` varchar(36) NOT NULL DEFAULT (UUID()),
 	`tenant_id` varchar(36) NOT NULL,
+	`scope` varchar(20) NOT NULL,
+	`role_id` varchar(36),
+	`target_user_id` varchar(36),
 	`platform_service_id` varchar(36) NOT NULL,
 	`platform_service_feature_id` varchar(36) NOT NULL,
-	`role_id` varchar(36) NOT NULL,
-	`commission_type` varchar(20) NOT NULL,
-	`commission_value` int NOT NULL,
-	`surcharge_type` varchar(20) NOT NULL,
-	`surcharge_value` int NOT NULL,
-	`gst_applicable` boolean NOT NULL DEFAULT false,
-	`gst_rate` int NOT NULL DEFAULT 18,
-	`gst_on` varchar(20) NOT NULL,
-	`gst_inclusive` boolean NOT NULL DEFAULT false,
-	`max_commission_value` int NOT NULL DEFAULT 0,
+	`mode` varchar(20) NOT NULL,
+	`type` varchar(20) NOT NULL,
+	`value` bigint NOT NULL,
+	`min_amount` bigint NOT NULL DEFAULT 0,
+	`max_amount` bigint NOT NULL DEFAULT 0,
+	`apply_tds` boolean NOT NULL DEFAULT false,
+	`tds_percent` decimal(5,2),
+	`apply_gst` boolean NOT NULL DEFAULT false,
+	`gst_percent` decimal(5,2),
 	`is_active` boolean NOT NULL DEFAULT true,
+	`effective_to` timestamp,
 	`created_at` timestamp NOT NULL DEFAULT (now()),
 	`updated_at` timestamp NOT NULL DEFAULT (now()),
-	CONSTRAINT `role_commission_settings_id` PRIMARY KEY(`id`),
-	CONSTRAINT `uniq_role_commission_rule` UNIQUE(`tenant_id`,`role_id`,`platform_service_feature_id`)
-);
---> statement-breakpoint
-CREATE TABLE `user_commission_settings` (
-	`id` varchar(36) NOT NULL DEFAULT (UUID()),
-	`tenant_id` varchar(36) NOT NULL,
-	`platform_service_id` varchar(36) NOT NULL,
-	`platform_service_feature_id` varchar(36) NOT NULL,
-	`user_id` varchar(36) NOT NULL,
-	`commission_type` varchar(20) NOT NULL,
-	`commission_value` int NOT NULL,
-	`surcharge_type` varchar(20) NOT NULL,
-	`surcharge_value` int NOT NULL,
-	`gst_applicable` boolean NOT NULL DEFAULT false,
-	`gst_rate` int NOT NULL DEFAULT 18,
-	`gst_on` varchar(20) NOT NULL,
-	`gst_inclusive` boolean NOT NULL DEFAULT false,
-	`max_commission_value` int NOT NULL DEFAULT 0,
-	`is_active` boolean NOT NULL DEFAULT true,
-	`created_at` timestamp NOT NULL DEFAULT (now()),
-	`updated_at` timestamp NOT NULL DEFAULT (now()),
-	CONSTRAINT `user_commission_settings_id` PRIMARY KEY(`id`),
-	CONSTRAINT `uniq_user_commission_setting` UNIQUE(`tenant_id`,`user_id`,`platform_service_feature_id`)
+	CONSTRAINT `commission_settings_id` PRIMARY KEY(`id`),
+	CONSTRAINT `cs_user_rule_uniq` UNIQUE(`tenant_id`,`target_user_id`,`platform_service_feature_id`,`mode`,`min_amount`),
+	CONSTRAINT `cs_role_rule_uniq` UNIQUE(`tenant_id`,`role_id`,`platform_service_feature_id`,`mode`,`min_amount`)
 );
 --> statement-breakpoint
 CREATE TABLE `wallet_snapshots` (
@@ -674,14 +653,11 @@ ALTER TABLE `commission_earnings` ADD CONSTRAINT `ce_wallet_fk` FOREIGN KEY (`wa
 ALTER TABLE `commission_earnings` ADD CONSTRAINT `ce_tx_fk` FOREIGN KEY (`transaction_id`) REFERENCES `transactions`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `commission_earnings` ADD CONSTRAINT `ce_ps_fk` FOREIGN KEY (`platform_service_id`) REFERENCES `platform_services`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `commission_earnings` ADD CONSTRAINT `ce_psf_fk` FOREIGN KEY (`platform_service_feature_id`) REFERENCES `platform_service_features`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `role_commission_settings` ADD CONSTRAINT `rcs_tenant_fk` FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `role_commission_settings` ADD CONSTRAINT `rcs_ps_fk` FOREIGN KEY (`platform_service_id`) REFERENCES `platform_services`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `role_commission_settings` ADD CONSTRAINT `rcs_psf_fk` FOREIGN KEY (`platform_service_feature_id`) REFERENCES `platform_service_features`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `role_commission_settings` ADD CONSTRAINT `rcs_role_fk` FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `user_commission_settings` ADD CONSTRAINT `ucs_tenant_fk` FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `user_commission_settings` ADD CONSTRAINT `ucs_platform_service_fk` FOREIGN KEY (`platform_service_id`) REFERENCES `platform_services`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `user_commission_settings` ADD CONSTRAINT `ucs_platform_service_feature_fk` FOREIGN KEY (`platform_service_feature_id`) REFERENCES `platform_service_features`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `user_commission_settings` ADD CONSTRAINT `ucs_user_fk` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `commission_settings` ADD CONSTRAINT `cs_tenant_fk` FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `commission_settings` ADD CONSTRAINT `cs_ps_fk` FOREIGN KEY (`platform_service_id`) REFERENCES `platform_services`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `commission_settings` ADD CONSTRAINT `cs_psf_fk` FOREIGN KEY (`platform_service_feature_id`) REFERENCES `platform_service_features`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `commission_settings` ADD CONSTRAINT `cs_role_fk` FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `commission_settings` ADD CONSTRAINT `cs_user_fk` FOREIGN KEY (`target_user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `wallet_snapshots` ADD CONSTRAINT `wallet_snapshots_wallet_id_wallets_id_fk` FOREIGN KEY (`wallet_id`) REFERENCES `wallets`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `mail_queue` ADD CONSTRAINT `mail_queue_tenant_fk` FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX `idx_user_tenant_status` ON `users` (`tenant_id`,`user_status`);--> statement-breakpoint
@@ -715,8 +691,6 @@ CREATE INDEX `idx_refund_transaction` ON `refunds` (`transaction_id`);--> statem
 CREATE INDEX `idx_commission_tenant` ON `commission_earnings` (`tenant_id`);--> statement-breakpoint
 CREATE INDEX `idx_commission_user` ON `commission_earnings` (`user_id`);--> statement-breakpoint
 CREATE INDEX `idx_commission_transaction` ON `commission_earnings` (`transaction_id`);--> statement-breakpoint
-CREATE INDEX `idx_rcs_tenant` ON `role_commission_settings` (`tenant_id`);--> statement-breakpoint
-CREATE INDEX `idx_rcs_role` ON `role_commission_settings` (`role_id`);--> statement-breakpoint
-CREATE INDEX `idx_rcs_feature` ON `role_commission_settings` (`platform_service_feature_id`);--> statement-breakpoint
+CREATE INDEX `cs_resolve_idx` ON `commission_settings` (`tenant_id`,`scope`,`role_id`,`target_user_id`,`platform_service_feature_id`,`is_active`);--> statement-breakpoint
 CREATE INDEX `idx_wallet_snapshots_wallet` ON `wallet_snapshots` (`wallet_id`);--> statement-breakpoint
 CREATE INDEX `idx_mail_status_retry` ON `mail_queue` (`status`,`next_attempt_at`);

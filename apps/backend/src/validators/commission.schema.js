@@ -1,29 +1,28 @@
 import { z } from 'zod';
 
-export const commissionParamSchema = z.object({
-  id: z.string().uuid(),
-});
-
 const baseCommissionSchema = {
   platformServiceId: z.string().uuid(),
   platformServiceFeatureId: z.string().uuid(),
 
-  commissionType: z.enum(['FLAT', 'PERCENTAGE']),
-  commissionValue: z.number().int().min(0),
+  mode: z.enum(['COMMISSION', 'SURCHARGE']),
+  type: z.enum(['FLAT', 'PERCENTAGE']),
 
-  surchargeType: z.enum(['FLAT', 'PERCENTAGE']),
-  surchargeValue: z.number().int().min(0),
+  value: z.number().int().min(0),
 
-  gstApplicable: z.boolean().default(false),
-  gstRate: z.number().int().min(0).max(28).default(18),
-  gstOn: z.enum(['COMMISSION', 'SURCHARGE', 'BOTH']),
-  gstInclusive: z.boolean().default(false),
+  minAmount: z.number().int().min(0).default(0),
+  maxAmount: z.number().int().min(0).default(0),
 
-  maxCommissionValue: z.number().int().min(0).default(0),
+  applyTDS: z.boolean().default(false),
+  tdsPercent: z.number().min(0).max(100).optional(),
+
+  applyGST: z.boolean().default(false),
+  gstPercent: z.number().min(0).max(100).optional(),
+
+  effectiveTo: z.date().optional(),
 };
 
 export const createUserCommissionSchema = z.object({
-  userId: z.string().uuid(),
+  targetUserId: z.string().uuid(),
   ...baseCommissionSchema,
 });
 
@@ -33,13 +32,6 @@ export const createRoleCommissionSchema = z.object({
 });
 
 export const commissionListQuerySchema = z.object({
-  type: z.enum(['USER', 'ROLE', 'ALL']).optional().default('ALL'),
-
-  search: z.string().trim().optional().default(''),
-
-  isActive: z.enum(['true', 'false']).optional(),
-
   page: z.string().regex(/^\d+$/).transform(Number).optional().default('1'),
-
   limit: z.string().regex(/^\d+$/).transform(Number).optional().default('10'),
 });

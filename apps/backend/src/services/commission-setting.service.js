@@ -1,12 +1,10 @@
 import { db } from '../database/core/core-db.js';
 import {
-  userCommissionSettingTable,
-  roleCommissionSettingTable,
+  commissionSettingTable,
   roleTable,
   usersTable,
-  tenantsTable,
 } from '../models/core/index.js';
-import { and, eq, like, desc, count, or } from 'drizzle-orm';
+import { and, eq, desc, count, or, isNull, lte, gte } from 'drizzle-orm';
 import crypto from 'crypto';
 import { ApiError } from '../lib/ApiError.js';
 import { canSetCommission } from '../guard/commission.guard.js';
@@ -18,7 +16,6 @@ class CommissionSettingService {
       throw ApiError.badRequest('Tenant missing');
     }
 
-    // 1️⃣ Actor role
     const [actorRole] = await db
       .select({ roleLevel: roleTable.roleLevel })
       .from(roleTable)
@@ -29,13 +26,10 @@ class CommissionSettingService {
       throw ApiError.forbidden('Invalid actor role');
     }
 
-    // 2️⃣ Target user + role
     const [targetUser] = await db
-      .select({
-        roleId: usersTable.roleId,
-      })
+      .select({ roleId: usersTable.roleId })
       .from(usersTable)
-      .where(eq(usersTable.id, payload.userId))
+      .where(eq(usersTable.id, payload.targetUserId))
       .limit(1);
 
     if (!targetUser) {
@@ -48,7 +42,6 @@ class CommissionSettingService {
       .where(eq(roleTable.id, targetUser.roleId))
       .limit(1);
 
-    // 3️⃣ 🔒 COMMISSION CONTROL GUARD
     if (
       !canSetCommission({
         actorRoleLevel: actorRole.roleLevel,
@@ -60,19 +53,49 @@ class CommissionSettingService {
       );
     }
 
-    // 4️⃣ UPSERT COMMISSION RULE
     await db
-      .insert(userCommissionSettingTable)
+      .insert(commissionSettingTable)
       .values({
         id: crypto.randomUUID(),
         tenantId: actor.tenantId,
-        ...payload,
+        scope: 'USER',
+        roleId: null,
+
+        targetUserId: payload.targetUserId,
+        platformServiceId: payload.platformServiceId,
+        platformServiceFeatureId: payload.platformServiceFeatureId,
+
+        mode: payload.mode,
+        type: payload.type,
+        value: payload.value,
+
+        minAmount: payload.minAmount ?? 0,
+        maxAmount: payload.maxAmount ?? 0,
+
+        applyTDS: payload.applyTDS ?? false,
+        tdsPercent: payload.tdsPercent ?? null,
+
+        applyGST: payload.applyGST ?? false,
+        gstPercent: payload.gstPercent ?? null,
+
+        effectiveTo: payload.effectiveTo ?? null,
+
         createdAt: new Date(),
         updatedAt: new Date(),
       })
       .onDuplicateKeyUpdate({
         set: {
-          ...payload,
+          roleId: null,
+          targetUserId: payload.targetUserId,
+          type: payload.type,
+          value: payload.value,
+          minAmount: payload.minAmount ?? 0,
+          maxAmount: payload.maxAmount ?? 0,
+          applyTDS: payload.applyTDS ?? false,
+          tdsPercent: payload.tdsPercent ?? null,
+          applyGST: payload.applyGST ?? false,
+          gstPercent: payload.gstPercent ?? null,
+          effectiveTo: payload.effectiveTo ?? null,
           updatedAt: new Date(),
         },
       });
@@ -86,7 +109,6 @@ class CommissionSettingService {
       throw ApiError.badRequest('Tenant missing');
     }
 
-    // 1️⃣ Actor role
     const [actorRole] = await db
       .select({ roleLevel: roleTable.roleLevel })
       .from(roleTable)
@@ -97,7 +119,6 @@ class CommissionSettingService {
       throw ApiError.forbidden('Invalid actor role');
     }
 
-    // 2️⃣ Target role
     const [targetRole] = await db
       .select({ roleLevel: roleTable.roleLevel })
       .from(roleTable)
@@ -108,7 +129,6 @@ class CommissionSettingService {
       throw ApiError.notFound('Target role not found');
     }
 
-    // 3️⃣ 🔒 COMMISSION CONTROL GUARD
     if (
       !canSetCommission({
         actorRoleLevel: actorRole.roleLevel,
@@ -120,23 +140,52 @@ class CommissionSettingService {
       );
     }
 
-    // 4️⃣ UPSERT COMMISSION RULE
     await db
-      .insert(roleCommissionSettingTable)
+      .insert(commissionSettingTable)
       .values({
         id: crypto.randomUUID(),
         tenantId: actor.tenantId,
-        ...payload,
+        scope: 'ROLE',
+        targetUserId: null,
+
+        roleId: payload.roleId,
+        platformServiceId: payload.platformServiceId,
+        platformServiceFeatureId: payload.platformServiceFeatureId,
+
+        mode: payload.mode,
+        type: payload.type,
+        value: payload.value,
+
+        minAmount: payload.minAmount ?? 0,
+        maxAmount: payload.maxAmount ?? 0,
+
+        applyTDS: payload.applyTDS ?? false,
+        tdsPercent: payload.tdsPercent ?? null,
+
+        applyGST: payload.applyGST ?? false,
+        gstPercent: payload.gstPercent ?? null,
+
+        effectiveTo: payload.effectiveTo ?? null,
+
         createdAt: new Date(),
         updatedAt: new Date(),
       })
       .onDuplicateKeyUpdate({
         set: {
-          ...payload,
+          targetUserId: null,
+          roleId: payload.roleId,
+          type: payload.type,
+          value: payload.value,
+          minAmount: payload.minAmount ?? 0,
+          maxAmount: payload.maxAmount ?? 0,
+          applyTDS: payload.applyTDS ?? false,
+          tdsPercent: payload.tdsPercent ?? null,
+          applyGST: payload.applyGST ?? false,
+          gstPercent: payload.gstPercent ?? null,
+          effectiveTo: payload.effectiveTo ?? null,
           updatedAt: new Date(),
         },
       });
-
     return { success: true };
   }
 
@@ -145,130 +194,26 @@ class CommissionSettingService {
   static async getCommissionList(actor, query = {}) {
     const { tenantId } = actor;
 
-    let { type = 'ALL', search = '', isActive, page = 1, limit = 10 } = query;
+    const page = Number(query.page) || 1;
+    const limit = Math.min(Number(query.limit) || 10, 100);
 
-    type = String(type).toUpperCase();
-    page = Number(page);
-    limit = Number(limit);
     const offset = (page - 1) * limit;
 
-    /* ================= CONDITIONS ================= */
-    const userConditions = [eq(userCommissionSettingTable.tenantId, tenantId)];
-    const roleConditions = [eq(roleCommissionSettingTable.tenantId, tenantId)];
+    const rows = await db
+      .select()
+      .from(commissionSettingTable)
+      .where(eq(commissionSettingTable.tenantId, tenantId))
+      .orderBy(desc(commissionSettingTable.createdAt))
+      .limit(limit)
+      .offset(offset);
 
-    if (isActive !== undefined) {
-      const active = isActive === 'true' || isActive === true;
-      userConditions.push(eq(userCommissionSettingTable.isActive, active));
-      roleConditions.push(eq(roleCommissionSettingTable.isActive, active));
-    }
-
-    if (search) {
-      userConditions.push(like(usersTable.firstName, `%${search}%`));
-      userConditions.push(like(usersTable.lastName, `%${search}%`));
-      userConditions.push(like(usersTable.userNumber, `%${search}%`));
-      roleConditions.push(like(roleTable.roleCode, `%${search}%`));
-    }
-
-    /* ================= USER QUERY ================= */
-    const userQuery = db
-      .select({
-        id: userCommissionSettingTable.id,
-
-        // commission fields
-        commissionType: userCommissionSettingTable.commissionType,
-        commissionValue: userCommissionSettingTable.commissionValue,
-        surchargeType: userCommissionSettingTable.surchargeType,
-        surchargeValue: userCommissionSettingTable.surchargeValue,
-        gstApplicable: userCommissionSettingTable.gstApplicable,
-        gstRate: userCommissionSettingTable.gstRate,
-        maxCommissionValue: userCommissionSettingTable.maxCommissionValue,
-        isActive: userCommissionSettingTable.isActive,
-        createdAt: userCommissionSettingTable.createdAt,
-
-        // user info
-        firstName: usersTable.firstName,
-        lastName: usersTable.lastName,
-        userNumber: usersTable.userNumber,
-
-        // tenant info
-        tenantNumber: tenantsTable.tenantNumber,
-        tenantName: tenantsTable.tenantName,
-      })
-      .from(userCommissionSettingTable)
-      .innerJoin(
-        usersTable,
-        eq(usersTable.id, userCommissionSettingTable.userId),
-      )
-      .innerJoin(tenantsTable, eq(tenantsTable.id, usersTable.tenantId))
-      .where(and(...userConditions))
-      .orderBy(desc(userCommissionSettingTable.createdAt));
-
-    /* ================= ROLE QUERY ================= */
-    const roleQuery = db
-      .select({
-        id: roleCommissionSettingTable.id,
-
-        // commission fields
-        commissionType: roleCommissionSettingTable.commissionType,
-        commissionValue: roleCommissionSettingTable.commissionValue,
-        surchargeType: roleCommissionSettingTable.surchargeType,
-        surchargeValue: roleCommissionSettingTable.surchargeValue,
-        gstApplicable: roleCommissionSettingTable.gstApplicable,
-        gstRate: roleCommissionSettingTable.gstRate,
-        maxCommissionValue: roleCommissionSettingTable.maxCommissionValue,
-        isActive: roleCommissionSettingTable.isActive,
-        createdAt: roleCommissionSettingTable.createdAt,
-
-        // role info
-        roleCode: roleTable.roleCode,
-      })
-      .from(roleCommissionSettingTable)
-      .innerJoin(roleTable, eq(roleTable.id, roleCommissionSettingTable.roleId))
-      .where(and(...roleConditions))
-      .orderBy(desc(roleCommissionSettingTable.createdAt));
-
-    let data = [];
-    let total = 0;
-
-    /* ================= TYPE USER ================= */
-    if (type === 'USER') {
-      const rows = await userQuery.limit(limit).offset(offset);
-      data = rows.map((r) => ({ ...r, type: 'USER' }));
-
-      const [{ totalCount }] = await db
-        .select({ totalCount: count() })
-        .from(userCommissionSettingTable)
-        .where(and(...userConditions));
-
-      total = Number(totalCount);
-    } else if (type === 'ROLE') {
-      /* ================= TYPE ROLE ================= */
-      const rows = await roleQuery.limit(limit).offset(offset);
-      data = rows.map((r) => ({ ...r, type: 'ROLE' }));
-
-      const [{ totalCount }] = await db
-        .select({ totalCount: count() })
-        .from(roleCommissionSettingTable)
-        .where(and(...roleConditions));
-
-      total = Number(totalCount);
-    } else {
-      /* ================= TYPE ALL ================= */
-      const [userRows, roleRows] = await Promise.all([userQuery, roleQuery]);
-
-      const users = userRows.map((r) => ({ ...r, type: 'USER' }));
-      const roles = roleRows.map((r) => ({ ...r, type: 'ROLE' }));
-
-      const combined = [...users, ...roles].sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-      );
-
-      total = combined.length;
-      data = combined.slice(offset, offset + limit);
-    }
+    const [{ total }] = await db
+      .select({ total: count() })
+      .from(commissionSettingTable)
+      .where(eq(commissionSettingTable.tenantId, tenantId));
 
     return {
-      data,
+      data: rows,
       meta: {
         page,
         limit,
@@ -285,73 +230,80 @@ class CommissionSettingService {
     roleId,
     platformServiceId,
     platformServiceFeatureId,
+    amount,
   }) {
-    console.log(
-      tenantId,
-      userId,
-      roleId,
-      platformServiceId,
-      platformServiceFeatureId,
-    );
-    try {
-      // 1️⃣ USER LEVEL CHECK
+    const now = new Date();
+
+    /* ================= BASE CONDITIONS ================= */
+
+    const baseConditions = [
+      eq(commissionSettingTable.tenantId, tenantId),
+      eq(commissionSettingTable.platformServiceId, platformServiceId),
+      eq(
+        commissionSettingTable.platformServiceFeatureId,
+        platformServiceFeatureId,
+      ),
+      eq(commissionSettingTable.isActive, true),
+      or(
+        isNull(commissionSettingTable.effectiveTo),
+        gte(commissionSettingTable.effectiveTo, now),
+      ),
+    ];
+
+    /* ================= SLAB CONDITIONS ================= */
+
+    const slabConditions =
+      typeof amount === 'number'
+        ? [
+            lte(commissionSettingTable.minAmount, amount),
+            or(
+              eq(commissionSettingTable.maxAmount, 0),
+              gte(commissionSettingTable.maxAmount, amount),
+            ),
+          ]
+        : [];
+
+    /* ================= USER LEVEL ================= */
+
+    if (userId) {
       const [userRule] = await db
         .select()
-        .from(userCommissionSettingTable)
+        .from(commissionSettingTable)
         .where(
           and(
-            eq(userCommissionSettingTable.tenantId, tenantId),
-            eq(userCommissionSettingTable.userId, userId),
-            or(
-              eq(
-                userCommissionSettingTable.platformServiceFeatureId,
-                platformServiceFeatureId,
-              ),
-              eq(
-                userCommissionSettingTable.platformServiceId,
-                platformServiceId,
-              ),
-            ),
-            eq(userCommissionSettingTable.isActive, true),
+            ...baseConditions,
+            eq(commissionSettingTable.scope, 'USER'),
+            eq(commissionSettingTable.targetUserId, userId),
+            ...slabConditions,
           ),
         )
+        .orderBy(desc(commissionSettingTable.minAmount))
         .limit(1);
-
-      console.log('User Rule:', userRule);
 
       if (userRule) return userRule;
+    }
 
-      // 2️⃣ ROLE LEVEL CHECK
+    /* ================= ROLE LEVEL ================= */
+
+    if (roleId) {
       const [roleRule] = await db
         .select()
-        .from(roleCommissionSettingTable)
+        .from(commissionSettingTable)
         .where(
           and(
-            eq(roleCommissionSettingTable.tenantId, tenantId),
-            eq(roleCommissionSettingTable.roleId, roleId),
-            or(
-              eq(
-                roleCommissionSettingTable.platformServiceFeatureId, // ✅ FIXED
-                platformServiceFeatureId,
-              ),
-              eq(
-                roleCommissionSettingTable.platformServiceId, // ✅ FIXED
-                platformServiceId,
-              ),
-            ),
-            eq(roleCommissionSettingTable.isActive, true),
+            ...baseConditions,
+            eq(commissionSettingTable.scope, 'ROLE'),
+            eq(commissionSettingTable.roleId, roleId),
+            ...slabConditions,
           ),
         )
+        .orderBy(desc(commissionSettingTable.minAmount))
         .limit(1);
 
-      console.log('Role Rule:', roleRule);
-
       if (roleRule) return roleRule;
-
-      throw ApiError.notFound('Commission rule not configured');
-    } catch (err) {
-      console.log(err);
     }
+
+    return null;
   }
 }
 

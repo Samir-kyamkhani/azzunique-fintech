@@ -3,9 +3,9 @@ import {
   varchar,
   timestamp,
   foreignKey,
-  int,
   uniqueIndex,
   index,
+  bigint,
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 
@@ -28,10 +28,7 @@ export const commissionEarningTable = mysqlTable(
     userId: varchar('user_id', { length: 36 }).notNull(),
     tenantId: varchar('tenant_id', { length: 36 }).notNull(),
     walletId: varchar('wallet_id', { length: 36 }).notNull(),
-
-    transactionId: varchar('transaction_id', {
-      length: 36,
-    }).notNull(),
+    transactionId: varchar('transaction_id', { length: 36 }).notNull(),
 
     platformServiceId: varchar('platform_service_id', {
       length: 36,
@@ -41,27 +38,27 @@ export const commissionEarningTable = mysqlTable(
       length: 36,
     }).notNull(),
 
-    commissionType: varchar('commission_type', { length: 20 }).notNull(), // FLAT | PERCENTAGE
+    mode: varchar('mode', { length: 20 }).notNull(),
+    type: varchar('type', { length: 20 }).notNull(),
 
-    commissionValue: int('commission_value').notNull(),
-    commissionAmount: int('commission_amount').notNull(),
+    value: bigint('value', { mode: 'number' }).notNull(),
 
-    surchargeType: varchar('surcharge_type', { length: 20 }).notNull(), // FLAT | PERCENTAGE
-
-    surchargeValue: int('surcharge_value').notNull(),
-    surchargeAmount: int('surcharge_amount').notNull(),
-
-    /** settlement math */
-    grossAmount: int('gross_amount').notNull(),
-    gstAmount: int('gst_amount').notNull(),
-    netAmount: int('net_amount').notNull(),
-    finalAmount: int('final_amount').notNull(),
+    baseAmount: bigint('base_amount', { mode: 'number' }).notNull(),
+    gstAmount: bigint('gst_amount', { mode: 'number' }).notNull(),
+    tdsAmount: bigint('tds_amount', { mode: 'number' }).notNull(),
+    finalAmount: bigint('final_amount', { mode: 'number' }).notNull(),
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
-
   (table) => ({
+    /* UNIQUE (Idempotency Lock) */
+    uniqCommission: uniqueIndex('uniq_commission').on(
+      table.transactionId,
+      table.userId,
+    ),
+
+    /* FOREIGN KEYS */
     ceTenantFk: foreignKey({
       name: 'ce_tenant_fk',
       columns: [table.tenantId],
@@ -98,11 +95,7 @@ export const commissionEarningTable = mysqlTable(
       foreignColumns: [platformServiceFeatureTable.id],
     }),
 
-    uniqCommissionEarning: uniqueIndex('uniq_commission_earning').on(
-      table.transactionId,
-      table.userId,
-    ),
-
+    /* INDEXES */
     idxCommissionTenant: index('idx_commission_tenant').on(table.tenantId),
 
     idxCommissionUser: index('idx_commission_user').on(table.userId),
