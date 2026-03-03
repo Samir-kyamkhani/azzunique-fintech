@@ -8,6 +8,13 @@
       "when": 1772449096051,
       "tag": "0000_white_lorna_dane",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1772523145347,
+      "tag": "0001_lame_fenris",
+      "breakpoints": true
     }
   ]
 }

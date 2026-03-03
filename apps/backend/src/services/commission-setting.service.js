@@ -4,7 +4,7 @@ import {
   roleTable,
   usersTable,
 } from '../models/core/index.js';
-import { and, eq, desc, count, or, isNull, lte, gte } from 'drizzle-orm';
+import { and, eq, desc, count, or } from 'drizzle-orm';
 import crypto from 'crypto';
 import { ApiError } from '../lib/ApiError.js';
 import { canSetCommission } from '../guard/commission.guard.js';
@@ -99,8 +99,6 @@ class CommissionSettingService {
         applyGST: payload.applyGST ?? false,
         gstPercent: payload.gstPercent ?? null,
 
-        effectiveTo: payload.effectiveTo ?? null,
-
         createdAt: new Date(),
         updatedAt: new Date(),
       })
@@ -114,7 +112,6 @@ class CommissionSettingService {
           tdsPercent: payload.tdsPercent ?? null,
           applyGST: payload.applyGST ?? false,
           gstPercent: payload.gstPercent ?? null,
-          effectiveTo: payload.effectiveTo ?? null,
           updatedAt: new Date(),
         },
       });
@@ -176,10 +173,6 @@ class CommissionSettingService {
         platformServiceFeatureId,
       ),
       eq(commissionSettingTable.isActive, true),
-      or(
-        isNull(commissionSettingTable.effectiveTo),
-        gte(commissionSettingTable.effectiveTo, now),
-      ),
     ];
 
     /* ================= SLAB CONDITIONS ================= */

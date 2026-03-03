@@ -59,7 +59,6 @@ export const commissionSettingTable = mysqlTable(
     gstPercent: decimal('gst_percent', { precision: 5, scale: 2 }),
 
     isActive: boolean('is_active').default(true).notNull(),
-    effectiveTo: timestamp('effective_to'),
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
