@@ -45,7 +45,7 @@ export async function seedUsers(tenantId) {
     email,
     emailVerifiedAt: new Date(),
     mobileNumber: '9999999999',
-    passwordHash: encrypt('admin@123'),
+    passwordHash: encrypt('Admin@123'),
     transactionPinHash: null,
 
     userStatus: 'ACTIVE',
