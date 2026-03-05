@@ -1,13 +1,14 @@
 CREATE TABLE `recharge_operator_map` (
 	`id` varchar(36) NOT NULL,
 	`platform_service_id` varchar(36) NOT NULL,
+	`platform_service_feature_id` varchar(36) NOT NULL,
 	`service_provider_id` varchar(36) NOT NULL,
 	`internal_operator_code` varchar(20) NOT NULL,
 	`provider_operator_code` varchar(20) NOT NULL,
 	`created_at` timestamp DEFAULT (now()),
 	`updated_at` timestamp DEFAULT (now()),
 	CONSTRAINT `recharge_operator_map_id` PRIMARY KEY(`id`),
-	CONSTRAINT `uq_rom_int_ps_prov` UNIQUE(`internal_operator_code`,`platform_service_id`,`service_provider_id`)
+	CONSTRAINT `uq_rom_int_ps_feat_prov` UNIQUE(`internal_operator_code`,`platform_service_id`,`platform_service_feature_id`,`service_provider_id`)
 );
 --> statement-breakpoint
 CREATE TABLE `recharge_transactions` (
@@ -15,8 +16,7 @@ CREATE TABLE `recharge_transactions` (
 	`tenant_id` varchar(36) NOT NULL,
 	`user_id` varchar(36) NOT NULL,
 	`mobile_number` varchar(15) NOT NULL,
-	`operator_code` varchar(10) NOT NULL,
-	`circle_code` varchar(10),
+	`operator_code` varchar(20) NOT NULL,
 	`idempotency_key` varchar(64) NOT NULL,
 	`amount` int NOT NULL,
 	`blocked_amount` int NOT NULL,

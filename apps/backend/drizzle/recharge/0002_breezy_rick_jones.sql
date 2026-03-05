@@ -1,1 +1,0 @@
-ALTER TABLE `recharge_transactions` DROP COLUMN `circle_code`;

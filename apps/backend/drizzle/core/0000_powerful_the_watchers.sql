@@ -551,7 +551,6 @@ CREATE TABLE `commission_settings` (
 	`apply_gst` boolean NOT NULL DEFAULT false,
 	`gst_percent` decimal(5,2),
 	`is_active` boolean NOT NULL DEFAULT true,
-	`effective_to` timestamp,
 	`created_at` timestamp NOT NULL DEFAULT (now()),
 	`updated_at` timestamp NOT NULL DEFAULT (now()),
 	CONSTRAINT `commission_settings_id` PRIMARY KEY(`id`),

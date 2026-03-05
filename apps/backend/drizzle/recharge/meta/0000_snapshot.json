@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "fd72a540-c6aa-4d8d-9b0f-ff055c83f8dd",
+  "id": "0520429a-64b1-4880-9c9b-fa7230fd3622",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "recharge_operator_map": {
@@ -16,6 +16,13 @@
         },
         "platform_service_id": {
           "name": "platform_service_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "platform_service_feature_id": {
+          "name": "platform_service_feature_id",
           "type": "varchar(36)",
           "primaryKey": false,
           "notNull": true,
@@ -70,11 +77,12 @@
         }
       },
       "uniqueConstraints": {
-        "uq_rom_int_ps_prov": {
-          "name": "uq_rom_int_ps_prov",
+        "uq_rom_int_ps_feat_prov": {
+          "name": "uq_rom_int_ps_feat_prov",
           "columns": [
             "internal_operator_code",
             "platform_service_id",
+            "platform_service_feature_id",
             "service_provider_id"
           ]
         }
@@ -114,16 +122,9 @@
         },
         "operator_code": {
           "name": "operator_code",
-          "type": "varchar(10)",
+          "type": "varchar(20)",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
-        },
-        "circle_code": {
-          "name": "circle_code",
-          "type": "varchar(10)",
-          "primaryKey": false,
-          "notNull": false,
           "autoincrement": false
         },
         "idempotency_key": {

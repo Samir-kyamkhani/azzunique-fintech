@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "f8a195a1-41b0-49d7-b6f3-583cf55be3c1",
+  "id": "ef1d4058-4319-43df-9a30-96a646dd6d35",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "audit_log": {
@@ -4828,13 +4828,6 @@
           "notNull": true,
           "autoincrement": false,
           "default": true
-        },
-        "effective_to": {
-          "name": "effective_to",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
         },
         "created_at": {
           "name": "created_at",

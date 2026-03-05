@@ -1,1 +1,0 @@
-ALTER TABLE `recharge_transactions` MODIFY COLUMN `operator_code` varchar(20) NOT NULL;

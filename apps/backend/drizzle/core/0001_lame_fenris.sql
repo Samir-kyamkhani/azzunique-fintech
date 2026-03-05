@@ -1,1 +1,0 @@
-ALTER TABLE `commission_settings` DROP COLUMN `effective_to`;
