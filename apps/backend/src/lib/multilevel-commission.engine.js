@@ -1,6 +1,6 @@
 import { db } from '../database/core/core-db.js';
 import { usersTable } from '../models/core/index.js';
-import { eq, and, isNull } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import CommissionEngine from './commission.engine.js';
 
 class MultiLevelCommission {
@@ -9,25 +9,22 @@ class MultiLevelCommission {
     let depth = 1;
 
     while (current.ownerUserId && depth <= maxDepth) {
-      // 🛑 Self-cycle protection
+      // 🛑 Self-cycle protection (user → user)
       if (current.ownerUserId === current.id) break;
 
       const [parent] = await db
         .select()
         .from(usersTable)
-        .where(
-          and(
-            eq(usersTable.id, current.ownerUserId),
-            isNull(usersTable.deletedAt), // ❌ deleted users skip
-            eq(usersTable.userStatus, 'ACTIVE'), // ❌ inactive users skip
-          ),
-        )
+        .where(eq(usersTable.id, current.ownerUserId))
         .limit(1);
 
       if (!parent) break;
 
-      // 💰 Credit commission (rule-based, safe)
-      await CommissionEngine.calculateAndCredit({
+      // 🛑 Circular hierarchy protection (A → B → A)
+      if (parent.id === user.id) break;
+
+      // 💰 Credit commission
+      await CommissionEngine.process({
         user: parent,
         transaction,
       });

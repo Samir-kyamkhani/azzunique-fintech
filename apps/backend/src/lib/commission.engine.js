@@ -1,128 +1,163 @@
 import { db } from '../database/core/core-db.js';
-import { commissionEarningTable, walletTable } from '../models/core/index.js';
-import { eq, and } from 'drizzle-orm';
-import WalletService from '../services/wallet.service.js';
+import { commissionEarningTable } from '../models/core/index.js';
 import crypto from 'crypto';
+import WalletService from '../services/wallet.service.js';
 import CommissionSettingService from '../services/commission-setting.service.js';
 
 class CommissionEngine {
-  static async calculateAndCredit({ transaction, user }) {
+  /* ================= RULE ================= */
+  static async resolveRule({ transaction, user }) {
+    return CommissionSettingService.resolveForUser({
+      tenantId: transaction.tenantId,
+      userId: user.id,
+      roleId: user.roleId,
+      platformServiceId: transaction.platformServiceId,
+      platformServiceFeatureId: transaction.platformServiceFeatureId,
+      amount: transaction.amount,
+    });
+  }
+
+  /* ================= COMMISSION ================= */
+  static calculateCommission(rule, amount) {
+    if (rule.mode !== 'COMMISSION') return 0;
+
+    if (rule.type === 'FLAT') return rule.value;
+
+    return Math.floor((amount * rule.value) / 100);
+  }
+
+  /* ================= SURCHARGE ================= */
+  static calculateSurcharge(rule, amount) {
+    if (rule.mode !== 'SURCHARGE') return 0;
+
+    if (rule.type === 'FLAT') return rule.value;
+
+    return Math.floor((amount * rule.value) / 100);
+  }
+
+  /* ================= TAX ================= */
+  static calculateTaxes(rule, { commissionAmount, surchargeAmount }) {
+    let gstAmount = 0;
+    let tdsAmount = 0;
+
+    if (rule.applyGST && surchargeAmount > 0) {
+      gstAmount = Math.floor((surchargeAmount * rule.gstPercent) / 100);
+    }
+
+    if (rule.applyTDS && commissionAmount > 0) {
+      tdsAmount = Math.floor((commissionAmount * rule.tdsPercent) / 100);
+    }
+
+    return { gstAmount, tdsAmount };
+  }
+
+  /* ================= WALLET FETCH ================= */
+  static async getUserWallet(user) {
+    const wallets = await WalletService.getUserWallets(user.id, user.tenantId);
+
+    return wallets.find((w) => w.walletType === 'COMMISSION');
+  }
+
+  /* ================= CREDIT COMMISSION ================= */
+  static async creditCommission({ wallet, user, transaction, amounts, rule }) {
     const {
-      id: transactionId,
-      tenantId,
-      platformServiceId,
-      platformServiceFeatureId,
-      amount, // paise
-    } = transaction;
+      commissionAmount,
+      surchargeAmount,
+      gstAmount,
+      tdsAmount,
+      finalAmount,
+    } = amounts;
 
-    await db.transaction(async () => {
-      // ✅ RULE RESOLUTION (SINGLE SOURCE OF TRUTH)
-      const rule = await CommissionSettingService.resolveForUser({
-        tenantId,
+    const baseAmount =
+      rule.mode === 'COMMISSION' ? commissionAmount : surchargeAmount;
+
+    try {
+      await db.insert(commissionEarningTable).values({
+        id: crypto.randomUUID(),
+
         userId: user.id,
-        roleId: user.roleId,
-        platformServiceFeatureId,
+        tenantId: transaction.tenantId,
+        walletId: wallet.id,
+        transactionId: transaction.id,
+
+        platformServiceId: transaction.platformServiceId,
+        platformServiceFeatureId: transaction.platformServiceFeatureId,
+
+        mode: rule.mode,
+        type: rule.type,
+        value: rule.value,
+
+        baseAmount,
+        gstAmount,
+        tdsAmount,
+        finalAmount,
+
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
-
-      if (!rule) return;
-
-      // ---- calculation SAME AS YOUR CODE ---- out of 100
-      const commissionAmount =
-        rule.commissionType === 'FLAT'
-          ? rule.commissionValue
-          : Math.floor((amount * rule.commissionValue) / 100);
-
-      const surchargeAmount =
-        rule.surchargeType === 'FLAT'
-          ? rule.surchargeValue
-          : Math.floor((amount * rule.surchargeValue) / 100);
-
-      let grossAmount = commissionAmount - surchargeAmount;
-      if (grossAmount < 0) grossAmount = 0;
-
-      // 3️⃣ GST
-      let gstAmount = 0;
-      if (rule.gstApplicable) {
-        const gstBase =
-          rule.gstOn === 'COMMISSION'
-            ? commissionAmount
-            : rule.gstOn === 'SURCHARGE'
-              ? surchargeAmount
-              : commissionAmount + surchargeAmount;
-
-        gstAmount = Math.floor((gstBase * rule.gstRate) / 100);
+    } catch (err) {
+      if (err?.code === 'ER_DUP_ENTRY') {
+        return;
       }
 
-      const netAmount = grossAmount - gstAmount;
-      if (netAmount <= 0) return;
+      throw err;
+    }
 
-      // ✅ APPLY MAX COMMISSION CAP (CRITICAL FIX)
-      let finalAmount = netAmount;
+    await WalletService.creditWallet({
+      walletId: wallet.id,
+      amount: finalAmount,
+      transactionId: transaction.id,
+      reference: `COMMISSION:${transaction.id}:${user.id}`,
+    });
+  }
 
-      if (
-        rule.maxCommissionValue > 0 &&
-        finalAmount > rule.maxCommissionValue
-      ) {
-        finalAmount = rule.maxCommissionValue;
-      }
+  /* ================= MAIN PROCESS ================= */
+  static async process({ transaction, user }) {
+    const rule = await this.resolveRule({ transaction, user });
 
-      // 4️⃣ Commission wallet (tenant-safe)
-      const [commissionWallet] = await db
-        .select()
-        .from(walletTable)
-        .where(
-          and(
-            eq(walletTable.ownerId, user.id),
-            eq(walletTable.ownerType, 'USER'),
-            eq(walletTable.walletType, 'COMMISSION'),
-            eq(walletTable.tenantId, tenantId),
-          ),
-        )
-        .limit(1);
+    if (!rule) return;
 
-      if (!commissionWallet) return;
+    const amount = transaction.amount;
 
-      // 🔐 STEP 1: INSERT COMMISSION (IDEMPOTENCY LOCK)
-      try {
-        await db.insert(commissionEarningTable).values({
-          id: crypto.randomUUID(),
-          userId: user.id,
-          tenantId,
-          walletId: commissionWallet.id,
-          transactionId,
-          platformServiceId,
-          platformServiceFeatureId,
+    /* ================= CALCULATION ================= */
 
-          commissionType: rule.commissionType,
-          commissionValue: rule.commissionValue,
-          commissionAmount,
+    const commissionAmount = this.calculateCommission(rule, amount);
 
-          surchargeType: rule.surchargeType,
-          surchargeValue: rule.surchargeValue,
-          surchargeAmount,
+    const surchargeAmount = this.calculateSurcharge(rule, amount);
 
-          grossAmount,
-          gstAmount,
-          netAmount,
-          finalAmount,
+    let grossAmount = commissionAmount - surchargeAmount;
 
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-      } catch (err) {
-        // ✅ DUPLICATE = already processed
-        if (err?.code === 'ER_DUP_ENTRY') {
-          return;
-        }
-        throw err;
-      }
+    if (grossAmount < 0) grossAmount = 0;
 
-      // 💰 STEP 2: CREDIT WALLET (SAFE NOW)
-      await WalletService.creditWallet({
-        walletId: commissionWallet.id,
-        amount: finalAmount,
-        reference: `COMMISSION:${transactionId}:${user.id}`,
-      });
+    const { gstAmount, tdsAmount } = this.calculateTaxes(rule, {
+      commissionAmount,
+      surchargeAmount,
+    });
+
+    const finalAmount = grossAmount - gstAmount - tdsAmount;
+
+    if (finalAmount <= 0) return;
+
+    /* ================= WALLET ================= */
+
+    const wallet = await this.getUserWallet(user);
+
+    if (!wallet) return;
+
+    /* ================= CREDIT ================= */
+
+    await this.creditCommission({
+      wallet,
+      user,
+      transaction,
+      rule,
+      amounts: {
+        commissionAmount,
+        surchargeAmount,
+        gstAmount,
+        tdsAmount,
+        finalAmount,
+      },
     });
   }
 }
