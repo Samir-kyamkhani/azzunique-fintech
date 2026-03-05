@@ -55,7 +55,7 @@ export const PermissionsRegistry = {
 
   COMMISSION: {
     READ: 'COMMISSION.READ',
-    SET_RULE: 'COMMISSION.SETE_RULE',
+    SET_RULE: 'COMMISSION.SET_RULE',
   },
 
   SERVER: {

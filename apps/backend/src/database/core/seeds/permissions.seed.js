@@ -8,17 +8,17 @@ function extractPermissions(obj) {
   for (const key in obj) {
     const value = obj[key];
 
-    if (typeof value === 'object' && value !== null) {
-      permissions = permissions.concat(extractPermissions(value));
-    } else {
+    if (typeof value === 'string') {
       const parts = value.split('.');
-      const resource = parts[parts.length - 2];
-      const action = parts[parts.length - 1];
+      const action = parts.pop(); // last segment
+      const resource = parts.join('.'); // everything before action
 
       permissions.push({
         resource,
         action,
       });
+    } else if (typeof value === 'object' && value !== null) {
+      permissions = permissions.concat(extractPermissions(value));
     }
   }
 
