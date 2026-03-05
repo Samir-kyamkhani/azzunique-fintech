@@ -1,40 +1,52 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/apiClient";
 
-export const useSetUserCommission = () =>
-  useMutation({
-    mutationFn: async (payload) =>
-      apiClient("/commission/user", {
+export const useSetCommission = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload) => {
+      return apiClient("/commission", {
         method: "POST",
         body: JSON.stringify(payload),
-      }),
-  });
+      });
+    },
 
-export const useSetRoleCommission = () =>
-  useMutation({
-    mutationFn: async (payload) =>
-      apiClient("/commission/role", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      }),
+    onSuccess: () => {
+      // refresh commission list after create/update
+      queryClient.invalidateQueries({
+        queryKey: ["commission-list"],
+      });
+    },
   });
+};
 
-export const useCommissionList = ({
-  type,
-  page = 1,
-  limit = 10,
-  search = "",
-  isActive,
-}) =>
-  useQuery({
-    queryKey: ["commission-list", type, page, limit, search, isActive],
-    queryFn: () =>
-      apiClient(
-        `/commission?type=${type || "ALL"}&page=${page}&limit=${limit}&search=${search}${
-          isActive !== undefined ? `&isActive=${isActive}` : ""
-        }`,
-      ),
+export const useCommissionList = (params = {}) => {
+  const { page = 1, limit = 10, scope, isActive } = params;
+
+  const searchParams = new URLSearchParams();
+
+  searchParams.append("page", page);
+  searchParams.append("limit", limit);
+
+  if (scope) {
+    searchParams.append("scope", scope);
+  }
+
+  if (isActive !== undefined) {
+    searchParams.append("isActive", String(isActive));
+  }
+
+  return useQuery({
+    queryKey: ["commission-list", page, limit, scope, isActive],
+
+    queryFn: async () => {
+      return apiClient(`/commission?${searchParams.toString()}`);
+    },
+
     retry: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    keepPreviousData: true,
   });
+};

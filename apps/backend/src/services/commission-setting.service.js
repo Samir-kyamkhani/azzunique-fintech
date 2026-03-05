@@ -1,6 +1,8 @@
 import { db } from '../database/core/core-db.js';
 import {
   commissionSettingTable,
+  platformServiceFeatureTable,
+  platformServiceTable,
   roleTable,
   usersTable,
 } from '../models/core/index.js';
@@ -125,13 +127,64 @@ class CommissionSettingService {
 
     const page = Number(query.page) || 1;
     const limit = Math.min(Number(query.limit) || 10, 100);
-
     const offset = (page - 1) * limit;
 
     const rows = await db
-      .select()
+      .select({
+        id: commissionSettingTable.id,
+        tenantId: commissionSettingTable.tenantId,
+        scope: commissionSettingTable.scope,
+        roleId: commissionSettingTable.roleId,
+        targetUserId: commissionSettingTable.targetUserId,
+
+        platformServiceId: commissionSettingTable.platformServiceId,
+        platformServiceFeatureId:
+          commissionSettingTable.platformServiceFeatureId,
+
+        mode: commissionSettingTable.mode,
+        type: commissionSettingTable.type,
+        value: commissionSettingTable.value,
+
+        minAmount: commissionSettingTable.minAmount,
+        maxAmount: commissionSettingTable.maxAmount,
+
+        applyTDS: commissionSettingTable.applyTDS,
+        tdsPercent: commissionSettingTable.tdsPercent,
+
+        applyGST: commissionSettingTable.applyGST,
+        gstPercent: commissionSettingTable.gstPercent,
+
+        isActive: commissionSettingTable.isActive,
+
+        createdAt: commissionSettingTable.createdAt,
+        updatedAt: commissionSettingTable.updatedAt,
+
+        // 🔥 extra fields
+        roleName: roleTable.roleName,
+        roleCode: roleTable.roleCode,
+
+        platformServiceName: platformServiceTable.name,
+        platformServiceFeatureName: platformServiceFeatureTable.name,
+      })
       .from(commissionSettingTable)
+
+      .leftJoin(roleTable, eq(commissionSettingTable.roleId, roleTable.id))
+
+      .leftJoin(
+        platformServiceTable,
+        eq(commissionSettingTable.platformServiceId, platformServiceTable.id),
+      )
+
+      .leftJoin(
+        platformServiceFeatureTable,
+        eq(
+          commissionSettingTable.platformServiceFeatureId,
+          platformServiceFeatureTable.id,
+        ),
+      )
+
       .where(eq(commissionSettingTable.tenantId, tenantId))
+
       .orderBy(desc(commissionSettingTable.createdAt))
       .limit(limit)
       .offset(offset);
@@ -151,7 +204,6 @@ class CommissionSettingService {
       },
     };
   }
-
   // RESOLVE COMMISSION (USER → ROLE)
   static async resolveForUser({
     tenantId,

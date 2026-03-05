@@ -7,15 +7,15 @@ import TableBody from "./core/TableBody";
 import TablePagination from "./core/TablePagination";
 
 const columns = [
-  { key: "type", label: "Type" },
+  { key: "scope", label: "Scope" },
   { key: "name", label: "User / Role" },
-  { key: "tenantNumber", label: "Tenant Number" },
-  { key: "userNumber", label: "User Number" },
-  { key: "tenantName", label: "Tenant" },
-  { key: "commission", label: "Commission" },
-  { key: "surcharge", label: "Surcharge" },
-  { key: "gst", label: "GST" },
-  { key: "maxCommissionValue", label: "Max Cap" },
+  { key: "service", label: "Service" },
+  { key: "feature", label: "Feature" },
+  { key: "mode", label: "Mode" },
+  { key: "calculation", label: "Calculation" },
+  { key: "range", label: "Amount Range" },
+  { key: "tax", label: "Tax" },
+  { key: "value", label: "Value" },
   { key: "isActive", label: "Status" },
   { key: "createdAt", label: "Created At" },
   { key: "actions", label: "Actions" },
@@ -24,23 +24,37 @@ const columns = [
 const formatRows = (rows = []) =>
   rows.map((r) => ({
     ...r,
+
+    scope: r.scope,
+
     name:
-      r.type === "USER"
+      r.scope === "USER"
         ? `${r.firstName || ""} ${r.lastName || ""}`
-        : r.roleCode || "-",
-    tenantNumber: r.tenantNumber || "-",
-    userNumber: r.userNumber || "-",
-    commission:
-      r.commissionType === "PERCENTAGE"
-        ? `${r.commissionValue}%`
-        : `₹${r.commissionValue}`,
-    surcharge:
-      r.surchargeType === "PERCENTAGE"
-        ? `${r.surchargeValue}%`
-        : `₹${r.surchargeValue}`,
-    gst: r.gstApplicable ? `${r.gstRate}%` : "No GST",
-    maxCommissionValue: r.maxCommissionValue ? `₹${r.maxCommissionValue}` : "-",
+        : r.roleCode || "ROLE",
+
+    service: r.platformServiceName || "-",
+
+    feature: r.platformServiceFeatureName || "-",
+
+    mode: r.mode,
+
+    calculation: r.type === "PERCENTAGE" ? `${r.value}%` : `₹${r.value}`,
+
+    range: `₹${r.minAmount} - ₹${r.maxAmount}`,
+
+    tax:
+      r.mode === "COMMISSION"
+        ? r.applyTDS
+          ? `TDS ${r.tdsPercent}%`
+          : "No TDS"
+        : r.applyGST
+          ? `GST ${r.gstPercent}%`
+          : "No GST",
+
+    value: r.type === "PERCENTAGE" ? `${r.value}%` : `₹${r.value}`,
+
     isActive: r.isActive ? "ACTIVE" : "INACTIVE",
+
     createdAt: new Date(r.createdAt).toLocaleDateString(),
   }));
 

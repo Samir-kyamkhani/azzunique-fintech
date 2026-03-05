@@ -17,34 +17,38 @@ const baseCommissionSchema = {
 
   applyGST: z.boolean().default(false),
   gstPercent: z.number().min(0).max(100).optional(),
-
-  effectiveTo: z.date().optional(),
 };
 
 export const createCommissionSchema = z
   .object({
     scope: z.enum(['USER', 'ROLE']),
 
-    targetUserId: z.string().uuid().optional(),
-    roleId: z.string().uuid().optional(),
+    targetUserId: z.string().uuid().nullable().optional(),
+    roleId: z.string().uuid().nullable().optional(),
 
     ...baseCommissionSchema,
   })
   .superRefine((data, ctx) => {
-    if (data.scope === 'USER' && !data.targetUserId) {
-      ctx.addIssue({
-        path: ['targetUserId'],
-        code: 'custom',
-        message: 'targetUserId is required when scope is USER',
-      });
+    if (data.scope === 'USER') {
+      if (!data.targetUserId) {
+        ctx.addIssue({
+          path: ['targetUserId'],
+          code: 'custom',
+          message: 'targetUserId is required when scope is USER',
+        });
+      }
+      data.roleId = null;
     }
 
-    if (data.scope === 'ROLE' && !data.roleId) {
-      ctx.addIssue({
-        path: ['roleId'],
-        code: 'custom',
-        message: 'roleId is required when scope is ROLE',
-      });
+    if (data.scope === 'ROLE') {
+      if (!data.roleId) {
+        ctx.addIssue({
+          path: ['roleId'],
+          code: 'custom',
+          message: 'roleId is required when scope is ROLE',
+        });
+      }
+      data.targetUserId = null;
     }
   });
 

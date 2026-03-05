@@ -17,9 +17,10 @@ export default function CommissionModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-card w-full max-w-3xl rounded-lg border border-border shadow-lg overflow-hidden">
-        <div className="relative bg-gradient-theme px-6 py-6 border-b border-border">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+      <div className="bg-card w-full max-w-3xl rounded-xl border border-border shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="relative bg-gradient-theme px-6 py-6 border-b border-border shrink-0">
           <div className="absolute right-4 top-4">
             <Button variant="ghost" size="icon" onClick={onClose}>
               ✕
@@ -36,12 +37,13 @@ export default function CommissionModal({
             </h2>
 
             <p className="mt-1 text-sm text-primary-foreground/80">
-              Configure commission, surcharge and tax behavior
+              Configure commission, surcharge and taxation behaviour
             </p>
           </div>
         </div>
 
-        <div className="p-6">
+        {/* Scrollable Body */}
+        <div className="p-6 overflow-y-auto">
           <CommissionForm
             onSubmit={onSubmit}
             isPending={isPending}
