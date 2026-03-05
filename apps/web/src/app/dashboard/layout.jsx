@@ -29,8 +29,8 @@ export default function DashboardLayout({ children }) {
 
   // ✅ CLIENT SIDE REDIRECT
   useEffect(() => {
-    if (complianceState === "KYC" && pathname !== "/dashboard/kyc") {
-      router.replace("/dashboard/kyc");
+    if (complianceState === "KYC" && pathname !== "/dashboard/kyc-request") {
+      router.replace("/dashboard/kyc-request");
     }
   }, [complianceState, pathname, router]);
 
