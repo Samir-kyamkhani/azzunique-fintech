@@ -18,6 +18,8 @@ import {
 } from '../../config/constant.js';
 import { buildTenantChain } from '../../lib/tenantHierarchy.util.js';
 import { assertRoleAllowed } from '../../guard/role.guard.js';
+import MultiLevelCommission from '../../lib/multilevel-commission.engine.js';
+import CommissionEngine from '../../lib/commission.engine.js';
 
 class RechargeTransactionService {
   // MAIN ENTRY
@@ -275,8 +277,8 @@ class RechargeTransactionService {
           });
         }
 
-        // 3️⃣ Commission
-        await CommissionEngine.calculateAndCredit({
+        // 3️⃣ Commission (direct user)
+        await CommissionEngine.process({
           transaction: {
             id: lockedTxn.id,
             tenantId: lockedTxn.tenantId,
@@ -293,7 +295,13 @@ class RechargeTransactionService {
 
         // 4️⃣ Multi Level Commission
         await MultiLevelCommission.process({
-          transaction: lockedTxn,
+          transaction: {
+            id: lockedTxn.id,
+            tenantId: lockedTxn.tenantId,
+            platformServiceId: lockedTxn.platformServiceId,
+            platformServiceFeatureId: lockedTxn.platformServiceFeatureId,
+            amount: lockedTxn.amount,
+          },
           user: {
             id: lockedTxn.userId,
             tenantId: lockedTxn.tenantId,
