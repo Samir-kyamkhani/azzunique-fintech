@@ -103,6 +103,9 @@ export default function PlatformServiceDetailsClient({ id }) {
   const canDeleteFeature = can(PERMISSIONS.PLATFORM.SERVICE_FEATURES.DELETE);
   const canCreateFeature = can(PERMISSIONS.PLATFORM.SERVICE_FEATURES.CREATE);
   const canManageProviders = can(PERMISSIONS.PLATFORM.SERVICE_PROVIDERS.CREATE);
+  const canReadProviders = can(
+    PERMISSIONS.PLATFORM.SERVICES.READ_ASSIGN_PROVIDER,
+  );
 
   useEffect(() => {
     if (!serviceLoading && !service) {
@@ -368,89 +371,91 @@ export default function PlatformServiceDetailsClient({ id }) {
             )}
           </InfoCard>
 
-          <InfoCard icon={Settings} title="Service Providers">
-            {canManageProviders && (
-              <div className="mb-4 flex justify-end">
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    setEditingProvider(null);
-                    setProviderModalOpen(true);
-                  }}
-                >
-                  Assign Provider
-                </Button>
-              </div>
-            )}
-
-            {providersLoading ? (
-              <div>Loading...</div>
-            ) : providers.length === 0 ? (
-              <div className="text-sm text-muted-foreground">
-                No providers assigned
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {providers.map((p) => (
-                  <div
-                    key={p.id}
-                    className="flex flex-col lg:flex-row lg:items-start justify-between gap-4 border rounded-lg px-4 py-4"
+          {canReadProviders && (
+            <InfoCard icon={Settings} title="Service Providers">
+              {canManageProviders && (
+                <div className="mb-4 flex justify-end">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setEditingProvider(null);
+                      setProviderModalOpen(true);
+                    }}
                   >
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium">{p.providerName}</div>
+                    Assign Provider
+                  </Button>
+                </div>
+              )}
 
-                      <div className="text-xs text-muted-foreground">
-                        Code: {p.code}
-                      </div>
+              {providersLoading ? (
+                <div>Loading...</div>
+              ) : providers.length === 0 ? (
+                <div className="text-sm text-muted-foreground">
+                  No providers assigned
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {providers.map((p) => (
+                    <div
+                      key={p.id}
+                      className="flex flex-col lg:flex-row lg:items-start justify-between gap-4 border rounded-lg px-4 py-4"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium">{p.providerName}</div>
 
-                      <div className="text-xs text-muted-foreground">
-                        Handler: {p.handler}
-                      </div>
-
-                      {p.config && (
-                        <div className="text-xs text-muted-foreground mt-1 break-all whitespace-pre-wrap">
-                          Config: {JSON.stringify(p.config, null, 2)}
+                        <div className="text-xs text-muted-foreground">
+                          Code: {p.code}
                         </div>
-                      )}
+
+                        <div className="text-xs text-muted-foreground">
+                          Handler: {p.handler}
+                        </div>
+
+                        {p.config && (
+                          <div className="text-xs text-muted-foreground mt-1 break-all whitespace-pre-wrap">
+                            Config: {JSON.stringify(p.config, null, 2)}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2 items-center">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => {
+                            setSelectedProviderId(p.id);
+                            setMapModalOpen(true);
+                          }}
+                        >
+                          Manage Features
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setEditingProvider(p);
+                            setProviderModalOpen(true);
+                          }}
+                        >
+                          Edit Config
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleUnassignProvider(p)}
+                        >
+                          Unassign
+                        </Button>
+                      </div>
                     </div>
-
-                    <div className="flex gap-2 items-center">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => {
-                          setSelectedProviderId(p.id);
-                          setMapModalOpen(true);
-                        }}
-                      >
-                        Manage Features
-                      </Button>
-
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setEditingProvider(p);
-                          setProviderModalOpen(true);
-                        }}
-                      >
-                        Edit Config
-                      </Button>
-
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleUnassignProvider(p)}
-                      >
-                        Unassign
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </InfoCard>
-
+                  ))}
+                </div>
+              )}
+            </InfoCard>
+          )}
+          
           {/* SYSTEM INFO */}
           <InfoCard icon={Key} title="System Information">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -156,7 +156,9 @@ router.post(
 
 router.get(
   '/:serviceId/providers',
-  PermissionMiddleware(PermissionsRegistry.PLATFORM.SERVICE_PROVIDERS.READ),
+  PermissionMiddleware(
+    PermissionsRegistry.PLATFORM.SERVICES.READ_ASSIGN_PROVIDER,
+  ),
   validate({ params: serviceIdParamSchema }),
   Admin.listProviders,
 );
