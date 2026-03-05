@@ -14,7 +14,7 @@ export function canSetCommission({ actorRoleLevel, targetRoleLevel }) {
 
   // White Label → State Head, MD, Distributor, Retailer
   if (actorRoleLevel === 2) {
-    return targetRoleLevel >= 3;
+    return [3, 4, 5, 6].includes(targetRoleLevel);
   }
 
   return false;

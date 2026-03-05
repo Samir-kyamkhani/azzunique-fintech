@@ -6,10 +6,11 @@ import {
   roleTable,
   usersTable,
 } from '../models/core/index.js';
-import { and, eq, desc, count, or } from 'drizzle-orm';
+import { and, eq, desc, count, or, lte, gte } from 'drizzle-orm';
 import crypto from 'crypto';
 import { ApiError } from '../lib/ApiError.js';
 import { canSetCommission } from '../guard/commission.guard.js';
+import { resolveCommissionAuthorityTenant } from '../guard/commission-authority.guard.js';
 
 class CommissionSettingService {
   //  SET COMMISSION
@@ -213,12 +214,12 @@ class CommissionSettingService {
     platformServiceFeatureId,
     amount,
   }) {
-    const now = new Date();
+    const authorityTenantId = await resolveCommissionAuthorityTenant(tenantId);
 
-    /* ================= BASE CONDITIONS ================= */
+    if (!authorityTenantId) return null;
 
     const baseConditions = [
-      eq(commissionSettingTable.tenantId, tenantId),
+      eq(commissionSettingTable.tenantId, authorityTenantId),
       eq(commissionSettingTable.platformServiceId, platformServiceId),
       eq(
         commissionSettingTable.platformServiceFeatureId,
@@ -226,8 +227,6 @@ class CommissionSettingService {
       ),
       eq(commissionSettingTable.isActive, true),
     ];
-
-    /* ================= SLAB CONDITIONS ================= */
 
     const slabConditions =
       typeof amount === 'number'
@@ -240,7 +239,7 @@ class CommissionSettingService {
           ]
         : [];
 
-    /* ================= USER LEVEL ================= */
+    /* USER RULE */
 
     if (userId) {
       const [userRule] = await db
@@ -260,7 +259,7 @@ class CommissionSettingService {
       if (userRule) return userRule;
     }
 
-    /* ================= ROLE LEVEL ================= */
+    /* ROLE RULE */
 
     if (roleId) {
       const [roleRule] = await db
