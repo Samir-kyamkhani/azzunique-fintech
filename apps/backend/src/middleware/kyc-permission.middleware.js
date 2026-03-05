@@ -13,10 +13,10 @@ export const KycPermissionResolver = (action) => {
         permission =
           action === 'SEND'
             ? [
-                PermissionsRegistry.SERVICES.AADHAAR.API_CREATE,
-                PermissionsRegistry.SERVICES.AADHAAR.MANUAL_CREATE,
+                PermissionsRegistry.AADHAAR_SERVICE_PAGES.API_CREATE,
+                PermissionsRegistry.AADHAAR_SERVICE_PAGES.MANUAL_CREATE,
               ]
-            : PermissionsRegistry.SERVICES.AADHAAR.VERIFY;
+            : PermissionsRegistry.AADHAAR_SERVICE_PAGES.VERIFY;
         break;
 
     //   case 'pan':

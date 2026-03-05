@@ -16,14 +16,14 @@ router.use(AuthMiddleware);
 // List All Services (Hierarchy based)
 router.get(
   '/services/all',
-  PermissionMiddleware(PermissionsRegistry.PLATFORM.SERVICE_TENANTS.READ),
+  PermissionMiddleware(PermissionsRegistry.PLATFORM_SERVICE_TENANTS.READ),
   TS.listAllTenantServices,
 );
 
 // Enable Service
 router.put(
   '/services',
-  PermissionMiddleware(PermissionsRegistry.PLATFORM.SERVICE_TENANTS.CREATE),
+  PermissionMiddleware(PermissionsRegistry.PLATFORM_SERVICE_TENANTS.CREATE),
   validate({
     body: enableTenantServiceSchema,
   }),
@@ -33,7 +33,7 @@ router.put(
 // Disable Service
 router.delete(
   '/:tenantId/services/:platformServiceId',
-  PermissionMiddleware(PermissionsRegistry.PLATFORM.SERVICE_TENANTS.UPDATE),
+  PermissionMiddleware(PermissionsRegistry.PLATFORM_SERVICE_TENANTS.UPDATE),
   validate({
     params: tenantServiceWithPlatformParamsSchema,
   }),

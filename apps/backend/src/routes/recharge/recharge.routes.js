@@ -32,7 +32,7 @@ const rechargeLimiter = rateLimit({
 // ✅ RECHARGE HISTORY
 router.get(
   '/history',
-  PermissionMiddleware(PermissionsRegistry.SERVICES.RECHARGE.READ),
+  PermissionMiddleware(PermissionsRegistry.RECHARGE_SERVICE_PAGES.READ),
   validate({ query: rechargeHistoryQuerySchema }),
   fetchRechargeHistory,
 );
@@ -40,7 +40,7 @@ router.get(
 // ✅ FETCH PLANS
 router.get(
   '/plans',
-  PermissionMiddleware(PermissionsRegistry.SERVICES.RECHARGE.READ),
+  PermissionMiddleware(PermissionsRegistry.RECHARGE_SERVICE_PAGES.READ),
   validate({ query: rechargePlanSchema }),
   fetchRechargePlans,
 );
@@ -56,7 +56,7 @@ router.get(
 router.post(
   '/',
   rechargeLimiter,
-  PermissionMiddleware(PermissionsRegistry.SERVICES.RECHARGE.CREATE),
+  PermissionMiddleware(PermissionsRegistry.RECHARGE_SERVICE_PAGES.CREATE),
   validate({ body: rechargeTransactionSchema }),
   initiateRecharge,
 );
@@ -64,7 +64,7 @@ router.post(
 // ✅ FETCH OPERATORS
 router.get(
   '/operators/:feature',
-  PermissionMiddleware(PermissionsRegistry.SERVICES.RECHARGE.READ),
+  PermissionMiddleware(PermissionsRegistry.RECHARGE_SERVICE_PAGES.READ),
   fetchOperatorsByFeature,
 );
 

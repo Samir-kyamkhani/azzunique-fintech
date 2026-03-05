@@ -17,7 +17,7 @@ router.use(AuthMiddleware);
 router.post(
   '/operator-map',
   PermissionMiddleware(
-    PermissionsRegistry.SERVICES.RECHARGE.ADMIN.OPERATORS.CREATE,
+    PermissionsRegistry.RECHARGE_SERVICE_PAGES_ADMIN_OPERATORS.CREATE,
   ),
   validate({ body: upsertOperatorMapSchema }),
   OperatorMap.upsertOperatorMap,
@@ -27,7 +27,7 @@ router.post(
 router.get(
   '/operator-map',
   PermissionMiddleware(
-    PermissionsRegistry.SERVICES.RECHARGE.ADMIN.OPERATORS.READ,
+    PermissionsRegistry.RECHARGE_SERVICE_PAGES_ADMIN_OPERATORS.READ,
   ),
   OperatorMap.listOperatorMaps,
 );
@@ -36,7 +36,7 @@ router.get(
 router.post(
   '/circle-map',
   PermissionMiddleware(
-    PermissionsRegistry.SERVICES.RECHARGE.ADMIN.CIRCLES.CREATE,
+    PermissionsRegistry.RECHARGE_SERVICE_PAGES_ADMIN_CIRCLES.CREATE,
   ),
   validate({ body: upsertCircleMapSchema }),
   CircleMap.upsertCircleMap,
@@ -46,7 +46,7 @@ router.post(
 router.get(
   '/circle-map',
   PermissionMiddleware(
-    PermissionsRegistry.SERVICES.RECHARGE.ADMIN.CIRCLES.READ,
+    PermissionsRegistry.RECHARGE_SERVICE_PAGES_ADMIN_CIRCLES.READ,
   ),
   CircleMap.listCircleMaps,
 );
