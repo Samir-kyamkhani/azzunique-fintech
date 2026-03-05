@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { AuthMiddleware } from '../../middleware/auth.middleware.js';
 import { PermissionMiddleware } from '../../middleware/permission.middleware.js';
-import { PermissionsRegistry } from '../../lib/PermissionsRegistry.js';
+import { PermissionsRegistryAdmin } from '../../lib/PermissionsRegistryAdmin.js';
 import { validate } from '../../middleware/zod-validate.js';
 
 import * as OperatorMap from '../../controllers/recharge-admin/operatorMap.controller.js';
@@ -17,7 +17,7 @@ router.use(AuthMiddleware);
 router.post(
   '/operator-map',
   PermissionMiddleware(
-    PermissionsRegistry.RECHARGE_SERVICE_PAGES_ADMIN_OPERATORS.CREATE,
+    PermissionsRegistryAdmin.RECHARGE_SERVICE_PAGES_ADMIN_OPERATORS.CREATE,
   ),
   validate({ body: upsertOperatorMapSchema }),
   OperatorMap.upsertOperatorMap,
@@ -27,7 +27,7 @@ router.post(
 router.get(
   '/operator-map',
   PermissionMiddleware(
-    PermissionsRegistry.RECHARGE_SERVICE_PAGES_ADMIN_OPERATORS.READ,
+    PermissionsRegistryAdmin.RECHARGE_SERVICE_PAGES_ADMIN_OPERATORS.READ,
   ),
   OperatorMap.listOperatorMaps,
 );
@@ -36,7 +36,7 @@ router.get(
 router.post(
   '/circle-map',
   PermissionMiddleware(
-    PermissionsRegistry.RECHARGE_SERVICE_PAGES_ADMIN_CIRCLES.CREATE,
+    PermissionsRegistryAdmin.RECHARGE_SERVICE_PAGES_ADMIN_CIRCLES.CREATE,
   ),
   validate({ body: upsertCircleMapSchema }),
   CircleMap.upsertCircleMap,
@@ -46,7 +46,7 @@ router.post(
 router.get(
   '/circle-map',
   PermissionMiddleware(
-    PermissionsRegistry.RECHARGE_SERVICE_PAGES_ADMIN_CIRCLES.READ,
+    PermissionsRegistryAdmin.RECHARGE_SERVICE_PAGES_ADMIN_CIRCLES.READ,
   ),
   CircleMap.listCircleMaps,
 );

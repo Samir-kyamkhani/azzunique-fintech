@@ -11,6 +11,7 @@ import {
 
 import { ApiError } from '../../lib/ApiError.js';
 import tenantServiceEffective from '../../lib/tenantService.effective.js';
+import { decrypt } from '../../lib/lib.js';
 
 class RechargeRuntimeService {
   /* RESOLVE SERVICE + PROVIDER (INITIATE FLOW)           */
@@ -124,7 +125,7 @@ class RechargeRuntimeService {
       provider: {
         providerId: row.providerId,
         code: row.providerCode,
-        config: row.config,
+        config: decrypt(row.config),
       },
     };
   }
