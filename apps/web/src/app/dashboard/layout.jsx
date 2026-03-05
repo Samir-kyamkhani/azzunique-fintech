@@ -28,11 +28,11 @@ export default function DashboardLayout({ children }) {
   }, [userData]);
 
   // ✅ CLIENT SIDE REDIRECT
-  useEffect(() => {
-    if (complianceState === "KYC" && pathname !== "/dashboard/kyc-request") {
-      router.replace("/dashboard/kyc-request");
-    }
-  }, [complianceState, pathname, router]);
+  // useEffect(() => {
+  //   if (complianceState === "KYC" && pathname !== "/dashboard/kyc-request") {
+  //     router.replace("/dashboard/kyc-request");
+  //   }
+  // }, [complianceState, pathname, router]);
 
   if (complianceState === "LOADING") {
     return (
