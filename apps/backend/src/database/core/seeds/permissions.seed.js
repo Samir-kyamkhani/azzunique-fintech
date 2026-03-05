@@ -3,22 +3,18 @@ import { PermissionsRegistry } from '../../../lib/PermissionsRegistry.js';
 import { permissionTable } from '../../../models/core/permission.schema.js';
 
 function extractPermissions(obj) {
-  let permissions = [];
+  const permissions = [];
 
-  for (const key in obj) {
-    const value = obj[key];
+  for (const resource in obj) {
+    const actions = obj[resource];
 
-    if (typeof value === 'object' && value !== null) {
-      permissions = permissions.concat(extractPermissions(value));
-    } else {
-      const parts = value.split('.');
-      const resource = parts[parts.length - 2];
-      const action = parts[parts.length - 1];
-
-      permissions.push({
-        resource,
-        action,
-      });
+    if (typeof actions === 'object' && actions !== null) {
+      for (const action in actions) {
+        permissions.push({
+          resource,
+          action,
+        });
+      }
     }
   }
 
