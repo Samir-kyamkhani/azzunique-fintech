@@ -7,6 +7,7 @@ import {
   serviceProviderFeatureTable,
   serviceProviderTable,
 } from '../models/core/index.js';
+import { decrypt, encrypt } from '../lib/lib.js';
 
 class PlatformServiceProviderService {
   assertAdmin(actor) {
@@ -18,17 +19,19 @@ class PlatformServiceProviderService {
   async assign(data, actor) {
     this.assertAdmin(actor);
 
+    const encryptedConfig = encrypt(JSON.stringify(data.config));
+
     await db
       .insert(platformServiceProviderTable)
       .values({
         platformServiceId: data.platformServiceId,
         serviceProviderId: data.serviceProviderId,
-        config: data.config,
+        config: encryptedConfig,
         isActive: true,
       })
       .onDuplicateKeyUpdate({
         set: {
-          config: data.config,
+          config: encryptedConfig,
           isActive: true,
           updatedAt: new Date(),
         },
@@ -88,7 +91,7 @@ class PlatformServiceProviderService {
           code: row.code,
           providerName: row.providerName,
           handler: row.handler,
-          config: row.config,
+          config: row.config ? JSON.parse(decrypt(row.config)) : null,
           features: [],
         };
       }
@@ -129,10 +132,12 @@ class PlatformServiceProviderService {
   async updateConfig(serviceId, providerId, config, actor) {
     this.assertAdmin(actor);
 
+    const encryptedConfig = encrypt(JSON.stringify(config));
+
     await db
       .update(platformServiceProviderTable)
       .set({
-        config,
+        config: encryptedConfig,
         updatedAt: new Date(),
       })
       .where(
