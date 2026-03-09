@@ -123,6 +123,8 @@ const Sidebar = () => {
           path: "/dashboard/recharge/admin",
           permissionGroup: [
             PERMISSIONS.RECHARGE_SERVICE_PAGES.READ,
+            PERMISSIONS.RECHARGE_SERVICE_PAGES_ADMIN_OPERATORS.READ,
+            PERMISSIONS.RECHARGE_SERVICE_PAGES_ADMIN_CIRCLES.READ,
           ],
         },
       ],
