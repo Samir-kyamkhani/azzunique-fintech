@@ -49,6 +49,7 @@ export default function PlatformServicesClient() {
   const canCreate = can(PERMISSIONS.PLATFORM_SERVICES.CREATE);
   const canEdit = can(PERMISSIONS.PLATFORM_SERVICES.UPDATE);
   const canDelete = can(PERMISSIONS.PLATFORM_SERVICES.DELETE);
+  const canView = can(PERMISSIONS.PLATFORM_SERVICES.READ);
 
   const handleSubmit = (payload, setError) => {
     const action = editingData ? updateService : createService;
@@ -56,11 +57,39 @@ export default function PlatformServicesClient() {
     action(editingData ? { id: editingData.id, payload } : payload, {
       onSuccess: () => {
         toast.success(editingData ? "Service Updated" : "Service Created");
+        refetch();
         setOpenModal(false);
         setEditingData(null);
       },
       onError: (err) => setError("root", { message: err.message }),
     });
+  };
+
+  const handleDelete = (row) => {
+    deleteService(row.id, {
+      onSuccess: () => {
+        toast.success("Service Deleted");
+        refetch();
+      },
+      onError: (err) => toast.error(err.message),
+    });
+  };
+
+  const exportServices = () => {
+    const csv = [
+      ["ID", "Code", "Name", "Active"],
+      ...services.map((s) => [s.id, s.code, s.name, s.isActive]),
+    ]
+      .map((r) => r.join(","))
+      .join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "platform_services.csv";
+    a.click();
   };
 
   return (
@@ -97,7 +126,11 @@ export default function PlatformServicesClient() {
               }
             : undefined
         }
-        onView={(row) => router.push(`/dashboard/platform/services/${row.id}`)}
+        onView={
+          canView
+            ? (row) => router.push(`/dashboard/platform/services/${row.id}`)
+            : undefined
+        }
         onEdit={
           canEdit
             ? (row) => {
@@ -106,14 +139,8 @@ export default function PlatformServicesClient() {
               }
             : undefined
         }
-        onDelete={
-          canDelete
-            ? (row) =>
-                deleteService(row.id, {
-                  onSuccess: () => toast.success("Service Deleted"),
-                })
-            : undefined
-        }
+        onDelete={canDelete ? handleDelete : undefined}
+        onExport={exportServices}
       />
 
       <PlatformServiceModal

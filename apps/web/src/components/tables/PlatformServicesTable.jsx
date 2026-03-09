@@ -14,7 +14,17 @@ const columns = [
   {
     key: "isActive",
     label: "Active",
-    render: (row) => (row.isActive ? "Active" : "Inactive"),
+    render: (row) => (
+      <span
+        className={`px-2 py-1 text-xs rounded ${
+          row.isActive
+            ? "bg-green-500/10 text-green-400"
+            : "bg-red-500/10 text-red-400"
+        }`}
+      >
+        {row.isActive ? "Active" : "Inactive"}
+      </span>
+    ),
   },
   {
     key: "createdAt",
@@ -30,11 +40,13 @@ const columns = [
 ];
 
 export default function PlatformServicesTable({
-  data,
+  data = [],
+  loading = false,
   onAdd,
   onEdit,
   onView,
   onDelete,
+  onExport,
   extraActions,
 }) {
   return (
@@ -45,13 +57,14 @@ export default function PlatformServicesTable({
         onAdd={onAdd}
         addLabel="Add Service"
         addIcon={Layers}
-        onExport={() => {}}
+        onExport={onExport}
         exportIcon={Download}
       />
 
       <TableBody
         columns={columns}
         data={data}
+        loading={loading}
         onEdit={onEdit}
         onDelete={onDelete}
         onView={onView}
