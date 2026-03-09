@@ -212,7 +212,7 @@ export const PERMISSIONS = Object.freeze({
     DELETE: { resource: RESOURCES.PLATFORM_SERVICES, action: ACTIONS.DELETE },
     UPDATE: { resource: RESOURCES.PLATFORM_SERVICES, action: ACTIONS.UPDATE },
     READ_ASSIGN_PROVIDER: {
-      resource: RESOURCES.PLATFORM,
+      resource: RESOURCES.PLATFORM_SERVICES,
       action: ACTIONS.READ_ASSIGN_PROVIDER,
     },
   },
