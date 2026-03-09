@@ -122,8 +122,7 @@ const Sidebar = () => {
           icon: CreditCard,
           path: "/dashboard/recharge/admin",
           permissionGroup: [
-            PERMISSIONS.SERVICES_PAGES.RECHARGE.ADMIN.OPERATORS.READ,
-            PERMISSIONS.SERVICES_PAGES.RECHARGE.ADMIN.CIRCLES.READ,
+            PERMISSIONS.RECHARGE_SERVICE_PAGES.READ,
           ],
         },
       ],

@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function OperatorMapsPage() {
   return (
-    <ClientGuard anyOf={[PERMISSIONS.SERVICES_PAGES.RECHARGE.ADMIN.OPERATORS.READ]}>
+    <ClientGuard anyOf={[PERMISSIONS.RECHARGE_SERVICE_PAGES.ADMIN.OPERATORS.READ]}>
       <OperatorMapsClient />
     </ClientGuard>
   );

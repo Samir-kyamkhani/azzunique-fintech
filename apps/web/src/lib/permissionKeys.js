@@ -20,7 +20,7 @@ export const RESOURCES = Object.freeze({
   PLATFORM_SERVICE_TENANT: "PLATFORM_SERVICE_TENANT",
 
   FUND_REQUEST: "FUND_REQUEST",
-  RECHARGE: "RECHARGE",
+  RECHARGE_SERVICE_PAGES: "RECHARGE_SERVICE_PAGES",
   RECHARGE_OPERATORS: "RECHARGE_OPERATORS",
   RECHARGE_CIRCLES: "RECHARGE_CIRCLES",
 
@@ -254,51 +254,6 @@ export const PERMISSIONS = Object.freeze({
       APPROVE: { resource: RESOURCES.FUND_REQUEST, action: ACTIONS.APPROVE },
     },
 
-    RECHARGE: {
-      READ: { resource: RESOURCES.RECHARGE, action: ACTIONS.READ },
-      CREATE: { resource: RESOURCES.RECHARGE, action: ACTIONS.CREATE },
-      UPDATE: { resource: RESOURCES.RECHARGE, action: ACTIONS.UPDATE },
-      RETRY: { resource: RESOURCES.RECHARGE, action: ACTIONS.RETRY },
-      ADMIN: {
-        OPERATORS: {
-          READ: {
-            resource: RESOURCES.RECHARGE_OPERATORS,
-            action: ACTIONS.READ,
-          },
-          CREATE: {
-            resource: RESOURCES.RECHARGE_OPERATORS,
-            action: ACTIONS.CREATE,
-          },
-          UPDATE: {
-            resource: RESOURCES.RECHARGE_OPERATORS,
-            action: ACTIONS.UPDATE,
-          },
-          DELETE: {
-            resource: RESOURCES.RECHARGE_OPERATORS,
-            action: ACTIONS.DELETE,
-          },
-        },
-        CIRCLES: {
-          READ: {
-            resource: RESOURCES.RECHARGE_CIRCLES,
-            action: ACTIONS.READ,
-          },
-          CREATE: {
-            resource: RESOURCES.RECHARGE_CIRCLES,
-            action: ACTIONS.CREATE,
-          },
-          UPDATE: {
-            resource: RESOURCES.RECHARGE_CIRCLES,
-            action: ACTIONS.UPDATE,
-          },
-          DELETE: {
-            resource: RESOURCES.RECHARGE_CIRCLES,
-            action: ACTIONS.DELETE,
-          },
-        },
-      },
-    },
-
     PANCARD: {
       READ: { resource: RESOURCES.PANCARD, action: ACTIONS.READ },
       CREATE: { resource: RESOURCES.PANCARD, action: ACTIONS.CREATE },
@@ -317,6 +272,22 @@ export const PERMISSIONS = Object.freeze({
       },
       VERIFY: { resource: RESOURCES.AADHAAR, action: ACTIONS.VERIFY },
       UPDATE: { resource: RESOURCES.AADHAAR, action: ACTIONS.UPDATE },
+    },
+  },
+
+  RECHARGE_SERVICE_PAGES: {
+    READ: { resource: RESOURCES.RECHARGE_SERVICE_PAGES, action: ACTIONS.READ },
+    CREATE: {
+      resource: RESOURCES.RECHARGE_SERVICE_PAGES,
+      action: ACTIONS.CREATE,
+    },
+    UPDATE: {
+      resource: RESOURCES.RECHARGE_SERVICE_PAGES,
+      action: ACTIONS.UPDATE,
+    },
+    RETRY: {
+      resource: RESOURCES.RECHARGE_SERVICE_PAGES,
+      action: ACTIONS.RETRY,
     },
   },
 });

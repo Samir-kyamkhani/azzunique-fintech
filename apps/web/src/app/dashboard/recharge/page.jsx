@@ -11,7 +11,7 @@ export default function RechargePage() {
   return (
     <ClientGuard
       roles={ALLOWED_SERVICES_ROLES}
-      anyOf={[PERMISSIONS.SERVICES_PAGES.RECHARGE.CREATE]}
+      anyOf={[PERMISSIONS.RECHARGE_SERVICE_PAGES.CREATE]}
     >
       <RechargeClient />
     </ClientGuard>

@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function CircleMapsPage() {
   return (
-    <ClientGuard anyOf={[PERMISSIONS.SERVICES_PAGES.RECHARGE.ADMIN.CIRCLES.READ]}>
+    <ClientGuard anyOf={[PERMISSIONS.RECHARGE_SERVICE_PAGES.ADMIN.CIRCLES.READ]}>
       <CircleMapsClient />
     </ClientGuard>
   );

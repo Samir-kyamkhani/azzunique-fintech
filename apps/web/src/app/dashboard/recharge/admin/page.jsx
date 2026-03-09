@@ -7,17 +7,17 @@ export default function Page() {
   return (
     <ClientGuard
       anyOf={[
-        PERMISSIONS.SERVICES_PAGES.RECHARGE.ADMIN.OPERATORS.READ,
-        PERMISSIONS.SERVICES_PAGES.RECHARGE.ADMIN.CIRCLES.READ,
+        PERMISSIONS.RECHARGE_SERVICE_PAGES.ADMIN.OPERATORS.READ,
+        PERMISSIONS.RECHARGE_SERVICE_PAGES.ADMIN.CIRCLES.READ,
       ]}
       redirectMap={[
         {
           path: "/dashboard/recharge/admin/operators",
-          perm: PERMISSIONS.SERVICES_PAGES.RECHARGE.ADMIN.OPERATORS.READ,
+          perm: PERMISSIONS.RECHARGE_SERVICE_PAGES.ADMIN.OPERATORS.READ,
         },
         {
           path: "/dashboard/recharge/admin/circles",
-          perm: PERMISSIONS.SERVICES_PAGES.RECHARGE.ADMIN.CIRCLES.READ,
+          perm: PERMISSIONS.RECHARGE_SERVICE_PAGES.ADMIN.CIRCLES.READ,
         },
       ]}
     >
