@@ -124,6 +124,9 @@ class TenantService {
         .where(eq(tenantsTable.parentTenantId, actor.tenantId));
 
       allowedTenantIds = tenants.map((t) => t.id);
+    } else if (actor.roleLevel === 2) {
+      // WhiteLabel → self only
+      allowedTenantIds = [actor.tenantId];
     }
 
     if (!allowedTenantIds.length) {
