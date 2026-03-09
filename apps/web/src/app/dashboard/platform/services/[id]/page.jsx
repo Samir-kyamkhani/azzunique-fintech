@@ -10,7 +10,7 @@ export default async function PlatformServiceDetailsPage({ params }) {
   const { id } = await params;
 
   return (
-    <ClientGuard anyOf={[PERMISSIONS.PLATFORM.SERVICES.READ]}>
+    <ClientGuard anyOf={[PERMISSIONS.PLATFORM_SERVICES.READ]}>
       <PlatformServiceDetailsClient id={id} />
     </ClientGuard>
   );

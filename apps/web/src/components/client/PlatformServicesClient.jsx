@@ -46,9 +46,9 @@ export default function PlatformServicesClient() {
 
   const can = (perm) => permissionChecker(perms, perm?.resource, perm?.action);
 
-  const canCreate = can(PERMISSIONS.PLATFORM.SERVICES.CREATE);
-  const canEdit = can(PERMISSIONS.PLATFORM.SERVICES.UPDATE);
-  const canDelete = can(PERMISSIONS.PLATFORM.SERVICES.DELETE);
+  const canCreate = can(PERMISSIONS.PLATFORM_SERVICES.CREATE);
+  const canEdit = can(PERMISSIONS.PLATFORM_SERVICES.UPDATE);
+  const canDelete = can(PERMISSIONS.PLATFORM_SERVICES.DELETE);
 
   const handleSubmit = (payload, setError) => {
     const action = editingData ? updateService : createService;

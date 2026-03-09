@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function TenantServicesPage() {
   return (
-    <ClientGuard anyOf={[PERMISSIONS.PLATFORM.SERVICE_TENANTS.READ]}>
+    <ClientGuard anyOf={[PERMISSIONS.PLATFORM_SERVICE_TENANTS.READ]}>
       <TenantServicesClient />
     </ClientGuard>
   );

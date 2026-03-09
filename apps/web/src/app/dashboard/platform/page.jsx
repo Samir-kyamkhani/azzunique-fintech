@@ -7,22 +7,22 @@ export default function Page() {
   return (
     <ClientGuard
       anyOf={[
-        PERMISSIONS.PLATFORM.SERVICES.READ,
-        PERMISSIONS.PLATFORM.SERVICE_PROVIDERS.READ,
-        PERMISSIONS.PLATFORM.SERVICE_TENANTS.READ,
+        PERMISSIONS.PLATFORM_SERVICES.READ,
+        PERMISSIONS.PLATFORM_SERVICE_PROVIDERS.READ,
+        PERMISSIONS.PLATFORM_SERVICE_TENANTS.READ,
       ]}
       redirectMap={[
         {
           path: "/dashboard/platform/services",
-          perm: PERMISSIONS.PLATFORM.SERVICES.READ,
+          perm: PERMISSIONS.PLATFORM_SERVICES.READ,
         },
         {
           path: "/dashboard/platform/providers",
-          perm: PERMISSIONS.PLATFORM.SERVICE_PROVIDERS.READ,
+          perm: PERMISSIONS.PLATFORM_SERVICE_PROVIDERS.READ,
         },
         {
           path: "/dashboard/platform/tenants",
-          perm: PERMISSIONS.PLATFORM.SERVICE_TENANTS.READ,
+          perm: PERMISSIONS.PLATFORM_SERVICE_TENANTS.READ,
         },
       ]}
     >

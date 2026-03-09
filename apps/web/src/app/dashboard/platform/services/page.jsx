@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function PlatformServicesPage() {
   return (
-    <ClientGuard anyOf={[PERMISSIONS.PLATFORM.SERVICES.READ]}>
+    <ClientGuard anyOf={[PERMISSIONS.PLATFORM_SERVICES.READ]}>
       <PlatformServicesClient />
     </ClientGuard>
   );

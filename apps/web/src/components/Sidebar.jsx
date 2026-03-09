@@ -166,9 +166,8 @@ const Sidebar = () => {
           icon: Cog,
           path: "/dashboard/platform",
           permissionGroup: [
-            PERMISSIONS.PLATFORM.SERVICES.READ,
-            PERMISSIONS.PLATFORM.SERVICE_PROVIDERS.READ,
-            PERMISSIONS.PLATFORM.SERVICE_TENANTS.READ,
+            PERMISSIONS.PLATFORM_SERVICES.READ,
+            PERMISSIONS.PLATFORM_SERVICE_TENANTS.READ,
           ],
         },
 

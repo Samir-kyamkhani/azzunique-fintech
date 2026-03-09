@@ -14,15 +14,13 @@ export const RESOURCES = Object.freeze({
   SOCIAL_MEDIA: "SOCIAL_MEDIA",
   PERMISSION: "PERMISSION",
 
-  PLATFORM: "PLATFORM",
-  PLATFORM_FEATURE: "PLATFORM_FEATURE",
+  PLATFORM_SERVICES: "PLATFORM_SERVICES",
+  PLATFORM_SERVICE_FEATURES: "PLATFORM_SERVICE_FEATURES",
   PLATFORM_SERVICE_PROVIDER: "PLATFORM_SERVICE_PROVIDER",
-  PLATFORM_SERVICE_TENANT: "PLATFORM_SERVICE_TENANT",
+  PLATFORM_SERVICE_TENANTS: "PLATFORM_SERVICE_TENANTS",
 
   FUND_REQUEST: "FUND_REQUEST",
   RECHARGE_SERVICE_PAGES: "RECHARGE_SERVICE_PAGES",
-  RECHARGE_OPERATORS: "RECHARGE_OPERATORS",
-  RECHARGE_CIRCLES: "RECHARGE_CIRCLES",
 
   AADHAAR: "AADHAAR",
   PANCARD: "PANCARD",
@@ -176,75 +174,7 @@ export const PERMISSIONS = Object.freeze({
 
   /* ================= PLATFORM ================= */
 
-  PLATFORM: {
-    SERVICES: {
-      READ: { resource: RESOURCES.PLATFORM, action: ACTIONS.READ },
-      CREATE: { resource: RESOURCES.PLATFORM, action: ACTIONS.CREATE },
-      UPDATE: { resource: RESOURCES.PLATFORM, action: ACTIONS.UPDATE },
-      DELETE: { resource: RESOURCES.PLATFORM, action: ACTIONS.DELETE },
-      READ_ASSIGN_PROVIDER: {
-        resource: RESOURCES.PLATFORM,
-        action: ACTIONS.READ_ASSIGN_PROVIDER,
-      },
-      ASSIGN_PROVIDER: {
-        resource: RESOURCES.PLATFORM,
-        action: ACTIONS.ASSIGN_PROVIDER,
-      },
-      DISABLE_PROVIDER: {
-        resource: RESOURCES.PLATFORM,
-        action: ACTIONS.DISABLE_PROVIDER,
-      },
-    },
-
-    SERVICE_FEATURES: {
-      READ: { resource: RESOURCES.PLATFORM_FEATURE, action: ACTIONS.READ },
-      CREATE: { resource: RESOURCES.PLATFORM_FEATURE, action: ACTIONS.CREATE },
-      UPDATE: { resource: RESOURCES.PLATFORM_FEATURE, action: ACTIONS.UPDATE },
-      DELETE: { resource: RESOURCES.PLATFORM_FEATURE, action: ACTIONS.DELETE },
-    },
-
-    SERVICE_PROVIDERS: {
-      READ: {
-        resource: RESOURCES.PLATFORM_SERVICE_PROVIDER,
-        action: ACTIONS.READ,
-      },
-      CREATE: {
-        resource: RESOURCES.PLATFORM_SERVICE_PROVIDER,
-        action: ACTIONS.CREATE,
-      },
-      UPDATE: {
-        resource: RESOURCES.PLATFORM_SERVICE_PROVIDER,
-        action: ACTIONS.UPDATE,
-      },
-      DELETE: {
-        resource: RESOURCES.PLATFORM_SERVICE_PROVIDER,
-        action: ACTIONS.DELETE,
-      },
-      VIEW_PROVIDER: {
-        resource: RESOURCES.PLATFORM_SERVICE_PROVIDER,
-        action: ACTIONS.VIEW_PROVIDER,
-      },
-    },
-
-    SERVICE_TENANTS: {
-      READ: {
-        resource: RESOURCES.PLATFORM_SERVICE_TENANT,
-        action: ACTIONS.READ,
-      },
-      CREATE: {
-        resource: RESOURCES.PLATFORM_SERVICE_TENANT,
-        action: ACTIONS.CREATE,
-      },
-      UPDATE: {
-        resource: RESOURCES.PLATFORM_SERVICE_TENANT,
-        action: ACTIONS.UPDATE,
-      },
-      DELETE: {
-        resource: RESOURCES.PLATFORM_SERVICE_TENANT,
-        action: ACTIONS.DELETE,
-      },
-    },
-  },
+  PLATFORM: {},
 
   SERVICES_PAGES: {
     FUND_REQUEST: {
@@ -272,6 +202,78 @@ export const PERMISSIONS = Object.freeze({
       },
       VERIFY: { resource: RESOURCES.AADHAAR, action: ACTIONS.VERIFY },
       UPDATE: { resource: RESOURCES.AADHAAR, action: ACTIONS.UPDATE },
+    },
+  },
+
+  PLATFORM_SERVICES: {
+    READ: { resource: RESOURCES.PLATFORM_SERVICES, action: ACTIONS.READ },
+    CREATE: { resource: RESOURCES.PLATFORM_SERVICES, action: ACTIONS.CREATE },
+    DELETE: { resource: RESOURCES.PLATFORM_SERVICES, action: ACTIONS.DELETE },
+    UPDATE: { resource: RESOURCES.PLATFORM_SERVICES, action: ACTIONS.UPDATE },
+    READ_ASSIGN_PROVIDER: {
+      resource: RESOURCES.PLATFORM,
+      action: ACTIONS.READ_ASSIGN_PROVIDER,
+    },
+  },
+
+  PLATFORM_SERVICE_FEATURES: {
+    READ: {
+      resource: RESOURCES.PLATFORM_SERVICE_FEATURES,
+      action: ACTIONS.READ,
+    },
+    CREATE: {
+      resource: RESOURCES.PLATFORM_SERVICE_FEATURES,
+      action: ACTIONS.CREATE,
+    },
+    UPDATE: {
+      resource: RESOURCES.PLATFORM_SERVICE_FEATURES,
+      action: ACTIONS.UPDATE,
+    },
+    DELETE: {
+      resource: RESOURCES.PLATFORM_SERVICE_FEATURES,
+      action: ACTIONS.DELETE,
+    },
+  },
+
+  PLATFORM_SERVICE_TENANTS: {
+    READ: {
+      resource: RESOURCES.PLATFORM_SERVICE_TENANTS,
+      action: ACTIONS.READ,
+    },
+    CREATE: {
+      resource: RESOURCES.PLATFORM_SERVICE_TENANTS,
+      action: ACTIONS.CREATE,
+    },
+    UPDATE: {
+      resource: RESOURCES.PLATFORM_SERVICE_TENANTS,
+      action: ACTIONS.UPDATE,
+    },
+    DELETE: {
+      resource: RESOURCES.PLATFORM_SERVICE_TENANTS,
+      action: ACTIONS.DELETE,
+    },
+  },
+
+  PLATFORM_SERVICE_PROVIDERS: {
+    READ: {
+      resource: RESOURCES.PLATFORM_SERVICE_PROVIDER,
+      action: ACTIONS.READ,
+    },
+    CREATE: {
+      resource: RESOURCES.PLATFORM_SERVICE_PROVIDER,
+      action: ACTIONS.CREATE,
+    },
+    UPDATE: {
+      resource: RESOURCES.PLATFORM_SERVICE_PROVIDER,
+      action: ACTIONS.UPDATE,
+    },
+    DELETE: {
+      resource: RESOURCES.PLATFORM_SERVICE_PROVIDER,
+      action: ACTIONS.DELETE,
+    },
+    VIEW_PROVIDER: {
+      resource: RESOURCES.PLATFORM_SERVICE_PROVIDER,
+      action: ACTIONS.VIEW_PROVIDER,
     },
   },
 

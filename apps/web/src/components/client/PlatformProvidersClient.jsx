@@ -36,9 +36,9 @@ export default function PlatformProvidersClient() {
   const perms = useSelector((s) => s.auth.user?.permissions);
   const can = (perm) => permissionChecker(perms, perm.resource, perm.action);
 
-  const canCreate = can(PERMISSIONS.PLATFORM.SERVICE_PROVIDERS.CREATE);
-  const canEdit = can(PERMISSIONS.PLATFORM.SERVICE_PROVIDERS.UPDATE);
-  const canDelete = can(PERMISSIONS.PLATFORM.SERVICE_PROVIDERS.DELETE);
+  const canCreate = can(PERMISSIONS.PLATFORM_SERVICE_PROVIDERS.CREATE);
+  const canEdit = can(PERMISSIONS.PLATFORM_SERVICE_PROVIDERS.UPDATE);
+  const canDelete = can(PERMISSIONS.PLATFORM_SERVICE_PROVIDERS.DELETE);
 
   const handleSubmit = (payload, setError) => {
     const action = editingData ? updateProvider : createProvider;

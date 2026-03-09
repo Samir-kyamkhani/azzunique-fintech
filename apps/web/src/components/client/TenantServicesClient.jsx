@@ -53,9 +53,9 @@ export default function TenantServicesClient() {
     if (error) toast.error(error.message);
   }, [error]);
 
-  const canCreate = can(PERMISSIONS.PLATFORM.SERVICE_TENANTS.CREATE);
-  const canUpdate = can(PERMISSIONS.PLATFORM.SERVICE_TENANTS.UPDATE);
-  const canDelete = can(PERMISSIONS.PLATFORM.SERVICE_TENANTS.DELETE);
+  const canCreate = can(PERMISSIONS.PLATFORM_SERVICE_TENANTS.CREATE);
+  const canUpdate = can(PERMISSIONS.PLATFORM_SERVICE_TENANTS.UPDATE);
+  const canDelete = can(PERMISSIONS.PLATFORM_SERVICE_TENANTS.DELETE);
 
   const handleEnable = (payload, setError) => {
     enableService(payload, {

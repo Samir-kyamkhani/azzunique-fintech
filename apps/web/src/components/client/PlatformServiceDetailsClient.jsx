@@ -98,13 +98,13 @@ export default function PlatformServiceDetailsClient({ id }) {
 
   const can = (perm) => permissionChecker(perms, perm?.resource, perm?.action);
 
-  const canUpdateService = can(PERMISSIONS.PLATFORM.SERVICES.UPDATE);
-  const canUpdateFeature = can(PERMISSIONS.PLATFORM.SERVICE_FEATURES.UPDATE);
-  const canDeleteFeature = can(PERMISSIONS.PLATFORM.SERVICE_FEATURES.DELETE);
-  const canCreateFeature = can(PERMISSIONS.PLATFORM.SERVICE_FEATURES.CREATE);
-  const canManageProviders = can(PERMISSIONS.PLATFORM.SERVICE_PROVIDERS.CREATE);
+  const canUpdateService = can(PERMISSIONS.PLATFORM_SERVICES.UPDATE);
+  const canUpdateFeature = can(PERMISSIONS.PLATFORM_SERVICE_FEATURES.UPDATE);
+  const canDeleteFeature = can(PERMISSIONS.PLATFORM_SERVICE_FEATURES.DELETE);
+  const canCreateFeature = can(PERMISSIONS.PLATFORM_SERVICE_FEATURES.CREATE);
+  const canManageProviders = can(PERMISSIONS.PLATFORM_SERVICE_PROVIDERS.CREATE);
   const canReadProviders = can(
-    PERMISSIONS.PLATFORM.SERVICES.READ_ASSIGN_PROVIDER,
+    PERMISSIONS.PLATFORM_SERVICES.READ_ASSIGN_PROVIDER,
   );
 
   useEffect(() => {
