@@ -1,13 +1,41 @@
 "use client";
 
 import TabsNav from "@/components/details/TabsNav";
-import { Building2 } from "lucide-react";
-import { Users } from "lucide-react";
+import { Building2, Users } from "lucide-react";
+import { useSelector } from "react-redux";
+import { PERMISSIONS } from "@/lib/permissionKeys";
+import { permissionChecker } from "@/lib/permissionCheker";
 
 export default function PlatformLayout({ children }) {
+  const perms = useSelector((s) => s.auth.user?.permissions);
+
+  const tabs = [
+    {
+      label: "Services",
+      value: "services",
+      icon: Users,
+      perm: PERMISSIONS.PLATFORM_SERVICES.READ,
+    },
+    {
+      label: "Providers",
+      value: "providers",
+      icon: Building2,
+      perm: PERMISSIONS.PLATFORM_SERVICE_PROVIDERS.READ,
+    },
+    {
+      label: "Tenants",
+      value: "tenants",
+      icon: Building2,
+      perm: PERMISSIONS.PLATFORM_SERVICE_TENANTS.READ,
+    },
+  ];
+
+  const filteredTabs = tabs.filter((tab) =>
+    permissionChecker(perms, tab.perm.resource, tab.perm.action),
+  );
+
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-xl font-semibold">Platform Control Center</h1>
 
@@ -16,28 +44,8 @@ export default function PlatformLayout({ children }) {
         </p>
       </div>
 
-      <TabsNav
-        tabs={[
-          {
-            label: "Services",
-            value: "services",
-            icon: Users,
-          },
-          {
-            label: "Providers",
-            value: "providers",
-            icon: Building2,
-          },
-          {
-            label: "Tenants",
-            value: "tenants",
-            icon: Building2,
-          },
-        ]}
-        basePath="/dashboard/platform"
-      />
+      <TabsNav tabs={filteredTabs} basePath="/dashboard/platform" />
 
-      {/* Content */}
       <div>{children}</div>
     </div>
   );
