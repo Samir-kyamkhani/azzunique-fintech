@@ -18,3 +18,8 @@ export const listAllTenantServices = async (req, res) => {
   const result = await tenantService.listAll(req.user);
   res.json(result);
 };
+
+export const listEnabledServices = async (req, res) => {
+  const result = await tenantService.listEnabledForTenant(req.user);
+  res.json(result);
+};

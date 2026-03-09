@@ -21,6 +21,8 @@ import { setPlatformServices } from "@/store/platformServiceSlice";
 import { toast } from "@/lib/toast";
 import { permissionChecker } from "@/lib/permissionCheker";
 import { PERMISSIONS } from "@/lib/permissionKeys";
+import { useTenantServices } from "@/hooks/useTenantServices";
+import { ADMIN_ROLE } from "@/lib/constants";
 
 export default function PlatformServicesClient() {
   const dispatch = useDispatch();
@@ -30,7 +32,18 @@ export default function PlatformServicesClient() {
   const [openModal, setOpenModal] = useState(false);
   const [editingData, setEditingData] = useState(null);
 
-  const { data: services = [], isLoading, error, refetch } = useServices();
+  const user = useSelector((s) => s.auth.user);
+
+  const isAdmin = user?.role?.roleCode === ADMIN_ROLE;
+
+  // Always call hooks
+  const adminServices = useServices();
+  const tenantServices = useTenantServices();
+
+  // Decide which data to use
+  const servicesData = isAdmin ? adminServices : tenantServices;
+
+  const { data: services = [], isLoading, error, refetch } = servicesData;
 
   const { mutate: createService, isPending: creating } = useCreateService();
   const { mutate: updateService, isPending: updating } = useUpdateService();

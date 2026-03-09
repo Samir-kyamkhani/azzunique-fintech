@@ -30,6 +30,12 @@ router.put(
   TS.enableTenantService,
 );
 
+router.get(
+  '/services',
+  PermissionMiddleware(PermissionsRegistry.PLATFORM_SERVICE_TENANTS.READ),
+  TS.listEnabledServices,
+);
+
 // Disable Service
 router.delete(
   '/:tenantId/services/:platformServiceId',

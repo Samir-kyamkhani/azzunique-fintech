@@ -13,6 +13,7 @@ import {
   useAllTenantServices,
   useEnableTenantService,
   useDisableTenantService,
+  useTenantServices,
 } from "@/hooks/useTenantServices";
 
 import { toast } from "@/lib/toast";
@@ -22,11 +23,24 @@ import { useServices } from "@/hooks/useAdminServices";
 import { useTenants } from "@/hooks/useTenant";
 import { Power } from "lucide-react";
 import { PowerOff } from "lucide-react";
+import { ADMIN_ROLE } from "@/lib/constants";
 
 export default function TenantServicesClient() {
   const perms = useSelector((s) => s.auth.user?.permissions);
   const can = (perm) => permissionChecker(perms, perm.resource, perm.action);
   const [openModal, setOpenModal] = useState(false);
+
+  const user = useSelector((s) => s.auth.user);
+
+  const isAdmin = user?.role?.roleCode === ADMIN_ROLE;
+
+  // Always call hooks
+  const adminServices = useServices();
+  const tenantServices = useTenantServices();
+
+  // Decide which data to use
+  const servicesData = isAdmin ? adminServices : tenantServices;
+  const { data: servicesList = [] } = servicesData;
 
   const {
     data: services = [],
@@ -38,8 +52,6 @@ export default function TenantServicesClient() {
   const { mutate: enableService, isPending } = useEnableTenantService();
 
   const { mutate: disableService } = useDisableTenantService();
-
-  const { data: servicesList = [] } = useServices();
 
   const { data: tenantsData } = useTenants({
     page: 1,

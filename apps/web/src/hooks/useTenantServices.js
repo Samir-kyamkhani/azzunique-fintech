@@ -12,6 +12,15 @@ export const useAllTenantServices = () =>
     },
   });
 
+export const useTenantServices = () =>
+  useQuery({
+    queryKey: ["tenant-services"],
+    queryFn: async () => {
+      const res = await apiClient("/platform-tenants/services");
+      return res.data;
+    },
+  });
+
 /* ================= ENABLE ================= */
 
 export const useEnableTenantService = () => {
