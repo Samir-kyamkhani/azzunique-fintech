@@ -29,8 +29,8 @@ export default function OperatorMapsClient() {
   const perms = useSelector((s) => s.auth.user?.permissions);
   const can = (perm) => permissionChecker(perms, perm.resource, perm.action);
 
-  const canCreate = can(PERMISSIONS.RECHARGE_SERVICE_PAGES.ADMIN.OPERATORS.CREATE);
-  const canUpdate = can(PERMISSIONS.RECHARGE_SERVICE_PAGES.ADMIN.OPERATORS.UPDATE);
+  const canCreate = can(PERMISSIONS.RECHARGE_SERVICE_PAGES_ADMIN_OPERATORS.CREATE);
+  const canUpdate = can(PERMISSIONS.RECHARGE_SERVICE_PAGES_ADMIN_OPERATORS.UPDATE);
 
   const handleSubmit = (payload, setError) => {
     upsertMap(payload, {
